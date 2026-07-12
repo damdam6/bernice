@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사이트 구축 작업 계획</title>
+<style>
+  :root {
+    --bg:#0f1115; --panel:#171a21; --panel-2:#1e222b; --line:#2a2f3a;
+    --text:#e6e9ef; --muted:#9aa3b2; --accent:#ff7a45; --accent-2:#4a90ff;
+    --good:#35c07a; --warn:#f5b800; --bad:#ff5c5c; --radius:12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--sans); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:920px; margin:0 auto; padding:48px 24px 96px; }
+  header.hero { border-bottom:1px solid var(--line); padding-bottom:26px; margin-bottom:34px; }
+  .crumb { font-size:13px; color:var(--muted); margin-bottom:10px; }
+  .crumb a { color:var(--accent-2); text-decoration:none; }
+  .badge { display:inline-block; font-size:12px; letter-spacing:.04em; color:var(--accent); border:1px solid var(--accent); border-radius:999px; padding:3px 12px; margin-bottom:16px; }
+  h1 { font-size:28px; margin:0 0 8px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); font-size:15px; margin:0; }
+  h2 { font-size:19px; margin:38px 0 6px; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
+  h2 .ph { font-family:var(--mono); font-size:12px; color:#111; background:var(--accent); border-radius:6px; padding:2px 8px; }
+  h2 .goal { font-size:13px; color:var(--muted); font-weight:400; }
+  .dep { font-size:12.5px; color:var(--muted); margin:2px 0 10px; }
+  ol.tasks { list-style:none; counter-reset:t; padding:0; margin:8px 0 4px; }
+  ol.tasks li { counter-increment:t; position:relative; padding:9px 12px 9px 44px; margin:6px 0; background:var(--panel); border:1px solid var(--line); border-radius:9px; font-size:14px; }
+  ol.tasks li::before { content:counter(t); position:absolute; left:12px; top:9px; width:22px; height:22px; border-radius:6px; background:var(--panel-2); border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:12px; display:flex; align-items:center; justify-content:center; }
+  ol.tasks li b { color:var(--text); }
+  ol.tasks li .k { color:var(--accent); font-weight:600; }
+  code.inline { font-family:var(--mono); font-size:12.5px; background:var(--panel-2); border:1px solid var(--line); border-radius:5px; padding:1px 6px; }
+  .blockers { background:rgba(245,184,0,.06); border:1px solid rgba(245,184,0,.28); border-radius:10px; padding:14px 18px; margin:14px 0; }
+  .blockers h3 { margin:0 0 8px; font-size:15px; color:var(--warn); }
+  .blockers ul { margin:0; padding-left:18px; font-size:14px; }
+  .blockers li { margin:5px 0; }
+  .stack { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 4px; }
+  .pill { font-family:var(--mono); font-size:12px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; padding:3px 9px; }
+  .muted { color:var(--muted); }
+  .footer { margin-top:56px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a></div>
+    <span class="badge">작업 계획 · 구축 대기 중</span>
+    <h1>🏗️ 사이트 구축 작업 계획</h1>
+    <p class="sub">확정된 설계를 실제 사이트로 만드는 순서. 위 → 아래 의존성 순.</p>
+    <div class="stack">
+      <span class="pill">Vite + React + TS</span><span class="pill">Tailwind</span><span class="pill">Recharts</span>
+      <span class="pill">TanStack Query</span><span class="pill">Cloudflare Pages</span><span class="pill">Pages Functions</span>
+      <span class="pill">Google Sheets API (서비스계정)</span>
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="ph">P0</span> 프로젝트 스캐폴딩 &amp; 인프라 <span class="goal">기반</span></h2>
+    <ol class="tasks">
+      <li><b>Vite + React + TS 프로젝트 생성</b> — 레포 구조 정리 (<code class="inline">src/</code> · <code class="inline">functions/</code> · 기존 <code class="inline">docs/</code>·<code class="inline">scripts/</code> 유지)</li>
+      <li><b>Tailwind 설정</b> + 디자인 토큰 (농구 오렌지 테마)</li>
+      <li><b>Cloudflare Pages 연결</b> + <code class="inline">wrangler.jsonc</code></li>
+      <li><b>로컬 시크릿</b> <code class="inline">.dev.vars</code> (서비스계정 키 / 패스코드 / 관리자코드) — gitignore 확인</li>
+      <li><b>로컬 개발환경</b> (<code class="inline">wrangler pages dev</code> + vite) 구동 확인</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="ph">P1</span> 백엔드 데이터 레이어 (읽기) <span class="goal">가장 핵심</span></h2>
+    <div class="dep">의존: P0</div>
+    <ol class="tasks">
+      <li><span class="k">공용</span> <b>서비스계정 JWT 서명 유틸</b> (Workers Web Crypto)</li>
+      <li><b>Sheets API 읽기 래퍼</b> (액세스 토큰 캐시)</li>
+      <li><b>탭 분류</b>: 명단(<code class="inline">버니스명단</code>) / 목표 / 회차(날짜) — <b>NFC 정규화 주의</b></li>
+      <li><b>파서</b>: 명단(이름·상태) · 목표(종목·목표·만점·방향) · 회차(이름·점수)</li>
+      <li><b>값 정규화</b>: <code class="inline">1:15</code>→초 · <code class="inline">면제</code> · 빈칸 · 상태 4종</li>
+      <li><b>종목별 랭킹 계산</b> (방향 반영: 셔틀런 낮을수록 / 면제·빈칸 제외)</li>
+      <li><b>개인 추이 · PB · 목표 달성</b> 계산</li>
+      <li><b><code class="inline">/api/records</code></b> 엔드포인트 + <b>JSON 응답 계약 확정</b> + 긴 캐시(Cache API)</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="ph">P2</span> 인증 <span class="goal">팀 전용 게이트</span></h2>
+    <div class="dep">의존: P1</div>
+    <ol class="tasks">
+      <li><b><code class="inline">/api/login</code></b> — 패스코드 검증 → HttpOnly 쿠키</li>
+      <li><b>인증 미들웨어</b> — records/refresh 보호 (쿠키 없으면 401)</li>
+      <li><b><code class="inline">/api/refresh</code></b> — 캐시 무효화 (로그인 필요)</li>
+      <li><b>로그인 게이트 UI</b> (프론트)</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="ph">P3</span> 프론트 공통 뼈대 <span class="goal">토대</span></h2>
+    <div class="dep">의존: P1 (JSON 계약), P2</div>
+    <ol class="tasks">
+      <li><b>라우팅 + 레이아웃 + 네비게이션</b></li>
+      <li><b>TanStack Query 셋업</b> + <code class="inline">/api/records</code> fetch 훅</li>
+      <li><b>공통 컴포넌트</b> (카드 / 뱃지 / 게이지 / 테이블 / 차트 래퍼)</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="ph">P4</span> 화면 (읽기 기능) <span class="goal">사용자 화면</span></h2>
+    <div class="dep">의존: P3</div>
+    <ol class="tasks">
+      <li>🏠 <b>홈</b> — 최신 회차 요약(참여인원/날짜) + 종목별 목표 달성률 게이지</li>
+      <li>🏆 <b>랭킹</b> — 종목별 랭킹 + 회차 선택 + 목표 달성 뱃지</li>
+      <li>👤 <b>개인 프로필</b> — 선수 선택 / 레이더 / 종목별 추이 라인 / PB / 전회차 대비 변화</li>
+      <li>📈 <b>전체 추이</b> — 전체 인원 × 회차 멀티라인·매트릭스 + 종목 전환</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="ph">P5</span> 관리자 페이지 (쓰기) <span class="goal">운영자 전용</span></h2>
+    <div class="dep">의존: P1(파서·탭유틸 재사용), P2</div>
+    <ol class="tasks">
+      <li><b>관리자 코드 검증 유틸</b></li>
+      <li><b><code class="inline">/api/admin/create-sheet</code></b> — 원자적 batchUpdate(복제 → 참가자 참조 재작성 가나다 → 점수 비움), 오늘(KST)·중복 가드</li>
+      <li><b><code class="inline">/api/admin/add-players</code></b> — 대상 회차에 활동 선수 맨 아래 추가</li>
+      <li>🔒 <b>관리자 페이지 UI</b> — 기록지 만들기(참가자 선택 모달: 활동만·가나다·기본 해제) + 사람 추가 폼</li>
+      <li><b>성공 시 캐시 무효화</b> + "시트 열기" 링크</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="ph">P6</span> 마감 &amp; 배포 <span class="goal">출시</span></h2>
+    <div class="dep">의존: P4, P5</div>
+    <ol class="tasks">
+      <li><b>로딩 / 에러 / 빈 상태</b> 처리</li>
+      <li><b>Cloudflare 프로덕션 Secret</b> 설정 + 배포</li>
+      <li><b>커스텀 도메인</b>(선택) + 스모크 테스트</li>
+    </ol>
+  </section>
+
+  <div class="blockers">
+    <h3>⚠️ 착수 전 확정해야 할 결정 (블로커)</h3>
+    <ul>
+      <li><b>상태 4종의 랭킹·표시 동작</b> (P1·P4): <code class="inline">탈퇴</code>=숨김은 확정. <code class="inline">비대상</code>·<code class="inline">휴식</code>은 명단·랭킹에 어떻게? ← 미정</li>
+      <li><b>패스코드 / 관리자 코드</b> 값 (P2·P5)</li>
+      <li><b>JSON 응답 계약</b> 스키마 (P1에서 확정 → 프론트 전체가 의존)</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    사이트 구축 작업 계획 · 작성 2026-07-12 · 상태: 구축 대기 (사용자 착수 지시 시 진행)
+  </div>
+
+</div>
+</body>
+</html>

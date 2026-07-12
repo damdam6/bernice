@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>시트 편집 규칙 · 운영 매뉴얼</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --panel-2: #1e222b; --line: #2a2f3a;
+    --text: #e6e9ef; --muted: #9aa3b2; --accent: #ff7a45; --accent-2: #4a90ff;
+    --good: #35c07a; --warn: #f5b800; --bad: #ff5c5c; --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 36px; }
+  .crumb { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .crumb a { color: var(--accent-2); text-decoration: none; }
+  .badge { display: inline-block; font-size: 12px; letter-spacing: .04em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 12px; margin-bottom: 16px; }
+  h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0; }
+  .tldr { margin-top: 18px; font-size: 14px; color: var(--warn); background: rgba(245,184,0,.08); border: 1px solid rgba(245,184,0,.25); border-radius: 8px; padding: 12px 16px; }
+  h2 { font-size: 20px; margin: 44px 0 14px; letter-spacing: -.01em; }
+  h2 .num { color: var(--accent); font-family: var(--mono); font-size: 15px; margin-right: 8px; }
+  h3 { font-size: 15px; margin: 22px 0 8px; }
+  p { color: var(--text); }
+  .muted { color: var(--muted); }
+  code.inline { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.mono, th.mono { font-family: var(--mono); }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+
+  .rule { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--bad); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+  .rule .title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .rule .why { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .rule .why b { color: var(--warn); font-weight: 600; }
+
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 12px 0; }
+  .steps li { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px 12px 48px; margin: 8px 0; font-size: 14px; }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #111; font-family: var(--mono); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+
+  .dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  .dodont > div { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; font-size: 14px; }
+  .do { border-left: 3px solid var(--good); }
+  .dont { border-left: 3px solid var(--bad); }
+  .dodont h4 { margin: 0 0 8px; font-size: 14px; }
+  .dodont ul { margin: 0; padding-left: 18px; }
+  .dodont li { margin: 4px 0; }
+  .sheet { font-family: var(--mono); font-size: 13px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; white-space: pre; margin: 10px 0; }
+  .sheet .h { color: var(--muted); }
+  .tabname { display: inline-block; font-family: var(--mono); font-size: 12px; background: rgba(74,144,255,.12); border: 1px solid rgba(74,144,255,.35); color: var(--accent-2); border-radius: 6px; padding: 2px 9px; }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  @media (max-width:600px){ .dodont{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a></div>
+    <span class="badge">운영 매뉴얼 · 편집 전 필독</span>
+    <h1>📝 시트 편집 규칙</h1>
+    <p class="sub">이 시트를 직접 수정하기 전에 읽어주세요. 몇 가지 규칙만 지키면 사이트가 안 깨집니다.</p>
+    <div class="tldr"><strong>30초 요약:</strong> ① <b>버니스명단·목표 행 순서 바꾸지 않기</b>(정렬·재배치 금지, 추가만) · ② 탈퇴는 <b>행 삭제 말고 상태만 '탈퇴'</b> · ③ <b>헤더(1행)·컬럼 순서 그대로</b> · ④ 새 회차 탭 이름은 <b><code style="color:inherit">YYYY-MM-DD</code></b> · ⑤ 서비스 계정 공유 <b>유지</b> · ⑥ 이름·종목명 칸은 <b>참조 수식</b>이라 손대지 않기(점수만 입력)</div>
+  </header>
+
+  <!-- 1 -->
+  <section>
+    <h2><span class="num">01</span>절대 규칙 (깨지면 사이트가 망가짐)</h2>
+
+    <div class="rule">
+      <div class="title">🔒 버니스명단 · 목표 행 순서 고정 (정렬·재배치 금지)</div>
+      <span class="tabname">버니스명단</span>과 <span class="tabname">목표</span>는 <strong>행을 정렬하거나 위아래로 옮기지 않는다.</strong> 새 팀원은 <strong>맨 아래로 추가만.</strong>
+      <div class="why"><b>왜:</b> 회차의 이름·종목명은 <b>행 위치로 참조</b>(<code style="color:inherit">='버니스명단'!A2</code>)한다. 행을 옮기면 <b>이름은 밀려 바뀌는데 점수는 그대로라 서로 어긋난다.</b> 이름순 정렬 같은 건 <b>사이트에서</b> 하면 된다.</div>
+    </div>
+
+    <div class="rule">
+      <div class="title">🔒 탈퇴 = 행 삭제 금지, 상태만 '탈퇴'로</div>
+      <span class="tabname">버니스명단</span>에서 사람을 <strong>지우지 말 것.</strong> 나갔으면 <code class="inline">상태</code> 드롭다운을 <code class="inline">탈퇴</code>로 바꾸기만.
+      <div class="why"><b>왜:</b> 행을 지우면 그 행을 참조하던 회차 이름이 <b>아래 사람으로 밀려 점수가 어긋난다.</b> 상태만 바꾸면 과거 기록은 보존되고 현재 랭킹에서만 빠진다.</div>
+    </div>
+
+    <div class="rule">
+      <div class="title">🔒 이름 · 종목명 칸은 참조 수식 — 손대지 않기</div>
+      회차 탭의 <strong>이름 열</strong>과 <strong>종목 헤더</strong>는 <code class="inline">='버니스명단'!A2</code>·<code class="inline">='목표'!A2</code> 같은 수식이다. 직접 타이핑해서 덮어쓰지 않는다. 사람이 채우는 건 <strong>점수 숫자뿐.</strong>
+      <div class="why"><b>왜:</b> 참조라서 <b>명단·목표에서 이름/종목명을 바꾸면 회차에도 자동 반영</b>된다. 덮어쓰면 이 연결이 끊긴다.</div>
+    </div>
+
+    <div class="rule">
+      <div class="title">🔒 헤더(1행)와 컬럼 순서 고정</div>
+      각 탭의 첫 행 제목과 열 순서를 바꾸지 않는다. 열 추가/삭제/이동 금지.
+      <div class="why"><b>왜:</b> 사이트가 <b>열 제목·순서를 보고 데이터를 읽는다.</b> 바꾸면 값이 뒤섞이거나 안 읽힌다. (열을 추가하려면 사이트 코드도 같이 고쳐야 함 → 먼저 문의)</div>
+    </div>
+
+    <div class="rule">
+      <div class="title">🔒 새 회차 탭 이름은 날짜 <code class="inline" style="font-size:12px">YYYY-MM-DD</code></div>
+      회차 탭 이름은 반드시 <code class="inline">2025-08-16</code> 같은 날짜 형식. <span class="tabname">버니스명단</span>·<span class="tabname">목표</span>는 그대로 둔다.
+      <div class="why"><b>왜:</b> 사이트가 <b>'날짜 형식 탭 = 회차'</b>로 자동 인식하고 시간순 정렬한다. 다른 이름이면 회차로 안 잡힌다.</div>
+    </div>
+
+    <div class="rule">
+      <div class="title">🔒 서비스 계정 공유 유지</div>
+      시트 공유에서 <code class="inline">bernice-sheet@…iam.gserviceaccount.com</code>의 <strong>편집자 권한을 제거하지 않는다.</strong>
+      <div class="why"><b>왜:</b> 사이트는 이 계정으로 시트를 읽는다. 공유가 끊기면 <b>사이트가 데이터를 못 불러온다.</b></div>
+    </div>
+
+    <div class="rule" style="border-left-color:var(--warn)">
+      <div class="title">⚠️ 표 중간에 빈 행·메모 행 넣지 않기</div>
+      데이터 표 안에 빈 줄이나 "여기부터 미참여" 같은 메모 행을 넣지 않는다.
+      <div class="why"><b>왜:</b> 사이트가 <b>빈 행을 데이터의 끝</b>으로 오해할 수 있다. 메모는 다른 탭이나 셀 옆쪽에.</div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <h2><span class="num">02</span>자주 하는 작업 ① — 새 회차 추가 (3개월마다)</h2>
+    <ol class="steps">
+      <li>가장 최근 <strong>회차 탭을 복제</strong> (탭 우클릭 → 복사) — 이름·종목 참조 수식과 서식이 그대로 따라옴</li>
+      <li>복제된 탭 이름을 <strong>측정한 날짜</strong>로 변경 (예: <code class="inline">2025-08-16</code>)</li>
+      <li>이전 점수를 지우고 <strong>이번 기록의 점수 숫자만</strong> 입력. <strong>이름·헤더 칸은 건드리지 않는다</strong>(참조라 자동)</li>
+      <li>그 회차 <strong>미참여자는 점수만 비운다</strong> (행 삭제 X — 이름은 그대로 남겨둠)</li>
+      <li><span class="tabname">버니스명단</span>에 새 팀원이 늘었으면, 이름 열의 참조 수식을 <strong>맨 아래로 한 칸 더 끌어내려</strong> 포함(드래그)</li>
+    </ol>
+    <div class="dodont">
+      <div class="do"><h4 class="good">✓ 이렇게</h4><ul>
+        <li>기존 회차 복제해서 참조·서식 유지</li>
+        <li>날짜 형식 탭 이름</li>
+        <li>점수 숫자만 입력, 면제는 <code class="inline">면제</code></li>
+      </ul></div>
+      <div class="dont"><h4 class="bad">✗ 이러지 말기</h4><ul>
+        <li>이름·헤더 칸에 직접 타이핑(참조 수식 덮어쓰기)</li>
+        <li>탭 이름을 <code class="inline">3차</code>, <code class="inline">8월</code> 등으로</li>
+        <li>미참여자에게 0점 입력 (0점 ≠ 미참여)</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <h2><span class="num">03</span>자주 하는 작업 ② — 팀원 가입 / 탈퇴</h2>
+    <h3>새로 가입</h3>
+    <ol class="steps">
+      <li><span class="tabname">버니스명단</span> <strong>맨 아래</strong>에 행 추가 (중간 삽입 X)</li>
+      <li><code class="inline">이름</code> 입력, <code class="inline">상태</code>는 드롭다운에서 <code class="inline">활동</code></li>
+      <li>다음 회차부터 회차 탭 이름 열 참조를 이 행까지 늘리면 자동 포함</li>
+    </ol>
+    <h3>탈퇴</h3>
+    <ol class="steps">
+      <li><span class="tabname">버니스명단</span>에서 그 사람의 <code class="inline">상태</code>를 <code class="inline">탈퇴</code>로 변경 <strong>(행 삭제·이동 X)</strong></li>
+      <li>끝. 과거 기록은 보존되고 현재 랭킹·명단에서만 빠진다</li>
+    </ol>
+    <p class="muted" style="font-size:13px;">※ 나갔다가 다시 들어오면 → 상태만 <code class="inline">활동</code>으로 되돌리기 (같은 행 유지, 추이가 이어짐).</p>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <h2><span class="num">04</span>셀 입력 형식</h2>
+    <table>
+      <thead><tr><th>항목</th><th class="mono">형식</th><th>예시</th></tr></thead>
+      <tbody>
+        <tr><td>드리블 셔틀런</td><td class="mono">분:초 (콜론)</td><td class="mono">1:15</td></tr>
+        <tr><td>골밑슛 / 자유투 / 45도패스캐치</td><td class="mono">성공 개수 숫자만</td><td class="mono">6</td></tr>
+        <tr><td>면제</td><td class="mono">면제</td><td class="mono">면제</td></tr>
+        <tr><td>미측정 (참여했으나 그 종목 안 함)</td><td class="mono">(빈칸)</td><td class="muted">비워둠</td></tr>
+        <tr><td>상태</td><td class="mono">드롭다운</td><td class="mono">활동 / 탈퇴 / 비대상 / 휴식</td></tr>
+        <tr><td>방향 (목표 탭)</td><td class="mono">드롭다운</td><td class="mono">낮을수록 / 높을수록</td></tr>
+        <tr><td class="muted">이름 · 종목명</td><td class="mono">참조 수식</td><td class="muted">입력 대상 아님 (자동)</td></tr>
+      </tbody>
+    </table>
+    <div class="rule" style="border-left-color:var(--warn)">
+      <div class="title">⚠️ <code class="inline">1:15</code>가 시간으로 바뀌면</div>
+      셔틀런 값을 입력했는데 <code class="inline">오전 1:15</code>처럼 변하면, 그 셀 서식을 <strong>서식 → 숫자 → 일반 텍스트</strong>로 바꾼 뒤 다시 <code class="inline">1:15</code> 입력.
+      <div class="why"><b>왜:</b> 구글 시트가 <code style="color:inherit">1:15</code>를 시각으로 자동 인식할 때가 있음. 텍스트로 두면 그대로 저장된다.</div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <h2><span class="num">05</span>현재 시트 구조 (참고)</h2>
+    <p class="muted" style="font-size:14px;">탭 3종. 회차 탭만 3개월마다 늘어남.</p>
+    <div class="sheet"><span class="tabname">버니스명단</span>   <span class="h">이름 | 상태</span>                  ← 팀 명단 (행 위치=신원, 상태 드롭다운)
+<span class="tabname">목표</span>       <span class="h">종목 | 목표 | 만점 | 방향</span>       ← 종목 기준 (방향 드롭다운)
+<span class="tabname">2025-05-16</span> <span class="h">이름 | 드리블셔틀런 | 골밑슛 | 자유투 | 45도패스캐치</span>   ← 회차 기록
+           <span class="note">(이름 = ='버니스명단'!A행,  종목 헤더 = ='목표'!A행,  점수만 직접 입력)</span></div>
+    <p class="muted" style="font-size:13px;">자세한 스키마·설계 근거는 <a href="sheet-integration.html" style="color:var(--accent-2)">시트 연동 확정안</a> 참고.</p>
+  </section>
+
+  <div class="footer">
+    시트 편집 규칙 · 운영 매뉴얼 · 최종 업데이트 2026-07-12
+  </div>
+
+</div>
+</body>
+</html>

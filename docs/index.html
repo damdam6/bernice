@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>버니스 실력 기록 사이트 · 설계 문서</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --accent: #ff7a45;
+    --accent-2: #4a90ff;
+    --good: #35c07a;
+    --warn: #f5b800;
+    --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.hero {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 3px 12px;
+    margin-bottom: 16px;
+  }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0; }
+  .status {
+    margin-top: 18px; font-size: 13px; color: var(--warn);
+    background: rgba(245,184,0,.08); border: 1px solid rgba(245,184,0,.25);
+    border-radius: 8px; padding: 10px 14px; display: inline-block;
+  }
+  h2 {
+    font-size: 21px; margin: 48px 0 16px; padding-top: 8px;
+    letter-spacing: -.01em;
+  }
+  h2 .num {
+    color: var(--accent); font-family: var(--mono); font-size: 16px; margin-right: 8px;
+  }
+  h3 { font-size: 16px; margin: 28px 0 10px; color: var(--text); }
+  p { color: var(--text); }
+  .muted { color: var(--muted); }
+  section { scroll-margin-top: 24px; }
+
+  /* nav */
+  nav.toc {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 8px;
+  }
+  nav.toc ol { margin: 0; padding-left: 20px; }
+  nav.toc li { margin: 4px 0; }
+  nav.toc a { color: var(--accent-2); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  /* cards + layers */
+  .layer {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin: 12px 0;
+  }
+  .layer .lbl {
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .layer.data { border-left: 3px solid var(--good); }
+  .layer.backend { border-left: 3px solid var(--accent-2); }
+  .layer.frontend { border-left: 3px solid var(--accent); }
+  .arrow { text-align: center; color: var(--muted); font-size: 20px; margin: 2px 0; }
+  .layer ul { margin: 8px 0 0; padding-left: 18px; }
+  .layer li { margin: 3px 0; font-size: 14px; }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 12px;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 2px 8px; margin: 2px 4px 2px 0;
+  }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.mono, th.mono { font-family: var(--mono); }
+  .good { color: var(--good); }
+  .down { color: var(--accent-2); }
+
+  /* sitemap tree */
+  .tree {
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.9;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 22px; overflow-x: auto;
+    white-space: pre; color: var(--text);
+  }
+  .tree .node { color: var(--accent); }
+  .tree .note { color: var(--muted); }
+
+  code.inline {
+    font-family: var(--mono); font-size: 13px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 5px; padding: 1px 6px;
+  }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  .stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-top: 12px; }
+  .stack-item { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .stack-item .k { font-size: 12px; color: var(--muted); }
+  .stack-item .v { font-family: var(--mono); font-size: 14px; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">설계 문서 · DRAFT</span>
+    <h1>🏀 버니스 실력 기록 사이트</h1>
+    <p class="sub">체육 기록 관리 사이트 — 팀 랭킹 · 개인 성장 추이 시각화</p>
+    <div class="status">⚠️ 이 문서는 <strong>검토용 계획안</strong>입니다. 아직 구현(스캐폴딩)은 시작하지 않았습니다.</div>
+  </header>
+
+  <nav class="toc">
+    <strong style="font-size:14px;">목차</strong>
+    <ol>
+      <li><a href="#overview">프로젝트 개요 & 운영 프로세스</a></li>
+      <li><a href="#tech">기술 구조도</a></li>
+      <li><a href="#data">데이터 모델</a></li>
+      <li><a href="#sitemap">사이트 구조도</a></li>
+      <li><a href="#admin">관리자 페이지 기능 스펙</a></li>
+      <li><a href="#decisions">확정된 선택 & 남은 결정</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="overview">
+    <h2><span class="num">01</span>프로젝트 개요 &amp; 운영 프로세스</h2>
+    <p>
+      버니스(농구팀)의 3개월 주기 실력 향상 테스트 기록을 관리·시각화하는 사이트입니다.
+      데이터는 <strong>구글 스프레드시트 한 개</strong>에 회차별 탭으로 누적하고, 사이트는 그 시트를 참조합니다.
+    </p>
+    <h3>운영 흐름</h3>
+    <div class="tree"><span class="node">구글 스프레드시트 (1개)</span>
+ ├─ 탭: 2025-05-16   <span class="note">← 1차 (현재 데이터)</span>
+ ├─ 탭: 2025-08-16   <span class="note">← 2차 (3개월 뒤, 동일 형식으로 탭만 추가)</span>
+ └─ 탭: ...          <span class="note">← 회차마다 탭 추가</span>
+        │
+        ▼  <span class="note">사이트가 시트를 자동으로 읽어 반영</span>
+ <span class="node">기록 사이트</span></div>
+    <p class="muted" style="font-size:14px;">
+      핵심 원칙: 사용자는 <strong>탭 추가만</strong> 하면 되고, 탭 이름을 코드에 하드코딩하지 않고 <strong>자동 탐색</strong>하여 새 회차가 자동 반영됩니다.
+    </p>
+  </section>
+
+  <!-- 2 -->
+  <section id="tech">
+    <h2><span class="num">02</span>기술 구조도</h2>
+    <p class="muted" style="font-size:14px;">호스팅/백엔드는 <strong>Cloudflare</strong>, 프론트는 <strong>React + Vite + TypeScript</strong>로 확정.</p>
+
+    <div class="layer data">
+      <div class="lbl">Data · 사용자가 관리</div>
+      <strong>Google Spreadsheet</strong> — 탭 1개 = 테스트 회차 1개
+      <ul>
+        <li>모든 탭이 동일한 컬럼 형식</li>
+        <li>공유 설정: <span class="pill">링크 있는 모든 사용자 — 뷰어</span></li>
+      </ul>
+    </div>
+    <div class="arrow">▼ &nbsp;<span class="muted" style="font-size:13px;">Google Sheets API v4 (read-only) · spreadsheets.get(탭 자동 탐색) + values.batchGet(전 회차)</span></div>
+
+    <div class="layer backend">
+      <div class="lbl">Backend · Cloudflare Pages Functions</div>
+      <code class="inline">functions/api/records.ts</code> (Workers 런타임)
+      <ul>
+        <li>API 키를 Secret으로 보관 <span class="pill">GOOGLE_API_KEY</span></li>
+        <li>시간 <code class="inline">1'15"</code> → 75초 파싱, "면제" 예외 처리</li>
+        <li>목표 대비 달성률(0~100%) 정규화, 회차별 랭킹 계산</li>
+        <li>Cache API로 캐시(약 10분) → 깔끔한 JSON 반환</li>
+      </ul>
+    </div>
+    <div class="arrow">▼ &nbsp;<span class="muted" style="font-size:13px;">fetch("/api/records") → JSON</span></div>
+
+    <div class="layer frontend">
+      <div class="lbl">Frontend · Cloudflare Pages (정적 배포)</div>
+      <strong>React + Vite + TypeScript</strong>
+      <div class="stack-grid">
+        <div class="stack-item"><div class="k">스타일</div><div class="v">Tailwind CSS</div></div>
+        <div class="stack-item"><div class="k">차트</div><div class="v">Recharts</div></div>
+        <div class="stack-item"><div class="k">애니메이션</div><div class="v">Framer Motion</div></div>
+        <div class="stack-item"><div class="k">데이터 fetch</div><div class="v">TanStack Query</div></div>
+      </div>
+      <p class="muted" style="font-size:13px; margin-top:12px;">배포: GitHub 연동 push → 자동 빌드/배포 (또는 wrangler)</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="data">
+    <h2><span class="num">03</span>데이터 모델</h2>
+    <p class="muted" style="font-size:14px;">와이어프레임의 컬럼을 그대로 표준 형식으로 사용합니다.</p>
+    <table>
+      <thead>
+        <tr><th>컬럼</th><th class="mono">형식</th><th>목표치</th><th>정렬 방향</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>이름</td><td class="mono">텍스트</td><td>—</td><td>—</td></tr>
+        <tr><td>드리블 셔틀런</td><td class="mono">1'15"</td><td>1'17" 이내</td><td class="down">낮을수록 좋음 ↓</td></tr>
+        <tr><td>골밑슛(양쪽)</td><td class="mono">x / 10</td><td>5개 이상</td><td class="good">높을수록 좋음 ↑</td></tr>
+        <tr><td>자유투</td><td class="mono">x / 5</td><td>2개 이상</td><td class="good">높을수록 좋음 ↑</td></tr>
+        <tr><td>45도 패스캐치</td><td class="mono">x / 7 (면제 가능)</td><td>5개 이상</td><td class="good">높을수록 좋음 ↑</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:14px;">
+      셔틀런만 "낮을수록 좋음"이라 종목별 랭킹에서 방향 처리가 필요합니다.
+      랭킹·추이는 <strong>종목별로 원값 그대로</strong> 다룹니다 (종합 점수·정규화 없음). 개인 프로필의 레이더 차트는 종목별 값을 축으로 표시.
+    </p>
+    <h3>데이터 형식 예시 <span class="muted" style="font-size:13px;font-weight:400">(더미 — 실제 명단·기록은 비공개 시트에만)</span></h3>
+    <table>
+      <thead>
+        <tr><th>이름</th><th class="mono">셔틀런</th><th class="mono">골밑슛</th><th class="mono">자유투</th><th class="mono">패스캐치</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>선수1</td><td class="mono">1'12"</td><td class="mono">5/10</td><td class="mono">2/5</td><td class="mono">6/7</td></tr>
+        <tr><td>선수2</td><td class="mono">1'14"</td><td class="mono">6/10</td><td class="mono">1/5</td><td class="mono">7/7</td></tr>
+        <tr><td>선수3</td><td class="mono">1'10"</td><td class="mono">7/10</td><td class="mono">3/5</td><td class="mono">7/7</td></tr>
+        <tr><td>선수4</td><td class="mono">1'22"</td><td class="mono">4/10</td><td class="mono">2/5</td><td class="mono">5/7</td></tr>
+        <tr><td>선수5</td><td class="mono">1'16"</td><td class="mono">8/10</td><td class="mono">2/5</td><td class="mono">면제</td></tr>
+        <tr><td>선수6</td><td class="mono">1'19"</td><td class="mono">6/10</td><td class="mono">3/5</td><td class="mono">6/7</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4 -->
+  <section id="sitemap">
+    <h2><span class="num">04</span>사이트 구조도</h2>
+    <div class="tree"><span class="node">🏀 버니스 실력 기록</span>
+│
+├─ <span class="node">🏠 홈 (대시보드)</span>              <span class="note">"이번 분기 한눈에"</span>
+│    ├─ 최신 회차 요약 (참여인원 / 날짜)
+│    └─ 종목별 팀 목표 달성률 게이지
+│
+├─ <span class="node">🏆 랭킹</span>                       <span class="note">"누가 제일 잘해?"</span>
+│    ├─ [종목별] 셔틀런 / 골밑슛 / 자유투 / 45도패스캐치
+│    ├─ 회차 선택 (1차 / 2차 / ...)
+│    └─ 목표 달성 뱃지
+│
+├─ <span class="node">👤 개인 프로필</span>                <span class="note">"내 성장 추이"</span>
+│    ├─ 선수 선택
+│    ├─ 레이더 차트 (4종목 스킬 프로필)
+│    ├─ 종목별 추이 라인차트 (회차 누적)
+│    ├─ 개인 최고기록(PB) & 목표 대비 달성률
+│    └─ 전 회차 대비 변화 (▲▼)
+│
+├─ <span class="node">📈 전체 추이</span>                 <span class="note">"모든 선수 · 모든 회차 한눈에"</span>
+│    ├─ 전체 인원 회차별 추이 (멀티라인 차트 / 매트릭스)
+│    └─ 종목별 보기 전환
+│
+└─ <span class="node">🔒 관리자 · 시트 관리하기</span>       <span class="note">"운영자 전용 · 관리자 코드"</span>
+     ├─ 기록지 만들기 — 오늘(KST) 회차 탭 생성 (참가자 선택: 활동만·가나다·기본 해제)
+     └─ 기존 기록지에 사람 추가 — 특정 회차에 활동 선수 추가(맨 아래)</div>
+    <p class="muted" style="font-size:13px; margin-top:12px;">🔒 관리자 페이지의 두 기능은 <strong>시트에 쓰기</strong>를 하며, 확정 시마다 관리자 코드로 검증. 자세한 스펙은 아래 06 참고. (구현은 사이트 구축 단계에서)</p>
+  </section>
+
+  <!-- 4b: 관리자 기능 스펙 -->
+  <section id="admin">
+    <h2><span class="num">05</span>관리자 페이지 "시트 관리하기" — 기능 스펙</h2>
+    <p class="muted" style="font-size:14px;">사이트 → 시트 <strong>쓰기</strong> 기능. 관리자 코드로 보호(생성/추가 확정 시마다 입력·서버 검증), 성공 시 캐시 자동 무효화.</p>
+
+    <h3>① 기록지 만들기</h3>
+    <table>
+      <thead><tr><th>항목</th><th>동작</th></tr></thead>
+      <tbody>
+        <tr><td>날짜</td><td>오늘 (Asia/Seoul), <code class="inline">YYYY-MM-DD</code>. 오늘 탭 있으면 생성 안 함 + 안내</td></tr>
+        <tr><td>참가자 선택</td><td><code class="inline">활동</code> 선수만, 가나다 오름차순, 기본 전원 해제 → 체크한 사람만 탭에 생성</td></tr>
+        <tr><td>생성 방식</td><td>최근 탭 복제 → 이름열을 선택 참가자 참조(가나다)로 재작성 → 점수 비움</td></tr>
+        <tr><td>원자성</td><td>한 번의 batchUpdate — 실패 시 전체 롤백(반쪽 탭 없음)</td></tr>
+        <tr><td>이후</td><td>"시트 열기" 링크 표시. 점수는 시트에서 직접 입력</td></tr>
+      </tbody>
+    </table>
+
+    <h3>② 기존 기록지에 사람 추가하기</h3>
+    <table>
+      <thead><tr><th>항목</th><th>동작</th></tr></thead>
+      <tbody>
+        <tr><td>대상 회차</td><td>날짜 탭 선택 (기본 = 최근)</td></tr>
+        <tr><td>대상 사람</td><td>그 탭에 없는 <code class="inline">활동</code> 선수 멀티선택</td></tr>
+        <tr><td>위치</td><td>맨 아래에 추가 (이름 참조 + 빈 점수)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5 -->
+  <section id="decisions">
+    <h2><span class="num">06</span>확정된 선택 &amp; 남은 결정</h2>
+    <table>
+      <thead><tr><th>항목</th><th>상태</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td>데이터 소스</td><td class="good">확정</td><td>구글 스프레드시트 (탭 = 회차) · 명단 탭 = <span class="tabname" style="margin:0">버니스명단</span></td></tr>
+        <tr><td>데이터 접근</td><td class="good">확정·완료</td><td>서버(Pages Function) 경유 — <strong>서비스 계정</strong>(읽기+쓰기), 시트 비공개. 키 = Secret</td></tr>
+        <tr><td>선수 상태</td><td class="good">확정</td><td><code class="inline">활동</code> / <code class="inline">탈퇴</code> / <code class="inline">비대상</code> / <code class="inline">휴식</code> (드롭다운) — 랭킹 표시 세부는 구축 시</td></tr>
+        <tr><td>프론트엔드</td><td class="good">확정</td><td>React + Vite + TypeScript</td></tr>
+        <tr><td>호스팅</td><td class="good">확정</td><td>Cloudflare Pages (+ Pages Functions). Netlify 미사용</td></tr>
+        <tr><td>시트 연동·시딩</td><td class="good">완료</td><td>서비스 계정 연동 + 21명 명단·1차 기록 시딩 + 보호범위 완료</td></tr>
+        <tr><td>공용 패스코드 / 관리자 코드</td><td style="color:var(--warn)">미정</td><td>사이트 접속용 + 관리자 기능용 코드</td></tr>
+        <tr><td>사이트 구축</td><td style="color:var(--warn)">대기</td><td>React 앱·Pages Functions·관리자 페이지 (사용자 요청 시 착수)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="footer">
+    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-12 (서비스 계정·참조 구조·관리자 기능·버니스명단 반영) · 관련: <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a>
+  </div>
+
+</div>
+</body>
+</html>
