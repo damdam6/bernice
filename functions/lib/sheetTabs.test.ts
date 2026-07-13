@@ -49,6 +49,27 @@ describe('classifySheetTabs', () => {
     expect(result.rounds.map((r) => r.name)).toEqual(['2025-05-16'])
   })
 
+  it('월 또는 일이 0이면 회차로 분류하지 않는다', () => {
+    const result = classifySheetTabs(['2025-00-10', '2025-01-00'])
+
+    expect(result.rounds).toEqual([])
+    expect(result.unclassified).toEqual(['2025-00-10', '2025-01-00'])
+  })
+
+  it('윤년 규칙(4년 주기 + 100년 예외)을 정확히 반영한다', () => {
+    const result = classifySheetTabs(['2024-02-29', '2025-02-29', '2100-02-29'])
+
+    expect(result.rounds.map((r) => r.name)).toEqual(['2024-02-29']) // 2024는 윤년
+    expect(result.unclassified).toEqual(['2025-02-29', '2100-02-29']) // 2025는 평년, 2100은 100년 예외(400 배수 아님)
+  })
+
+  it('YYYY-MM-DD 자릿수를 벗어나면 정규식 단계에서 걸러 unclassified로 보낸다', () => {
+    const result = classifySheetTabs(['2025-5-16', '25-05-16'])
+
+    expect(result.rounds).toEqual([])
+    expect(result.unclassified).toEqual(['2025-5-16', '25-05-16'])
+  })
+
   it('명단/목표 탭 이름이 중복되면 첫 번째만 채택하고 나머지는 unclassified에 노출한다', () => {
     const result = classifySheetTabs(['버니스명단', '목표', ROSTER_NFD, GOALS_NFD])
 
@@ -57,9 +78,11 @@ describe('classifySheetTabs', () => {
     expect(result.unclassified).toEqual([ROSTER_NFD, GOALS_NFD])
   })
 
-  it('같은 날짜로 파싱되는 회차 탭이 바이트 표현만 다르게 둘 이상 존재하면 병합하지 않고 모두 남긴다', () => {
-    // 이론상 Sheets가 탭 이름 유일성을 보장하지만, NFC/NFD처럼 바이트가 다른 두 탭이
-    // 같은 날짜로 파싱될 가능성은 배제할 수 없다 — 우열을 가릴 근거가 없으므로 그대로 노출한다.
+  it('같은 날짜의 회차 탭 이름이 중복 입력되면 병합하지 않고 모두 남긴다', () => {
+    // 회차 탭 이름은 숫자·하이픈만 쓰는 고정 패턴이라 같은 날짜가 서로 다른 바이트로
+    // 표현될 수는 없다(NFC/NFD 이슈는 한글 탭 이름에만 해당). 다만 Sheets가 탭 이름
+    // 유일성을 보장하더라도, 상위 호출부의 버그 등으로 완전히 동일한 이름이 중복
+    // 입력될 가능성은 배제할 수 없다 — 우열을 가릴 근거가 없으므로 그대로 둘 다 노출한다.
     const result = classifySheetTabs(['2025-05-16', '2025-05-16'])
 
     expect(result.rounds).toHaveLength(2)

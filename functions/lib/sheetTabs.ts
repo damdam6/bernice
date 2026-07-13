@@ -42,6 +42,9 @@ function parseRoundDate(normalizedName: string): Date | null {
   const day = Number(match[3])
   const date = new Date(Date.UTC(year, month - 1, day))
 
+  // Date.UTC는 0~99년을 1900~1999년으로 매핑하는 레거시 동작이 있어(예: 25 → 1925),
+  // 그런 입력은 아래 왕복 검증에서 항상 실패해 unclassified로 빠진다. 의도한 검증은
+  // 아니지만 실사용에서 나올 수 없는 연도라 안전한 방향으로만 작동한다.
   const isValidCalendarDate =
     date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
   return isValidCalendarDate ? date : null
