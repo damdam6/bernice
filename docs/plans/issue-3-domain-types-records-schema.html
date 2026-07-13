@@ -156,23 +156,28 @@
       <li><b>비대상·휴식</b> = <code>players[]</code>에는 포함(상태 뱃지용 <code>status</code> 필드 포함), 과거 <code>sessions[].entries</code>에도 정상 포함(프로필에서 과거 기록 열람 가능) — 하지만 <code>rankings</code>와 <code>home.achievementRates</code> 집계 대상에서는 제외.</li>
       <li><b>활동</b> = 전 영역에 포함되고 랭킹·달성률 집계 대상.</li>
     </ul>
-    <div class="confirm">
-      <div class="t">⚠️ 확인 요청 — "탈퇴 = 사이트 전체 숨김"의 해석 범위</div>
-      이슈 문구를 문자 그대로 읽어 <b>과거 회차 기록(sessions)까지 완전히 제외</b>하는 것으로 설계했다. <code>docs/sheet-rules.html:84</code>의 기존 문구("과거 기록은 보존되고 현재 랭킹에서만 빠진다")보다 더 엄격한 해석인데, 이슈 본문이 더 최신 결정이라 우선했다. 만약 "탈퇴자도 과거 회차 표에는 남기고 목록·랭킹에서만 뺀다"는 의도였다면 <code>SessionEntry</code> 필터링 지점만 바꾸면 되는 국소적인 변경이다 — 리뷰에서 확정해달라.
+    <div class="confirm" style="border-left-color:var(--ok);">
+      <div class="t" style="color:var(--ok);">✅ 확정 (PR #16 오너 리뷰) — "탈퇴 = 사이트 전체 숨김"은 과거 회차 기록 포함</div>
+      리뷰에서 지지 의견과 함께 확정됐다. 단, <b>소급 효과를 명시적으로 수용해야 한다</b>: 상태는 "현재값 하나"만 저장되고 회차별 이력이 없어, <code>rankings</code>/<code>home.achievementRates</code>는 "그 회차 당시 스냅샷"이 아니라 <b>"응답 생성 시점 상태 기준 매번 재계산"</b>이 된다 — 탈퇴자가 빠지면 과거 랭킹에서 남은 선수 등수가 올라가고, 지금 휴식·비대상인 선수는 실제로 활동 중이었던 과거 회차 랭킹에서도 함께 빠진다. 상세: <a href="../records-schema.html#policy">docs/records-schema.html §02</a>. <code>docs/sheet-rules.html</code>의 상충 문구도 이 결정에 맞춰 갱신했다.
     </div>
 
     <h3>3-3. 점수 특수값 표현 — <code>ScoreStatus</code> + 정규화</h3>
-    <p>모든 점수 칸을 <code>{ status, value, display }</code> 3필드로 통일한다. <code>status</code>가 <code>recorded</code>일 때만 <code>value</code>(정렬·판정용 숫자 — 시간형은 총 초, 개수형은 그대로)와 <code>display</code>(원본 표시 문자열 — <code>"1:12"</code> 또는 <code>"6"</code>)가 채워진다. 면제는 <code>exempt</code>, 빈칸(그 종목만 미측정)은 <code>unmeasured</code>. 회차 전체 미참여는 별도 상태값이 아니라 <code>SessionEntry.participated</code>(모든 종목이 <code>unmeasured</code>면 <code>false</code>)로 파생 표현 — "면제/빈칸/미참여"를 표에서 그대로 구분해 보여줘야 하는 개인 프로필·회차 상세 화면과, 깨끗한 숫자만 필요한 랭킹·추이 화면 양쪽을 하나의 필드셋으로 커버한다.</p>
+    <p>모든 점수 칸을 판별 유니온 <code>EventScore</code>로 통일한다. <code>status</code>가 <code>recorded</code>일 때만 <code>value</code>(정렬·판정용 숫자 — 시간형은 총 초, 개수형은 그대로)와 <code>display</code>(원본 표시 문자열 — <code>"1:12"</code> 또는 <code>"6"</code>)가 채워진다. 면제는 <code>exempt</code>, 빈칸(그 종목만 미측정)은 <code>unmeasured</code>. 회차 전체 미참여는 별도 상태값이 아니라 <code>SessionEntry.participated</code>(모든 종목이 <code>unmeasured</code>면 <code>false</code>)로 파생 표현 — "면제/빈칸/미참여"를 표에서 그대로 구분해 보여줘야 하는 개인 프로필·회차 상세 화면과, 깨끗한 숫자만 필요한 랭킹·추이 화면 양쪽을 하나의 필드셋으로 커버한다.</p>
+    <div class="confirm" style="border-left-color:var(--accent);">
+      <div class="t">🔧 PR #16 리뷰에서 추가된 4번째 상태 — <code>invalid</code>(이상값)</div>
+      병행 진행 중인 이슈 #6(<code>functions/lib/normalize-score.ts</code>)의 정규화 유틸이 이미 이상값(잘못된 mm:ss, 60초 초과, 비정수 등)을 <code>{ kind: 'invalid'; raw; reason }</code>으로 명시적으로 반환한다는 걸 리뷰에서 지적받았다. 애초 설계엔 <code>recorded</code>/<code>exempt</code>/<code>unmeasured</code> 3종뿐이라 이걸 담을 곳이 없었다 — <code>invalid</code>를 4번째 상태로 추가하고(<code>value: null</code>, <code>display</code>에 원본 보존, <code>reason</code>에 사유), 두 이슈의 매핑표를 <a href="../records-schema.html#scores">docs/records-schema.html §03</a>에 명문화했다.
+    </div>
 
     <h3>3-4. 종목 정의 — <code>EventValueKind</code></h3>
     <p><span class="tabname">목표</span> 탭에는 "이 종목이 시간형인지 개수형인지"를 나타내는 열이 따로 없다(방향 열만 있음). 콜론 포함 여부로 파서가 <code>valueKind</code>(<code>'time' | 'count'</code>)를 판별해 <code>EventDefinition</code>에 명시적으로 싣는다 — 방향(<code>낮을수록/높을수록</code>)과 값 형식(시간/개수)이 우연히 지금은 1:1(셔틀런만 낮을수록·시간형)이지만 개념적으로 독립이라 나중에 "낮을수록 좋은 개수형 종목"이 추가돼도 깨지지 않는다.</p>
 
     <h3>3-5. 타입 정의 전문 (<code>shared/domain.ts</code>)</h3>
+    <p class="muted" style="font-size:13px;">아래는 PR #16 오너 리뷰 반영 후 최종본. 원안 대비: <code>ScoreStatus</code>에 <code>invalid</code> 추가, <code>EventScore</code>를 판별 유니온으로 전환, <code>PlayerSummary.status</code> 타입 강제, <code>TrendPoint.improved</code> 추가. 실제 소스는 <code>shared/domain.ts</code>.</p>
     <pre class="code-block"><code>// shared/domain.ts
 // 버니스 실력 기록 — 공용 도메인 타입. 파서·계산(functions)과 프론트(src)가 함께 import.
-// 근거: docs/sheet-integration.html(시트 스키마) · docs/sheet-rules.html(운영 규칙)
+// 근거: docs/sheet-integration.html(시트 스키마) · docs/sheet-rules.html(운영 규칙) · docs/records-schema.html(이 타입의 JSON 계약 문서)
 
-// ── 선수 상태 — 버니스명단 상태 드롭다운 4종 (scripts/seed-sheet.mjs:176과 동일해야 함) ──
+// ── 선수 상태 — 버니스명단 상태 드롭다운 4종 (scripts/seed-sheet.mjs와 동일해야 함) ──
 export const PLAYER_STATUSES = ['활동', '탈퇴', '비대상', '휴식'] as const
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number]
 
@@ -184,8 +189,10 @@ export type RankDirection = (typeof RANK_DIRECTIONS)[number]
 export const EVENT_VALUE_KINDS = ['count', 'time'] as const
 export type EventValueKind = (typeof EVENT_VALUE_KINDS)[number]
 
-// ── 개별 점수 상태 — 정상 기록 · 면제 · 미측정 ────────────────────────────
-export const SCORE_STATUSES = ['recorded', 'exempt', 'unmeasured'] as const
+// ── 개별 점수 상태 — 정상 기록 · 면제 · 미측정 · 이상값 ────────────────────
+// functions/lib/normalize-score.ts(이슈 #6)의 ScoreValue.kind → 이 상태로 매핑:
+//   count/seconds → recorded · exempt → exempt · blank → unmeasured · invalid → invalid
+export const SCORE_STATUSES = ['recorded', 'exempt', 'unmeasured', 'invalid'] as const
 export type ScoreStatus = (typeof SCORE_STATUSES)[number]
 
 /** 선수 — 버니스명단 1행 = 선수 1명.
@@ -197,7 +204,7 @@ export interface Player {
   status: PlayerStatus
 }
 
-/** 종목 정의 — 목표 탭 1행 = 종목 1개. key가 회차 점수 컬럼·랭킹·추이를 잇는 유일한 식별자. */
+/** 종목 정의 — 목표 탭 1행 = 종목 1개. 달성 판정은 direction 기준 경계값 포함(같아도 달성). */
 export interface EventDefinition {
   key: string
   valueKind: EventValueKind
@@ -207,19 +214,19 @@ export interface EventDefinition {
   direction: RankDirection
 }
 
-/** 회차 1건, 종목 1개의 점수 한 칸. */
-export interface EventScore {
-  status: ScoreStatus
-  value: number | null    // 정규화 값. status가 'recorded'가 아니면 null
-  display: string | null  // 원본 표시값 그대로("1:12" | "6"). status가 'recorded'가 아니면 null
-}
+/** 회차 1건, 종목 1개의 점수 한 칸 — status로 분기하면 null 체크 없이 쓸 수 있다.
+ *  invalid는 이상값이 실제로 입력된 경우(display에 원본 보존, reason에 사유) — 빈칸(unmeasured)과 구분. */
+export type EventScore =
+  | { status: 'recorded'; value: number; display: string }
+  | { status: 'exempt' | 'unmeasured'; value: null; display: null }
+  | { status: 'invalid'; value: null; display: string; reason: string }
 
 /** 회차 1건에서 선수 1명의 기록 행. */
 export interface SessionEntry {
   playerId: number
-  name: string                          // 그 시점 이름(참조 수식이라 개명 시 항상 최신과 동일)
-  scores: Record<string, EventScore>    // key = EventDefinition.key
-  participated: boolean                 // 전 종목 unmeasured면 false (회차 전체 미참여)
+  name: string                           // 그 시점 이름(참조 수식이라 개명 시 항상 최신과 동일)
+  scores: Record&lt;string, EventScore&gt;    // key = EventDefinition.key. events[] 전체 key가 항상 존재(누락 없음)
+  participated: boolean                  // 전 종목 unmeasured면 false. exempt·invalid는 참여로 침
 }
 
 /** 회차 1개 = 날짜 탭 1개. */
@@ -235,13 +242,14 @@ export interface RankingEntry {
   name: string
   value: number
   display: string
-  rank: number        // 1부터. 동점은 공동순위(예: 1,1,3) — 다음 등수는 동점자 수만큼 건너뜀
+  rank: number        // 1부터. 동점(정규화 value 기준)은 공동순위(예: 1,1,3) —
+                       // 건너뛰기는 활동+recorded 엔트리만 대상으로 계산
   achieved: boolean
 }
 
 export interface EventRanking {
   event: string              // EventDefinition.key
-  entries: RankingEntry[]    // rank 오름차순. 면제·미측정·활동 외 상태 제외
+  entries: RankingEntry[]    // rank 오름차순. 면제·미측정·이상값·활동 외 상태 제외
 }
 
 /** 회차 1개에 대한 종목별 랭킹 묶음 — 랭킹 화면의 "회차 선택 → 종목 탭" 흐름과 그대로 대응. */
@@ -256,12 +264,13 @@ export interface TrendPoint {
   value: number
   display: string
   achieved: boolean
-  deltaFromPrevious: number | null   // 직전 유효 기록 대비 변화. 첫 기록이면 null
+  deltaFromPrevious: number | null   // 직전 유효 기록 대비 원값 변화. 첫 기록이면 null
+  improved: boolean | null            // direction 반영한 개선 여부. 첫 기록이면 null
 }
 
 export interface PlayerEventTrend {
   event: string
-  points: TrendPoint[]    // 유효 기록을 남긴 회차만(면제·미측정 제외), 날짜 오름차순
+  points: TrendPoint[]    // 유효 기록을 남긴 회차만(면제·미측정·이상값 제외), 날짜 오름차순
 }
 
 export interface PlayerPersonalBest {
@@ -272,21 +281,25 @@ export interface PlayerPersonalBest {
   achieved: boolean
 }
 
-/** 선수 1명의 프로필 요약(추이·PB 포함). 탈퇴 상태는 응답 어디에도 등장하지 않음. */
+/** 선수 1명의 프로필 요약. status가 '탈퇴' 제외 타입이라 탈퇴 선수는 타입 수준에서 등장 불가. */
 export interface PlayerSummary extends Player {
-  trends: PlayerEventTrend[]
-  personalBests: PlayerPersonalBest[]
+  status: Exclude&lt;PlayerStatus, '탈퇴'&gt;
+  trends: PlayerEventTrend[]          // events[] 전체에 대해 항상 하나씩(기록 없으면 points: [])
+  personalBests: PlayerPersonalBest[] // 유효 기록이 있는 종목만(스파스)
 }
 
 export interface EventAchievementRate {
   event: string
   achievedCount: number
-  eligibleCount: number   // 면제·미측정 제외한 분모, 활동 상태만 집계
+  eligibleCount: number   // 활동 상태 + recorded만. 0이면(전원 면제 등) rate도 0
   rate: number             // 0~1
 }
 
 export interface HomeSummary {
-  latestSession: { date: string; participantCount: number } | null
+  latestSession: {
+    date: string
+    participantCount: number   // 활동 상태 + participated:true만 (비대상·휴식 제외)
+  } | null
   achievementRates: EventAchievementRate[]
 }
 
@@ -301,7 +314,7 @@ export interface RecordsResponse {
 }</code></pre>
 
     <h3>3-6. <code>/api/records</code> 예시 응답</h3>
-    <p>인증(401)·에러 응답 형식은 P2 이슈 범위. 아래는 200 성공 시 <code>RecordsResponse</code> 본문 예시(3명·2종목·1회차로 축약, 면제·미측정·정상 기록을 모두 포함):</p>
+    <p>인증(401)·에러 응답 형식은 P2 이슈 범위. 아래는 200 성공 시 <code>RecordsResponse</code> 본문 예시(4명·2종목·1회차로 축약) — <b>PR #16 리뷰에서 원안의 예시가 §3-2 정책(휴식은 랭킹·달성률 제외)과 모순된다는 지적을 받아 재작성</b>. <code>recorded</code>·<code>exempt</code>·<code>unmeasured</code>·<code>invalid</code> 4가지 점수 상태를 모두 포함하고, 휴식 상태 선수도 프로필(trends/PB)엔 채워지되 rankings/achievementRates에서는 정확히 제외되는 걸 보여준다. 최신 버전은 <a href="../records-schema.html#example">docs/records-schema.html §06</a>가 항상 정본.</p>
     <pre class="code-block"><code>{
   "generatedAt": "2026-07-13T09:00:00.000Z",
   "events": [
@@ -317,15 +330,54 @@ export interface RecordsResponse {
         { "event": "드리블셔틀런",
           "points": [
             { "sessionDate": "2025-05-16", "value": 72, "display": "1:12",
-              "achieved": true, "deltaFromPrevious": null }
+              "achieved": true, "deltaFromPrevious": null, "improved": null }
+          ] },
+        { "event": "골밑슛",
+          "points": [
+            { "sessionDate": "2025-05-16", "value": 5, "display": "5",
+              "achieved": true, "deltaFromPrevious": null, "improved": null }
           ] }
       ],
       "personalBests": [
         { "event": "드리블셔틀런", "value": 72, "display": "1:12",
+          "sessionDate": "2025-05-16", "achieved": true },
+        { "event": "골밑슛", "value": 5, "display": "5",
           "sessionDate": "2025-05-16", "achieved": true }
       ]
     },
-    { "id": 5, "name": "선수5", "status": "휴식", "trends": [], "personalBests": [] }
+    {
+      "id": 3, "name": "선수3", "status": "활동",
+      "trends": [
+        { "event": "드리블셔틀런",
+          "points": [
+            { "sessionDate": "2025-05-16", "value": 70, "display": "1:10",
+              "achieved": true, "deltaFromPrevious": null, "improved": null }
+          ] },
+        { "event": "골밑슛", "points": [] }
+      ],
+      "personalBests": [
+        { "event": "드리블셔틀런", "value": 70, "display": "1:10",
+          "sessionDate": "2025-05-16", "achieved": true }
+      ]
+    },
+    {
+      "id": 5, "name": "선수5", "status": "휴식",
+      "trends": [
+        { "event": "드리블셔틀런",
+          "points": [
+            { "sessionDate": "2025-05-16", "value": 76, "display": "1:16",
+              "achieved": true, "deltaFromPrevious": null, "improved": null }
+          ] },
+        { "event": "골밑슛", "points": [] }
+      ],
+      "personalBests": [
+        { "event": "드리블셔틀런", "value": 76, "display": "1:16",
+          "sessionDate": "2025-05-16", "achieved": true }
+      ]
+    },
+    { "id": 7, "name": "선수7", "status": "활동", "trends": [
+        { "event": "드리블셔틀런", "points": [] }, { "event": "골밑슛", "points": [] }
+      ], "personalBests": [] }
   ],
   "sessions": [
     {
@@ -335,6 +387,12 @@ export interface RecordsResponse {
           "scores": {
             "드리블셔틀런": { "status": "recorded", "value": 72, "display": "1:12" },
             "골밑슛": { "status": "recorded", "value": 5, "display": "5" }
+          } },
+        { "playerId": 3, "name": "선수3", "participated": true,
+          "scores": {
+            "드리블셔틀런": { "status": "recorded", "value": 70, "display": "1:10" },
+            "골밑슛": { "status": "invalid", "value": null, "display": "6개",
+              "reason": "개수 값이 올바르지 않음 (0 이상의 정수여야 함)" }
           } },
         { "playerId": 5, "name": "선수5", "participated": true,
           "scores": {
@@ -355,10 +413,15 @@ export interface RecordsResponse {
       "events": [
         { "event": "드리블셔틀런",
           "entries": [
-            { "playerId": 1, "name": "선수1", "value": 72, "display": "1:12",
+            { "playerId": 3, "name": "선수3", "value": 70, "display": "1:10",
               "rank": 1, "achieved": true },
-            { "playerId": 5, "name": "선수5", "value": 76, "display": "1:16",
+            { "playerId": 1, "name": "선수1", "value": 72, "display": "1:12",
               "rank": 2, "achieved": true }
+          ] },
+        { "event": "골밑슛",
+          "entries": [
+            { "playerId": 1, "name": "선수1", "value": 5, "display": "5",
+              "rank": 1, "achieved": true }
           ] }
       ]
     }
@@ -366,14 +429,16 @@ export interface RecordsResponse {
   "home": {
     "latestSession": { "date": "2025-05-16", "participantCount": 2 },
     "achievementRates": [
-      { "event": "드리블셔틀런", "achievedCount": 2, "eligibleCount": 2, "rate": 1 }
+      { "event": "드리블셔틀런", "achievedCount": 2, "eligibleCount": 2, "rate": 1 },
+      { "event": "골밑슛", "achievedCount": 1, "eligibleCount": 1, "rate": 1 }
     ]
   }
 }</code></pre>
+    <p class="muted" style="font-size:13px;">휴식 상태 <b>선수5</b>는 players·과거 sessions·trends/PB엔 포함되지만 rankings·achievementRates·participantCount에선 제외된다. <b>선수3</b>의 골밑슛 <code>invalid</code>도 같은 이유로 랭킹·달성률 제외. <b>선수7</b>은 활동 상태지만 이 회차 기록이 전혀 없어 <code>participated: false</code>.</p>
 
-    <div class="confirm">
-      <div class="t">⚠️ 확인 요청 — 동점자 랭킹 처리</div>
-      어느 문서에도 동점 처리 규칙이 없어 표준 공동순위(1,1,3 — 동점자는 같은 등수, 다음 등수는 동점 인원수만큼 건너뜀)를 기본값으로 제안한다. <code>RankingEntry.rank</code>의 계산 방식만 바뀌는 문제라 다른 필드에 영향 없음 — 다른 방식(예: 1,2,2)을 원하면 리뷰에서 알려달라.
+    <div class="confirm" style="border-left-color:var(--ok);">
+      <div class="t" style="color:var(--ok);">✅ 확정 (PR #16 오너 리뷰) — 동점자는 표준 공동순위(1,1,3)</div>
+      제안대로 승인됐고, 두 가지가 추가로 명시됐다: 동점 판정은 <b>정규화된 <code>value</code> 기준</b>(<code>display</code> 문자열이 아님), 건너뛰기 계산은 <b><code>entries</code>에 실제 포함된 엔트리(활동+recorded)만</b> 대상. <code>RankingEntry.rank</code> 계산 로직에만 영향.
     </div>
 
     <h3>3-7. 기각한 대안</h3>
@@ -382,6 +447,26 @@ export interface RecordsResponse {
     <div class="rejected"><b>점수를 원본 문자열만 내려주고 프론트가 시간(콜론) 파싱</b> — 기각: 셔틀런 정렬·PB 비교 로직이 프론트마다 재구현되며 랭킹 기준이 어긋날 위험. 백엔드가 한 번만 정규화하는 편이 안전.</div>
     <div class="rejected"><b>상태값을 영문 enum(<code>ACTIVE</code>/<code>WITHDRAWN</code> 등)으로 변환</b> — 기각: 시트 드롭다운 문구가 곧 화면 뱃지 텍스트라, 변환 레이어를 두면 드롭다운 문구가 바뀔 때 코드도 별도로 바꿔야 하는 드리프트 지점이 생김. 한글 리터럴 그대로가 파서를 단순 패스스루로 유지.</div>
     <div class="rejected"><b>Zod 등 런타임 스키마 검증 라이브러리 도입</b> — 기각: 이번 이슈 범위는 타입·계약 설계이며 런타임 검증은 실제 파서 구현 이슈에서 필요 시 판단. 신규 의존성 추가는 범위 밖.</div>
+
+    <h3>3-8. PR #16 리뷰 반영 요약 (2026-07-13)</h3>
+    <p class="muted" style="font-size:13.5px;">최초 커밋(<code>8e745d7</code>) 이후 저장소 오너의 실제 리뷰가 도착 — "수정 후 머지"(구조는 승인, 세부 수정 필요) 판정. 반영 내역:</p>
+    <table>
+      <thead><tr><th>구분</th><th>지적</th><th>반영</th></tr></thead>
+      <tbody>
+        <tr><td><b>필수</b></td><td>이슈 #6(<code>normalize-score.ts</code>)이 이미 산출하는 <code>invalid</code> 이상값을 담을 곳이 없음</td><td><code>ScoreStatus</code>에 <code>invalid</code> 추가 + 매핑표(§3-3 콜아웃)</td></tr>
+        <tr><td><b>필수</b></td><td>예시 응답이 §3-2 정책과 모순(휴식 선수가 rankings/achievementRates에 포함, trends가 부당하게 비어있음, players 인원 불일치)</td><td>§3-6 예시 4명으로 재작성 — 휴식은 프로필만, 랭킹·달성률 제외</td></tr>
+        <tr><td>중간</td><td><code>EventScore</code>의 "recorded 아니면 null" 약속이 주석뿐, 타입 강제 아님</td><td>판별 유니온으로 전환</td></tr>
+        <tr><td>중간</td><td>"탈퇴 미등장"이 주석뿐, 타입 수준 강제 가능</td><td><code>PlayerSummary.status: Exclude&lt;PlayerStatus,'탈퇴'&gt;</code></td></tr>
+        <tr><td>중간</td><td><code>scores</code> Record의 전체 event key 존재 여부(invariant) 미명시</td><td>주석 명시 + <code>trends</code>도 동일 원칙 적용</td></tr>
+        <tr><td>중간</td><td><code>EventDefinition.valueKind</code>(종목 기준) vs 정규화 함수의 per-cell 판별 불일치 처리 규칙 없음</td><td>§3-3에 교차검증 규칙 추가(불일치 시 invalid)</td></tr>
+        <tr><td>낮음</td><td><code>achieved</code> 경계값(목표치와 정확히 같을 때) 미정의</td><td>포함(달성)으로 확정</td></tr>
+        <tr><td>낮음</td><td><code>rate</code>의 0/0(전원 면제 등) 처리 미정의</td><td>0으로 확정</td></tr>
+        <tr><td>낮음</td><td><code>deltaFromPrevious</code> 부호와 direction 결합 규칙(개선/악화 판정)이 프론트 몫으로 남아있음</td><td><code>TrendPoint.improved: boolean | null</code> 추가로 백엔드가 미리 계산</td></tr>
+        <tr><td>낮음</td><td><code>participantCount</code>가 비대상·휴식을 포함하는지 애매</td><td>활동 상태만으로 확정(rankings와 동일 범위)</td></tr>
+        <tr><td>낮음</td><td><code>docs/sheet-rules.html</code>의 구 문구("현재 랭킹에서만 빠진다")가 새 정책과 상충</td><td>새 정책에 맞게 갱신</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:13.5px;">최신 정본은 <a href="../records-schema.html">docs/records-schema.html</a> — 이 플랜 문서는 설계 논의 기록으로 남기고, 계약이 더 바뀌면 records-schema.html을 기준으로 삼는다.</p>
   </section>
 
   <section class="card">
