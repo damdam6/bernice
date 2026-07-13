@@ -62,7 +62,7 @@
 
   <header class="hero">
     <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="build-plan.html">작업 계획</a></div>
-    <span class="badge">설계 계약 · 이슈 #3 · PR #16</span>
+    <span class="badge">설계 계약 · 이슈 #21 · PR #16</span>
     <h1>🧩 도메인 타입 &amp; <code class="inline">/api/records</code> 응답 계약</h1>
     <p class="sub">명단·목표·회차를 표현하는 공용 TypeScript 타입과, 프론트가 추가 가공 없이 소비하는 JSON 응답 스키마</p>
     <div class="status">🔄 1차 리뷰 반영 완료 · 재확인 대기. PR #16의 오너 리뷰(2건 필수 수정 + 세부 6건)를 전부 반영했고, 최종 승인은 다음 리뷰 라운드에서 확정.</div>
@@ -100,7 +100,7 @@
         <tr><td>비대상 · 휴식</td><td>포함(상태 뱃지용 <code class="inline">status</code>)</td><td>포함(프로필에서 과거 기록 열람 — <code class="inline">trends</code>/<code class="inline">personalBests</code>도 정상 채움)</td><td>집계 제외</td></tr>
       </tbody>
     </table>
-    <div class="callout">"탈퇴 = 사이트 전체 숨김"은 과거 회차 기록까지 포함해 완전히 제외하는 것으로 해석했다(이슈 #3 리뷰에서 확정). <code class="inline">docs/sheet-rules.html</code>의 "과거 기록은 보존되고 현재 랭킹에서만 빠진다"는 문구는 이 결정에 맞춰 갱신했다 — 시트 자체의 데이터는 보존되지만, 사이트 응답(<code class="inline">/api/records</code>)에서는 완전히 걸러진다.</div>
+    <div class="callout">"탈퇴 = 사이트 전체 숨김"은 과거 회차 기록까지 포함해 완전히 제외하는 것으로 해석했다(이슈 #21 리뷰에서 확정). <code class="inline">docs/sheet-rules.html</code>의 "과거 기록은 보존되고 현재 랭킹에서만 빠진다"는 문구는 이 결정에 맞춰 갱신했다 — 시트 자체의 데이터는 보존되지만, 사이트 응답(<code class="inline">/api/records</code>)에서는 완전히 걸러진다.</div>
     <div class="callout">
       <b>⚠️ 소급 효과(리뷰에서 지적) — 반드시 인지하고 수용할 것.</b>
       상태는 "현재값 하나"만 저장되고 회차별 이력이 없다. 그래서:
@@ -456,7 +456,7 @@ export interface RecordsResponse {
   </section>
 
   <div class="footer">
-    도메인 타입 · /api/records 응답 계약 · 이슈 <a href="https://github.com/damdam6/bernice/issues/3" style="color:var(--accent-2);">#3</a> · PR <a href="https://github.com/damdam6/bernice/pull/16" style="color:var(--accent-2);">#16</a> · 작성 2026-07-13 · 관련: <a href="index.html" style="color:var(--accent-2);">설계 개요</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">시트 연동 확정안</a> · <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a>
+    도메인 타입 · /api/records 응답 계약 · 이슈 <a href="https://github.com/damdam6/bernice/issues/21" style="color:var(--accent-2);">#21</a> · PR <a href="https://github.com/damdam6/bernice/pull/16" style="color:var(--accent-2);">#16</a> · 작성 2026-07-13 · 관련: <a href="index.html" style="color:var(--accent-2);">설계 개요</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">시트 연동 확정안</a> · <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a>
   </div>
 
 </div>
