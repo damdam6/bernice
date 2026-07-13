@@ -61,7 +61,7 @@
 <div class="wrap">
 
   <header class="hero">
-    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a></div>
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
     <span class="badge">운영 매뉴얼 · 편집 전 필독</span>
     <h1>📝 시트 편집 규칙</h1>
     <p class="sub">이 시트를 직접 수정하기 전에 읽어주세요. 몇 가지 규칙만 지키면 사이트가 안 깨집니다.</p>
@@ -81,7 +81,7 @@
     <div class="rule">
       <div class="title">🔒 탈퇴 = 행 삭제 금지, 상태만 '탈퇴'로</div>
       <span class="tabname">버니스명단</span>에서 사람을 <strong>지우지 말 것.</strong> 나갔으면 <code class="inline">상태</code> 드롭다운을 <code class="inline">탈퇴</code>로 바꾸기만.
-      <div class="why"><b>왜:</b> 행을 지우면 그 행을 참조하던 회차 이름이 <b>아래 사람으로 밀려 점수가 어긋난다.</b> 상태만 바꾸면 과거 기록은 보존되고 현재 랭킹에서만 빠진다.</div>
+      <div class="why"><b>왜:</b> 행을 지우면 그 행을 참조하던 회차 이름이 <b>아래 사람으로 밀려 점수가 어긋난다.</b> 상태만 바꾸면 시트 데이터(과거 기록 포함)는 그대로 보존되고, 사이트에서는 <b>전체 숨김</b> 처리된다 — 과거 회차 기록까지 포함해 사이트 어디에도 나타나지 않는다(상세: <a href="records-schema.html#policy" style="color:inherit; text-decoration:underline;">도메인 타입·API 계약 §02</a>).</div>
     </div>
 
     <div class="rule">
@@ -151,7 +151,7 @@
     <h3>탈퇴</h3>
     <ol class="steps">
       <li><span class="tabname">버니스명단</span>에서 그 사람의 <code class="inline">상태</code>를 <code class="inline">탈퇴</code>로 변경 <strong>(행 삭제·이동 X)</strong></li>
-      <li>끝. 과거 기록은 보존되고 현재 랭킹·명단에서만 빠진다</li>
+      <li>끝. 시트 데이터(과거 기록 포함)는 보존되지만, 사이트에서는 과거 회차 기록까지 포함해 전체 숨김 처리된다</li>
     </ol>
     <p class="muted" style="font-size:13px;">※ 나갔다가 다시 들어오면 → 상태만 <code class="inline">활동</code>으로 되돌리기 (같은 행 유지, 추이가 이어짐).</p>
   </section>
@@ -190,7 +190,7 @@
   </section>
 
   <div class="footer">
-    시트 편집 규칙 · 운영 매뉴얼 · 최종 업데이트 2026-07-12
+    시트 편집 규칙 · 운영 매뉴얼 · 최종 업데이트 2026-07-13 (탈퇴 = 사이트 전체 숨김 정책 반영) · 관련: <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a>
   </div>
 
 </div>
