@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#24 P1 — Sheets API 읽기 래퍼 (batchGet · 토큰 주입) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+  .pre {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.82rem;
+    background: var(--code-bg); border-radius: 8px; padding: 12px 14px;
+    white-space: pre; overflow-x: auto; margin: 10px 0;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/24">#24</a></span><span class="type-chip">기능 추가</span>
+    <h1>P1 — Sheets API 읽기 래퍼 (batchGet · 토큰 주입)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/24-sheets-read-wrapper</code></b> ← <code>main</code></span>
+      <span>라벨 <b>없음</b></span>
+      <span>2026-07-13</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>서비스계정 액세스 토큰(<code>functions/lib/googleAuth.ts</code>의 <code>getAccessToken</code>, 이슈 #19)과 탭 분류 유틸(<code>functions/lib/sheetTabs.ts</code>의 <code>classifySheetTabs</code>, 이슈 #18)을 그대로 재사용해, 스프레드시트 메타(탭 목록)를 조회하고 <code>values.batchGet</code>으로 명단·목표·회차 탭의 원시 값을 <strong>한 번의 API 호출</strong>로 가져오는 순수 IO 레이어를 <code>functions/lib/sheetsApi.ts</code>에 신규 추가한다.</p>
+    <p>이 레이어는 파싱을 하지 않고 <code>string[][]</code> 원시 2D 배열만 반환하며, 이후 파서 이슈(#25 명단·#26 목표·#27 회차)가 이 결과를 입력으로 받는다. Sheets API의 4xx/5xx 오류는 상태코드를 담은 전용 에러 타입으로 구분해 그대로 전파한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>functions/lib/googleAuth.ts</code> — 서비스계정 JWT 서명 + scope별 액세스 토큰 캐시 완성 (<code>getAccessToken(env, scope)</code>, <code>Env = { GOOGLE_SERVICE_ACCOUNT_KEY }</code>). Workers 런타임 제약(node:crypto 없음)을 이미 Web Crypto로 해결해둔 상태 — 그대로 재사용 대상.</li>
+      <li><code>functions/lib/sheetTabs.ts:53</code> — <code>classifySheetTabs(tabNames: string[])</code>가 탭 이름 배열을 받아 <code>{ roster, goals, rounds, unclassified }</code>로 분류(NFC 비교·원본 문자열 보존·날짜 오름차순 정렬)까지 완성. 이 이슈는 이 함수의 <strong>입력(탭 이름 배열)을 실제 API에서 만들어주는 부분</strong>만 담당하면 된다.</li>
+      <li><code>functions/api/health.ts</code> — 유일한 기존 Functions 엔드포인트, 참고용 최소 예시. <code>/api/records</code>(이슈 #30)는 아직 없음 — 이번 이슈는 그 엔드포인트가 쓸 IO 레이어만 준비.</li>
+      <li><code>wrangler.jsonc</code> — <code>vars.SHEET_ID</code>가 이미 설정되어 있고(비밀 아님), <code>GOOGLE_SERVICE_ACCOUNT_KEY</code>는 로컬 <code>.dev.vars</code>/프로덕션 Secret으로 분리되어 있음.</li>
+      <li><code>scripts/seed-sheet.mjs:87-93</code>, <code>scripts/protect-sheet.mjs</code> — 과거 1회성 Node 스크립트에서 <code>sheets.googleapis.com/v4/spreadsheets/{id}</code> 호출 패턴(메타 조회 <code>?fields=...</code>, <code>:batchUpdate</code>)을 이미 써본 선례가 있음. 다만 <code>node:crypto</code> 기반이라 Workers에 그대로 못 씀 — 엔드포인트 URL 관례만 참고하고 토큰 발급은 <code>googleAuth.ts</code>를 쓴다.</li>
+      <li><code>functions/lib/normalize-score.ts:12</code>, <code>functions/lib/normalize-status.ts:9</code> — 둘 다 셀 값을 <code>string | null | undefined</code>로 받는 계약. 이 이슈가 돌려주는 원시 값의 타입이 이 계약과 맞아야 한다(아래 §3-5 참고).</li>
+      <li>현재 <code>functions/lib/</code>에 Sheets API를 직접 호출하는 코드가 전혀 없음 — 이 이슈가 그 첫 진입점.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ol>
+      <li><b>파일 위치</b>: <code>functions/lib/sheetsApi.ts</code> (+ <code>sheetsApi.test.ts</code>) — <code>googleAuth.ts</code>/<code>sheetTabs.ts</code>와 동일 계층·네이밍 스타일.</li>
+      <li><b>토큰 재사용</b>: <code>import { getAccessToken, type Env } from './googleAuth'</code> — JWT 서명·토큰 캐시 로직은 재구현하지 않고 그대로 호출. scope는 <code>https://www.googleapis.com/auth/spreadsheets.readonly</code>(읽기 전용, 최소 권한) 상수로 고정. 쓰기가 필요한 관리자 기능(P5)은 별도 이슈에서 다른 scope로 자체 처리.</li>
+      <li><b>공통 호출 헬퍼</b> <code>callSheetsApi(env, path)</code>: <code>fetch(`https://sheets.googleapis.com/v4/spreadsheets/${path}`, { headers: { Authorization: `Bearer ${accessToken}` } })</code> → <code>response.ok</code>가 아니면 <code>SheetsApiError(message, status)</code>를 던짐. 모든 하위 함수가 이 헬퍼를 거치므로 에러 처리가 한 곳에 모임.</li>
+      <li><b>에러 타입</b>: <code>export class SheetsApiError extends Error { constructor(message: string, readonly status: number) }</code>. 4xx(권한 없음·존재하지 않는 범위)와 5xx(구글 쪽 일시 장애)를 <code>status</code> 필드로 호출자가 구분할 수 있게 함 — 이후 <code>/api/records</code>(#30)가 이 값을 보고 응답 코드를 매핑할 수 있음.</li>
+      <li><b>메타 조회</b> <code>getSpreadsheetTabTitles(env, sheetId)</code>: <code>GET {sheetId}?fields=sheets.properties.title</code> → 응답의 <code>sheets[].properties.title</code>을 시트 내 실제 탭 순서 그대로 배열로 반환. 이 배열이 바로 <code>classifySheetTabs</code>의 입력.</li>
+      <li><b>값 일괄 조회</b> <code>batchGetValues(env, sheetId, ranges)</code>: <code>GET {sheetId}/values:batchGet?ranges=A&amp;ranges=B&amp;...</code> (요청 range 개수만큼 <code>ranges</code> 쿼리 파라미터 반복 — 이슈가 요구하는 "일괄 조회"). 구글 API는 응답 <code>valueRanges</code> 순서가 요청 순서와 동일함을 보장하므로 인덱스로 매핑. <code>values</code>가 없는 빈 탭은 <code>[]</code>로 정규화.</li>
+      <li><b>range 문자열</b>: 탭 이름은 항상 <code>'{name}'</code>처럼 작은따옴표로 감싸고(A1 표기에서 공백·하이픈·숫자 시작 탭 이름은 quoting 필수 — 회차 탭 <code>2025-05-16</code>이 정확히 이 케이스), 이름 내 작은따옴표는 <code>''</code>로 이스케이프. 셀 범위를 지정하지 않고 탭 이름만 넘기면 Sheets API가 "그 탭 전체"를 반환하는 동작을 활용 — 회차가 늘어도 헤더/컬럼 추가에 코드 변경이 필요 없음.</li>
+      <li><b>valueRenderOption 명시 안 함</b>: 기본값(<code>FORMATTED_VALUE</code>)에 의도적으로 의존 — 이 경우 셀 값이 항상 문자열로 내려와 <code>normalizeScore</code>/<code>normalizeStatus</code>(#20)의 <code>string | null | undefined</code> 입력 계약과 그대로 맞음. <code>UNFORMATTED_VALUE</code>로 바꾸면 숫자 셀이 JS <code>number</code>로 내려와 그 계약이 깨지므로, 코드 주석 + 테스트로 이 의존을 명시.</li>
+      <li><b>조합 진입점</b> <code>fetchSheetBundle(env, sheetId)</code>: <code>getSpreadsheetTabTitles</code> → <code>classifySheetTabs</code>(재사용, 무수정) → roster/goals(존재할 때만)와 rounds 전체를 대상으로 range 목록 구성 → <code>batchGetValues</code> 1회 호출 → 아래 <code>SheetRawBundle</code>로 재조립해 반환.
+        <div class="pre">interface SheetRawTable { name: string; values: string[][] }
+interface SheetRawBundle {
+  roster: SheetRawTable | null
+  goals: SheetRawTable | null
+  rounds: (SheetRawTable &amp; { date: Date })[]  // classifySheetTabs 순서(날짜 오름차순) 유지
+  unclassified: string[]
+}</div>
+      </li>
+      <li><b>기각한 대안 1</b>: <code>scripts/seed-sheet.mjs</code>의 <code>api()</code> 헬퍼를 그대로 옮겨오기 — <code>node:crypto</code> 기반이라 Workers에서 동작 안 함. googleAuth.ts가 이미 Web Crypto로 이 문제를 풀어뒀으므로 그 결과물(<code>getAccessToken</code>)만 재사용.</li>
+      <li><b>기각한 대안 2</b>: 탭별로 개별 <code>values.get</code> 호출 — 이슈가 명시적으로 <code>batchGet</code>을 요구하고, 회차가 3개월마다 늘어나는 구조상 탭 수만큼 API 호출이 늘어나는 건 레이턴시·쿼터 낭비.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li><code>functions/lib/sheetsApi.ts</code> 신규 생성 — <code>SheetsApiError</code> 클래스, scope 상수, 내부 <code>callSheetsApi(env, path)</code> 헬퍼(<code>getAccessToken</code> 재사용 + <code>response.ok</code> 체크 + 에러 래핑) 작성.
+        <span class="files"><code>functions/lib/sheetsApi.ts</code></span>
+      </li>
+      <li><code>getSpreadsheetTabTitles(env, sheetId)</code> 구현 — 메타 조회(<code>fields=sheets.properties.title</code>) → 탭 이름 배열(원본 순서) 반환. 응답 형태가 예상과 다르면(예: <code>title</code> 누락) 명확한 에러.
+        <span class="files"><code>functions/lib/sheetsApi.ts</code></span>
+      </li>
+      <li><code>batchGetValues(env, sheetId, ranges)</code> 구현 — <code>values:batchGet</code> 쿼리 조립(<code>quoteSheetName</code> 헬퍼로 각 range escape), 응답 <code>valueRanges</code>를 요청 순서 그대로 매핑, <code>ranges</code>가 빈 배열이면 API 호출 없이 즉시 <code>[]</code> 반환.
+        <span class="files"><code>functions/lib/sheetsApi.ts</code></span>
+      </li>
+      <li><code>fetchSheetBundle(env, sheetId)</code> 구현 — <code>getSpreadsheetTabTitles</code> → <code>classifySheetTabs</code>(<code>sheetTabs.ts</code>, 재사용·무수정) → roster/goals(null이 아닐 때만)+rounds 전체로 range 목록 구성 → <code>batchGetValues</code> 1회 호출 → <code>SheetRawBundle</code>로 재조립.
+        <span class="files"><code>functions/lib/sheetsApi.ts</code></span>
+      </li>
+      <li>단위 테스트 작성 — <code>googleAuth.test.ts</code>의 스텁 패턴(테스트용 RSA 키페어 생성 + <code>vi.stubGlobal('fetch', ...)</code>)을 확장해 oauth2 토큰 엔드포인트와 <code>sheets.googleapis.com</code> 엔드포인트를 함께 스텁. 커버 케이스: 정상 조회(roster/goals/rounds 모두 채워짐), 빈 탭(<code>values</code> 없음 → <code>[]</code>), 탭 이름에 특수문자/하이픈 있을 때 quoting, roster/goals 미분류(null) 시 해당 range를 요청하지 않음, 4xx(권한 없음)·5xx(서버 오류) 응답이 <code>SheetsApiError.status</code>로 구분되어 전파됨.
+        <span class="files"><code>functions/lib/sheetsApi.test.ts</code></span>
+      </li>
+      <li>로컬 실데이터 검증 — <code>.dev.vars</code>에 실제 <code>GOOGLE_SERVICE_ACCOUNT_KEY</code>를 채운 상태로 임시 디버그 라우트(예: <code>functions/api/_debug-sheets.ts</code>, 커밋하지 않음)에서 <code>fetchSheetBundle(env, env.SHEET_ID)</code>를 호출해 <code>npm run dev:all</code>로 실제 시딩 데이터(선수1~21, 종목 4개, <code>2025-05-16</code> 회차)가 채워지는지 확인 후 라우트 제거.
+        <span class="files">(임시 파일, 커밋 제외)</span>
+      </li>
+      <li><code>npm run typecheck</code> · <code>npm test</code> 전체 통과 확인.
+        <span class="files">(검증만)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>탭 이름에 하이픈(회차 <code>YYYY-MM-DD</code>)·공백·작은따옴표가 섞여 A1 range 문법이 깨질 수 있음</td><td><code>values:batchGet</code> 요청이 400으로 실패해 전체 조회가 막힘</td><td><code>quoteSheetName</code>에서 항상 <code>'{name}'</code>로 감싸고 내부 <code>'</code>는 <code>''</code>로 이스케이프 — 예외 없이 모든 range에 적용</td></tr>
+        <tr><td><code>valueRenderOption</code> 기본값(<code>FORMATTED_VALUE</code>)에 대한 암묵적 의존</td><td>추후 누군가 <code>UNFORMATTED_VALUE</code>로 바꾸면 숫자 셀이 문자열이 아닌 값으로 내려와 #20 정규화 유틸 입력 계약이 깨짐</td><td>코드 주석으로 근거 명시 + 테스트에서 반환 타입이 문자열임을 명시적으로 검증</td></tr>
+        <tr><td>회차 탭이 3개월마다 계속 늘어나 <code>ranges</code> 쿼리 파라미터가 많아짐</td><td>이론상 URL 길이 제한 — 현재 규모(연 4개 내외)에서는 문제 없음</td><td>지금은 무시, 수십 개 이상으로 늘어나면 청크 분할을 별도 이슈로 분리</td></tr>
+        <tr><td>roster/goals 탭이 없는(분류 실패) 스프레드시트 상태</td><td><code>fetchSheetBundle</code>이 해당 필드에 <code>null</code>을 반환 — 호출자가 체크 없이 쓰면 다운스트림에서 예외</td><td>타입에 <code>| null</code> 명시해 컴파일 타임에 처리 강제. 이 이슈 범위에서는 에러로 취급하지 않고 그대로 반환(파서 이슈에서 처리할 문제)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test -- functions/lib/sheetsApi.test.ts</code> — 신규 유닛 테스트 전체 통과 (정상 조회 · 빈 탭 · quoting · roster/goals null · 4xx/5xx 에러 구분).</li>
+      <li><code>npm run typecheck</code> — 기존 tsconfig(functions) 기준 타입 통과.</li>
+      <li><code>npm run dev:all</code> 구동 후 임시 디버그 라우트로 실제 시트 조회 → roster/goals/rounds에 시딩된 실데이터가 정확히 채워지는지 눈으로 확인.</li>
+      <li>존재하지 않는 <code>SHEET_ID</code> 또는 서비스계정 미공유 시트로 임시 호출 → 403/404가 <code>SheetsApiError</code>로 구분되어 올라오는지 확인 (완료 조건의 "오류 케이스" 항목).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>functions/</code> 공용 유틸로 스프레드시트 읽기 함수 제공 — <code>functions/lib/sheetsApi.ts</code>의 <code>fetchSheetBundle</code>(+ <code>getSpreadsheetTabTitles</code>/<code>batchGetValues</code>).</li>
+      <li>로컬에서 실제 시트 값 조회 확인 (<code>npm run dev:all</code>).</li>
+      <li>오류 케이스(권한 없음·존재하지 않는 범위) 동작 확인 — <code>SheetsApiError.status</code>로 4xx/5xx 구분.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/24">#24</a> · 2026-07-13</footer>
+</main>
+</body>
+</html>
