@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+/* 디자인 토큰 — 농구 오렌지 테마
+   근거 색: 시트 헤더 #E8623A(scripts/seed-sheet.mjs) · 설계 문서 액센트 #FF7A45 */
+@theme {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI',
+    'Noto Sans KR', sans-serif;
+
+  /* 프라이머리: 농구 오렌지 스케일 */
+  --color-brand-50: #fff6f1;
+  --color-brand-100: #ffe9dd;
+  --color-brand-200: #ffd3bd;
+  --color-brand-300: #ffb495;
+  --color-brand-400: #ff9469;
+  --color-brand-500: #ff7a45;
+  --color-brand-600: #e8623a;
+  --color-brand-700: #c04e2e;
+  --color-brand-800: #9a3f26;
+  --color-brand-900: #7c3521;
+  --color-brand-950: #431a0f;
+
+  /* 보조 블루 (링크·차트 대비색) */
+  --color-accent-400: #74aaff;
+  --color-accent-500: #4a90ff;
+  --color-accent-600: #3671d9;
+
+  /* 시맨틱 (목표 달성 뱃지 등) */
+  --color-good: #35c07a;
+  --color-warn: #f5b800;
+  --color-bad: #ff5c5c;
+}
