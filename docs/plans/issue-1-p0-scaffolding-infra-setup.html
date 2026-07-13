@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#1 P0 — 사이트 스캐폴딩 &amp; 인프라 셋업 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/1">#1</a></span><span class="type-chip">기능 개선 (스캐폴딩)</span>
+    <h1>P0 — 사이트 스캐폴딩 &amp; 인프라 셋업 (Vite+React+TS · Tailwind · Cloudflare Pages)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/1-p0-scaffolding-infra-setup</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-13</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>설계 문서(<code>docs/</code>)와 구글 시트 데이터 레이어(시딩·보호, <code>scripts/</code>)만 있는 레포에 실제 웹앱 뼈대를 세우는 P0 단계. 레포 루트에 Vite + React + TypeScript 앱을 스캐폴딩하고, Tailwind v4에 농구 오렌지 디자인 토큰을 심고, <code>functions/api/health.ts</code> 헬스체크와 <code>wrangler.jsonc</code>로 Cloudflare Pages 배포 준비를 마친다. 로컬에서는 <code>vite</code>(5173) + <code>wrangler pages dev</code>(8788, <code>/api</code> 프록시) 이중 서버로 빈 홈과 <code>/api/health</code>가 함께 구동되는 것까지 확인한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>레포 구성</b> — 추적 파일은 <code>docs/</code>(설계 HTML 4개), <code>scripts/seed-sheet.mjs</code> · <code>scripts/protect-sheet.mjs</code>, <code>.gitignore</code>뿐. 프론트/백엔드 앱 코드·<code>package.json</code> 없음.</li>
+      <li><b>.gitignore 이미 준비됨</b> — <code>.gitignore:1-17</code>에 <code>secrets/</code>, <code>.dev.vars</code>, <code>.env*</code>, <code>node_modules/</code>, <code>dist/</code>, <code>.wrangler/</code>가 전부 등재. 완료 조건의 "gitignore 반영"은 신규 작성이 아니라 <code>git check-ignore</code> 검증만 필요.</li>
+      <li><b>서비스계정 키 위치</b> — 메인 체크아웃 <code>secrets/bernice-502106-02d0840dab2f.json</code>에 존재(untracked라 이 워크트리엔 없음). <code>.dev.vars</code> 생성 시 여기서 복사해야 함. 문서(<code>docs/sheet-integration.html</code>)의 <code>secrets/sa-key.json</code>과 실제 파일명이 다른 점 주의.</li>
+      <li><b>SHEET_ID는 비밀 아님</b> — <code>scripts/seed-sheet.mjs:18</code>에 이미 하드코딩·커밋됨(시트 자체는 비공개 + 서비스계정 공유). <code>wrangler.jsonc</code>의 평문 <code>vars</code>로 둬도 무방.</li>
+      <li><b>확정된 아키텍처</b> — <code>docs/sheet-integration.html</code> §04: Pages Functions가 서비스계정 JWT로 시트를 읽고, <code>/api/login</code>(패스코드→HttpOnly 쿠키) · <code>/api/records</code> · <code>/api/refresh</code>를 제공. P0는 이 구조가 올라갈 자리(<code>functions/</code>)만 만들면 됨.</li>
+      <li><b>디자인 토큰 근거</b> — 농구 오렌지는 이미 두 곳에 존재: 시트 헤더색 <code>scripts/seed-sheet.mjs:64</code> ≈ <code>#E8623A</code>, 문서 액센트 <code>docs/build-plan.html:10</code> <code>#ff7a45</code>. Tailwind 토큰은 이 계열로 스케일 구성.</li>
+      <li><b>툴체인</b> — Node v24.11.0 · npm 11.6.1 (Vite 7 요건 충족). wrangler는 미설치 → devDependency로 추가.</li>
+      <li><b>패스코드/관리자코드 값 미정</b> — <code>docs/build-plan.html:143</code> 블로커. P0에선 <code>.dev.vars</code>에 자리(placeholder)만 만들면 되고 실값은 P2 전에 결정.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>레포 루트 = 앱 루트</b> (모노레포 아님) — Vite 엔트리 <code>index.html</code>·<code>package.json</code>·<code>vite.config.ts</code>를 루트에 두고 <code>src/</code>·<code>functions/</code>를 추가, 기존 <code>docs/</code>·<code>scripts/</code>는 그대로 공존. Cloudflare Pages가 루트 빌드(<code>dist/</code>)를 바로 집는 가장 단순한 구조.</li>
+      <li><b>Tailwind v4 (CSS-first)</b> — <code>@tailwindcss/vite</code> 플러그인 + <code>src/index.css</code>의 <code>@import "tailwindcss"</code>·<code>@theme</code>으로 토큰 정의. <code>tailwind.config.js</code>·PostCSS 설정 불필요. 토큰: 오렌지 프라이머리 스케일(<code>#ff7a45</code>/<code>#e8623a</code> 기반), 옅은 틴트(<code>#FBE7DD</code>), 보조 블루(<code>#4a90ff</code>), 시맨틱 good/warn/bad — 설계 문서 팔레트와 동일 계열. <i>기각안</i>: Tailwind v3 + config 파일 — 신규 프로젝트에서 굳이 구버전 문법을 쓸 이유 없음.</li>
+      <li><b>Pages Functions 파일 라우팅</b> — <code>functions/api/health.ts</code> 하나로 뼈대 확립(<code>GET /api/health</code> → <code>{ ok: true, service: "bernice", ts }</code>). P1의 <code>records</code>, P2의 <code>login/refresh</code>가 같은 폴더에 얹힘. 타입은 <code>@cloudflare/workers-types</code> devDep + <code>functions/tsconfig.json</code>.</li>
+      <li><b><code>wrangler.jsonc</code></b> — <code>name: "bernice"</code>, <code>pages_build_output_dir: "./dist"</code>, <code>compatibility_date</code>, 평문 <code>vars.SHEET_ID</code>. 시크릿 3종(서비스계정 키 JSON·팀 패스코드·관리자 코드)은 로컬 <code>.dev.vars</code> / 프로덕션 Pages Secret으로만.</li>
+      <li><b>로컬 개발 = 이중 서버 + 프록시</b> — ① <code>vite</code>(5173, HMR) ② <code>wrangler pages dev dist --port 8788</code>(Functions + 빌드 산출물). <code>vite.config.ts</code>의 <code>server.proxy</code>로 <code>/api</code> → <code>localhost:8788</code> 위임. npm scripts로 <code>dev</code>(vite) · <code>dev:api</code>(wrangler) · <code>dev:all</code>(둘 동시 실행) 제공. <i>기각안 1</i>: <code>wrangler pages dev -- vite</code> 프록시 모드 — deprecated. <i>기각안 2</i>: <code>@cloudflare/vite-plugin</code> — Workers 전용이라 Pages Functions 파일 라우팅과 안 맞음.</li>
+      <li><b>Cloudflare Pages "연결"의 범위</b> — 코드로 준비 가능한 것(<code>wrangler.jsonc</code>, 빌드 설정)까지가 이 브랜치의 몫. 실제 프로젝트 생성(<code>wrangler pages project create bernice</code> 또는 대시보드 Git 연동)은 Cloudflare 계정 인증이 필요한 사용자 단계로 분리(아래 작업 단계 7).</li>
+      <li><b>P0에 안 넣는 것</b> — Recharts·TanStack Query 설치(P3에서), 라우팅/레이아웃(P3), 시트 읽기 코드(P1). 홈은 토큰이 보이는 빈 화면 + 헬스체크 표시 수준으로 최소화.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>Vite + React + TS 스캐폴딩을 레포 루트에 생성 — <code>package.json</code>(name bernice), strict TS, 기존 <code>docs/</code>·<code>scripts/</code>·<code>.gitignore</code> 유지·병합
+        <span class="files"><code>package.json</code>, <code>index.html</code>, <code>vite.config.ts</code>, <code>tsconfig.json</code>, <code>tsconfig.app.json</code>, <code>tsconfig.node.json</code>, <code>src/main.tsx</code>, <code>src/App.tsx</code>, <code>src/vite-env.d.ts</code></span>
+      </li>
+      <li>Tailwind v4 설치(<code>tailwindcss</code>, <code>@tailwindcss/vite</code>) + <code>@theme</code> 디자인 토큰(농구 오렌지 스케일·틴트·보조 블루·시맨틱 색) 정의, 빈 홈 화면에 토큰 적용(팀명 헤더 + API 상태 표시)
+        <span class="files"><code>src/index.css</code>, <code>vite.config.ts</code>, <code>src/App.tsx</code></span>
+      </li>
+      <li>Pages Functions 뼈대 — <code>GET /api/health</code> 헬스체크 라우트 + Functions 전용 tsconfig + <code>@cloudflare/workers-types</code>
+        <span class="files"><code>functions/api/health.ts</code>, <code>functions/tsconfig.json</code>, <code>package.json</code></span>
+      </li>
+      <li><code>wrangler.jsonc</code> 작성(name · <code>pages_build_output_dir: "./dist"</code> · compatibility_date · <code>vars.SHEET_ID</code>) + <code>wrangler</code> devDep 설치
+        <span class="files"><code>wrangler.jsonc</code>, <code>package.json</code></span>
+      </li>
+      <li>로컬 시크릿 — 커밋용 템플릿 <code>.dev.vars.example</code>(키 3종: <code>GOOGLE_SERVICE_ACCOUNT_KEY</code> · <code>TEAM_PASSCODE</code> · <code>ADMIN_CODE</code>) 작성, 실제 <code>.dev.vars</code>는 메인 체크아웃 <code>secrets/bernice-502106-02d0840dab2f.json</code>을 한 줄 JSON으로 넣어 생성(코드 2종은 placeholder), <code>git check-ignore .dev.vars</code>로 미추적 검증
+        <span class="files"><code>.dev.vars.example</code>, <code>.dev.vars</code>(gitignored)</span>
+      </li>
+      <li>로컬 개발 파이프라인 — <code>vite.config.ts</code>에 <code>/api</code> → <code>localhost:8788</code> 프록시, npm scripts(<code>dev</code> · <code>dev:api</code> · <code>dev:all</code> · <code>build</code> · <code>typecheck</code>) 정리 후 실제 구동 확인(빈 홈 렌더 + <code>/api/health</code> 200)
+        <span class="files"><code>vite.config.ts</code>, <code>package.json</code></span>
+      </li>
+      <li>Cloudflare Pages 연결(사용자 단계) — <code>! npx wrangler login</code> 후 <code>npx wrangler pages project create bernice</code> 또는 대시보드 Git 연동. 코드 쪽 준비는 4단계에서 완료되므로 이 단계 없이도 로컬 검증·머지는 가능
+        <span class="files">(코드 변경 없음 — Cloudflare 계정 작업)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>실제 서비스계정 키를 <code>.dev.vars</code>로 복사 — 실수 커밋 시 키 유출</td><td>높음</td><td>이미 <code>.gitignore:9</code>에 등재. 작업 단계 5에서 <code>git check-ignore</code>로 검증하고, 커밋 전 <code>git status</code>에 시크릿 파일이 없는지 재확인. 커밋은 <code>.dev.vars.example</code>만.</td></tr>
+        <tr><td>Tailwind v4는 v3과 설정 문법이 다름(config 파일 → CSS-first) — 구버전 예제 혼입 시 토큰 미적용</td><td>중간</td><td>v4 방식(<code>@import "tailwindcss"</code> + <code>@theme</code>)으로만 작성, <code>tailwind.config.js</code>를 만들지 않음. 홈 화면에서 토큰 색상 렌더를 눈으로 확인.</td></tr>
+        <tr><td>이중 서버(vite 5173 + wrangler 8788) 프록시 설정 오류 — 로컬에서 <code>/api</code> 404/ECONNREFUSED</td><td>중간</td><td>포트를 스크립트에 고정하고 <code>server.proxy</code>를 명시. 테스트 계획에서 5173 경유·8788 직접 호출을 각각 확인.</td></tr>
+        <tr><td><code>wrangler pages dev dist</code>는 빌드 산출물이 있어야 기동 — 첫 실행 시 <code>dist/</code> 없음</td><td>낮음</td><td><code>dev:api</code> 스크립트가 선행 빌드를 포함하거나 README/스크립트 주석에 <code>npm run build</code> 선행을 명시.</td></tr>
+        <tr><td>Pages 프로젝트 생성은 인터랙티브 인증 필요 — 세션이 대신 못 함</td><td>낮음</td><td>작업 단계 7로 분리해 사용자 단계로 안내. 로컬 구동·타입체크·빌드는 인증 없이 전부 검증 가능.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code>(tsc -b) — 앱·functions 모두 타입 에러 0.</li>
+      <li><code>npm run build</code> — <code>dist/</code> 생성, 경고/에러 없이 종료.</li>
+      <li><code>npx wrangler pages dev dist --port 8788</code> — <code>curl http://localhost:8788/api/health</code>가 200 + <code>{"ok":true,...}</code> JSON, <code>http://localhost:8788/</code>이 빈 홈 렌더(Functions·정적 동시 서빙 확인).</li>
+      <li><code>npm run dev</code>(vite 5173) — 홈에서 농구 오렌지 토큰 색상 렌더 확인, <code>http://localhost:5173/api/health</code>가 프록시 경유로 동일 응답(개발 워크플로 확인).</li>
+      <li><code>git check-ignore .dev.vars secrets/</code> 통과 + <code>git status</code>에 <code>.dev.vars</code>·키 파일 미노출 — 시크릿 미추적 회귀 확인.</li>
+      <li>기존 자산 회귀 — <code>docs/</code> 4개 HTML·<code>scripts/</code> 2개가 변경/이동 없이 그대로인지 <code>git diff --stat</code>으로 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>Vite + React + TypeScript 프로젝트가 레포 루트에 생성되고 <code>src/</code>·<code>functions/</code> 추가, 기존 <code>docs/</code>·<code>scripts/</code> 유지.</li>
+      <li>Tailwind v4 + 농구 오렌지 디자인 토큰(<code>@theme</code>)이 적용된 빈 홈이 렌더된다.</li>
+      <li><code>wrangler.jsonc</code>(pages_build_output_dir 포함) 작성 완료 — Pages 프로젝트 생성/Git 연동만 하면 배포 가능한 상태. 실제 연결은 사용자 인증 단계로 안내.</li>
+      <li><code>.dev.vars</code>(서비스계정 키 / 패스코드 / 관리자코드) 생성 + <code>.dev.vars.example</code> 커밋 + gitignore 동작 검증.</li>
+      <li><code>wrangler pages dev</code> + vite 로컬 구동 확인 — 빈 홈 + <code>/api/health</code> 200 (프록시 경유 포함).</li>
+      <li>타입체크·빌드 클린, 시크릿 미추적 상태로 커밋 가능.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/1">#1</a> · 2026-07-13</footer>
+</main>
+</body>
+</html>
