@@ -111,7 +111,7 @@
     <ul>
       <li><b>레포 구성</b> — 추적 파일은 <code>docs/</code>(설계 HTML 4개), <code>scripts/seed-sheet.mjs</code> · <code>scripts/protect-sheet.mjs</code>, <code>.gitignore</code>뿐. 프론트/백엔드 앱 코드·<code>package.json</code> 없음.</li>
       <li><b>.gitignore 이미 준비됨</b> — <code>.gitignore:1-17</code>에 <code>secrets/</code>, <code>.dev.vars</code>, <code>.env*</code>, <code>node_modules/</code>, <code>dist/</code>, <code>.wrangler/</code>가 전부 등재. 완료 조건의 "gitignore 반영"은 신규 작성이 아니라 <code>git check-ignore</code> 검증만 필요.</li>
-      <li><b>서비스계정 키 위치</b> — 메인 체크아웃 <code>secrets/bernice-502106-02d0840dab2f.json</code>에 존재(untracked라 이 워크트리엔 없음). <code>.dev.vars</code> 생성 시 여기서 복사해야 함. 문서(<code>docs/sheet-integration.html</code>)의 <code>secrets/sa-key.json</code>과 실제 파일명이 다른 점 주의.</li>
+      <li><b>서비스계정 키 위치</b> — 메인 체크아웃 <code>secrets/&lt;서비스계정 키파일&gt;.json</code>에 존재(untracked라 이 워크트리엔 없음). <code>.dev.vars</code> 생성 시 여기서 복사해야 함. 문서(<code>docs/sheet-integration.html</code>)의 <code>secrets/sa-key.json</code>과 실제 파일명이 다른 점 주의.</li>
       <li><b>SHEET_ID는 비밀 아님</b> — <code>scripts/seed-sheet.mjs:18</code>에 이미 하드코딩·커밋됨(시트 자체는 비공개 + 서비스계정 공유). <code>wrangler.jsonc</code>의 평문 <code>vars</code>로 둬도 무방.</li>
       <li><b>확정된 아키텍처</b> — <code>docs/sheet-integration.html</code> §04: Pages Functions가 서비스계정 JWT로 시트를 읽고, <code>/api/login</code>(패스코드→HttpOnly 쿠키) · <code>/api/records</code> · <code>/api/refresh</code>를 제공. P0는 이 구조가 올라갈 자리(<code>functions/</code>)만 만들면 됨.</li>
       <li><b>디자인 토큰 근거</b> — 농구 오렌지는 이미 두 곳에 존재: 시트 헤더색 <code>scripts/seed-sheet.mjs:64</code> ≈ <code>#E8623A</code>, 문서 액센트 <code>docs/build-plan.html:10</code> <code>#ff7a45</code>. Tailwind 토큰은 이 계열로 스케일 구성.</li>
@@ -148,7 +148,7 @@
       <li><code>wrangler.jsonc</code> 작성(name · <code>pages_build_output_dir: "./dist"</code> · compatibility_date · <code>vars.SHEET_ID</code>) + <code>wrangler</code> devDep 설치
         <span class="files"><code>wrangler.jsonc</code>, <code>package.json</code></span>
       </li>
-      <li>로컬 시크릿 — 커밋용 템플릿 <code>.dev.vars.example</code>(키 3종: <code>GOOGLE_SERVICE_ACCOUNT_KEY</code> · <code>TEAM_PASSCODE</code> · <code>ADMIN_CODE</code>) 작성, 실제 <code>.dev.vars</code>는 메인 체크아웃 <code>secrets/bernice-502106-02d0840dab2f.json</code>을 한 줄 JSON으로 넣어 생성(코드 2종은 placeholder), <code>git check-ignore .dev.vars</code>로 미추적 검증
+      <li>로컬 시크릿 — 커밋용 템플릿 <code>.dev.vars.example</code>(키 3종: <code>GOOGLE_SERVICE_ACCOUNT_KEY</code> · <code>TEAM_PASSCODE</code> · <code>ADMIN_CODE</code>) 작성, 실제 <code>.dev.vars</code>는 메인 체크아웃 <code>secrets/&lt;서비스계정 키파일&gt;.json</code>을 한 줄 JSON으로 넣어 생성(코드 2종은 placeholder), <code>git check-ignore .dev.vars</code>로 미추적 검증
         <span class="files"><code>.dev.vars.example</code>, <code>.dev.vars</code>(gitignored)</span>
       </li>
       <li>로컬 개발 파이프라인 — <code>vite.config.ts</code>에 <code>/api</code> → <code>localhost:8788</code> 프록시, npm scripts(<code>dev</code> · <code>dev:api</code> · <code>dev:all</code> · <code>build</code> · <code>typecheck</code>) 정리 후 실제 구동 확인(빈 홈 렌더 + <code>/api/health</code> 200)
