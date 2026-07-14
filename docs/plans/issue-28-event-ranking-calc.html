@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#28 P1 — 종목별 랭킹 계산 (방향·면제/빈칸 제외·상태 정책) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/28">#28</a></span><span class="type-chip">신규 기능</span>
+    <h1>P1 — 종목별 랭킹 계산 (방향·면제/빈칸 제외·상태 정책)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/28-event-ranking-calc</code></b> ← <code>main</code></span>
+      <span>라벨 <b>없음</b></span>
+      <span>2026-07-13</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>회차·종목별 랭킹을 계산하는 순수 함수를 <code>functions/lib/</code>에 추가한다. 입력·출력 타입(<code>Player</code>·<code>EventDefinition</code>·<code>Session</code> → <code>EventRanking</code>·<code>SessionRankings</code>)과 동점·달성·상태 정책 규칙은 이미 <code>shared/domain.ts</code>와 <code>docs/records-schema.html</code> §02·§04에 확정되어 있다(이슈 #21, PR #16 리뷰 승인). 이슈 본문의 의존성 <code>#3</code>은 그 도메인 타입 이슈를 가리키며, 실제로는 <code>#21</code>로 머지되어 이미 <code>main</code>의 <code>shared/domain.ts</code>에 들어와 있다 — 재구현하지 않고 그대로 import해 쓴다. 따라서 이번 작업은 규칙을 새로 정의하는 게 아니라 이미 문서화된 계약을 구현하고 픽스처로 검증하는 것이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>출력 타입은 이미 정의돼 있다 — <code>shared/domain.ts:70-89</code>의 <code>RankingEntry</code>·<code>EventRanking</code>·<code>SessionRankings</code>. 아직 어떤 파일도 이 타입을 만들어내지 않는다(구현 없음, 신규).</li>
+      <li>입력 타입도 이미 정의돼 있다 — <code>Player</code>(<code>shared/domain.ts:27-31</code>, <code>status</code>는 4종 전체를 그대로 갖는 좁혀지지 않은 타입), <code>EventDefinition</code>(<code>shared/domain.ts:36-43</code>, <code>direction</code>·<code>targetValue</code> 포함), <code>SessionEntry</code>/<code>EventScore</code>(<code>shared/domain.ts:48-60</code>, <code>scores</code>는 종목 key 전체가 항상 존재).</li>
+      <li>동점·달성·상태 정책 규칙은 코드가 아니라 <b>이미 문서에 확정</b>돼 있다 — <code>docs/records-schema.html:151-171</code>(§04: 표준 공동순위 1,1,3 · 경계값 포함 달성 · 0/0 → rate 0)과 <code>docs/records-schema.html:96-103</code>(§02: 탈퇴=전체 제외, 비대상·휴식=랭킹만 제외). 이 이슈가 처음부터 규칙을 정할 필요가 없다는 뜻.</li>
+      <li><code>docs/records-schema.html:388-441</code>에 <code>rankings</code> 예시 JSON이 선수1(활동)·선수3(활동, invalid 포함)·선수5(휴식)·선수7(활동, 미참여)까지 상태 혼합 케이스로 이미 나와 있어, 그대로 회귀 테스트 픽스처로 재사용 가능.</li>
+      <li>기존 <code>functions/lib/</code>의 계산 유틸(<code>normalize-score.ts</code>, <code>normalize-status.ts</code>, <code>sheetTabs.ts</code>)은 모두 "순수 함수 + 동일 디렉터리 <code>*.test.ts</code>" 형태이고 파서·네트워크에 의존하지 않는다 — 이 이슈도 같은 모양을 따른다.</li>
+      <li><code>functions/tsconfig.json:1-19</code>의 <code>include</code>에 이미 <code>"../shared"</code>가 들어 있어 <code>functions/lib/</code>에서 <code>shared/domain.ts</code>를 바로 import할 수 있다. 다만 <code>grep -rn "from '.*shared" functions/ src/</code> 결과가 0건 — 아직 아무도 이 타입을 소비하지 않으므로 이 이슈가 첫 소비처가 된다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>파일</b>: <code>functions/lib/compute-rankings.ts</code> + <code>functions/lib/compute-rankings.test.ts</code>(기존 <code>normalize-*.ts</code>와 동일한 kebab-case 네이밍).</li>
+      <li><b>함수 시그니처</b>:
+        <ul>
+          <li><code>computeEventRanking(event: EventDefinition, entries: SessionEntry[], players: Player[]): EventRanking</code> — 종목 1개에 대한 랭킹.</li>
+          <li><code>computeSessionRankings(session: Session, events: EventDefinition[], players: Player[]): SessionRankings</code> — <code>events.map(e =&gt; computeEventRanking(e, session.entries, players))</code>로 조립.</li>
+        </ul>
+        여러 회차를 한 번에 도는 함수는 만들지 않는다 — <code>SessionRankings[]</code> 배열 조립은 <code>/api/records</code> 엔드포인트(별도 이슈)의 책임이고, 이 이슈는 "회차 1개 × 종목별" 단위 순수 계산만 맡는 게 범위에 맞다.
+      </li>
+      <li><b>포함 조건(한 줄로 상태 4종 + 면제/빈칸/이상값을 동시에 처리)</b>: <code>player.status === '활동'</code> && <code>entry.scores[event.key].status === 'recorded'</code>. 첫 조건 하나로 탈퇴·비대상·휴식이 모두 배제되고(§02 표와 동일 결과), 두 번째 조건으로 면제·미측정·이상값이 배제된다(§04와 동일 결과). 파서가 이미 탈퇴를 걸러줬을 거라고 가정하지 않는다 — 이 함수는 픽스처로 독립 테스트되므로 방어적으로 직접 재확인한다.</li>
+      <li><b>빈 결과 처리</b>: 종목에 유효 엔트리가 0건이어도 <code>EventRanking</code> 자체는 생략하지 않고 <code>entries: []</code>로 포함한다(모든 <code>events[]</code>에 대해 1개씩) — <code>EventAchievementRate</code>의 "0/0 → rate 0" 패턴(§04)과 동일한 결로, 프론트의 "회차 선택 → 종목 탭" 흐름에서 종목 탭 자체가 사라지지 않게 한다.</li>
+      <li><b>정렬·동점 처리</b>: 정규화된 <code>value</code> 기준으로 <code>direction</code>에 따라 정렬(낮을수록=오름차순, 높을수록=내림차순) 후, 표준 공동순위(1,1,3)를 값 비교로 직접 구현 — 이전 엔트리와 값이 같으면 이전 rank를 재사용, 다르면 <code>index+1</code>. <code>display</code> 문자열은 비교에 쓰지 않는다(§04 명시 규칙). 이 규칙은 이미 PR #16에서 승인된 것이라 이 이슈에서 새로 결정하지 않고 그대로 구현·테스트만 한다.</li>
+      <li><b>달성(achieved) 판정</b>: 경계값 포함 — 낮을수록는 <code>value &lt;= event.targetValue</code>, 높을수록는 <code>value &gt;= event.targetValue</code>(§04와 동일, <code>RankingEntry.achieved</code>).</li>
+      <li><b>기각한 대안</b>: (a) <code>PlayerStatus</code>를 타입 레벨에서 좁혀 받는 방식 — <code>Player</code>는 이미 4종 그대로인 타입이라 실질적 방어가 안 되고 런타임 필터가 필요해 의미 없음. (b) 이벤트당 엔트리 0건이면 <code>EventRanking</code> 자체를 배열에서 생략 — 프론트가 "이 회차엔 이 종목 데이터가 없음" 상태를 표현할 근거가 없어져 기각.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>순수 함수 구현: <code>computeEventRanking</code>, <code>computeSessionRankings</code>. <code>shared/domain.ts</code> 타입만 import하고 파서·네트워크 의존 없음.
+        <span class="files"><code>functions/lib/compute-rankings.ts</code></span>
+      </li>
+      <li>픽스처 + 단위 테스트: 방향 양쪽(낮을수록/높을수록) · 면제/빈칸/이상값 제외 · 상태 4종(활동/탈퇴/비대상/휴식) 혼합 · 동점(2-way, 3-way 이상 skip 포함, 예: 1,1,1,4) · achieved 경계값(<code>&lt;=</code>/<code>&gt;=</code> 정확히 같은 값) 케이스.
+        <span class="files"><code>functions/lib/compute-rankings.test.ts</code></span>
+      </li>
+      <li><code>docs/records-schema.html</code> §06 예시 JSON(선수1/3/5/7, 드리블셔틀런·골밑슛)을 그대로 픽스처로 넣어, 문서에 적힌 결과(선수3 1위, 선수1 2위 등)와 함수 출력이 정확히 일치하는지 회귀 테스트로 고정.
+        <span class="files"><code>functions/lib/compute-rankings.test.ts</code></span>
+      </li>
+      <li><code>npm test</code>, <code>npm run typecheck</code> 통과 확인 — 기존 <code>normalize-score</code>/<code>normalize-status</code>/<code>sheetTabs</code>/<code>googleAuth</code> 테스트 회귀 없음도 함께 확인.
+        <span class="files"><code>package.json</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>엔트리 0건 종목을 배열에서 생략할지 <code>entries: []</code>로 남길지 판단이 갈림</td><td>프론트 종목 탭이 회차마다 사라지거나 나타나 UI가 불안정해짐</td><td>항상 <code>events[]</code> 전체 개수만큼 <code>EventRanking</code>을 생성(§3 설계에서 고정), 0건 케이스를 테스트에 포함</td></tr>
+        <tr><td>"파서가 이미 탈퇴/비대상/휴식을 걸렀을 것"이라 가정하고 상태 필터를 생략</td><td>탈퇴·비대상·휴식 선수가 랭킹에 노출되는 정책 위반</td><td>함수 내부에서 <code>player.status === '활동'</code>을 직접 재확인 — 파서 완성 여부와 무관하게 항상 안전. 4종 혼합 픽스처로 검증</td></tr>
+        <tr><td>동점 판정을 <code>display</code> 문자열이나 부동소수 비교로 잘못 구현</td><td>§04에 명시된 표준 공동순위와 다른 결과 → 문서-코드 불일치</td><td>정규화된 <code>value</code>(정수)만 비교하도록 명시적으로 구현하고, 2-way/3-way 동점 테스트로 고정</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test -- compute-rankings</code> — 신규 테스트 파일 단독 실행, 방향·제외·상태·동점·achieved 케이스 전부 통과 확인.</li>
+      <li><code>npm test</code> — 전체 스위트 실행, 기존 <code>normalize-score</code>/<code>normalize-status</code>/<code>sheetTabs</code>/<code>googleAuth</code> 테스트에 회귀 없는지 확인.</li>
+      <li><code>npm run typecheck</code> — <code>functions/tsconfig.json</code>이 <code>../shared</code>를 이미 include하고 있어 별도 설정 변경 없이 <code>EventRanking</code> 등 타입이 그대로 소비되는지 확인.</li>
+      <li><code>docs/records-schema.html</code> §06 예시 JSON을 픽스처로 넣었을 때, 함수 출력(<code>rankings[0].events</code>)이 문서에 적힌 예시 값(선수3 1위 <code>1:10</code>, 선수1 2위 <code>1:12</code>, 골밑슛 선수1 1위)과 정확히 일치하는지 assert로 고정.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>순수 함수(<code>computeEventRanking</code>/<code>computeSessionRankings</code>)가 <code>shared/domain.ts</code> 타입만 의존하고, 방향 양쪽·면제/빈칸(및 이상값)·상태 4종 혼합·동점 케이스를 픽스처 테스트로 검증함</li>
+      <li>목표 달성 뱃지 판정에 쓸 <code>achieved</code>가 <code>direction</code> 반영 + 경계값 포함 규칙으로 함께 계산됨</li>
+      <li>동점 처리 규칙(표준 공동순위 1,1,3, value 기준 비교, 활동+recorded 엔트리만 skip 계산에 포함)이 코드와 문서(<code>docs/records-schema.html</code> §04, 이미 명시됨) 양쪽에 일치하게 반영됨</li>
+      <li><code>npm test</code> / <code>npm run typecheck</code> 통과</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/28">#28</a> · 2026-07-13</footer>
+</main>
+</body>
+</html>
