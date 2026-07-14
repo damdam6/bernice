@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#29 P1 — 개인 추이 · PB · 목표 달성 계산 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 18px 0 8px; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  .callout {
+    background: var(--accent-soft); border-radius: 10px; padding: 12px 16px;
+    font-size: 0.88rem; margin-top: 10px;
+  }
+  pre.code {
+    background: var(--code-bg); border-radius: 10px; padding: 14px 16px;
+    font-size: 0.82rem; overflow-x: auto; line-height: 1.5;
+  }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/29">#29</a></span><span class="type-chip">기능 구현</span>
+    <h1>P1 — 개인 추이 · PB · 목표 달성 계산</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/29-trend-pb-goal-calc</code></b> ← <code>main</code></span>
+      <span>라벨 <b>없음</b></span>
+      <span>2026-07-13</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>개인 프로필·전체 추이 화면(P4)이 그대로 소비할 <code>PlayerSummary.trends</code>/<code>personalBests</code>를 만드는 순수 함수를 작성한다. 입력은 <code>shared/domain.ts</code>(이슈 #21, main에 <code>PR #16</code>으로 이미 머지됨)의 <code>Player</code>/<code>EventDefinition</code>/<code>Session</code>이고, 이 타입은 <b>그대로 재사용</b>한다 — 이슈 본문의 "#3"은 번호 재부여 전 구번호로 지금의 #21과 동일 이슈다. 시트 파서(#25~#27)가 아직 없으므로 픽스처로 대체해 병렬 개발한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>shared/domain.ts</code>에 출력 타입이 이미 전부 정의돼 있다 — 이 이슈는 <b>타입을 새로 설계하지 않고</b>, 그 타입을 채우는 계산 로직만 작성한다.</p>
+    <ul>
+      <li><code>shared/domain.ts:92-99</code> — <code>TrendPoint</code>: <code>sessionDate</code>·<code>value</code>·<code>display</code>·<code>achieved</code>·<code>deltaFromPrevious</code>·<code>improved</code></li>
+      <li><code>shared/domain.ts:101-104</code> — <code>PlayerEventTrend</code>: <code>points</code>는 "유효 기록을 남긴 회차만(면제·미측정·이상값 제외), 날짜 오름차순"</li>
+      <li><code>shared/domain.ts:106-112</code> — <code>PlayerPersonalBest</code>: 종목당 최고기록 1건</li>
+      <li><code>shared/domain.ts:114-120</code> — <code>PlayerSummary</code>: <code>status</code>가 <code>Exclude&lt;PlayerStatus, '탈퇴'&gt;</code>로 타입에서부터 탈퇴 제외 강제, <code>trends</code>는 <code>events[]</code> 전체에 대해 항상 하나씩(빈 배열 허용), <code>personalBests</code>는 기록 있는 종목만(스파스)</li>
+      <li><code>docs/records-schema.html</code> §02 정책표(97-101행) — 탈퇴는 응답 어디에도 안 나타남, 비대상·휴식은 프로필용 <code>trends</code>/<code>personalBests</code>에 정상 포함(랭킹·달성률만 제외 — 그건 이 이슈 범위 밖, 이슈 #28)</li>
+      <li><code>docs/records-schema.html</code> §04 규칙(160-167행) — 달성 판정(경계값 포함)과 <code>deltaFromPrevious</code>/<code>improved</code> 규칙이 이미 확정돼 있음</li>
+      <li>참고 구현 스타일: <code>functions/lib/normalize-status.ts</code>·<code>functions/lib/sheetTabs.ts</code> — 순수 함수 + 판별 유니온 반환 + <code>*.test.ts</code> 픽스처 테스트 컨벤션</li>
+      <li><code>functions/tsconfig.json:15</code>의 <code>include: [".", "../shared"]</code>로 <code>functions/lib/*.ts</code>에서 <code>../../shared/domain</code> import가 이미 가능하나, 실제 소비하는 코드는 아직 없음(신규 첫 소비처)</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <h3>파일 위치 · 함수 시그니처</h3>
+    <p><code>functions/lib/player-summary.ts</code>에 다음 함수 하나를 공개 API로 둔다(내부 헬퍼는 비공개):</p>
+    <pre class="code">export function computePlayerSummaries(
+  events: EventDefinition[],
+  players: Player[],
+  sessions: Session[],
+): PlayerSummary[]</pre>
+    <p>인자 순서는 <code>RecordsResponse</code>의 필드 순서(<code>events</code> → <code>players</code> → <code>sessions</code>)를 따른다 — 이후 #30(엔드포인트)에서 그대로 스프레드해 넘기기 쉽게.</p>
+
+    <h3>알고리즘</h3>
+    <ol>
+      <li><b>선수 필터링</b>: <code>player.status !== '탈퇴'</code>인 선수만 순회(타입 좁히기용 type guard로 처리, <code>as</code> 캐스트 없이). 세션의 <code>entries</code> 자체는 필터링하지 않는다 — 탈퇴 선수 데이터는 애초에 파서 단계(#27)에서 걸러진다는 전제(§02)를 따르고, 이 함수는 "어떤 선수를 출력할지"만 책임진다.</li>
+      <li><b>유효 기록 수집</b>: 선수 × 종목 조합마다 전체 세션을 순회해 <code>entry.scores[event.key].status === 'recorded'</code>인 것만 모은다. 그 세션에 선수의 <code>entry</code> 자체가 없으면(아직 미가입) 조용히 건너뛴다 — <code>unmeasured</code>로도 취급하지 않는다. 입력 <code>sessions</code>가 이미 날짜 오름차순이라는 보장에 기대지 않고 <code>sessionDate</code> 기준으로 직접 정렬한다(방어적).</li>
+      <li><b><code>TrendPoint[]</code> 생성</b>: 정렬된 유효 기록을 순서대로 훑으며 직전 유효 기록과 비교 — <code>deltaFromPrevious = value - previous.value</code>(없으면 <code>null</code>), <code>improved</code>는 <code>direction</code> 반영(낮을수록: delta &lt; 0, 높을수록: delta &gt; 0 — 동률(delta === 0)은 개선 아님으로 <code>false</code>). <code>achieved</code>는 경계값 포함 규칙(§04)을 공통 헬퍼로 판정.</li>
+      <li><b><code>PlayerPersonalBest | null</code> 생성</b>: 유효 기록이 없으면 <code>null</code>(호출부에서 필터링돼 스파스 배열이 됨). 있으면 <code>direction</code> 기준 최고값(낮을수록 = min, 높을수록 = max)을 고른다.</li>
+      <li><b>결과 조립</b>: <code>events[]</code> 순서 그대로 <code>trends</code>(항상 이벤트 수만큼), <code>personalBests</code>는 <code>null</code> 아닌 것만 필터.</li>
+    </ol>
+
+    <h3>결정 사항 — PB 동률 처리(계약에 명시 안 됨, 이 이슈에서 확정)</h3>
+    <div class="callout">
+      같은 최고값을 두 번 이상 찍은 경우 <code>PlayerPersonalBest.sessionDate</code>를 <b>그 값을 처음 달성한(가장 이른) 회차</b>로 고정한다. "PB"는 기록을 처음 경신한 순간을 가리킨다고 보는 게 자연스럽고("타이 기록"은 PB를 다시 세우는 게 아니라 기존 PB를 유지하는 것), 나중에 프론트에서 "이 회차에 PB를 세웠다" 배지를 붙일 때도 최초 달성 시점이 더 유용하다. 계약 문서(<code>records-schema.html</code>)에 반례가 없으면 이 규칙을 그대로 채택한다.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>공통 판정 헬퍼(<code>isAchieved(direction, value, targetValue)</code>, <code>isImproved(direction, delta)</code>)와 유효 기록 수집(<code>collectValidScores</code>) 작성 — 전부 비공개, <code>computePlayerSummaries</code> 내부에서만 사용
+        <span class="files"><code>functions/lib/player-summary.ts</code></span>
+      </li>
+      <li><code>buildTrend</code>(선수×종목 → <code>PlayerEventTrend</code>)와 <code>buildPersonalBest</code>(선수×종목 → <code>PlayerPersonalBest | null</code>) 작성 — PB 동률은 최초 달성일 기준
+        <span class="files"><code>functions/lib/player-summary.ts</code></span>
+      </li>
+      <li><code>computePlayerSummaries</code> 조립 — 탈퇴 제외 type guard, <code>events[]</code> 순서 유지, <code>personalBests</code> 스파스 필터
+        <span class="files"><code>functions/lib/player-summary.ts</code></span>
+      </li>
+      <li>픽스처 테스트: 방향 양쪽(낮을수록/높을수록) · 경계값 달성 · 면제/미측정/이상값이 낀 시계열의 delta/improved 스킵 · 아직 미가입 선수의 과거 회차 부재 · PB 갱신되는 케이스와 갱신 안 되는(더 나빠진 나중 기록) 케이스 · PB 동률 시 최초 달성일 · 탈퇴 선수 완전 제외 · 비대상/휴식 선수는 정상 포함 · 기록 전혀 없는 종목은 <code>points: []</code>이고 <code>personalBests</code>에 항목 자체가 없음
+        <span class="files"><code>functions/lib/player-summary.test.ts</code></span>
+      </li>
+      <li><code>npm run typecheck</code>·<code>npm test</code> 실행 확인</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>PB 동률 처리가 계약에 없어 이 이슈에서 임의로 정하는 것</td>
+          <td>다른 이슈(#28 랭킹, #30 엔드포인트, P4 프론트)가 다른 가정을 하면 불일치</td>
+          <td>§3의 결정 사항을 PR 설명에 명시해 리뷰에서 확정 짓고, 필요하면 <code>records-schema.html</code>에 소급 반영</td>
+        </tr>
+        <tr>
+          <td>실제 파서(#25~#27)가 아직 없어 픽스처가 실제 파서 출력과 형태가 어긋날 가능성</td>
+          <td>파서 완성 후 통합 시 타입은 맞아도 필드 조합(예: 빈 <code>entries</code> 처리)이 다를 수 있음</td>
+          <td><code>shared/domain.ts</code> 타입을 그대로 쓰고 §02 정책표에 명시된 조합만 픽스처로 구성 — 임의 필드 추가 안 함</td>
+        </tr>
+        <tr><td colspan="3">그 외 특이 리스크 없음 — 순수 함수라 부작용·외부 의존 없음</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test</code> — <code>functions/lib/player-summary.test.ts</code> vitest 실행, 위 4번 단계에 나열한 케이스 전부 통과 확인</li>
+      <li><code>npm run typecheck</code> — <code>shared/domain.ts</code> import가 <code>functions/tsconfig.json</code>·<code>tsconfig.app.json</code> 양쪽에서 타입 오류 없이 컴파일되는지 확인</li>
+      <li>수동 확인: 완성된 함수의 출력 JSON 한 건을 <code>docs/records-schema.html</code> §06 예시 응답의 <code>trends</code>/<code>personalBests</code> 구조와 나란히 비교해 필드명·중첩 구조가 정확히 일치하는지 눈으로 대조</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>순수 함수 + 픽스처 테스트: 방향 양쪽 · 면제/미참여 낀 시계열 · PB 갱신/비갱신 케이스 모두 커버</li>
+      <li>출력이 <code>shared/domain.ts</code>(#21)의 <code>PlayerSummary</code>/<code>PlayerEventTrend</code>/<code>PlayerPersonalBest</code> 구조와 정확히 일치(필드 재정의·재구현 없음)</li>
+      <li><code>npm run typecheck</code>·<code>npm test</code> 통과</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/29">#29</a> · 2026-07-13</footer>
+</main>
+</body>
+</html>

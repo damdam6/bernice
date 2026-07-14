@@ -164,7 +164,10 @@
     <p><code class="inline">EventAchievementRate.eligibleCount</code>가 0이면(예: 그 회차에 그 종목이 전원 면제) <code class="inline">rate</code>는 <code class="inline">0</code>. <code class="inline">achievedCount</code>·<code class="inline">eligibleCount</code> 둘 다 활동 상태 + 최신 회차(<code class="inline">home.latestSession</code>) 기준.</p>
 
     <h3>추이 변화(<code class="inline">deltaFromPrevious</code> / <code class="inline">improved</code>)</h3>
-    <p><code class="inline">deltaFromPrevious</code>는 직전 유효 기록 대비 <b>원값 그대로의 부호 있는 차이</b>(시간 종목은 초, 개수 종목은 개수)다 — 이것만으로는 "좋아졌는지"를 알 수 없다(낮을수록 종목은 감소가 개선, 높을수록 종목은 증가가 개선). 그래서 <code class="inline">direction</code>까지 반영해 미리 계산한 <code class="inline">improved: boolean | null</code>을 함께 내려준다 — 프론트는 <code class="inline">direction</code>과 조합할 필요 없이 <code class="inline">improved</code>만 보고 ▲▼를 그리면 된다. 둘 다 첫 기록이면 <code class="inline">null</code>.</p>
+    <p><code class="inline">deltaFromPrevious</code>는 직전 유효 기록 대비 <b>원값 그대로의 부호 있는 차이</b>(시간 종목은 초, 개수 종목은 개수)다 — 이것만으로는 "좋아졌는지"를 알 수 없다(낮을수록 종목은 감소가 개선, 높을수록 종목은 증가가 개선). 그래서 <code class="inline">direction</code>까지 반영해 미리 계산한 <code class="inline">improved: boolean | null</code>을 함께 내려준다 — 프론트는 <code class="inline">direction</code>과 조합할 필요 없이 <code class="inline">improved</code>만 보고 ▲▼를 그리면 된다. 둘 다 첫 기록이면 <code class="inline">null</code>. 직전 기록과 값이 같아 변화가 없는 경우(<code class="inline">deltaFromPrevious === 0</code>)는 <code class="inline">improved: false</code>로 처리한다(개선도 악화도 아니므로 ▲▼가 아닌 다른 표시로 구분 가능) — 이슈 #29에서 확정.</p>
+
+    <h3>PB(<code class="inline">PlayerPersonalBest</code>) 동률 처리</h3>
+    <p>같은 최고값을 여러 회차에서 달성했다면 <code class="inline">sessionDate</code>는 <b>그 값을 처음 달성한(가장 이른) 회차</b>로 고정한다 — 타이 기록은 PB를 새로 세우는 것이 아니라 기존 PB를 유지하는 것으로 본다. <code class="inline">achieved</code>는 다른 곳과 동일한 경계값 포함 규칙(위 문단)을 그대로 적용. 이슈 #29 리뷰에서 확정.</p>
 
     <h3>참여 인원(<code class="inline">home.latestSession.participantCount</code>)</h3>
     <p><b>활동 상태 선수 중</b> 최신 회차에서 <code class="inline">participated: true</code>인 인원만 센다 — 비대상·휴식은 그 회차에 기록이 남아 있어도 제외(<code class="inline">rankings</code>·<code class="inline">achievementRates</code>와 동일 범위로 통일).</p>
@@ -265,7 +268,7 @@ export interface TrendPoint {
   display: string
   achieved: boolean
   deltaFromPrevious: number | null   // 직전 유효 기록 대비 원값 변화. 첫 기록이면 null
-  improved: boolean | null            // direction 반영한 개선 여부. 첫 기록이면 null
+  improved: boolean | null            // direction 반영한 개선 여부(동률은 개선 아님). 첫 기록이면 null
 }
 
 export interface PlayerEventTrend {
@@ -273,6 +276,7 @@ export interface PlayerEventTrend {
   points: TrendPoint[]   // 유효 기록을 남긴 회차만(면제·미측정·이상값 제외), 날짜 오름차순
 }
 
+/** 동률이면 sessionDate는 최초로 그 값을 달성한 회차(#29) */
 export interface PlayerPersonalBest {
   event: string
   value: number
