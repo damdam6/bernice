@@ -95,7 +95,7 @@ export interface TrendPoint {
   display: string
   achieved: boolean
   deltaFromPrevious: number | null // 직전 유효 기록 대비 원값 변화(시간=초, 개수=그대로). 첫 기록이면 null
-  improved: boolean | null // direction까지 반영한 개선 여부(낮을수록 종목은 delta<0이 개선). 첫 기록이면 null
+  improved: boolean | null // direction까지 반영한 개선 여부(낮을수록 종목은 delta<0이 개선, 동률(delta===0)은 개선 아님). 첫 기록이면 null
 }
 
 export interface PlayerEventTrend {
@@ -103,6 +103,8 @@ export interface PlayerEventTrend {
   points: TrendPoint[] // 유효 기록을 남긴 회차만(면제·미측정·이상값 제외), 날짜 오름차순
 }
 
+/** 개인 최고기록 — direction 기준 최고값 1건(이슈 #29). 여러 회차가 동률이면
+ *  sessionDate는 그 값을 처음 달성한(가장 이른) 회차 — 타이 기록은 PB를 새로 세우는 게 아니라 유지하는 것으로 본다. */
 export interface PlayerPersonalBest {
   event: string
   value: number

@@ -167,6 +167,12 @@ describe('computePlayerSummaries', () => {
     ])
     expect(player6.personalBests).toEqual([])
   })
+
+  it('sessions를 날짜 역순으로 섞어 넣어도 결과가 동일하다(정렬을 입력 순서에 의존하지 않음)', () => {
+    const shuffled = [...SESSIONS].reverse()
+    const shuffledSummaries = computePlayerSummaries(EVENTS, PLAYERS, shuffled)
+    expect(shuffledSummaries).toEqual(summaries)
+  })
 })
 
 describe('computePlayerSummaries — 경계값·빈 입력', () => {
