@@ -34,8 +34,10 @@ export function computeEventRanking(event: EventDefinition, entries: SessionEntr
   const candidates: RankedCandidate[] = []
   for (const entry of entries) {
     if (!activePlayerIds.has(entry.playerId)) continue
+    // scores[event.key]는 계약상(shared/domain.ts:57-58) 항상 존재하지만, 그 보장을 만드는
+    // 파서(#27)가 아직 없는 상태라 방어적으로 optional chaining — player.status 재확인과 대칭.
     const score = entry.scores[event.key]
-    if (score.status !== 'recorded') continue
+    if (score?.status !== 'recorded') continue
     candidates.push({ playerId: entry.playerId, name: entry.name, value: score.value, display: score.display })
   }
 

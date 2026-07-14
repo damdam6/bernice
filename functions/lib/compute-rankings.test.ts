@@ -110,6 +110,20 @@ describe('computeEventRanking', () => {
     expect(result.entries.map((e) => e.rank)).toEqual([1, 1, 1, 4])
   })
 
+  it('동점자는 입력(시트 행) 순서를 그대로 유지한다 (안정 정렬)', () => {
+    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 0 })
+    const players = [player(3, '활동'), player(1, '활동'), player(2, '활동')]
+    const entries = [
+      entry(3, { 골밑슛: recorded(100) }),
+      entry(1, { 골밑슛: recorded(100) }),
+      entry(2, { 골밑슛: recorded(100) }),
+    ]
+
+    const result = computeEventRanking(layup, entries, players)
+
+    expect(result.entries.map((e) => e.playerId)).toEqual([3, 1, 2])
+  })
+
   it('동점 판정은 정규화된 value 기준이지 display 문자열이 아니다', () => {
     const shuttleRun = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77 })
     const players = [player(1, '활동'), player(2, '활동')]
@@ -129,6 +143,31 @@ describe('computeEventRanking', () => {
     const result = computeEventRanking(layup, entries, players)
 
     expect(result).toEqual({ event: '골밑슛', entries: [] })
+  })
+
+  it('entries·players가 모두 빈 배열이어도 entries: []를 반환한다', () => {
+    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+
+    expect(computeEventRanking(layup, [], [])).toEqual({ event: '골밑슛', entries: [] })
+  })
+
+  it('scores에 종목 key 자체가 없으면(계약 위반 방어) 크래시하지 않고 제외한다', () => {
+    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const players = [player(1, '활동')]
+    const entries = [entry(1, {})] // 골밑슛 key가 아예 없는 방어적 케이스 — 파서(#27) 완성 전까지는 실제로 나올 수 있음
+
+    expect(() => computeEventRanking(layup, entries, players)).not.toThrow()
+    expect(computeEventRanking(layup, entries, players).entries).toEqual([])
+  })
+
+  it('players 목록에 없는 playerId의 엔트리는 제외된다', () => {
+    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const players = [player(1, '활동')]
+    const entries = [entry(1, { 골밑슛: recorded(6) }), entry(99, { 골밑슛: recorded(100) })]
+
+    const result = computeEventRanking(layup, entries, players)
+
+    expect(result.entries).toEqual([{ playerId: 1, name: '선수1', value: 6, display: '6', rank: 1, achieved: true }])
   })
 
   describe('달성(achieved) 판정 — 경계값 포함', () => {
@@ -168,8 +207,23 @@ describe('computeEventRanking', () => {
 
 describe('computeSessionRankings', () => {
   it('docs/records-schema.html §06 예시 응답과 동일한 출력을 낸다', () => {
-    const shuttleRun = event({ key: '드리블셔틀런', direction: '낮을수록', targetValue: 77 })
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    // valueKind/target/maxScore도 문서 예시(§06)와 동일하게 맞춘다 — 랭킹 로직엔 영향 없지만 픽스처 충실도용.
+    const shuttleRun = event({
+      key: '드리블셔틀런',
+      direction: '낮을수록',
+      targetValue: 77,
+      valueKind: 'time',
+      target: '1:17',
+      maxScore: null,
+    })
+    const layup = event({
+      key: '골밑슛',
+      direction: '높을수록',
+      targetValue: 5,
+      valueKind: 'count',
+      target: '5',
+      maxScore: 10,
+    })
     const events = [shuttleRun, layup]
 
     const players = [player(1, '활동', '선수1'), player(3, '활동', '선수3'), player(5, '휴식', '선수5'), player(7, '활동', '선수7')]
