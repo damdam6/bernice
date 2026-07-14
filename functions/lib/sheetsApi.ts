@@ -21,9 +21,13 @@ export class SheetsApiError extends Error {
   }
 }
 
-async function callSheetsApi(env: Env, path: string): Promise<unknown> {
+// 401(만료/폐기 토큰)·429(레이트리밋)도 재시도 없이 그대로 SheetsApiError로 전파한다.
+// googleAuth의 scope별 캐시는 만료 5분 전 선제 갱신하지만 캐시 무효화 API가 없어, 서비스계정
+// 키 회전/폐기 시 워커 warm isolate에 남은 캐시된 토큰이 만료 시각까지(최대 ~55분) 401을
+// 반복시킬 수 있다 — googleAuth.ts 변경이 필요해 이 이슈 범위 밖으로 의도적으로 남겨둔다.
+async function callSheetsApi(env: Env, sheetId: string, pathSuffix: string): Promise<unknown> {
   const accessToken = await getAccessToken(env, READONLY_SCOPE)
-  const response = await fetch(`${SHEETS_BASE_URL}/${path}`, {
+  const response = await fetch(`${SHEETS_BASE_URL}/${encodeURIComponent(sheetId)}${pathSuffix}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
 
@@ -39,7 +43,7 @@ interface SpreadsheetMetadata {
 }
 
 export async function getSpreadsheetTabTitles(env: Env, sheetId: string): Promise<string[]> {
-  const metadata = (await callSheetsApi(env, `${sheetId}?fields=sheets.properties.title`)) as SpreadsheetMetadata
+  const metadata = (await callSheetsApi(env, sheetId, '?fields=sheets.properties.title')) as SpreadsheetMetadata
 
   return (metadata.sheets ?? []).map((sheet) => {
     const title = sheet.properties?.title
@@ -65,7 +69,7 @@ export async function batchGetValues(env: Env, sheetId: string, ranges: string[]
   const query = ranges.map((range) => `ranges=${encodeURIComponent(range)}`).join('&')
   // valueRenderOption을 명시하지 않고 기본값(FORMATTED_VALUE)에 의존한다 — 이 옵션에서는 셀 값이
   // 항상 문자열로 내려와 normalizeScore/normalizeStatus(이슈 #20)의 string 입력 계약과 맞는다.
-  const body = (await callSheetsApi(env, `${sheetId}/values:batchGet?${query}`)) as BatchGetResponse
+  const body = (await callSheetsApi(env, sheetId, `/values:batchGet?${query}`)) as BatchGetResponse
   const valueRanges = body.valueRanges ?? []
 
   // 구글 API는 응답 valueRanges 순서가 요청 ranges 순서와 동일함을 보장한다 — 인덱스로 매핑.
@@ -75,7 +79,10 @@ export async function batchGetValues(env: Env, sheetId: string, ranges: string[]
   }))
 }
 
-function quoteSheetName(name: string): string {
+// fetchSheetBundle의 유일한 호출 경로에서는 분류된 탭 이름(고정 리터럴 또는 YYYY-MM-DD)만
+// 넘어와 작은따옴표를 포함할 수 없다 — 이스케이프 분기는 현재 도달 불가능한 방어 코드지만,
+// A1 표기 규칙상 필요한 처리라 export해 단위 테스트로 직접 검증한다.
+export function quoteSheetName(name: string): string {
   return `'${name.replace(/'/g, "''")}'`
 }
 

@@ -1,6 +1,12 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { Env } from './googleAuth'
-import { SheetsApiError, batchGetValues, fetchSheetBundle, getSpreadsheetTabTitles } from './sheetsApi'
+import {
+  SheetsApiError,
+  batchGetValues,
+  fetchSheetBundle,
+  getSpreadsheetTabTitles,
+  quoteSheetName,
+} from './sheetsApi'
 
 let pem: string
 
@@ -38,12 +44,22 @@ const SHEET_ID = 'sheet-under-test'
 
 interface StubResponse {
   status?: number
-  body: unknown
+  body?: unknown
+  /** JSON.stringify(body) 대신 그대로 응답 본문으로 쓴다 — 빈 문자열·비-JSON 본문 테스트용. */
+  rawBody?: string
 }
 
 interface SheetsStub {
   metadata?: StubResponse
   batchGet?: StubResponse
+}
+
+function toStubResponse(res: StubResponse): Response {
+  const bodyText = res.rawBody !== undefined ? res.rawBody : JSON.stringify(res.body)
+  return new Response(bodyText, {
+    status: res.status ?? 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 // oauth2 토큰 발급과 sheets.googleapis.com 메타/batchGet 호출을 함께 스텁한다. scope가 고정 상수라
@@ -65,10 +81,7 @@ function stubSheetsFetch(stub: SheetsStub) {
       ? (stub.batchGet ?? { body: { valueRanges: [] } })
       : (stub.metadata ?? { body: { sheets: [] } })
 
-    return new Response(JSON.stringify(res.body), {
-      status: res.status ?? 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return toStubResponse(res)
   })
   vi.stubGlobal('fetch', fetchMock)
   return { calls }
@@ -95,9 +108,25 @@ describe('getSpreadsheetTabTitles', () => {
     expect(metaCall).toContain('fields=sheets.properties.title')
   })
 
+  it('sheetId에 경로 구분자 등 특수문자가 있어도 인코딩해 요청 경로를 벗어나지 않는다', async () => {
+    const maliciousSheetId = 'evil/../x?y=1'
+    const { calls } = stubSheetsFetch({ metadata: { body: { sheets: [] } } })
+
+    await getSpreadsheetTabTitles(makeEnv(), maliciousSheetId)
+
+    const metaCall = calls.find((url) => !url.includes('oauth2'))
+    expect(metaCall).toContain(encodeURIComponent(maliciousSheetId))
+    expect(metaCall).not.toContain(maliciousSheetId)
+  })
+
   it('title이 없는 시트가 섞여 있으면 명확한 에러', async () => {
     stubSheetsFetch({ metadata: { body: { sheets: [{ properties: {} }] } } })
     await expect(getSpreadsheetTabTitles(makeEnv(), SHEET_ID)).rejects.toThrow('탭 title이 없습니다')
+  })
+
+  it('401 응답도 SheetsApiError(status 포함)로 전파한다', async () => {
+    stubSheetsFetch({ metadata: { status: 401, body: { error: 'unauthorized' } } })
+    await expect(getSpreadsheetTabTitles(makeEnv(), SHEET_ID)).rejects.toMatchObject({ status: 401 })
   })
 
   it('4xx 응답을 SheetsApiError(status 포함)로 전파한다', async () => {
@@ -110,6 +139,14 @@ describe('getSpreadsheetTabTitles', () => {
   it('5xx 응답도 SheetsApiError(status 포함)로 전파한다', async () => {
     stubSheetsFetch({ metadata: { status: 500, body: { error: 'internal' } } })
     await expect(getSpreadsheetTabTitles(makeEnv(), SHEET_ID)).rejects.toMatchObject({ status: 500 })
+  })
+
+  it('에러 응답 본문이 비어있거나 JSON이 아니어도 안전하게 에러 메시지에 담는다', async () => {
+    stubSheetsFetch({ metadata: { status: 500, rawBody: '' } })
+    await expect(getSpreadsheetTabTitles(makeEnv(), SHEET_ID)).rejects.toThrow('Sheets API 호출 실패 (500)')
+
+    stubSheetsFetch({ metadata: { status: 502, rawBody: '<html>Bad Gateway</html>' } })
+    await expect(getSpreadsheetTabTitles(makeEnv(), SHEET_ID)).rejects.toMatchObject({ status: 502 })
   })
 })
 
@@ -159,6 +196,23 @@ describe('batchGetValues', () => {
   it('4xx/5xx 응답을 SheetsApiError로 구분해 전파한다', async () => {
     stubSheetsFetch({ batchGet: { status: 404, body: { error: 'range not found' } } })
     await expect(batchGetValues(makeEnv(), SHEET_ID, ["'없는탭'"])).rejects.toMatchObject({ status: 404 })
+  })
+
+  it('응답 valueRanges가 요청 range 수보다 적으면 초과분을 []로 정규화한다', async () => {
+    stubSheetsFetch({ batchGet: { body: { valueRanges: [{ values: [['a']] }] } } })
+
+    const result = await batchGetValues(makeEnv(), SHEET_ID, ["'첫번째'", "'두번째'"])
+    expect(result).toEqual([
+      { range: "'첫번째'", values: [['a']] },
+      { range: "'두번째'", values: [] },
+    ])
+  })
+})
+
+describe('quoteSheetName', () => {
+  it('탭 이름을 작은따옴표로 감싸고, 내부 작은따옴표는 이중화해 이스케이프한다', () => {
+    expect(quoteSheetName('2025-05-16')).toBe("'2025-05-16'")
+    expect(quoteSheetName("선수5'B")).toBe("'선수5''B'")
   })
 })
 
@@ -232,5 +286,21 @@ describe('fetchSheetBundle', () => {
   it('메타 조회 단계의 4xx/5xx 오류도 SheetsApiError로 전파한다', async () => {
     stubSheetsFetch({ metadata: { status: 403, body: { error: 'permission denied' } } })
     await expect(fetchSheetBundle(makeEnv(), SHEET_ID)).rejects.toMatchObject({ status: 403 })
+  })
+
+  it('NFD(자모 분해) 명단 탭 이름도 원본 그대로 quoting해 batchGet에 요청한다', async () => {
+    const rosterNfd = '버니스명단'.normalize('NFD')
+    expect(rosterNfd).not.toBe('버니스명단') // 픽스처가 실제로 다른 바이트 표현인지 확인
+
+    const { calls } = stubSheetsFetch({
+      metadata: { body: { sheets: [{ properties: { title: rosterNfd } }] } },
+      batchGet: { body: { valueRanges: [{ values: [['이름', '상태']] }] } },
+    })
+
+    const bundle = await fetchSheetBundle(makeEnv(), SHEET_ID)
+    expect(bundle.roster?.name).toBe(rosterNfd)
+
+    const batchGetCall = calls.find((url) => url.includes('/values:batchGet'))
+    expect(batchGetCall).toContain(`ranges=${encodeURIComponent(`'${rosterNfd}'`)}`)
   })
 })
