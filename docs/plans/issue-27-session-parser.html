@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#27 P1 — 회차 파서 (이름·점수) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 18px 0 8px; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  pre {
+    background: var(--code-bg); border-radius: 10px; padding: 14px 16px;
+    overflow-x: auto; font-size: 0.82rem; line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+  .note {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 0.9rem; margin: 10px 0;
+  }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/27">#27</a></span><span class="type-chip">신규 기능</span>
+    <h1>P1 — 회차 파서 (이름·점수)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/27-session-parser</code></b> ← <code>main</code></span>
+      <span>라벨 <b>없음</b></span>
+      <span>2026-07-13</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>회차 탭(3개월마다 추가되는 날짜 이름 탭)의 원시 2D 배열을 <code>shared/domain.ts</code>의 <code>Session</code> 도메인 타입으로 변환하는 순수 함수 <code>parseSession</code>을 <code>functions/lib/parse-session.ts</code>에 신규 작성한다. 점수 셀은 이미 병합된 <code>normalizeScore</code>(functions/lib/normalize-score.ts, 이슈 #6 → #20)로 정규화하고, 선수 식별은 이슈 #3(→ #21)이 확정한 "행 위치가 신원" 원칙을 그대로 적용해 <b>회차 탭의 데이터 행 위치</b>로 <code>playerId</code>를 도출하며 회차 탭 자체의 이름 셀(참조 수식 결과)을 명단과 대조하는 무결성 검증으로 쓴다. 시트 연동 없이 픽스처 기반 테스트만으로 완결한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>functions/lib/</code>에는 이미 세 조각의 기반이 준비돼 있고, 회차 파서 자체는 아직 없다.</p>
+    <ul>
+      <li><b>도메인 계약</b> — <code>shared/domain.ts:24-31</code>의 <code>Player</code>는 "id는 시트 행 위치 기반 파생값(1부터, 헤더 제외)"이라고 명시한다. <code>shared/domain.ts:53-60</code> <code>SessionEntry</code>는 <code>playerId</code> · <code>name</code>(그 시점 이름) · <code>scores: Record&lt;EventDefinition.key, EventScore&gt;</code> · <code>participated</code>를 요구하고, <code>shared/domain.ts:62-67</code> <code>Session</code>은 <code>{ date, entries[] }</code>다. <code>EventScore</code>(<code>shared/domain.ts:45-51</code>)는 <code>status</code>로 분기하는 판별 유니온이다.</li>
+      <li><b>값 정규화</b> — <code>functions/lib/normalize-score.ts:12-22</code> <code>normalizeScore(raw)</code>는 <code>ScoreValue</code>(<code>kind: 'count' | 'seconds' | 'exempt' | 'blank' | 'invalid'</code>)를 돌려준다. NFKC 정규화, 분 상한(999), 초 범위(0-59), 3파트(h:mm:ss) 자동 변환 의심 케이스까지 이미 처리돼 있다(<code>functions/lib/normalize-score.test.ts</code>).</li>
+      <li><b>탭 분류</b> — <code>functions/lib/sheetTabs.ts:53-86</code> <code>classifySheetTabs</code>가 탭 이름을 <code>YYYY-MM-DD</code> 정규식 + 캘린더 왕복 검증으로 걸러 <code>RoundTab { name, date }</code>를 만든다. <b>이 파서는 그 결과물(유효성 검증이 끝난 탭 이름)을 그대로 <code>Session.date</code>로 재사용</b>하면 되고, 날짜 형식을 다시 검증할 필요가 없다.</li>
+      <li><b>시트 스키마</b>(docs/sheet-integration.html §02, docs/sheet-rules.html §01/§04) — 회차 탭 헤더는 <code>이름 | 종목1 | 종목2 | …</code> 고정이고, 종목 헤더 셀은 <code>='목표'!A2</code> 같은 참조 수식이라 <b>목표 탭 행 순서와 항상 같은 순서</b>로 나타난다. 데이터 행의 이름 셀은 <code>='버니스명단'!A2</code> 참조 수식이고, 회차 탭은 명단 전원을 <b>행 순서 그대로</b> 미러링한다(중간 삽입·재배치·삭제 금지 — 이 규칙이 깨지면 "이름은 밀려 바뀌는데 점수는 그대로"인 사고가 난다).</li>
+      <li><b>의존 이슈 상태</b> — 이슈 본문의 #3/#6은 각각 <a href="https://github.com/damdam6/bernice/issues/21">#21</a>(도메인 타입, main 병합됨)·<a href="https://github.com/damdam6/bernice/issues/20">#20</a>(값 정규화, main 병합됨)를 가리키며 그대로 재사용한다. 반면 <a href="https://github.com/damdam6/bernice/issues/25">#25</a>(명단 파서)·<a href="https://github.com/damdam6/bernice/issues/26">#26</a>(목표 파서)는 <b>아직 미구현(OPEN)</b>이다 — 이 파서는 그 둘의 실제 구현이 아니라 이미 확정된 <code>Player[]</code>/<code>EventDefinition[]</code> 타입 계약(shared/domain.ts)만 입력으로 받아 픽스처로 개발한다. 타입 계약만 맞으면 #25/#26이 나중에 구현돼도 이 파서는 그대로 재사용된다.</li>
+      <li><b>탈퇴 필터링 책임 소재</b> — docs/records-schema.html §02는 "탈퇴 = 응답 어디에도 등장하지 않음, 파서 단계에서 제외"라고 적혀 있지만, <code>Session.entries</code> 주석(<code>shared/domain.ts:65-66</code>)은 "그 회차 탭에 실제로 존재하는 명단 행만"이라고만 하고 상태 필터링은 언급하지 않는다. 다운스트림 이슈(<a href="https://github.com/damdam6/bernice/issues/28">#28</a> 랭킹은 활동만, <a href="https://github.com/damdam6/bernice/issues/29">#29</a> 프로필 추이는 비대상·휴식도 포함)는 <code>PlayerStatus</code>별로 서로 다른 포함 규칙을 <code>Session.entries</code> 전체에 대해 적용해야 하므로, <b>이 파서가 상태로 미리 걸러내면 하류에서 필요한 정보를 복원할 수 없다</b>. 따라서 이 이슈는 상태 필터링을 하지 않는 것으로 설계한다(§3 참고).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+
+    <h3>3-1. 시그니처</h3>
+    <pre><code>// functions/lib/parse-session.ts
+export function parseSession(
+  tabName: string,               // 이미 검증된 회차 탭 이름 (예: sheetTabs.RoundTab.name) → Session.date로 그대로 사용
+  rows: string[][],              // Sheets API 원시 2D 배열, rows[0] = 헤더
+  players: Player[],             // 명단 파서(#25) 출력과 같은 계약. id = 1-based 행 위치
+  events: EventDefinition[],     // 목표 파서(#26) 출력과 같은 계약. key로 헤더 매칭
+): Session</code></pre>
+    <p>날짜 형식 재검증은 하지 않는다 — <code>classifySheetTabs</code>가 이미 캘린더 왕복 검증까지 끝낸 값을 넘겨받는다는 계약으로 둔다(중복 검증 대신 호출부 책임으로 명시).</p>
+
+    <h3>3-2. 선수 매칭 — 행 위치가 1차 키, 이름은 무결성 검증</h3>
+    <p>완료 조건 "명단 행 위치/이름 기준 매칭 전략이 명단 파서(#25)와 일관됨"을 다음과 같이 해석한다: 회차 탭의 데이터 행 N(1부터, 헤더 제외)은 항상 <code>='버니스명단'!A(N+1)</code>을 참조하므로(전원 미러링 + append-only 규칙), <b><code>playerId = N</code>을 행 위치로 직접 도출</b>하는 것이 <code>Player.id</code>(shared/domain.ts:25 "행 위치 기반 파생값")와 동일한 컨벤션이다. 이름 셀은 수식이 정확히 해석됐는지 확인하는 <b>2차 무결성 검증</b>으로 쓴다: <code>players[N-1]</code>이 존재해야 하고, 그 <code>.name</code>이 회차 탭의 이름 셀(NFC 정규화 후)과 일치해야 한다. 불일치·범위 초과는 시트 편집 규칙(§01) 위반이 실제로 일어났다는 뜻이므로 <b>조용히 무시하지 않고 Error를 던진다</b> — 잘못 매칭된 점수가 다른 사람 기록으로 섞이는 사고보다, 새로고침 시 에러로 드러나 관리자가 시트를 고치는 편이 훨씬 안전하다.</p>
+    <div class="note">이름만으로 매칭하지 않는 이유: 회차 탭 이름 셀은 참조 수식이라 항상 "현재" 명단 이름과 같아야 하지만(개명 반영), 이것만으로 매칭하면 이론상 동명이인이나 공백/정규화 차이에 취약하다. 행 위치는 시트의 물리적 구조(참조 수식이 가리키는 행)에서 직접 나오는 값이라 더 견고하고, <code>Player.id</code> 정의와 정확히 같은 축을 쓴다.</div>
+
+    <h3>3-3. 종목 헤더 매칭</h3>
+    <p>헤더 행(<code>rows[0]</code>)의 첫 칸은 <code>"이름"</code>과 NFC 일치해야 한다. 이후 칸들은 각각 NFC 정규화 후 <code>events[].key</code>와 매칭한다(위치가 아니라 <b>텍스트 매칭</b> — 헤더가 <code>='목표'!A2:A5</code> 참조라 목표 탭과 같은 순서로 나오는 게 보장되지만, 매칭 로직 자체는 순서에 의존하지 않게 해 더 견고하게 만든다). 다음은 즉시 Error:</p>
+    <ul>
+      <li>헤더 칸 텍스트가 어떤 <code>events[].key</code>와도 안 맞음(알 수 없는 종목)</li>
+      <li>같은 종목 키가 헤더에 중복</li>
+      <li><code>events[]</code>의 어떤 키가 헤더 어디에도 없음(종목 컬럼 누락)</li>
+    </ul>
+
+    <h3>3-4. 셀 → EventScore 조립 (valueKind 교차검증 포함)</h3>
+    <p>docs/records-schema.html §03은 <code>normalizeScore</code>의 <code>ScoreValue.kind</code> → 이 계약의 <code>ScoreStatus</code> 매핑과, "종목 형식(<code>valueKind</code>)과 셀에서 판별된 형식이 다르면 invalid로 승격"하는 교차검증을 "조립 단계(파서/엔드포인트 이슈)의 책임"이라고만 적어두고 어느 이슈인지 못박지 않았다. 이 파서가 이미 <code>events[]</code>를 받아 헤더를 매칭하므로 <b>이 교차검증을 이 파서가 흡수</b>한다 — 그러면 <code>Session</code>이 최종 <code>EventScore</code>를 담은 채로 나가고, 하류(#28~#30)가 같은 정규화 로직을 다시 구현하거나 재검증할 필요가 없다.</p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>normalizeScore 결과</th><th>EventScore</th></tr></thead>
+      <tbody>
+        <tr><td><code>exempt</code></td><td><code>{ status: 'exempt', value: null, display: null }</code></td></tr>
+        <tr><td><code>blank</code></td><td><code>{ status: 'unmeasured', value: null, display: null }</code></td></tr>
+        <tr><td><code>invalid</code></td><td><code>{ status: 'invalid', value: null, display: raw.trim(), reason }</code></td></tr>
+        <tr><td><code>count</code> · <code>event.valueKind==='count'</code></td><td><code>{ status: 'recorded', value, display: raw.trim() }</code></td></tr>
+        <tr><td><code>seconds</code> · <code>event.valueKind==='time'</code></td><td><code>{ status: 'recorded', value, display: raw.trim() }</code></td></tr>
+        <tr><td><code>count</code>/<code>seconds</code>인데 <code>event.valueKind</code>와 불일치</td><td><code>{ status: 'invalid', value: null, display: raw.trim(), reason: '종목 형식과 값 형식이 다름' }</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><code>row[columnIndex]</code>가 <code>undefined</code>(Sheets API가 행 끝의 빈 셀을 생략해 배열이 짧아진 경우)면 <code>normalizeScore(undefined)</code> → <code>blank</code> → <code>unmeasured</code>로 자연스럽게 처리된다(별도 분기 불필요).</p>
+
+    <h3>3-5. participated 파생 및 빈 행 처리</h3>
+    <p><code>participated = Object.values(scores).some(s =&gt; s.status !== 'unmeasured')</code> — 전 종목 unmeasured면만 false, exempt·invalid도 "뭔가 입력됨"으로 참여로 친다(records-schema.html §03과 일치).</p>
+    <p>데이터 행의 <b>모든 칸(이름 포함)이 공백</b>이면 식별할 이름 자체가 없으므로 엔트리를 만들지 않고 조용히 스킵한다(Sheets 범위 조회가 실제 데이터보다 한두 행 더 가져왔을 때 생기는 흔한 아티팩트로 취급) — 이름은 있는데 매칭이 안 되거나 점수만 있고 이름이 없는 <b>부분적으로만 빈 행</b>은 진짜 이상 상태이므로 Error로 처리한다. 스킵된 행이 있어도 이후 행의 <code>playerId</code>는 원본 배열의 절대 위치를 그대로 쓰므로(반복문 인덱스를 필터링 전 배열에서 얻음) 밀림이 생기지 않는다.</p>
+    <p>데이터 행 수가 <code>players.length</code>보다 많으면(존재하지 않는 명단 위치를 참조) Error. 반대로 적은 것은 정상이다 — 신규 가입자는 과거 회차에 엔트리 자체가 없다(이슈 본문 그대로).</p>
+
+    <h3>3-6. 상태(탈퇴 등) 필터링은 여기서 하지 않는다</h3>
+    <p>§2에서 분석한 대로, <code>PlayerStatus</code>별 포함 규칙은 소비자마다 다르다(활동만/비대상·휴식 포함/탈퇴 항상 제외). 이 파서는 <code>players[]</code>를 오직 <b>이름 무결성 검증</b>에만 쓰고 <code>status</code>는 들여다보지 않는다 — 필터링은 랭킹(#28)·추이(#29)·엔드포인트 조립(#30)의 책임으로 남긴다. PR 설명에 이 결정을 명시해 향후 리뷰에서 혼동을 막는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>도메인 타입 재확인 — <code>shared/domain.ts</code>의 <code>Player</code> · <code>EventDefinition</code> · <code>EventScore</code> · <code>SessionEntry</code> · <code>Session</code> 필드를 그대로 인용해 구현(재정의 금지).
+        <span class="files"><code>shared/domain.ts</code></span>
+      </li>
+      <li><code>functions/lib/parse-session.ts</code> 신규 작성 — 헤더 매칭(§3-3) · 행 위치 기반 선수 매칭 + 이름 무결성 검증(§3-2) · <code>normalizeScore</code> 기반 EventScore 조립 + valueKind 교차검증(§3-4) · participated 파생 + 빈 행 스킵(§3-5)을 구현한 <code>parseSession</code> export.
+        <span class="files"><code>functions/lib/parse-session.ts</code>, import <code>../../shared/domain</code>, <code>./normalize-score</code></span>
+      </li>
+      <li>픽스처 헬퍼 준비 — docs/sheet-integration.html §02 예시(선수1~7, 드리블셔틀런/골밑슛/자유투/45도패스캐치)를 본뜬 <code>players</code>·<code>events</code>·<code>rows</code> 픽스처 빌더.
+        <span class="files"><code>functions/lib/parse-session.test.ts</code></span>
+      </li>
+      <li>정상 케이스 테스트 — 면제·빈칸(미참여)·시간형/개수형 혼합 회차, participated 계산, NFD 이름 셀도 매칭됨, 헤더 열 순서가 뒤섞여도 텍스트 매칭으로 정상 처리.
+        <span class="files"><code>functions/lib/parse-session.test.ts</code></span>
+      </li>
+      <li>경계·이상 케이스 테스트 — valueKind 불일치(개수 종목에 <code>1:15</code>) → invalid 승격, 알 수 없는 헤더/종목 컬럼 누락/헤더 중복 → Error, 이름 불일치·데이터 행 초과 → Error, 트레일링 빈 셀(짧은 행 배열)·완전 빈 행 스킵.
+        <span class="files"><code>functions/lib/parse-session.test.ts</code></span>
+      </li>
+      <li>검증 — <code>npm test</code>(vitest) · <code>npm run typecheck</code>(tsc -b, functions/tsconfig.json의 <code>../shared</code> include 경로로 <code>shared/domain.ts</code> import가 타입 체크되는지 확인).
+        <span class="files">-</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>#25/#26(명단·목표 파서)이 아직 미구현</td><td>실제 시트 출력과의 통합 테스트는 이 이슈 범위 밖</td><td><code>shared/domain.ts</code> 타입 계약만으로 픽스처 작성 — 순수 함수라 #25/#26이 나중에 그 타입을 만들어내기만 하면 그대로 연결됨</td></tr>
+        <tr><td>valueKind 교차검증 책임을 이 이슈가 흡수하기로 임의 결정</td><td>#30(엔드포인트) 설계 시 중복 검증 또는 책임 혼동 가능성</td><td>PR 설명에 "Session이 이미 최종 EventScore를 담아 나간다"고 명시, #30 플랜 작성 시 이 문서 링크</td></tr>
+        <tr><td>탈퇴 등 상태 필터링을 이 파서가 하지 않기로 결정</td><td>후속 이슈(#28~#30)가 필터링을 빠뜨리면 탈퇴 회원이 응답에 노출</td><td>도메인 주석·PR 설명에 "필터링은 하류 책임"임을 명시, 완료 조건에도 반영</td></tr>
+        <tr><td>Sheets API가 트레일링 빈 셀/행을 생략해 배열 길이가 들쭉날쭉할 수 있음(실제 동작은 #24 미구현으로 아직 확인 불가)</td><td>인덱스 접근 시 undefined를 못 다루면 컬럼이 밀리거나 예외 발생</td><td>짧은 행은 <code>normalizeScore(undefined)</code> → blank로 자연 처리, 완전 빈 행은 스킵 테스트로 커버 — #24 구현 후 실제 응답 형태로 재검증 필요하면 별도 이슈</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run functions/lib/parse-session.test.ts</code> — 아래 케이스가 모두 통과해야 한다.</li>
+      <li>정상: 개수형·시간형 혼합 회차에서 <code>recorded</code> value/display가 정확히 계산됨(예: <code>1:15</code> → 75초).</li>
+      <li>면제: <code>면제</code> 셀 → <code>{ status: 'exempt', value: null, display: null }</code>, 그 종목은 랭킹 제외 대상이지만 participated는 true로 남음.</li>
+      <li>미참여: 전 종목 빈칸인 행 → 모든 칸 <code>unmeasured</code>, <code>participated: false</code>. 한 종목만 빈칸인 행은 그 칸만 unmeasured고 participated는 true.</li>
+      <li>이상값 승격: 개수 종목 셀에 <code>1:15</code> 입력 → <code>invalid</code>(reason에 형식 불일치 명시), <code>normalizeScore</code> 자체가 invalid로 판별하는 값(예: <code>1:75</code>)도 그대로 invalid 전달.</li>
+      <li>이름 무결성: 회차 탭 이름 셀이 <code>players[N-1].name</code>과 다르면 Error, NFD로 들어와도 NFC 정규화 후 일치하면 정상 통과.</li>
+      <li>헤더 매칭: 헤더 열 순서를 <code>events[]</code> 순서와 다르게 섞어도 텍스트 매칭으로 정상 처리, 알 수 없는 헤더 텍스트·종목 컬럼 누락·중복 헤더는 각각 Error.</li>
+      <li>행 수: <code>rows</code> 데이터 행 수가 <code>players.length</code>보다 많으면 Error, 적은 것(신규 가입자 미포함)은 정상적으로 그만큼만 <code>entries</code>에 담김.</li>
+      <li>빈 행: 완전히 빈 행(이름·점수 전부 공백)은 스킵되고, 그 다음 실제 행의 <code>playerId</code>는 원래 위치를 유지함(밀리지 않음).</li>
+      <li><code>npm run typecheck</code> — <code>shared/domain.ts</code> import, <code>Record&lt;string, EventScore&gt;</code> 조립이 <code>strict</code> 옵션 하에서 타입 에러 없이 통과.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>순수 함수 <code>parseSession</code>이 <code>functions/lib/parse-session.ts</code>에 존재하고, 픽스처 테스트가 면제·빈칸·시간형/개수형 혼합 회차를 모두 커버한다.</li>
+      <li>이상값(valueKind 불일치 포함)은 예외를 던지지 않고 <code>EventScore</code> 값(<code>status: 'invalid'</code>)으로 표현된다.</li>
+      <li>선수 매칭은 회차 탭 데이터 행 위치를 1차 키로 쓰고 이름 셀을 무결성 검증으로 쓰는 전략이며, 이는 <code>Player.id</code>(shared/domain.ts:25, "행 위치 기반 파생값")·명단 파서(#25) 컨벤션과 동일한 축을 공유한다.</li>
+      <li>상태(탈퇴 등) 필터링은 이 파서의 책임이 아님을 코드 주석과 PR 설명에 명시한다.</li>
+      <li><code>npm test</code> · <code>npm run typecheck</code> 모두 통과.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/27">#27</a> · 2026-07-13</footer>
+</main>
+</body>
+</html>
