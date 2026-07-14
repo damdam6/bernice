@@ -198,4 +198,90 @@ describe('parseSession', () => {
     const session = parseSession('2025-05-16', rows, buildPlayers(), buildEvents())
     expect(session.entries.map((e) => e.playerId)).toEqual([1, 3])
   })
+
+  it('헤더 행조차 없는 빈 rows는 Error를 던진다', () => {
+    expect(() => parseSession('2025-05-16', [], buildPlayers(), buildEvents())).toThrow(/헤더 행조차 없음/)
+  })
+
+  it('이름 셀은 비어 있는데 점수는 입력돼 있으면 "이름 불일치"가 아니라 전용 사유로 Error를 던진다', () => {
+    const rows = [HEADER, ['', '1:12', '5', '2', '6']]
+
+    expect(() => parseSession('2025-05-16', rows, buildPlayers(), buildEvents())).toThrow(
+      /이름 셀이 비어 있는데 점수가 입력돼 있습니다/,
+    )
+  })
+
+  it('전 종목 exempt만 있어도 participated는 true다', () => {
+    const rows = [HEADER, ['선수1', '면제', '면제', '면제', '면제']]
+    const session = parseSession('2025-05-16', rows, buildPlayers(['선수1']), buildEvents())
+
+    expect(session.entries[0].participated).toBe(true)
+    for (const event of buildEvents()) {
+      expect(session.entries[0].scores[event.key]).toEqual({ status: 'exempt', value: null, display: null })
+    }
+  })
+
+  it('전 종목 invalid만 있어도 participated는 true다', () => {
+    const rows = [HEADER, ['선수1', '1:75', '-1', '6.5', 'abc']]
+    const session = parseSession('2025-05-16', rows, buildPlayers(['선수1']), buildEvents())
+
+    expect(session.entries[0].participated).toBe(true)
+    for (const event of buildEvents()) {
+      expect(session.entries[0].scores[event.key].status).toBe('invalid')
+    }
+  })
+
+  it('이름 셀 앞뒤 공백은 trim되어 명단과 매칭된다', () => {
+    const rows = [HEADER, ['  선수1  ', '1:12', '5', '2', '6']]
+    const session = parseSession('2025-05-16', rows, buildPlayers(['선수1']), buildEvents())
+
+    expect(session.entries[0].name).toBe('선수1')
+  })
+
+  describe('players 배열에 결번이 있는 경우 (명단 파서(#25)가 이름 없음·알 수 없는 상태값 행을 issues로 빼고 players에서 제외 — id는 원본 행 위치로 고정, functions/lib/roster.ts)', () => {
+    it('결번 위치를 참조하는 행은 엉뚱한 선수와 매칭되지 않고 "명단에 없는 위치"로 Error를 던진다', () => {
+      const players: Player[] = [
+        { id: 1, name: '선수1', status: '활동' },
+        { id: 3, name: '선수3', status: '활동' }, // id=2는 명단에서 상태값 오타 등으로 제외된 행
+      ]
+      const rows = [
+        HEADER,
+        ['선수1', '1:12', '5', '2', '6'],
+        ['선수2', '1:14', '6', '1', '7'], // 명단 2번 위치를 참조 — players엔 없음
+        ['선수3', '1:20', '4', '2', '5'],
+      ]
+
+      expect(() => parseSession('2025-05-16', rows, players, buildEvents())).toThrow(
+        /명단에 없는 위치를 참조합니다 \(playerId=2\)/,
+      )
+    })
+
+    it('결번 위치의 회차 탭 행이 빈 행이면 스킵되고, 그 뒤 행은 id 기반으로 정확히 매칭된다', () => {
+      const players: Player[] = [
+        { id: 1, name: '선수1', status: '활동' },
+        { id: 3, name: '선수3', status: '활동' },
+      ]
+      const rows = [
+        HEADER,
+        ['선수1', '1:12', '5', '2', '6'],
+        ['', '', '', '', ''], // 2번 위치는 명단 자체가 빈 행이었던 경우
+        ['선수3', '1:20', '4', '2', '5'],
+      ]
+
+      const session = parseSession('2025-05-16', rows, players, buildEvents())
+      expect(session.entries.map((e) => e.playerId)).toEqual([1, 3])
+      expect(session.entries[1].name).toBe('선수3')
+    })
+  })
+
+  it('헤더 중간에 빈 칸이 있으면(참조 수식 깨짐) 조용히 무시하지 않고 Error를 던진다', () => {
+    // 5개 비-이름 컬럼(events는 4개) 중 하나가 빈 칸 — missing-컬럼 체크로는 안 걸리는
+    // "여분 컬럼이 빈 채로 끼어든" 케이스를 직접 겨냥한다.
+    const header = ['이름', '드리블셔틀런', '', '골밑슛', '자유투', '45도패스캐치']
+    const rows = [header, ['선수1', '1:12', '', '5', '2', '6']]
+
+    expect(() => parseSession('2025-05-16', rows, buildPlayers(['선수1']), buildEvents())).toThrow(
+      /비어 있습니다/,
+    )
+  })
 })

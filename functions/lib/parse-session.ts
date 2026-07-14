@@ -11,6 +11,12 @@
 // 않고 Error를 던진다 — 잘못 매칭된 점수가 다른 사람 기록으로 섞이는 것보다, 새로고침
 // 시 에러로 드러나 관리자가 시트를 고치는 편이 안전하다.
 //
+// players[]는 배열 인덱스가 아니라 id로 조회한다: 명단 파서(#25)는 이름 없음·알 수 없는
+// 상태값 같은 행을 issues로 빼고 players에서 제외하되 id는 원본 행 위치로 고정하므로
+// (functions/lib/roster.ts), players 배열은 간극이 있을 수 있다(id 1,3만 있고 2는 없는
+// 식). 배열 인덱스로 접근하면(players[index]) 그 간극만큼 뒤의 모든 행이 엉뚱한 선수와
+// 매칭된다 — 반드시 Map<id, Player>로 조회해야 한다.
+//
 // valueKind 교차검증: docs/records-schema.html §03이 "조립 단계(파서/엔드포인트)의 책임"
 // 이라고만 적어둔 검증(예: 개수 종목 셀에 1:15 입력)을 이 파서가 흡수한다 — 이미 events[]
 // 를 받아 헤더를 매칭하므로 자연스러운 지점이고, Session이 최종 EventScore를 담은 채로
@@ -42,6 +48,7 @@ export function parseSession(
 
   const eventColumns = mapHeaderToEvents(rows[0], events)
   const dataRows = rows.slice(1)
+  const playersById = new Map(players.map((player) => [player.id, player]))
 
   // 행 수가 players.length를 넘는지는 여기서 일괄 검사하지 않는다 — 초과분이 완전히 빈
   // 트레일링 행(범위 조회 아티팩트)이면 아래 루프에서 스킵되는 게 맞고, 실제로 명단에
@@ -54,7 +61,17 @@ export function parseSession(
     if (isFullyBlank) return // Sheets 범위 조회가 실제 데이터보다 더 가져온 경우의 트레일링 아티팩트로 취급
 
     const playerId = index + 1
-    const player = players[index]
+
+    if (nameCell === '') {
+      // restCells 중 하나라도 채워져 있어 isFullyBlank는 아니지만 이름만 없는 경우 — 이름
+      // 무결성 검증(아래)에 맡기면 "명단과 불일치"로 오진된다. 실제로는 이름 참조 수식이
+      // 깨졌거나 지워졌다는 뜻이라 별도 메시지로 정확히 알린다.
+      throw new Error(
+        `회차 탭 ${index + 2}행 이름 셀이 비어 있는데 점수가 입력돼 있습니다 (playerId=${playerId}) — 이름 참조 수식이 깨졌을 수 있습니다`,
+      )
+    }
+
+    const player = playersById.get(playerId)
     if (!player) {
       throw new Error(`회차 탭 ${index + 2}행이 명단에 없는 위치를 참조합니다 (playerId=${playerId})`)
     }
@@ -91,15 +108,22 @@ function mapHeaderToEvents(header: string[], events: EventDefinition[]): EventCo
   const columns: EventColumn[] = []
 
   for (let columnIndex = 1; columnIndex < header.length; columnIndex++) {
-    const label = (header[columnIndex] ?? '').trim().normalize('NFC')
-    if (label === '') continue // 트레일링 빈 헤더 셀은 무시
+    const rawLabel = header[columnIndex] ?? ''
+    const label = rawLabel.trim().normalize('NFC')
 
+    // 헤더 셀은 전부 종목 참조 수식이라 정상 상태에서는 절대 빈 칸일 수 없다(데이터 행의
+    // 점수 칸과 달리 "빈 트레일링 셀 생략" 같은 benign 케이스가 없음) — 빈 칸도 그냥
+    // "대응 종목 없음"으로 던져 다른 헤더 이상과 동일하게 fail-loud를 유지한다.
     const event = eventByKey.get(label)
     if (!event) {
-      throw new Error(`회차 탭 헤더 "${header[columnIndex]}"에 대응하는 종목을 목표 탭에서 찾을 수 없습니다`)
+      throw new Error(
+        label === ''
+          ? `회차 탭 헤더 ${columnIndex + 1}번째 열이 비어 있습니다 — 종목 참조 수식이 깨졌을 수 있습니다`
+          : `회차 탭 헤더 "${rawLabel}"에 대응하는 종목을 목표 탭에서 찾을 수 없습니다`,
+      )
     }
     if (matchedKeys.has(label)) {
-      throw new Error(`회차 탭 헤더에 "${header[columnIndex]}"가 중복됩니다`)
+      throw new Error(`회차 탭 헤더에 "${rawLabel}"가 중복됩니다`)
     }
 
     matchedKeys.add(label)
