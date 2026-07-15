@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#30 P1 — /api/records 엔드포인트 + Cache API 긴 캐시 (조립) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/30">#30</a></span><span class="type-chip">기능 추가 (조립)</span>
+    <h1>P1 — /api/records 엔드포인트 + Cache API 긴 캐시 (조립)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/30-records-endpoint-cache</code></b> ← <code>main</code></span>
+      <span>라벨 <b>없음</b></span>
+      <span>2026-07-15</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>이슈 #24(Sheets 읽기 래퍼)·#25~#27(명단/목표/회차 파서)·#28~#29(랭킹/추이·PB 계산)에서 이미 만들어져 <code>main</code>에 머지된 순수 함수들을 그대로 재사용해, <code>GET /api/records</code>가 #21(<code>shared/domain.ts</code> · <code>docs/records-schema.html</code>) 계약대로의 <code>RecordsResponse</code> JSON을 반환하도록 조립한다. 다만 <code>HomeSummary</code>(홈 요약: 최신 회차 참여 인원·종목별 달성률) 계산과, 탈퇴 선수를 <code>sessions[].entries</code>에서 제외하는 처리는 어느 선행 이슈에도 구현돼 있지 않아 이번 이슈에서 새로 작성해야 한다. 캐싱은 Cloudflare Cache API(<code>caches.default</code>)로 구현하고, 향후 P2의 <code>/api/refresh</code>가 같은 캐시 키로 무효화할 수 있도록 키를 별도 lib 모듈로 분리한다. 인증 게이트(P2)는 이 이슈 범위 밖이라 적용하지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>현재 <code>functions/api/</code>에는 <code>health.ts</code>(<code>functions/api/health.ts:1-2</code>) 하나뿐 — 캐싱도, env 사용도 없는 가장 단순한 형태. <code>/api/records</code>는 아직 없다.</li>
+      <li><code>shared/domain.ts:139-147</code>의 <code>RecordsResponse</code>가 최종 응답 계약이고, <code>docs/records-schema.html</code>이 상태 4종 정책(§02)·점수 특수값(§03)·랭킹/달성/추이 규칙(§04)·예시 응답(§06)을 규정한다. §07은 "<code>/api/records</code> 엔드포인트 — 위 결과를 <code>RecordsResponse</code> 형태로 조립해 반환 + 캐싱"이 이 이슈의 몫이라고 명시한다.</li>
+      <li>선행 이슈 산출물 확인 완료(<code>functions/lib/</code>): <code>sheetsApi.ts</code>(#24, <code>fetchSheetBundle</code>이 탭 분류 + <code>batchGet</code>까지 끝낸 <code>SheetRawBundle</code>을 반환), <code>roster.ts</code>(#25, <code>parseRoster</code>), <code>parse-goals.ts</code>(#26), <code>parse-session.ts</code>(#27), <code>compute-rankings.ts</code>(#28, <code>computeSessionRankings</code>), <code>player-summary.ts</code>(#29, <code>computePlayerSummaries</code>) — 전부 그대로 재사용 가능. 전부 순수 함수라 조립 로직도 순수 함수로 짜서 단위 테스트하기 좋은 조건.</li>
+      <li><b>구멍 1 — <code>HomeSummary</code> 미구현</b>: <code>grep -rn "HomeSummary\|achievementRates\|latestSession"</code>은 <code>shared/domain.ts</code> 정의 외에 어떤 구현도 없음을 확인했다. #28(랭킹)·#29(추이/PB)의 스코프는 각각 <code>SessionRankings</code>와 <code>PlayerEventTrend</code>/<code>PlayerPersonalBest</code>까지였고 <code>HomeSummary</code>는 남겨졌다 — 이번 이슈에서 새로 작성해야 한다.</li>
+      <li><b>구멍 2 — 탈퇴 필터링이 이 계층 책임</b>: <code>functions/lib/parse-session.ts:25-27</code> 주석이 "상태(탈퇴 등) 필터링은 이 파서의 책임이 아니다 ... 하류 소비자마다 포함 규칙이 달라 여기서 미리 걸러내면 복원할 수 없다"고 명시한다. 반면 <code>docs/records-schema.html</code> §02 표는 탈퇴 상태를 <code>players[]</code>·<code>sessions[].entries</code>·<code>rankings</code>/<code>home.achievementRates</code> "어디에도 등장하지 않음"으로 못박는다. <code>computeEventRanking</code>(<code>compute-rankings.ts:32-36</code>)과 <code>computePlayerSummaries</code>(<code>player-summary.ts:98</code>, <code>isActivePlayer</code> 필터)는 각자 내부적으로 탈퇴를 이미 걸러내지만, <b><code>RecordsResponse.sessions</code> 필드 자체(원시 회차별 기록)에는 탈퇴 엔트리를 걸러내는 코드가 어디에도 없다</b> — 이번 조립 단계가 명시적으로 처리해야 한다.</li>
+      <li><code>wrangler.jsonc:8-10</code>의 <code>SHEET_ID</code>는 지금 어떤 함수 코드에서도 참조되지 않는다 — 이 이슈가 처음으로 소비한다. 시크릿(<code>GOOGLE_SERVICE_ACCOUNT_KEY</code>)은 <code>.dev.vars</code>(로컬)/Pages 시크릿(운영)이며 이미 <code>googleAuth.ts</code>가 그 계약대로 소비 중.</li>
+      <li>Cache API(<code>caches.*</code>) 사용처가 레포 전체에 전혀 없음(grep 확인) — 이 레포에서 처음 도입하는 패턴. Cloudflare 공식 문서 기준으로 <code>caches.default</code>는 문자열/커스텀 <code>Request</code>를 키로 받고(요청 자체와 무관하게 설계 가능), <code>Cache-Control</code> 헤더가 없는 응답은 상태코드 기반 기본 TTL로 저장되며, <code>context.waitUntil(cache.put(...))</code>로 응답을 먼저 반환하고 캐시 쓰기는 백그라운드에서 완료하는 것이 표준 패턴이다.</li>
+      <li><code>package.json</code>의 <code>dev:all</code>(빌드 + <code>wrangler pages dev --port 8788</code> 동시 실행)이 완료 조건의 "로컬(npm run dev:all)에서 실제 시트 기반 응답" 검증 경로다. <code>vitest.config.ts</code>는 <code>environment: 'node'</code>라 <code>caches.default</code>는 테스트에서 전역이 아니다 — <code>sheetsApi.test.ts</code>가 <code>fetch</code>를 <code>vi.stubGlobal</code>로 흉내낸 것과 같은 방식으로 <code>caches</code>도 스텁해야 단위 테스트가 가능하다.</li>
+      <li>깨끗한 워크트리 기준 <code>npm install</code> 후 <code>npm run typecheck</code>·<code>npx vitest run</code> 모두 그린(10 파일 · 177 테스트) — 회귀 기준선으로 사용.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>모듈 분리</b> — 기존 컨벤션(<code>compute-rankings.ts</code>/<code>player-summary.ts</code>처럼 순수 계산은 <code>functions/lib/</code>에 테스트와 함께)을 따라 3개 모듈로 나눈다.</p>
+    <ul>
+      <li><code>functions/lib/compute-home-summary.ts</code> — <code>(sessions, rankings, players) =&gt; HomeSummary</code>. 새로 "활동+recorded" 필터를 다시 구현하지 않고, 이미 §04 규칙대로 계산된 최신 회차의 <code>SessionRankings</code>(<code>rankings.at(-1)</code>, <code>sessions</code>와 같은 순서로 1:1 대응)를 그대로 집계한다 — <code>eventRanking.entries.length</code> = eligibleCount, <code>.filter(e =&gt; e.achieved).length</code> = achievedCount. 회차가 하나도 없으면 <code>latestSession: null</code>, <code>achievementRates: []</code>.</li>
+      <li><code>functions/lib/build-records-response.ts</code> — <code>SheetRawBundle</code> + <code>generatedAt</code>을 받아 <code>parseRoster</code>/<code>parseGoals</code>/<code>parseSession</code>을 호출하고, <b>탈퇴 엔트리를 여기서 한 번만 걸러낸 뒤</b>(그 결과를 <code>sessions</code> 필드에도, <code>computeSessionRankings</code>/<code>computePlayerSummaries</code>/<code>computeHomeSummary</code> 입력에도 동일하게 사용) <code>RecordsResponse</code>를 조립한다. <code>버니스명단</code>/<code>목표</code> 탭이 없으면(<code>bundle.roster/goals === null</code>) <code>RecordsAssemblyError</code>(코드: <code>missing_roster_tab</code>/<code>missing_goals_tab</code>)를 던진다.</li>
+      <li><code>functions/lib/records-cache.ts</code> — 캐시 키(버전 접미사 포함 고정 문자열, 예: <code>https://bernice-cache.internal/records/v1</code>)와 TTL 상수만 export. P2의 <code>/api/refresh</code>가 같은 상수를 import해 <code>cache.delete(key)</code>로 무효화할 수 있도록 이 이슈에서 소유권을 확정해 둔다. 응답 스키마가 나중에 바뀌면 <code>v2</code>로 올려 구버전 캐시를 자연스럽게 무효화할 수 있다.</li>
+      <li><code>functions/api/records.ts</code> — <code>onRequestGet</code>: <code>caches.default.match(cacheKey)</code> 히트 시 그대로 반환. 미스 시 <code>fetchSheetBundle</code> → <code>buildRecordsResponse</code> → <code>Cache-Control: public, max-age=…</code> 헤더를 붙인 <code>Response.json</code> 생성 → <code>context.waitUntil(cache.put(cacheKey, response.clone()))</code> → 반환. <code>try/catch</code>로 <code>SheetsApiError</code>는 502(<code>{ error: 'sheets_api_error', message, upstreamStatus }</code>), <code>RecordsAssemblyError</code>는 500(<code>{ error: err.code, message }</code>), 그 외 <code>Error</code>는 500(<code>{ error: 'sheet_data_invalid', message }</code>)로 매핑.</li>
+    </ul>
+    <p><b>기각한 대안</b></p>
+    <ul>
+      <li>탈퇴 필터링을 <code>compute-rankings.ts</code>/<code>player-summary.ts</code> 각자에 흩어 두기 — 기각: 그 두 함수는 이미 정확히 동작하고(활동 상태·비탈퇴 필터를 각자 갖고 있음) 손댈 이유가 없다. 문제는 오직 <code>RecordsResponse.sessions</code> 필드 자체이므로, 조립 단계에서 한 번만 걸러내는 편이 로직이 한 곳에만 있다.</li>
+      <li><code>context.request</code>를 캐시 키로 그대로 사용 — 기각: 쿼리스트링·헤더 차이로 캐시가 쪼개질 위험이 있고, 별도 이슈(P2)의 <code>/api/refresh</code>가 같은 키를 재현하기 어려워진다. 고정된 합성 키가 "팀 전체가 같은 응답 하나를 공유"하는 이 엔드포인트의 의미와도 맞는다.</li>
+      <li>홈 요약 달성률을 <code>events</code>/<code>players</code>/<code>sessions</code>로부터 처음부터 재계산 — 기각: <code>computeEventRanking</code>과 동일한 "활동+recorded" 필터를 중복 구현하게 되어 두 곳의 규칙이 어긋날 위험이 생긴다. 이미 계산된 <code>rankings</code>의 최신 회차 결과를 그대로 집계하는 편이 안전하고 코드도 짧다.</li>
+      <li>에러 응답을 위해 <code>shared/domain.ts</code>에 정식 에러 타입 추가 — 기각: <code>docs/records-schema.html</code> §06이 인증(401)·에러 응답 형식은 P2 범위로 명시적으로 미루고 있고, 이 계약 파일은 이슈 #21이 소유한 강제 계약(§07)이라 이번 이슈에서 확장하지 않는다. 엔드포인트 레벨의 ad hoc JSON(<code>{ error, message }</code>)으로 충분.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>새 순수 함수 <code>computeHomeSummary(sessions, rankings, players)</code> 작성 — <code>sessions.at(-1)</code>/<code>rankings.at(-1)</code>로 최신 회차를 잡고, <code>participantCount</code>는 활동 상태 + <code>participated: true</code>만, <code>achievementRates</code>는 최신 회차 <code>EventRanking.entries</code>를 그대로 집계(<code>eligibleCount 0</code> → <code>rate 0</code>). 회차 0건이면 <code>latestSession: null</code>, <code>achievementRates: []</code>.
+        <span class="files"><code>functions/lib/compute-home-summary.ts</code>, <code>functions/lib/compute-home-summary.test.ts</code></span>
+      </li>
+      <li><code>functions/lib/records-cache.ts</code> 작성 — 캐시 키 문자열 상수(버전 접미사 포함)와 TTL 초 상수 export. 트리비얼한 상수라 별도 테스트 없이 진행.
+        <span class="files"><code>functions/lib/records-cache.ts</code></span>
+      </li>
+      <li><code>build-records-response.ts</code> 작성 — <code>SheetRawBundle</code> + <code>generatedAt</code> → <code>RecordsResponse</code>. 순서: 탭 누락 가드(<code>RecordsAssemblyError</code>) → <code>parseRoster</code>/<code>parseGoals</code> → 각 회차 <code>parseSession</code> 후 탈퇴 엔트리 필터링 → <code>computeSessionRankings</code>/<code>computePlayerSummaries</code>/<code>computeHomeSummary</code> 호출 → 조립. 테스트: 탈퇴 선수가 <code>sessions[].entries</code>/<code>players</code>/<code>rankings</code> 어디에도 없음, 탭 누락 시 코드별 <code>RecordsAssemblyError</code>, 회차 0건일 때 <code>home</code> 기본값.
+        <span class="files"><code>functions/lib/build-records-response.ts</code>, <code>functions/lib/build-records-response.test.ts</code></span>
+      </li>
+      <li><code>functions/api/records.ts</code> 작성 — <code>PagesFunction&lt;Env&gt;</code>(<code>Env</code>는 <code>googleAuth.Env</code> + <code>SHEET_ID: string</code> 확장 정의). 캐시 히트/미스 분기, <code>Cache-Control</code> 헤더 부여, <code>context.waitUntil(cache.put(...))</code>, <code>try/catch</code> 에러 상태코드 매핑(502 vs 500×3코드). <code>health.ts</code>의 최소주의 스타일을 유지.
+        <span class="files"><code>functions/api/records.ts</code></span>
+      </li>
+      <li>엔드포인트 자체 테스트 — <code>sheetsApi.test.ts</code>가 <code>fetch</code>를 스텁하는 방식과 동일하게 <code>caches</code> 전역을 가짜 Map 기반 Cache로 스텁: (1) 첫 호출 캐시 미스 → 200 + <code>Cache-Control</code> 헤더 + <code>cache.put</code> 호출 확인, (2) 캐시 히트 시 <code>fetchSheetBundle</code> 미호출 확인, (3) <code>SheetsApiError</code> → 502, 파서 <code>Error</code> → 500 + 서로 다른 <code>error</code> 코드 확인.
+        <span class="files"><code>functions/api/records.test.ts</code></span>
+      </li>
+      <li><code>npm run typecheck && npx vitest run</code>로 회귀 없음 확인(기존 177개 + 신규 테스트).
+        <span class="files"></span>
+      </li>
+      <li><code>npm run dev:all</code>로 실제 시트 기준 수동 스모크 — 완료 조건 항목(계약 형태 일치·연속 호출 캐시 적중·상태 4종 정책 반영)을 직접 확인.
+        <span class="files"></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>"긴 캐시"의 구체적 TTL 값이 이슈 본문·설계 문서 어디에도 명시돼 있지 않음</td><td>너무 길면 갱신 지연 체감, 너무 짧으면 시트 API 호출 절감 효과 감소</td><td>6시간을 기본값으로 제안하고 단일 상수(<code>records-cache.ts</code>)로 관리 — 리뷰에서 쉽게 조정 가능</td></tr>
+        <tr><td>로컬 <code>wrangler pages dev</code>(Miniflare)의 Cache API 시뮬레이션이 실제 Cloudflare 엣지와 동작이 다를 수 있음</td><td>로컬에서 본 캐시 적중 여부가 운영 환경과 다르게 보일 수 있음</td><td>완료 조건의 캐시 적중 확인은 반드시 <code>npm run dev:all</code>로 직접 확인 + 단위 테스트로 캐시 히트/미스 분기 로직 자체를 별도 검증</td></tr>
+        <tr><td>로컬 반복 개발 중 캐시가 프로세스 재시작 전까지 남아 파서 수정이 응답에 안 보일 수 있음</td><td>디버깅 중 "왜 안 바뀌지" 혼란</td><td><code>wrangler pages dev</code> 재시작으로 캐시 리셋 — 이번 이슈 범위에 캐시 우회 기능은 추가하지 않음(그 자체가 스코프 밖 기능)</td></tr>
+        <tr><td><code>RosterParseResult.issues</code>(이름 없음/알 수 없는 상태값 같은 명단 행 이슈)는 <code>RecordsResponse</code>에 실을 필드가 없어 조립 단계에서 버려짐</td><td>시트에 오류가 있어도 API 응답만으로는 감지 불가</td><td>이 이슈 범위 밖 — 필요해지면 별도 로깅/관측 이슈로 분리</td></tr>
+        <tr><td>회차가 0건일 때 <code>home.achievementRates: []</code>로 반환하는 것은 계약 문서에 명시되지 않은 해석</td><td>프론트(P3~P4)가 다른 형태(예: 종목별 0/0 항목)를 기대할 수 있음</td><td>구현 시 이 판단을 PR 설명에 명시해 리뷰에서 확인받는다</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 신규 lib 모듈이 <code>shared/domain.ts</code> 계약과 타입 정합, 기존 코드 회귀 없음.</li>
+      <li><code>npx vitest run</code> — 기존 10파일·177개 테스트 그대로 통과 + 신규 <code>compute-home-summary.test.ts</code>/<code>build-records-response.test.ts</code>/<code>functions/api/records.test.ts</code> 통과.</li>
+      <li><code>compute-home-summary.test.ts</code>: 활동+participated만 참여 인원 집계(비대상/휴식 제외), <code>eligibleCount 0</code> → <code>rate 0</code>, 회차 0건 → <code>latestSession: null</code>/<code>achievementRates: []</code>.</li>
+      <li><code>build-records-response.test.ts</code>: 탈퇴 선수가 <code>sessions[].entries</code>/<code>players</code>/<code>rankings</code> 어디에도 등장하지 않음, 명단/목표 탭 없을 때 각각 다른 코드의 <code>RecordsAssemblyError</code>.</li>
+      <li><code>functions/api/records.test.ts</code>: 가짜 <code>caches</code>로 캐시 미스(200 + <code>Cache-Control</code> + <code>cache.put</code> 호출)·캐시 히트(<code>fetchSheetBundle</code> 미호출)·에러 상태코드 분기(502/500) 각각 검증.</li>
+      <li>수동: <code>npm run dev:all</code> 구동 후 <code>curl localhost:8788/api/records</code>를 연속 2회 호출 — 두 응답의 <code>generatedAt</code>이 동일(=캐시 적중)한지, 실제 시트 데이터가 #21 스키마·상태 4종 정책과 형태가 일치하는지 육안 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>npm run dev:all</code> 로컬에서 실제 시트 기반 응답이 <code>RecordsResponse</code> 계약과 형태 일치(탈퇴 완전 제외, <code>EventScore</code> 4상태 반영 포함)</li>
+      <li>연속 호출 시 두 번째 응답부터 Sheets API 재호출 없이 캐시로 응답 — 수동 확인 + 단위 테스트로 캐시 히트 경로 검증</li>
+      <li>상태 4종 정책이 응답에 정확히 반영: 탈퇴는 <code>players</code>/<code>sessions</code>/<code>rankings</code>/<code>home</code> 어디에도 등장하지 않고, 비대상·휴식은 프로필(<code>players</code>/<code>trends</code>/<code>personalBests</code>)엔 포함되지만 <code>rankings</code>/<code>home.achievementRates</code> 집계에서는 제외</li>
+      <li>시트 접근 실패(<code>SheetsApiError</code>)와 시트 데이터 이상(탭 누락·파싱 실패)이 서로 다른 상태코드/에러 코드로 응답</li>
+      <li><code>npm run typecheck && npx vitest run</code> 통과(기존 177개 + 신규 테스트 회귀 없음)</li>
+    </ul>
+  </section>
+
+  <footer>issue-work · <a href="https://github.com/damdam6/bernice/issues/30">#30</a> · 2026-07-15</footer>
+</main>
+</body>
+</html>
