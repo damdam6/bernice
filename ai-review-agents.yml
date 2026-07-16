@@ -33,6 +33,7 @@ agents:
     model: deepseek-v4-flash
     prompt_file: prompts/resolver.md
     confidence_threshold: 0.8
+    max_tokens: 8192
   responder:
     provider: zai
     model: glm-4.6
