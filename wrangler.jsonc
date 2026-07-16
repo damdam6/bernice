@@ -9,6 +9,6 @@
     "SHEET_ID": "1Emv2rbm1vakp2aEUfLD2V9GTmghHQ2SdaNqPwMBZNDw"
   }
 
-  // 시크릿(GOOGLE_SERVICE_ACCOUNT_KEY · TEAM_PASSCODE · ADMIN_CODE)은 여기 두지 않는다:
+  // 시크릿(GOOGLE_SERVICE_ACCOUNT_KEY · TEAM_PASSCODE · SESSION_SECRET · ADMIN_CODE)은 여기 두지 않는다:
   //   로컬 = .dev.vars (gitignore) · 프로덕션 = Pages 대시보드 Secret 또는 `wrangler pages secret put`
 }
