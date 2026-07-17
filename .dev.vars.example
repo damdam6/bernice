@@ -7,5 +7,8 @@ GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"...","private
 # 팀 공용 패스코드 (P2 로그인 게이트에서 사용 — 값은 아직 미정)
 TEAM_PASSCODE=change-me
 
+# 세션 쿠키 HMAC 서명 시크릿 (P2 로그인·미들웨어에서 사용 — 고엔트로피 임의 값, 예: openssl rand -base64 32)
+SESSION_SECRET=change-me
+
 # 관리자 코드 (P5 관리자 기능에서 사용 — 값은 아직 미정)
 ADMIN_CODE=change-me
