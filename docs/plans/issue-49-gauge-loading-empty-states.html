@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#49 P3 — 공통 컴포넌트 ②: 달성률 게이지 + 로딩/에러/빈 상태 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/49">#49</a></span><span class="type-chip">기능 추가</span>
+    <h1>P3 — 공통 컴포넌트 ②: 달성률 게이지 + 로딩/에러/빈 상태</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/49-gauge-loading-empty-states</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>P4 전 화면이 공유할 프레젠테이션 컴포넌트 4종 — 달성률 <code>Gauge</code>(0~100%), <code>Spinner</code>, <code>ErrorPanel</code>, <code>EmptyState</code> — 을 <code>src/components/common/</code>에 새로 만든다. 데이터 계약(<code>useRecords</code> 훅 #46, 인증 401 처리 #42)이 아직 존재하지 않으므로 네 컴포넌트 모두 순수 프레젠테이션(props만 받고 fetch/쿼리 상태에 결합하지 않음)으로 설계한다. 이슈가 독립(의존 없음)이라 형제 이슈 #44(라우팅)·#46(TanStack Query)·#48(카드/뱃지/상태 pill)과 무관하게 진행하되, #48과 같은 <code>common/</code> 디렉터리를 병행 작업 중이므로 파일 단위로만 겹치도록 배럴 <code>index.ts</code>는 만들지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>src/</code>는 아직 <code>App.tsx</code>(P0 placeholder) 하나뿐 — <code>src/components/</code> 디렉터리 자체가 없다. 형제 이슈 #44/#46/#48/#50/#51의 워크트리도 전부 같은 베이스 커밋(<code>6e66b2e</code>)에 멈춰 있어(플랜 파일도 자기 이슈 번호로는 없음) 아직 아무도 <code>src/components/</code> 컨벤션을 확정하지 않았다 — 이번 이슈가 사실상 첫 프론트 컴포넌트 작업.</li>
+      <li>디자인 토큰은 <code>src/index.css:1-30</code>에 이미 확정: 브랜드 오렌지 스케일(<code>--color-brand-50~950</code>), 시맨틱 <code>--color-good/warn/bad</code>(주석: "목표 달성 뱃지 등"). <code>App.tsx:11-14,36</code>가 <code>bg-good/warn/bad</code>를 상태 dot에 이미 쓰고 있어 실사용 전례가 있다.</li>
+      <li>아이콘 라이브러리 미설치(<code>package.json</code> 확인) — <code>App.tsx:29</code>는 이모지(🏀)를 아이콘 대신 쓴다. 이 관례를 그대로 따른다(<code>EmptyState</code>/<code>ErrorPanel</code> 아이콘도 이모지).</li>
+      <li><code>vitest.config.ts:4-6</code>은 <code>environment: 'node'</code>이고 <code>@testing-library/react</code>·jsdom·happy-dom 모두 devDependency로 설치돼 있지 않음(<code>package-lock.json</code>엔 vitest의 옵셔널 peer로만 언급). 즉 이 레포엔 아직 React 컴포넌트를 렌더링해 검증하는 자동 테스트 인프라가 없다 — 기존 테스트는 전부 <code>functions/lib/*.test.ts</code> 순수 함수 테스트뿐.</li>
+      <li>완료 조건 문구("게이지가 0·중간·100% 값에서 올바르게 렌더")는 자동 렌더 테스트가 아니라 수치 계산의 정확성 + 육안 확인으로 만족 가능 — 게이지의 각도/채움 비율 계산을 순수 함수로 분리하면 기존 <code>functions/lib/</code> 컨벤션과 동일하게 <code>vitest</code>(node 환경)로 단위 테스트할 수 있다.</li>
+      <li><code>shared/domain.ts:124-129</code>의 <code>EventAchievementRate.rate</code>(0~1)가 이 <code>Gauge</code>의 실사용처 중 하나(홈 화면 종목별 달성률, <code>docs/build-plan.html</code> P4 홈 항목)로 보이지만, 값 변환(0~1 → 0~100)은 소비 측(#46 훅 완성 후 P4 화면)의 책임으로 남기고 <code>Gauge</code>는 이슈 문구 그대로 <code>0~100</code> 스케일의 <code>value</code> prop만 받는다 —도메인 타입에 결합하지 않는다.</li>
+      <li><code>functions/api/records.ts:35-49</code>의 에러 응답(<code>{ error, message, upstreamStatus? }</code>)과 401 구분(#42, 미착수)이 아직 확정되지 않아 <code>ErrorPanel</code>이 특정 에러 스키마에 맞출 근거가 없다 — <code>title</code>/<code>message</code>/<code>onRetry</code> 정도의 범용 props로 최소화한다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>디렉터리</b> — <code>src/components/common/</code>에 컴포넌트당 파일 하나(+게이지만 계산 헬퍼 분리). 배럴 <code>index.ts</code>는 만들지 않고 각 소비처가 파일을 직접 import — #48이 같은 디렉터리에 <code>Card</code>/<code>Badge</code>/<code>StatusPill</code>을 병행 작업 중이라, 공유 인덱스 파일을 함께 건드리면서 생기는 불필요한 머지 충돌을 피한다.</p>
+    <ul>
+      <li><code>Gauge</code> — 막대형이 아닌 원형(링) SVG 게이지로 결정. 이슈 문구가 형태를 못박지 않았고, "게이지"라는 표현과 홈 화면의 종목별 카드형 레이아웃(다건 나열)에 원형이 더 적합하다고 판단. <code>value: number</code>(0~100, 범위 밖은 클램프) · <code>size?: 'sm' | 'md'</code>(기본 <code>md</code>) · <code>label?: string</code>(게이지 아래 캡션, 선택) props. 원형 채움 비율·클램프 계산은 <code>gauge-math.ts</code>로 분리해 DOM 없이 단위 테스트. 색상은 브랜드 단색(트랙 <code>brand-100</code>, 채움 <code>brand-500</code>) — 달성률 구간별 <code>good/warn/bad</code> 색상 분기는 기각(아래 참고).</li>
+      <li><code>Spinner</code> — Tailwind <code>animate-spin</code> 기반 CSS 스피너(테두리 원, JS 계산 불필요). <code>size?: 'sm' | 'md'</code> · <code>label?: string</code>(기본 "불러오는 중…", <code>sr-only</code>로 스크린리더에만 노출). <code>role="status"</code>.</li>
+      <li><code>ErrorPanel</code> — <code>title?: string</code>(기본값 제공) · <code>message: string</code>(필수) · <code>onRetry?: () => void</code>(있으면 재시도 버튼 렌더). <code>role="alert"</code>. fetch/쿼리 관련 타입에 의존하지 않는 순수 프레젠테이션 — #46/#42가 확정되면 그쪽에서 이 props로 매핑.</li>
+      <li><code>EmptyState</code> — <code>icon?: string</code>(이모지, 기본값) · <code>title: string</code> · <code>description?: string</code> · <code>children?: ReactNode</code>(선택적 CTA 슬롯 — 특정 버튼/링크 형태를 강제하지 않기 위해 구체적 <code>action</code> prop 대신 children으로 열어 둠).</li>
+      <li>네 컴포넌트 모두 <code>App.tsx:24-33</code>의 기존 카드 톤(<code>rounded-2xl</code>/<code>border-brand-200</code>/<code>shadow-sm</code>/브랜드 텍스트 컬러)을 재사용해 시각적 일관성을 맞춘다.</li>
+    </ul>
+    <p><b>기각한 대안</b></p>
+    <ul>
+      <li><code>Gauge</code>를 막대형(linear progress bar)으로 구현 — 기각: 여러 종목을 카드로 나열하는 홈 화면 레이아웃엔 원형이 더 적합하고, 링 형태가 "게이지"라는 이름에도 더 부합. 리뷰에서 막대형 요청 시 쉽게 교체 가능하도록 <code>gauge-math.ts</code> 계산 로직은 형태와 무관하게 재사용 가능한 순수 함수로 둔다.</li>
+      <li><code>Gauge</code> 색상을 달성률 구간(예: &lt;40% bad, 40~70% warn, ≥70% good)별로 분기 — 기각: 구간 경계값이 이슈·설계 문서 어디에도 정의돼 있지 않아 이번에 임의로 정하면 나중에 실제 정책과 어긋날 위험. 브랜드 단색으로 시작하고, 필요해지면 P4 구현 시점에 실제 기준과 함께 추가.</li>
+      <li>이번 이슈에서 <code>@testing-library/react</code> + jsdom 도입 — 기각: 레포 전체의 프론트 테스트 전략을 바꾸는 결정이라 이 S급 단일 이슈 범위를 벗어난다. 대신 게이지 산술은 순수 함수로 분리해 기존 <code>vitest</code>(node) 컨벤션으로 테스트하고, 나머지 시각적 정확성은 <code>npm run dev</code> 수동 확인으로 커버.</li>
+      <li>4개 컴포넌트를 배럴 <code>src/components/common/index.ts</code>로 재노출 — 기각: #48이 같은 디렉터리를 병행 작업 중이라 공유 파일을 만들면 두 PR이 같은 줄을 두고 충돌할 여지가 생긴다. 소비처가 늘어나 배럴이 실제로 필요해지면 그때 어느 한쪽 PR에서 추가.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li><code>gauge-math.ts</code> 작성 — <code>clampGaugeValue(value)</code>(NaN→0, 범위 밖 클램프)와 <code>getGaugeDashArray(value, radius)</code>(SVG <code>stroke-dasharray</code> 문자열 계산)를 순수 함수로. 단위 테스트: 0%(채움 0) · 중간값(예: 50%, 절반 채움) · 100%(전체 채움, 원둘레와 일치) · 범위 밖(-10→0, 150→100) · NaN→0.
+        <span class="files"><code>src/components/common/gauge-math.ts</code>, <code>src/components/common/gauge-math.test.ts</code></span>
+      </li>
+      <li><code>Gauge.tsx</code> 작성 — <code>viewBox="0 0 100 100"</code> SVG에 트랙 <code>circle</code> + 채움 <code>circle</code>(<code>-90deg</code> 회전으로 12시 방향 시작, <code>gauge-math</code>의 dasharray 사용), 중앙에 반올림한 퍼센트 텍스트(절대 위치 <code>span</code>), <code>size</code> variant(sm/md)별 지름·스트로크 두께, <code>role="img" aria-label="달성률 {value}%"</code>.
+        <span class="files"><code>src/components/common/Gauge.tsx</code></span>
+      </li>
+      <li><code>Spinner.tsx</code> 작성 — <code>border-4 border-brand-100 border-t-brand-600 rounded-full animate-spin</code> 조합의 CSS 스피너, <code>size</code> variant, <code>role="status"</code> + <code>sr-only</code> 레이블.
+        <span class="files"><code>src/components/common/Spinner.tsx</code></span>
+      </li>
+      <li><code>ErrorPanel.tsx</code> 작성 — <code>role="alert"</code> 카드, 제목/메시지/선택적 재시도 버튼(<code>onRetry</code> 있을 때만 렌더).
+        <span class="files"><code>src/components/common/ErrorPanel.tsx</code></span>
+      </li>
+      <li><code>EmptyState.tsx</code> 작성 — 이모지 아이콘(기본값)/제목/선택적 설명/선택적 children 슬롯의 중앙 정렬 카드.
+        <span class="files"><code>src/components/common/EmptyState.tsx</code></span>
+      </li>
+      <li><code>npm run typecheck && npx vitest run</code>으로 회귀 없음 확인(기존 테스트 + 신규 <code>gauge-math.test.ts</code>).
+        <span class="files"></span>
+      </li>
+      <li>수동 시각 확인 — <code>npm run dev</code> 구동 후 <code>App.tsx</code>를 임시로 고쳐 네 컴포넌트를 한 화면에 나열(게이지는 0/50/100% 세 개, 나머지 셋은 기본 상태 하나씩)하고 브라우저로 직접 렌더 확인(특히 100% 게이지에서 <code>strokeLinecap</code> 시작점에 점처럼 겹쳐 보이는 흔한 SVG 아치 버그가 없는지). 확인 후 <code>App.tsx</code> 임시 변경은 되돌린다(<code>App.tsx</code>는 #44 라우팅 이슈가 교체할 P0 placeholder라 이번 커밋에 남기지 않음).
+        <span class="files"></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>"게이지" 형태(원형 vs 막대)가 이슈 문구에 명시돼 있지 않음</td><td>리뷰어가 다른 형태를 기대하면 재작업</td><td>원형으로 결정한 근거를 PR 설명에 명시, 채움 계산은 형태 독립적인 <code>gauge-math.ts</code>로 분리해 교체 비용 최소화</td></tr>
+        <tr><td>SVG 원형 게이지의 흔한 버그: <code>strokeLinecap="round"</code> + 100% 채움 시 시작점에 점처럼 겹쳐 보임</td><td>100% 달성 시 시각적 결함</td><td>수동 검증 단계에서 100% 케이스를 반드시 육안 확인 — 필요 시 100%에서만 <code>strokeLinecap="butt"</code>로 전환</td></tr>
+        <tr><td>레포에 React 컴포넌트 렌더 자동 테스트 인프라(jsdom/RTL)가 없어 4개 컴포넌트의 JSX 출력 자체는 자동 검증되지 않음</td><td>회귀를 사람이 놓칠 가능성</td><td>이번 이슈 범위에서 계산 로직만 단위 테스트하고 렌더는 수동 확인으로 커버 — RTL 도입은 더 큰 별도 결정으로 남겨둠</td></tr>
+        <tr><td>#48(카드/뱃지/상태 pill)이 같은 <code>src/components/common/</code> 디렉터리를 병행 작업 중</td><td>두 PR이 먼저 머지되는 쪽 기준으로 디렉터리 컨벤션이 굳어짐</td><td>배럴 인덱스를 만들지 않아 파일 단위로만 존재 — 실제 파일명 충돌 가능성 낮음(<code>Gauge/Spinner/ErrorPanel/EmptyState</code> vs <code>Card/Badge/StatusPill</code>)</td></tr>
+        <tr><td><code>ErrorPanel</code>/<code>EmptyState</code>가 실제로 어떤 조건에서 뜨는지(401 구분 등)는 #42/#46 스코프라 아직 미정</td><td>지금 만드는 props가 실사용 시 부족할 수 있음</td><td>순수 프레젠테이션(런타임 결합 없음)으로 설계해 두어 #46 완성 후 소비 측에서 props만 채우면 되도록 함</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 신규 컴포넌트가 기존 타입 설정과 정합, 회귀 없음.</li>
+      <li><code>npx vitest run</code> — 기존 테스트 그대로 통과 + 신규 <code>gauge-math.test.ts</code> 통과.</li>
+      <li><code>gauge-math.test.ts</code>: value=0(채움 0) · value=50(원둘레 절반) · value=100(원둘레 전체와 일치) · value=-10(0으로 클램프) · value=150(100으로 클램프) · value=NaN(0으로 처리).</li>
+      <li>수동: <code>npm run dev</code>로 <code>Gauge</code>(0/50/100%) · <code>Spinner</code> · <code>ErrorPanel</code>(재시도 버튼 있음/없음 각각) · <code>EmptyState</code>(children 있음/없음 각각) 브라우저 렌더 육안 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>Gauge</code>가 0%·중간값(50%)·100%에서 채움 비율이 정확 — <code>gauge-math.test.ts</code> 단위 테스트 + 브라우저 육안 확인(100%에서 SVG 아치 결함 없음 포함)</li>
+      <li><code>Spinner</code>/<code>ErrorPanel</code>/<code>EmptyState</code> 각각 브라우저에서 정상 렌더 확인(<code>ErrorPanel</code>은 재시도 버튼 있음/없음, <code>EmptyState</code>는 children 있음/없음 케이스 포함)</li>
+      <li><code>npm run typecheck && npx vitest run</code> 통과(기존 테스트 회귀 없음 + 신규 <code>gauge-math.test.ts</code>)</li>
+      <li>네 컴포넌트 모두 fetch/쿼리 상태에 결합하지 않은 순수 props 기반 프레젠테이션 컴포넌트로 존재</li>
+    </ul>
+  </section>
+
+  <footer>issue-work · <a href="https://github.com/damdam6/bernice/issues/49">#49</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
