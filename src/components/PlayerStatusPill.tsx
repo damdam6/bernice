@@ -1,4 +1,5 @@
 import type { PlayerStatus } from '../../shared/domain'
+import { Pill } from './Pill'
 
 type PlayerStatusPillProps = {
   status: PlayerStatus
@@ -12,11 +13,5 @@ const PLAYER_STATUS_PILL_STYLE: Record<PlayerStatus, string> = {
 }
 
 export function PlayerStatusPill({ status }: PlayerStatusPillProps) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${PLAYER_STATUS_PILL_STYLE[status]}`}
-    >
-      {status}
-    </span>
-  )
+  return <Pill colorClassName={PLAYER_STATUS_PILL_STYLE[status]}>{status}</Pill>
 }

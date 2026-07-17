@@ -1,3 +1,5 @@
+import { Pill } from './Pill'
+
 type AchievementBadgeProps = {
   achieved: boolean
 }
@@ -10,11 +12,5 @@ const ACHIEVEMENT_BADGE_STYLE: Record<'achieved' | 'notAchieved', string> = {
 export function AchievementBadge({ achieved }: AchievementBadgeProps) {
   const style = ACHIEVEMENT_BADGE_STYLE[achieved ? 'achieved' : 'notAchieved']
 
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${style}`}
-    >
-      {achieved ? '달성' : '미달성'}
-    </span>
-  )
+  return <Pill colorClassName={style}>{achieved ? '달성' : '미달성'}</Pill>
 }
