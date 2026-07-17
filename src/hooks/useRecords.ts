@@ -16,7 +16,11 @@ export async function fetchRecords(): Promise<RecordsResponse> {
     throw new ApiError('records fetch failed (network)', 0)
   }
 
-  if (res.status === 401) throw new UnauthorizedError()
+  if (res.status === 401) {
+    // 본문을 읽지 않고 버리면 응답이 GC될 때까지 keep-alive 연결이 묶일 수 있어 명시적으로 취소한다.
+    await res.body?.cancel()
+    throw new UnauthorizedError()
+  }
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ErrorBody | null
