@@ -2,7 +2,7 @@ type AchievementBadgeProps = {
   achieved: boolean
 }
 
-export const ACHIEVEMENT_BADGE_STYLE: Record<'achieved' | 'notAchieved', string> = {
+const ACHIEVEMENT_BADGE_STYLE: Record<'achieved' | 'notAchieved', string> = {
   achieved: 'bg-good/15 text-good',
   notAchieved: 'bg-slate-200 text-slate-600',
 }

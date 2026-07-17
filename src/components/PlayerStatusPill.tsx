@@ -4,7 +4,7 @@ type PlayerStatusPillProps = {
   status: PlayerStatus
 }
 
-export const PLAYER_STATUS_PILL_STYLE: Record<PlayerStatus, string> = {
+const PLAYER_STATUS_PILL_STYLE: Record<PlayerStatus, string> = {
   활동: 'bg-good/15 text-good',
   휴식: 'bg-warn/15 text-warn',
   비대상: 'bg-slate-200 text-slate-600',
