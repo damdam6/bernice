@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#62 디자인 개편 — 라우팅 재구성 (3탭 + 관리자 스택, 전체 추이 라우트 삭제) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 18px 0 8px; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  .note { color: var(--muted); font-size: 0.85rem; }
+  .steps li.checked::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps li.checked { color: var(--muted); }
+  .done-list li.checked::before { background: var(--ok); }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/62">#62</a></span><span class="type-chip">기능 개선</span>
+    <h1>디자인 개편 — 라우팅 재구성 (3탭 + 관리자 스택, 전체 추이 라우트 삭제)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/62-routing-three-tabs-admin-stack</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>현재 <code>/trends</code>(전체 추이) 라우트를 삭제하고, 메인 화면을 하단 네비 3탭(홈·랭킹·개인) 체계로 정리한다. 동시에 관리자 전용 스택 — 로그인 → 시트 관리 홈 → (기록 입력: 날짜 선택 → 참가자 목록 → 선수별 입력) / 기록지 만들기 / 참가자 추가 — 의 라우트와 스텁 페이지 7개를 신설한다. 이번 이슈는 URL 구조와 빈 페이지 골격만 만들며, 실제 화면 내용(네비 UI·인증 가드·폼 로직)은 #45·#47·#67·#68 등 후속 이슈가 채운다. 삭제된 <code>/trends</code> 접근은 개인 탭으로 리다이렉트해 UX 단절을 막는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>src/App.tsx:1-18</code>은 #44에서 만든 flat 라우트 5개: <code>/</code>(Home) · <code>/rankings</code>(Rankings) · <code>/players</code>(Players) · <code>/trends</code>(Trends) · <code>*</code>(NotFound). 레이아웃 래퍼나 중첩 라우트 없이 <code>&lt;Routes&gt;</code> 하나에 평면적으로 나열되어 있다.</p>
+    <p><code>src/pages/Players.tsx</code>는 이미 "개인 프로필"로 라벨링되어 있고 안내문("선수별 추이 화면은 P4에서 채워집니다")이 추이 통합을 이미 전제하고 있어, 이번 이슈에서 이 파일 자체는 수정할 필요가 없다 — 삭제 대상은 <code>src/pages/Trends.tsx</code>뿐이다.</p>
+    <p><code>src/</code>·<code>functions/</code> 전체를 검색해도 admin/session 관련 프론트엔드 코드가 전혀 없다(관리자 로그인·세션·가드 컴포넌트 모두 미착수). 즉 관리자 스택은 완전한 그린필드이며, 이번 이슈가 만드는 라우트에 연결할 기존 가드 컴포넌트가 없다.</p>
+    <p>이슈 본문이 참고 문서로 지목한 <code>docs/prd-design.html</code>은 모든 브랜치·워크트리를 검색해도 존재하지 않는다 — 같은 시각(2026-07-17 11:21)에 한꺼번에 열린 디자인 개편 이슈군(#61·#62·#69·#70·#67·#68 등)이 공통으로 이 문서를 참조하지만 아직 작성되지 않은 상태다. 대신 <code>docs/index.html:255-281</code>(현재 살아있는 IA 문서)과 관련 이슈 본문들이 실질적 스펙 역할을 한다. 단, <code>docs/index.html:273-280</code>은 "📈 전체 추이"를 여전히 최상위 페이지로 그리는 구버전 IA라 이번 결정을 반영하지 못한 상태다 — 이 문서 갱신은 이번 이슈 범위 밖이지만 후속 문서화 시 참고.</p>
+    <p><code>gh issue view 45</code> 확인 결과, #45(공통 레이아웃 + 네비게이션 — 하단 3탭 UI, 관리자 스택 뒤로가기, <code>Outlet</code> 레이아웃)가 "선행: #44, #62, #61"로 명시되어 있다 — 즉 실제 네비게이션 UI/레이아웃은 이번 이슈의 범위가 아니라 #45가 이 라우트들을 감싸는 방식으로 후속 작업한다. #67·#68(기록 입력 W5/W6)도 "선행 … #62(라우팅)"으로 명시되어 있어, 관리자 스택 화면들의 실제 내용(로그인 폼, 시트 관리 홈의 버튼 3개, 날짜/참가자 카드, 타입별 입력기)은 이번 이슈에서 구현하지 않고 스텁으로만 남긴다.</p>
+    <p><code>package.json:16</code> — <code>react-router-dom@^7.18.1</code> 이미 설치·사용 중이므로 추가 의존성 없이 <code>&lt;Route&gt;</code> 추가/삭제만으로 처리 가능하다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><strong>선택한 설계</strong></p>
+    <ul>
+      <li>기존 flat <code>&lt;Routes&gt;</code> 스타일을 그대로 유지한다(레이아웃 래퍼 도입 안 함) — <code>Outlet</code> 기반 레이아웃은 #45가 별도로 감쌀 예정이라 지금 만들면 곧 갈아엎힌다.</li>
+      <li>관리자 라우트는 <code>/admin</code> 접두사로 묶는다 — 이미 확정된 백엔드 접두사 <code>/api/admin/*</code>(#64~#66)와 대칭을 맞춘다.</li>
+      <li>기록 입력 3단계만 이슈 본문이 명시적으로 "날짜 선택 → 참가자 목록 → 선수별 입력"으로 분해했으므로, 이 흐름만 동적 세그먼트로 중첩한다. 기록지 만들기·참가자 추가는 이슈 본문에서 단일 항목으로 남아 있어 평면 라우트로 유지한다(과설계 방지).</li>
+      <li>동적 세그먼트를 쓰는 두 스텁 페이지(참가자 목록·선수별 입력)는 <code>useParams()</code>로 캡처된 값을 화면에 그대로 표시한다 — 실제 UI는 #67/#68 몫이지만, 파라미터가 제대로 파싱되는지는 이번 이슈가 증명해야 할 부분이다.</li>
+      <li><code>/trends</code>는 완전 삭제 대신 <code>&lt;Navigate to="/players" replace /&gt;</code>로 리다이렉트한다 — 이슈가 "구현 시 결정"으로 열어둔 부분에 대한 결정이며, 근거는 아래 "기각한 대안" 참고.</li>
+    </ul>
+
+    <p><strong>최종 라우트 표</strong></p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>경로</th><th>페이지 컴포넌트</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td><code>/</code></td><td><code>pages/Home.tsx</code></td><td>기존 유지</td></tr>
+        <tr><td><code>/rankings</code></td><td><code>pages/Rankings.tsx</code></td><td>기존 유지</td></tr>
+        <tr><td><code>/players</code></td><td><code>pages/Players.tsx</code></td><td>기존 유지 (개인 탭 · 추이 통합 예정)</td></tr>
+        <tr><td><code>/trends</code></td><td><code>&lt;Navigate to="/players" /&gt;</code></td><td>삭제 + 리다이렉트, 페이지 파일 제거</td></tr>
+        <tr><td><code>/admin/login</code></td><td><code>pages/admin/AdminLogin.tsx</code></td><td>내용은 #67</td></tr>
+        <tr><td><code>/admin</code></td><td><code>pages/admin/SheetManagementHome.tsx</code></td><td>시트 관리 홈, 내용은 #67</td></tr>
+        <tr><td><code>/admin/records</code></td><td><code>pages/admin/RecordsDateSelect.tsx</code></td><td>회차(날짜) 선택, 내용은 #67</td></tr>
+        <tr><td><code>/admin/records/:sessionDate</code></td><td><code>pages/admin/RecordsParticipants.tsx</code></td><td>참가자 목록, 내용은 #67</td></tr>
+        <tr><td><code>/admin/records/:sessionDate/:playerId</code></td><td><code>pages/admin/RecordsPlayerInput.tsx</code></td><td>선수별 입력, 내용은 #68</td></tr>
+        <tr><td><code>/admin/create-sheet</code></td><td><code>pages/admin/CreateSheet.tsx</code></td><td>기록지 만들기, 내용은 #67</td></tr>
+        <tr><td><code>/admin/add-players</code></td><td><code>pages/admin/AddPlayers.tsx</code></td><td>참가자 추가, 내용은 #67</td></tr>
+        <tr><td><code>*</code></td><td><code>pages/NotFound.tsx</code></td><td>기존 유지</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p style="margin-top:14px;"><strong>기각한 대안</strong></p>
+    <ul>
+      <li>관리자 라우트를 별도 서브 라우터로 완전히 분리 — react-router v7 한 트리 안에서 flat하게 처리 가능하고, 어차피 #45가 <code>Outlet</code> 레이아웃으로 다시 감쌀 예정이라 지금 분리해봐야 곧 재작업된다.</li>
+      <li><code>/trends</code>를 삭제만 하고 <code>*</code> 404로 자연스럽게 떨어뜨림 — 오늘 막 생긴 페이지라 외부 링크 리스크는 낮지만, 내용이 개인 탭으로 이동했다는 사실을 아는 사용자가 없으므로 리다이렉트 쪽이 혼란을 원천 차단하고 비용은 <code>&lt;Route&gt;</code> 한 줄뿐이다.</li>
+      <li>기록 입력 흐름의 상태를 query string(<code>?date=&amp;player=</code>)으로 전달 — path segment가 react-router 관용에 더 맞고 딥링크·뒤로가기 시맨틱이 명확하다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="checked">전체 추이 페이지 삭제
+        <span class="files"><code>src/pages/Trends.tsx</code></span>
+      </li>
+      <li class="checked"><code>App.tsx</code>에서 Trends import·라우트를 제거하고, <code>/trends</code>를 <code>&lt;Navigate to="/players" replace /&gt;</code>로 대체
+        <span class="files"><code>src/App.tsx</code></span>
+      </li>
+      <li class="checked">관리자 스택 스텁 페이지 7개 신설 — 기존 <code>Players.tsx</code>/<code>Rankings.tsx</code>와 동일한 카드+h1+안내문 패턴, 안내문에 실제 구현 담당 이슈 번호 명시. <code>RecordsParticipants</code>·<code>RecordsPlayerInput</code>은 <code>useParams()</code> 값을 함께 표시
+        <span class="files"><code>src/pages/admin/AdminLogin.tsx</code>, <code>src/pages/admin/SheetManagementHome.tsx</code>, <code>src/pages/admin/RecordsDateSelect.tsx</code>, <code>src/pages/admin/RecordsParticipants.tsx</code>, <code>src/pages/admin/RecordsPlayerInput.tsx</code>, <code>src/pages/admin/CreateSheet.tsx</code>, <code>src/pages/admin/AddPlayers.tsx</code></span>
+      </li>
+      <li class="checked">위 표대로 <code>App.tsx</code>에 관리자 라우트 7개 등록(3탭 라우트·404는 그대로 유지)
+        <span class="files"><code>src/App.tsx</code></span>
+      </li>
+      <li class="checked"><code>npm run typecheck</code> · <code>npm run build</code>로 라우트 트리·미사용 import 여부 확인 — 순수 골격 이슈라 신규 vitest 케이스보다 타입체크·빌드가 더 유효한 검증(#44도 동일 방식). 실행 결과: 타입체크 통과, 빌드 통과(100 modules), <code>npm test</code> 19개 파일 249개 테스트 전부 통과
+        <span class="files">(파일 없음 · 커맨드)</span>
+      </li>
+      <li class="checked">브라우저로 전체 경로 수동 확인: <code>/</code>·<code>/rankings</code>·<code>/players</code>, <code>/trends</code>(→ <code>/players</code> 리다이렉트 확인), <code>/admin/login</code>·<code>/admin</code>·<code>/admin/records</code>·<code>/admin/records/2025-05-16</code>·<code>/admin/records/2025-05-16/abc123</code>(파라미터 표시 확인)·<code>/admin/create-sheet</code>·<code>/admin/add-players</code>, 임의 경로(404 확인). claude-in-chrome으로 12개 경로 전부 확인 — <code>/trends</code>는 <code>tabs_context_mcp</code>로 최종 URL이 <code>/players</code>임을 직접 확인, 동적 세그먼트 두 페이지 모두 파라미터가 화면에 정확히 표시됨
+        <span class="files">(수동 확인 완료)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td><code>/admin/*</code>에 인증 가드가 아직 없어 로그인 없이 스텁 화면이 노출됨</td><td>낮음 — 스텁이라 실제 데이터·쓰기 기능 없음</td><td>안내문만 노출하고 실 로직은 넣지 않음. 가드는 #41·#42·#47·#67에서 별도 처리</td></tr>
+        <tr><td><code>/trends</code> 리다이렉트가 이슈에서 "구현 시 결정"으로 열려있던 항목이라 의도와 다를 수 있음</td><td>낮음 — 내부용 앱, 실사용자 없음</td><td>플랜에 근거 명시, 승인 단계에서 조정 가능</td></tr>
+        <tr><td>#45가 이 라우트들을 감싸는 <code>Outlet</code> 레이아웃을 준비 중이라 경로 설계가 어긋나면 후속 이슈에서 재작업 필요</td><td>중간</td><td>#67·#68에 나온 화면 분해에 맞춰 경로 설계, flat <code>&lt;Route&gt;</code>라 감싸기 쉬움</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 라우트·컴포넌트 타입 오류 없는지 확인</li>
+      <li><code>npm run build</code> — 빌드 통과 및 Trends 등 미사용 import 없는지 확인</li>
+      <li><code>npm test</code>(vitest) — 기존 스위트 회귀 없는지 확인(라우팅 골격 자체엔 신규 유닛 테스트 없음 — #44와 동일)</li>
+      <li>수동: 브라우저에서 3탭 + 관리자 스택 각 경로 전환, <code>/trends</code> 리다이렉트, 동적 세그먼트 파라미터 표시, 임의 경로 404 확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="checked">3탭(홈·랭킹·개인) + 관리자 스택 7개 라우트가 각각 대응 페이지를 렌더한다</li>
+      <li class="checked"><code>/trends</code> 라우트·페이지가 삭제되고, 접근 시 <code>/players</code>로 리다이렉트된다</li>
+      <li class="checked">존재하지 않는 경로는 여전히 404로 처리된다</li>
+      <li class="checked"><code>npm run typecheck</code> · <code>npm run build</code> · <code>npm test</code> 모두 통과한다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/62">#62</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
