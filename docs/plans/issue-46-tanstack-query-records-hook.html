@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#46 P3 — TanStack Query 셋업 + useRecords 훅 (401 구분) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/46">#46</a></span><span class="type-chip">기능 추가</span>
+    <h1>P3 — TanStack Query 셋업 + useRecords 훅 (401 구분)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/46-tanstack-query-records-hook</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>@tanstack/react-query</code>를 설치해 <code>src/main.tsx</code>에 <code>QueryClientProvider</code>를 장착하고, <code>GET /api/records</code>를 호출해 <code>shared/domain.ts</code>의 <code>RecordsResponse</code>로 타입이 적용된 데이터를 반환하는 <code>useRecords</code> 훅을 새로 만든다. 핵심은 401을 일반 에러와 <b>타입 수준에서 구분</b>하는 것 — 이슈 #42가 확정한 <code>401 {"error":"unauthorized"}</code> 계약을 <code>UnauthorizedError</code>라는 전용 에러 클래스로 매핑하고, staleTime·retry 정책에서 401은 재시도 대상에서 제외한다. #42는 아직 머지되지 않아 로컬에서 실제 401을 재현할 수는 없으므로, 이번 이슈는 fetch를 모킹한 단위·통합 테스트로 계약 준수를 검증하고 실제 미들웨어와의 통합 확인은 #42 머지 이후로 남긴다. 이 훅은 후속 P2-5(로그인 게이트)와 P4의 모든 화면이 공통으로 소비할 진입점이라, 재사용 가능한 에러 타입 설계가 이번 이슈의 실질적 무게중심이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>src/App.tsx:20-23</code>가 지금 유일한 데이터 페치 코드 — <code>/api/health</code>를 순수 <code>fetch</code> + <code>useEffect</code>로 호출하는 P0 스캐폴딩 수준. <code>src/main.tsx:1-11</code>에는 <code>QueryClientProvider</code>는커녕 어떤 프로바이더도 없다. <code>package.json</code>의 <code>dependencies</code>에는 <code>react</code>/<code>react-dom</code>뿐, <code>@tanstack/react-query</code>가 아직 설치돼 있지 않다.</li>
+      <li><code>shared/domain.ts:139-147</code>의 <code>RecordsResponse</code>가 최종 계약(이슈 #21이 확정, §07)이고 이미 <code>functions/api/records.ts</code>가 그대로 구현·테스트돼 있어 프론트가 참조할 타입은 안정적이다.</li>
+      <li><b>#42(인증 미들웨어)는 아직 머지 전이다</b> — <code>gh issue view 42</code> 기준 <code>state: OPEN</code>. 레포 전체(메인 체크아�트 + 이 이슈를 포함한 모든 <code>.worktrees/*</code>)를 뒤져도 <code>functions/_middleware.ts</code>는 존재하지 않는다. 즉 오늘 시점의 <code>/api/records</code>(<code>functions/api/records.ts:1-33</code>)는 인증 게이트가 전혀 없고("인증 게이트는 P2 범위 — 여기서는 적용하지 않는다", <code>functions/api/records.ts:2-3</code> 주석), 성공 시 200, 실패 시 502(<code>sheets_api_error</code>)/500(<code>missing_roster_tab</code> 등)만 반환한다 — <b>401은 오늘 이 엔드포인트에서 물리적으로 발생하지 않는다.</b> 401 응답 바디 계약(<code>{"error":"unauthorized"}</code>)은 이슈 #42 본문에만 명시돼 있고, 예외 경로는 <code>/api/login</code>·<code>/api/health</code>다.</li>
+      <li>테스트 인프라: <code>vitest.config.ts:1-6</code>는 <code>environment: 'node'</code> 전역 설정 하나뿐이고, <code>@testing-library/react</code>·<code>jsdom</code> 둘 다 <code>package.json</code>에 없다 — <code>src/</code> 쪽 테스트가 이 레포에 하나도 없다는 뜻(<code>find src -name "*.test.*"</code> 결과 없음). 가장 가까운 컨벤션은 <code>functions/lib/sheetsApi.test.ts:1-20</code>·<code>functions/api/records.test.ts:1-15</code>의 <code>vi.stubGlobal</code>(전역 모킹) + <code>afterEach(() =&gt; vi.unstubAllGlobals())</code> 패턴이다.</li>
+      <li><code>tsconfig.app.json:22</code>의 <code>include: ["src", "shared"]</code>가 새로 만들 <code>src/hooks/</code>·<code>src/lib/</code> 파일과 그 테스트 파일을 자동으로 <code>npm run typecheck</code>(<code>tsc -b</code>) 범위에 포함시킨다 — 별도 tsconfig 수정 불필요.</li>
+      <li>다른 워크트리(<code>44-routing-skeleton</code>, <code>48-card-badge-status-pill</code>, <code>49~51</code> 등, P3/P4의 나머지 작업들)를 확인한 결과 전부 <code>main</code> 기준 커밋(<code>6e66b2e</code>)에 머물러 있고 <code>src/</code>에 손댄 게 없다 — <code>src/hooks/</code>·<code>src/lib/</code> 디렉터리 컨벤션은 이 이슈가 처음 확립한다.</li>
+      <li>깨끗한 워크트리에서 <code>npm install</code> → <code>npm run typecheck</code> 클린, <code>npx vitest run</code> → 13개 파일 · 194개 테스트 전부 그린 — 회귀 기준선.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b><code>src/lib/api-error.ts</code></b> — <code>ApiError extends Error { status: number }</code>와 그 서브클래스 <code>UnauthorizedError</code>(<code>status</code> 고정 401, 생성자 인자 없음)를 export. <code>instanceof UnauthorizedError</code>로 401을 다른 실패(502/500/네트워크 오류)와 타입 수준에서 구분할 수 있게 한다. 이슈 요구사항이 "401을 별도 에러 타입으로 구분"이라 명시했고, 소비 측(P2-5 로그인 게이트)이 <code>error.status === 401</code> 매직넘버 비교 대신 타입 체크로 분기할 수 있어야 하기 때문. records 전용이 아니라 <code>src/lib/</code>에 둬 향후 다른 훅(예: <code>/api/refresh</code>)도 재사용하게 한다.</li>
+      <li><b><code>src/lib/query-client.ts</code></b> — <code>export const queryClient = new QueryClient()</code> 싱글턴만 export. 전역 <code>defaultOptions</code>는 건드리지 않는다 — staleTime/retry는 아래처럼 <code>useRecords</code> 훅 안에 지역화한다.</li>
+      <li><b><code>src/hooks/useRecords.ts</code></b> — 세 개를 export:
+        <ul>
+          <li><code>fetchRecords()</code>: <code>fetch('/api/records')</code> 후 <code>res.status === 401</code>이면 <code>UnauthorizedError</code>를 던지고, <code>!res.ok</code>면 바디를 <code>{error, message}</code> 형태로 파싱 시도해(<code>functions/api/records.ts</code>의 에러 바디 계약과 동일) <code>ApiError(message, res.status)</code>를 던진다. 성공이면 <code>res.json()</code>을 <code>RecordsResponse</code>로 반환.</li>
+          <li><code>shouldRetryRecordsQuery(failureCount, error)</code>: 순수 함수로 분리해 export — <code>UnauthorizedError</code>면 항상 <code>false</code>, 그 외엔 <code>failureCount &lt; 2</code>(TanStack 기본 재시도 횟수 3회와 동일한 상한 유지). 실제 지수 백오프 타이머를 기다리지 않고도 재시도 판단 로직만 단위 테스트할 수 있어 테스트가 빠르고 결정적이다.</li>
+          <li><code>useRecords()</code>: <code>useQuery&lt;RecordsResponse, ApiError&gt;({ queryKey: ['records'], queryFn: fetchRecords, staleTime: 5 * 60 * 1000, retry: shouldRetryRecordsQuery })</code>. 제네릭에 <code>ApiError</code>를 명시해 소비 측 <code>error</code>가 <code>ApiError | null</code>로 타입되고 <code>instanceof UnauthorizedError</code> 좁히기가 그대로 작동한다.</li>
+        </ul>
+      </li>
+      <li><b><code>src/main.tsx</code></b> — <code>&lt;App /&gt;</code>를 <code>&lt;QueryClientProvider client={queryClient}&gt;</code>로 감싼다.</li>
+      <li><b>테스트 인프라</b> — <code>@testing-library/react</code>·<code>jsdom</code>을 devDependencies에 추가. 전역 <code>vitest.config.ts</code>의 <code>environment: 'node'</code>는 그대로 두고, 새 테스트 파일(<code>src/hooks/useRecords.test.tsx</code>) 맨 위에 <code>// @vitest-environment jsdom</code> 지시자로 그 파일에만 jsdom을 적용한다.</li>
+    </ul>
+    <p><b>기각한 대안</b></p>
+    <ul>
+      <li>전역 <code>QueryClient</code> <code>defaultOptions</code>에 staleTime/retry를 몰아넣기 — 기각: 이슈 범위가 "useRecords 훅"의 정책으로 명시돼 있고, 후속 엔드포인트(예: P5의 <code>/api/refresh</code>, <code>/api/admin/*</code>)가 다른 재시도 정책을 원할 수 있어 훅별로 지역화하는 편이 안전하다.</li>
+      <li>전역 <code>vitest.config.ts</code>의 <code>environment</code>를 <code>jsdom</code>으로 통째로 바꾸기 — 기각: <code>functions/lib/sheetsApi.test.ts</code> 등 13개 기존 테스트 파일이 Workers 런타임 전역(<code>crypto.subtle</code>, <code>caches</code> 스텁 등)을 node 환경 기준으로 짜여 있어 전역 교체는 회귀 위험이 크다. per-file 지시자로 국소화하면 위험이 새 파일 하나로 좁혀진다.</li>
+      <li>401 구분을 별도 클래스 대신 <code>{ status: number }</code> 필드만 있는 단일 에러 타입으로 처리 — 기각: 이슈가 "별도 에러 타입"을 명시했고, 소비 측이 <code>instanceof</code>로 분기하는 편이 매직넘버 비교보다 오탈자에 안전하다.</li>
+      <li><code>zod</code> 등으로 <code>/api/records</code> 응답에 런타임 스키마 검증 추가 — 기각: 서버가 <code>shared/domain.ts</code> 계약을 이미 강제(#21)하고 <code>functions/api/records.test.ts</code>가 그 계약을 서버 쪽에서 검증 중이다. 같은 계약을 클라이언트에서 다시 검증하는 건 이 이슈 범위를 넘는 과설계다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li><code>npm install @tanstack/react-query</code>(dependencies) + <code>npm install -D @testing-library/react jsdom</code>(devDependencies).
+        <span class="files"><code>package.json</code>, <code>package-lock.json</code></span>
+      </li>
+      <li><code>ApiError</code>/<code>UnauthorizedError</code> 작성.
+        <span class="files"><code>src/lib/api-error.ts</code></span>
+      </li>
+      <li><code>QueryClient</code> 싱글턴 작성.
+        <span class="files"><code>src/lib/query-client.ts</code></span>
+      </li>
+      <li><code>fetchRecords</code>/<code>shouldRetryRecordsQuery</code>/<code>useRecords</code> 작성 — <code>RecordsResponse</code>는 <code>../../shared/domain</code>에서 타입 import(기존 <code>functions/lib/*.ts</code> import 경로 컨벤션과 동일).
+        <span class="files"><code>src/hooks/useRecords.ts</code></span>
+      </li>
+      <li><code>main.tsx</code>에 <code>QueryClientProvider</code> 장착.
+        <span class="files"><code>src/main.tsx</code></span>
+      </li>
+      <li><code>vi.stubGlobal('fetch', ...)</code> 패턴으로 <code>fetchRecords</code>/<code>shouldRetryRecordsQuery</code> 단위 테스트, <code>renderHook</code> + <code>QueryClientProvider</code> 래퍼로 <code>useRecords</code> 통합 테스트(성공/401/기타 실패) 작성. 파일 맨 위에 <code>// @vitest-environment jsdom</code> 지시자 포함.
+        <span class="files"><code>src/hooks/useRecords.test.tsx</code></span>
+      </li>
+      <li><code>npm run typecheck</code> · <code>npx vitest run</code> 전체 그린 확인(13→14 파일, 194+α 테스트) — 회귀 없음 확인.
+        <span class="files">(검증만, 변경 파일 없음)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>#42(인증 미들웨어)가 아직 머지되지 않아 실제 401을 curl/브라우저로 재현 불가</td><td>401 분기 코드가 실전에서 한 번도 hit되지 않은 채 머지될 수 있음</td><td>fetch를 모킹해 401 응답을 흉내낸 단위·통합 테스트로 계약 준수를 검증. #42 머지 후 <code>wrangler pages dev</code>로 실제 재현 확인은 별도 후속 확인 사항으로 남김</td></tr>
+        <tr><td>jsdom을 새로 도입하며 vitest 전역 환경(node)과 충돌 가능</td><td>기존 13개 <code>functions/*</code> 테스트 파일의 Workers 전역 스텁(<code>caches</code>, <code>crypto.subtle</code>)이 깨질 위험</td><td>전역 <code>environment</code>는 그대로 <code>node</code> 유지, 새 테스트 파일에만 <code>// @vitest-environment jsdom</code> 지시자로 국소 적용 후 전체 스위트 재실행으로 확인</td></tr>
+        <tr><td><code>staleTime</code>(5분)·재시도 상한(2회) 수치가 다소 임의적</td><td>너무 짧으면 화면 전환마다 리페치 폭주, 너무 길면 관리자가 시트를 갱신해도 팀원 화면엔 오래된 데이터 표시</td><td>서버 캐시 TTL(<code>RECORDS_CACHE_TTL_SECONDS</code> = 6시간, <code>functions/lib/records-cache.ts</code>)보다 훨씬 짧게 보수적으로 시작 — 실사용 피드백을 보고 조정할 여지를 남김. 재시도 상한은 TanStack 기본값(3회 시도)과 동일하게 맞춤</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>fetchRecords</code>: 200 응답 → <code>RecordsResponse</code> 그대로 반환하는지 확인</li>
+      <li><code>fetchRecords</code>: 401 응답 → <code>UnauthorizedError</code> 인스턴스를 던지는지 확인(<code>instanceof</code>)</li>
+      <li><code>fetchRecords</code>: 502/500 등 기타 실패 → <code>ApiError</code>(에러 바디의 <code>message</code>·<code>status</code> 반영)를 던지는지 확인</li>
+      <li><code>shouldRetryRecordsQuery</code>: <code>UnauthorizedError</code>면 <code>failureCount</code>와 무관하게 항상 <code>false</code>, 그 외 에러면 <code>failureCount &lt; 2</code> 구간에서만 <code>true</code></li>
+      <li><code>useRecords</code>(<code>renderHook</code> + <code>QueryClientProvider</code> 래퍼): 성공 시 <code>data</code>가 타입대로 채워지고 <code>isPending</code>이 <code>false</code>로 전이되는지 확인</li>
+      <li><code>useRecords</code>: 401 시 <code>error</code>가 <code>UnauthorizedError</code> 인스턴스이고, <code>fetch</code>가 1회만 호출되는지(재시도 안 함) 확인</li>
+      <li>회귀: <code>npm run typecheck</code> · <code>npx vitest run</code> 전체 그린(기존 13파일/194테스트 + 신규 테스트 모두 통과)</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>성공 시 <code>RecordsResponse</code> 타입이 적용된 데이터를 <code>useRecords</code>가 반환한다</li>
+      <li>401 시 <code>UnauthorizedError</code>로 다른 에러와 구분 가능한 에러 상태를 반환하며, 재시도하지 않는다</li>
+      <li>테스트(vitest) — <code>fetchRecords</code>/<code>shouldRetryRecordsQuery</code> 단위 테스트 + <code>useRecords</code> 통합 테스트(성공/401/기타 에러)를 모두 포함한다</li>
+      <li><code>QueryClientProvider</code>가 <code>src/main.tsx</code>에 장착돼 앱 전체에서 <code>useRecords</code>를 바로 사용할 수 있다</li>
+      <li>기존 <code>npm run typecheck</code> · <code>npx vitest run</code> 스위트에 회귀가 없다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/46">#46</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
