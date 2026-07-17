@@ -1,8 +1,6 @@
-import type { AxisDomainItem, TooltipContentProps } from 'recharts'
-import { useCallback } from 'react'
+import type { AxisDomainItem } from 'recharts'
 import { CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { ChartContainer } from './chart-container'
-import { ChartTooltip } from './chart-tooltip'
 import {
   CHART_AXIS_LINE_COLOR,
   CHART_AXIS_TICK_STYLE,
@@ -12,6 +10,7 @@ import {
   seriesColor,
 } from './chart-theme'
 import type { ChartSeries } from './chart-types'
+import { useChartTooltipRenderer } from './use-chart-tooltip-renderer'
 
 export interface LineTrendChartProps {
   data: Array<Record<string, unknown>>
@@ -43,10 +42,7 @@ export function LineTrendChart({
   valueFormatter,
   yDomain,
 }: LineTrendChartProps) {
-  const renderTooltip = useCallback(
-    (props: TooltipContentProps) => <ChartTooltip {...props} valueFormatter={valueFormatter} />,
-    [valueFormatter],
-  )
+  const renderTooltip = useChartTooltipRenderer(valueFormatter)
 
   return (
     <ChartContainer height={height}>

@@ -1,10 +1,9 @@
-import type { AxisDomainItem, TooltipContentProps } from 'recharts'
-import { useCallback } from 'react'
+import type { AxisDomainItem } from 'recharts'
 import { Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, Tooltip } from 'recharts'
 import { ChartContainer } from './chart-container'
-import { ChartTooltip } from './chart-tooltip'
 import { CHART_AXIS_TICK_STYLE, CHART_GRID_COLOR, CHART_LEGEND_STYLE, seriesColor } from './chart-theme'
 import type { ChartSeries } from './chart-types'
+import { useChartTooltipRenderer } from './use-chart-tooltip-renderer'
 
 export interface RadarProfileChartProps {
   data: Array<Record<string, unknown>>
@@ -33,10 +32,7 @@ export function RadarProfileChart({
   domain = DEFAULT_DOMAIN,
   valueFormatter,
 }: RadarProfileChartProps) {
-  const renderTooltip = useCallback(
-    (props: TooltipContentProps) => <ChartTooltip {...props} valueFormatter={valueFormatter} />,
-    [valueFormatter],
-  )
+  const renderTooltip = useChartTooltipRenderer(valueFormatter)
 
   return (
     <ChartContainer height={height}>
