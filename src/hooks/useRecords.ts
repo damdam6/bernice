@@ -7,7 +7,14 @@ interface ErrorBody {
 }
 
 export async function fetchRecords(): Promise<RecordsResponse> {
-  const res = await fetch('/api/records')
+  let res: Response
+  try {
+    res = await fetch('/api/records')
+  } catch {
+    // HTTP 응답 자체가 없는 네트워크 오류. useQuery 제네릭이 error를 ApiError로 타입하므로
+    // fetch의 TypeError를 그대로 흘리지 않고 status 0(XHR 관례)으로 래핑한다.
+    throw new ApiError('records fetch failed (network)', 0)
+  }
 
   if (res.status === 401) throw new UnauthorizedError()
 
@@ -19,10 +26,10 @@ export async function fetchRecords(): Promise<RecordsResponse> {
   return (await res.json()) as RecordsResponse
 }
 
-// 401은 로그인 상태 문제라 재시도해도 소용없어 제외한다. 그 외 실패(네트워크·502 등)는
-// TanStack 기본 재시도 상한(3회 시도)과 동일하게 최대 2회까지 재시도한다.
+// 4xx(401 로그인 필요 포함)는 요청 자체의 문제라 재시도해도 소용없어 제외한다.
+// 그 외 실패(네트워크·5xx)는 TanStack 기본 재시도 상한(3회 시도)과 동일하게 최대 2회까지 재시도한다.
 export function shouldRetryRecordsQuery(failureCount: number, error: unknown): boolean {
-  if (error instanceof UnauthorizedError) return false
+  if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false
   return failureCount < 2
 }
 

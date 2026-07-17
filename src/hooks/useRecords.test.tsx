@@ -59,6 +59,15 @@ describe('fetchRecords', () => {
     expect((error as ApiError).status).toBe(500)
     expect((error as ApiError).message).toBe('records fetch failed (500)')
   })
+
+  it('fetch 자체가 실패(네트워크 오류)하면 status 0의 ApiError로 래핑해 던진다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+
+    const error: unknown = await fetchRecords().catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).status).toBe(0)
+  })
 })
 
 describe('shouldRetryRecordsQuery', () => {
@@ -67,11 +76,17 @@ describe('shouldRetryRecordsQuery', () => {
     expect(shouldRetryRecordsQuery(5, new UnauthorizedError())).toBe(false)
   })
 
-  it('그 외 에러는 failureCount < 2 구간에서만 true', () => {
+  it('401 외의 4xx도 재시도하지 않는다', () => {
+    expect(shouldRetryRecordsQuery(0, new ApiError('forbidden', 403))).toBe(false)
+    expect(shouldRetryRecordsQuery(0, new ApiError('not found', 404))).toBe(false)
+  })
+
+  it('그 외 에러(5xx·네트워크)는 failureCount < 2 구간에서만 true', () => {
     const error = new ApiError('boom', 502)
     expect(shouldRetryRecordsQuery(0, error)).toBe(true)
     expect(shouldRetryRecordsQuery(1, error)).toBe(true)
     expect(shouldRetryRecordsQuery(2, error)).toBe(false)
+    expect(shouldRetryRecordsQuery(0, new ApiError('network', 0))).toBe(true)
   })
 })
 
