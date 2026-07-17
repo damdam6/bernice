@@ -6,11 +6,13 @@ interface ErrorBody {
   message?: string
 }
 
-export async function fetchRecords(): Promise<RecordsResponse> {
+export async function fetchRecords(signal?: AbortSignal): Promise<RecordsResponse> {
   let res: Response
   try {
-    res = await fetch('/api/records')
-  } catch {
+    res = await fetch('/api/records', { signal })
+  } catch (cause) {
+    // 취소(abort)는 실패가 아니므로 래핑하지 않고 그대로 전파한다 — TanStack Query가 자체 처리한다.
+    if (signal?.aborted) throw cause
     // HTTP 응답 자체가 없는 네트워크 오류. useQuery 제네릭이 error를 ApiError로 타입하므로
     // fetch의 TypeError를 그대로 흘리지 않고 status 0(XHR 관례)으로 래핑한다.
     throw new ApiError('records fetch failed (network)', 0)
@@ -45,7 +47,7 @@ export function shouldRetryRecordsQuery(failureCount: number, error: unknown): b
 export function useRecords() {
   return useQuery<RecordsResponse, ApiError>({
     queryKey: ['records'],
-    queryFn: fetchRecords,
+    queryFn: ({ signal }) => fetchRecords(signal),
     staleTime: 5 * 60 * 1000,
     retry: shouldRetryRecordsQuery,
   })

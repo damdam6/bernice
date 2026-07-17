@@ -78,6 +78,27 @@ describe('fetchRecords', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(0)
   })
+
+  it('AbortSignal을 fetch에 그대로 전달한다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY))
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+
+    await fetchRecords(controller.signal)
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/records', { signal: controller.signal })
+  })
+
+  it('취소(abort)로 인한 실패는 ApiError로 래핑하지 않고 그대로 전파한다', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const abortError = new DOMException('The operation was aborted.', 'AbortError')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abortError))
+
+    const error: unknown = await fetchRecords(controller.signal).catch((e: unknown) => e)
+
+    expect(error).toBe(abortError)
+  })
 })
 
 describe('shouldRetryRecordsQuery', () => {
