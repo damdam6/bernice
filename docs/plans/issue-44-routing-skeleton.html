@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#44 P3 — 라우팅 골격 (react-router + 빈 페이지 4개 + 404) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/44">#44</a></span><span class="type-chip">기능 개선</span>
+    <h1>P3 — 라우팅 골격 (react-router + 빈 페이지 4개 + 404)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/44-routing-skeleton</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      현재 앱은 <code>src/App.tsx</code> 하나로 고정된 헬스체크 화면만 렌더한다.
+      이번 이슈는 P3(프론트 공통 뼈대)의 첫 조각으로, <code>react-router-dom</code>을
+      설치해 <code>/</code>·<code>/rankings</code>·<code>/players</code>·<code>/trends</code>
+      4개의 빈 페이지와 404 라우트를 배선하고, 기존 헬스체크 UI를 홈 페이지로 옮긴다.
+      레이아웃·네비게이션(#45)과 TanStack Query(#46)는 후속 이슈이므로 이번 범위에서는
+      건드리지 않고, 순수 라우팅 골격만 놓는다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>
+        <code>src/main.tsx:6-10</code> — <code>createRoot</code>가 <code>&lt;App /&gt;</code>
+        하나만 렌더. 라우터 프로바이더가 없다.
+      </li>
+      <li>
+        <code>src/App.tsx:17-43</code> — <code>App</code> 컴포넌트가 헬스체크 상태
+        (<code>useEffect</code>로 <code>/api/health</code> fetch)와 화면 마크업을 한 번에
+        갖고 있다. 완료 조건 중 "기존 헬스체크 동작 유지"는 이 로직을 그대로 홈 페이지로
+        옮기기만 하면 충족된다.
+      </li>
+      <li>
+        <code>package.json:15-16</code> — <code>dependencies</code>에 <code>react</code>·
+        <code>react-dom</code>만 있고 <code>react-router-dom</code>은 미설치. npm 레지스트리
+        최신 버전은 <code>7.18.1</code>(2026-07-17 기준).
+      </li>
+      <li>
+        <code>src/</code> 트리에 <code>pages/</code>나 라우트 관련 서브폴더가 아직 없다 —
+        지금까지는 단일 파일 구조.
+      </li>
+      <li>
+        형제 이슈로 <code>#45</code>(공통 레이아웃+네비게이션), <code>#46</code>(TanStack
+        Query 셋업)가 별도로 열려 있다 — 이번 이슈에서 네비게이션 바나 데이터 페칭 훅을
+        선점해서 만들 필요가 없다는 뜻이다.
+      </li>
+      <li>
+        배포 대상은 Cloudflare Pages(<code>wrangler.jsonc:5</code> —
+        <code>pages_build_output_dir: ./dist</code>)이고, <code>/api/*</code>는
+        <code>functions/api/*.ts</code> Pages Functions가 처리한다
+        (<code>vite.config.ts:9-11</code>은 dev 서버에서만 <code>/api</code>를 8788로
+        프록시). 리포에는 <code>public/</code> 디렉터리나 <code>_redirects</code>가 없다 —
+        처음엔 SPA 새로고침/직접 URL 진입을 위해 <code>_redirects</code> 추가가
+        필요하다고 가정했으나, <code>wrangler pages dev</code>로 직접 확인한 결과
+        Cloudflare "Classic Pages"는 <code>404.html</code>이 없으면 기본적으로 SPA로
+        간주해 미매칭 경로에 <code>index.html</code>을 200으로 서빙한다 — 별도 설정 없이
+        이미 충족되는 플랫폼 기본값이라 <code>_redirects</code>를 추가하지 않기로
+        했다(3장 설계 참고). dev 서버(Vite)도 SPA 폴백이 내장돼 있어 로컬 확인에는
+        영향이 없다.
+      </li>
+      <li>
+        <code>vitest.config.ts</code>의 테스트 환경은 <code>node</code>이고, jsdom/testing-library
+        류 의존성이 없다 — 지금까지 프론트 컴포넌트 단위 테스트가 존재하지 않는 상태
+        (<code>functions/</code> 쪽 로직 테스트만 있음). 이번 S급 라우팅 골격에 새 테스트
+        인프라(jsdom 등)를 들이는 건 범위 밖으로 판단.
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li>
+        <b>라우터 구성</b>: <code>&lt;BrowserRouter&gt;</code> + <code>&lt;Routes&gt;</code>
+        선언형 방식 채택. <code>createBrowserRouter</code>(데이터 라우터)는 loader/action
+        같은 기능이 필요할 때 쓰는데, 이번 이슈는 로더가 필요 없는 순수 골격이라 오버스펙.
+        선언형이 더 적고 읽기 쉬운 코드로 목적을 달성한다.
+      </li>
+      <li>
+        <b>파일 구조</b>: <code>src/pages/</code> 신설 — <code>Home.tsx</code>,
+        <code>Rankings.tsx</code>, <code>Players.tsx</code>, <code>Trends.tsx</code>,
+        <code>NotFound.tsx</code>. 기존 <code>App.tsx</code>의 헬스체크 마크업/로직을
+        <code>Home.tsx</code>로 그대로 이동하고, <code>App.tsx</code>는
+        <code>&lt;Routes&gt;</code> 선언만 담당하는 라우팅 진입점으로 역할을 바꾼다.
+        <code>main.tsx</code>가 <code>&lt;BrowserRouter&gt;</code>로 <code>&lt;App /&gt;</code>를
+        감싼다.
+      </li>
+      <li>
+        <b>빈 페이지 내용</b>: #45(레이아웃+네비게이션)가 아직 없으므로 각 페이지는 헤더
+        내비게이션 없이 페이지명 + 한 줄 안내 텍스트만 렌더하는 최소 placeholder로 둔다
+        (기존 <code>index.css</code>의 brand 색상 토큰만 재사용해 스타일 붕 뜨지 않게).
+        레이아웃/네비게이션 UI를 여기서 선점하지 않는다.
+      </li>
+      <li>
+        <b>404 처리</b>: <code>&lt;Route path="*" element={&lt;NotFound /&gt;} /&gt;</code>로
+        클라이언트 사이드 catch-all. 완료 조건의 "미정의 경로는 404"는 이 라우트로 충족.
+      </li>
+      <li>
+        <b>프로덕션 SPA 폴백 — <code>public/_redirects</code> 추가 안 함 (계획 수정)</b>:
+        최초 설계 때는 <code>/*  /index.html  200</code> 리다이렉트 규칙을 추가하려 했으나,
+        구현 중 실제로 <code>wrangler pages dev</code>에 적용해보니 이 규칙 자체가
+        <code>"Infinite loop detected"</code> 경고로 무효 처리됐다(Parsed 0 valid redirect
+        rules). 조사 결과 이는 Wrangler의 알려진 오탐 검증 버그이고
+        (cloudflare/workers-sdk#11824), 일부 설정에서는 오탐에 그치지 않고 실제
+        <code>wrangler pages deploy</code>를 에러 코드 10021로 막아버리는 사례도 보고돼
+        있다. 더 중요한 건 — 이 규칙 없이도(<code>public/_redirects</code> 자체를 지우고
+        재확인) <code>/rankings</code>·<code>/no-such-path</code> 등 모든 미매칭 경로가
+        이미 200으로 <code>index.html</code>을 서빙한다는 걸 로컬에서 직접 확인했다.
+        Cloudflare Pages 공식 문서상 "Classic Pages"는 프로젝트에 <code>404.html</code>이
+        없으면 기본적으로 SPA로 간주해 미매칭 경로에 <code>index.html</code>을 200으로
+        서빙한다 — 즉 우리가 추가하려던 동작이 이미 플랫폼 기본값이었다. 실익 없이
+        배포 실패 리스크만 있는 파일이라 추가하지 않기로 결정.
+      </li>
+      <li>
+        <b>기각한 대안</b>: <code>createBrowserRouter</code> 데이터 라우터 — 지금 당장
+        loader/action을 안 쓰므로 보일러플레이트만 늘어남. 나중에 TanStack Query(#46)가
+        라우터 loader가 아닌 훅 기반으로 명시돼 있어(빌드플랜: "TanStack Query 셋업 +
+        useRecords 훅") 데이터 라우터로 미리 갈아탈 이유가 없다.
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>
+        <code>react-router-dom</code> 설치 (<code>^7</code>)
+        <span class="files"><code>package.json</code>, <code>package-lock.json</code></span>
+      </li>
+      <li>
+        기존 헬스체크 UI/로직을 <code>App.tsx</code>에서 <code>src/pages/Home.tsx</code>로
+        이동 (컴포넌트 이름만 <code>Home</code>으로 변경, 로직은 그대로)
+        <span class="files"><code>src/pages/Home.tsx</code> (신규), <code>src/App.tsx</code></span>
+      </li>
+      <li>
+        <code>Rankings</code>·<code>Players</code>·<code>Trends</code> 빈 페이지 컴포넌트
+        생성 — 페이지명 + 안내 문구만 있는 최소 placeholder
+        <span class="files"><code>src/pages/Rankings.tsx</code>, <code>src/pages/Players.tsx</code>, <code>src/pages/Trends.tsx</code> (모두 신규)</span>
+      </li>
+      <li>
+        <code>NotFound</code>(404) 페이지 컴포넌트 생성
+        <span class="files"><code>src/pages/NotFound.tsx</code> (신규)</span>
+      </li>
+      <li>
+        <code>App.tsx</code>를 라우트 선언 전용으로 재작성: <code>/</code>→Home,
+        <code>/rankings</code>→Rankings, <code>/players</code>→Players,
+        <code>/trends</code>→Trends, <code>*</code>→NotFound
+        <span class="files"><code>src/App.tsx</code></span>
+      </li>
+      <li>
+        <code>main.tsx</code>에서 <code>&lt;App /&gt;</code>를
+        <code>&lt;BrowserRouter&gt;</code>로 감싸기
+        <span class="files"><code>src/main.tsx</code></span>
+      </li>
+      <li>
+        타입체크 + 빌드 + (해당 시) 기존 vitest 스위트 통과 확인
+        <span class="files"><code>npm run typecheck</code>, <code>npm run build</code>, <code>npm test</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>react-router-dom v7 API가 v6과 일부 다름(특히 데이터 라우터 관련)</td>
+          <td>선언형 <code>BrowserRouter</code>/<code>Routes</code>/<code>Route</code> API는
+            v6→v7 사이 안정적이라 실질 영향 낮음</td>
+          <td>설치 후 <code>npm run typecheck</code>로 즉시 검증</td>
+        </tr>
+        <tr>
+          <td>Cloudflare Pages의 "404.html 없으면 SPA로 간주" 기본 동작이 향후 플랫폼
+            변경으로 바뀔 가능성</td>
+          <td>배포 환경에서만 미매칭 경로가 실제 404로 보일 수 있음 (로컬에서는 안 보임)</td>
+          <td>이 동작은 Cloudflare Pages 공식 문서에 명시된 안정적 기본값 — 회귀 시
+            <code>public/_redirects</code>(<code>/*  /index.html  200</code>) 재도입
+            검토, 단 재도입 전 <code>wrangler pages deploy</code> 실제 배포로
+            에러 코드 10021 발생 여부부터 확인할 것</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 라우트/페이지 컴포넌트 타입 오류 없음 확인</li>
+      <li><code>npm run build</code> — 프로덕션 빌드 성공</li>
+      <li><code>npm test</code> — 기존 <code>functions/</code> 단위 테스트 스위트가
+        이번 변경으로 깨지지 않는지 확인 (프론트 라우팅은 자동 테스트 대상 아님)</li>
+      <li>수동 확인 (Vite dev 서버): <code>/</code> 진입 시 기존 헬스체크 UI("API 정상"/
+        "API 확인 중…" 등)가 그대로 뜨는지, <code>/rankings</code>·<code>/players</code>·
+        <code>/trends</code> 각각 해당 placeholder가 렌더되는지, <code>/no-such-path</code>
+        같은 미정의 경로에서 404 페이지가 뜨는지, 404 페이지의 "홈으로 돌아가기" 링크가
+        <code>/</code>로 클라이언트 사이드 이동하는지 URL 바 직접 입력·클릭으로 확인</li>
+      <li>수동 확인 (프로덕션 빌드 산출물, <code>npm run build</code> 후
+        <code>npx wrangler pages dev dist --port &lt;포트&gt;</code>):
+        <code>/rankings</code>·<code>/players</code>·<code>/trends</code>·미정의 경로를
+        새로고침/직접 진입해도 200으로 정상 렌더되는지, <code>/api/health</code>가 여전히
+        정상 응답하는지, wrangler 로그에 <code>_redirects</code> 관련 경고가 없는지 확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>/</code>·<code>/rankings</code>·<code>/players</code>·<code>/trends</code>
+        각 경로 진입 시 해당 빈 페이지가 렌더된다 (dev 서버 및 프로덕션 빌드 모두)</li>
+      <li>정의되지 않은 경로는 404 페이지를 렌더한다</li>
+      <li>기존 <code>/api/health</code> 기반 헬스체크 표시 동작이 홈 페이지에서 그대로
+        유지된다</li>
+      <li><code>npm run typecheck</code>, <code>npm run build</code>, <code>npm test</code>가
+        모두 통과한다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/44">#44</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
