@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#50 P3 — 공통 컴포넌트 ③: 랭킹 테이블 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/50">#50</a></span><span class="type-chip">기능 개선</span>
+    <h1>P3 — 공통 컴포넌트 ③: 랭킹 테이블</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/50-ranking-table</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      <code>shared/domain.ts</code>의 <code>RankingEntry</code>를 표시 기반으로 하는 순수 프레젠테이션
+      테이블 컴포넌트를 새로 만든다. 종목 1개의 랭킹을 받아 순위·이름·기록·달성 여부를 표로 그리고,
+      정렬 방향(낮을수록/높을수록)을 화살표로 표시하며, 동순위(1,1,3)와 면제·미측정 선수도 함께
+      렌더한다. 데이터 fetch나 라우팅은 포함하지 않고 목데이터로만 검증한다(다른 P3 컴포넌트 이슈
+      #48·#49와 동일한 패턴, 의존성 없음).
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><b>도메인 계약</b> — <code>shared/domain.ts:70-78</code>의 <code>RankingEntry</code>는
+      <code>{ playerId, name, value, display, rank, achieved }</code>이고, 공동순위는 이미
+      1,1,3 규칙으로 계산되어 들어온다(<code>functions/lib/compute-rankings.ts:46-62</code>).
+      단, <b>이 배열 자체에는 면제·미측정·이상값·비활동 상태 선수가 아예 없다</b> —
+      <code>computeEventRanking</code>이 활동 상태 + <code>recorded</code> 점수만 후보로 걸러낸 뒤
+      (<code>functions/lib/compute-rankings.ts:32-42</code>) 랭킹을 매기기 때문이다. 이는
+      <code>docs/records-schema.html</code> §02·§04(면제·미측정·이상값·활동 외 상태는 랭킹에서 제외,
+      PR #16에서 확정)에 문서화된 백엔드 계약이다.</p>
+    <p>즉 완료 조건이 요구하는 "면제·미측정이 포함된 목데이터로 렌더"는 백엔드가 주는
+      <code>EventRanking.entries</code> 배열 그대로는 만들어질 수 없는 상황이다 — 실데이터 조립(어떤
+      선수가 왜 랭킹에서 빠졌는지)은 이 이슈의 범위 밖(P4 랭킹 페이지에서 <code>players</code>/
+      <code>sessions</code>와 대조해 처리할 문제)이다. 이 컴포넌트는 <b>표시 전용</b>이므로,
+      <code>RankingEntry</code>를 확장한 로컬 prop 타입을 만들어 recorded·exempt·unmeasured 세 종류의
+      행을 모두 받아 그리는 것으로 범위를 잡는다(아래 3절).</p>
+    <p><b>프론트 현황</b> — <code>src/</code>에는 아직 <code>App.tsx</code>·<code>main.tsx</code>·
+      <code>index.css</code>뿐이고 <code>src/components/</code>는 없다(그린필드). 디자인 토큰은
+      <code>src/index.css:5-32</code>에 정의된 <code>brand-*</code>(오렌지)·<code>accent-*</code>(블루)·
+      <code>good</code>/<code>warn</code>/<code>bad</code> 시맨틱 색상이 전부이며 <code>App.tsx:26-36</code>이
+      이를 쓰는 유일한 참고 예시다. 형제 이슈 #48(카드·뱃지·상태 pill)·#49(게이지·로딩/에러/빈 상태)도
+      아직 미구현 상태라 이 컴포넌트가 의존할 공용 Badge/Pill이 없다 — "의존성 없음"이므로 필요한
+      만큼만 컴포넌트 내부에서 인라인으로 처리한다.</p>
+    <p><b>테스트 인프라 공백</b> — <code>vitest.config.ts:1-6</code>은 <code>environment: 'node'</code>뿐이고
+      React 컴포넌트를 렌더할 <code>jsdom</code>·<code>@testing-library/react</code>가
+      <code>package.json</code>에 없다(devDependencies에 React 관련 테스트 도구 전무, 순수 함수
+      테스트인 <code>functions/lib/*.test.ts</code>만 존재). 이 worktree에는 <code>node_modules</code>도
+      아직 설치돼 있지 않다. 완료 조건의 "목데이터로 올바르게 렌더"를 자동 테스트로 검증하려면 이
+      devDependencies 추가가 선행돼야 한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>선택한 설계</b> — <code>src/components/RankingTable.tsx</code>에 다음 판별 유니온을 로컬
+      export 타입으로 정의한다:</p>
+    <ul>
+      <li><code>RankingTableRow = ({ status: 'recorded' } &amp; RankingEntry) | { status: 'exempt' | 'unmeasured'; playerId: number; name: string }</code></li>
+      <li>Props: <code>{ entries: RankingTableRow[]; direction: RankDirection }</code> — 정렬·필터는
+        컴포넌트 책임이 아니고 호출부가 이미 원하는 순서로(recorded는 rank 오름차순, exempt/unmeasured는
+        뒤에) 넘긴다고 가정한다(Card/Badge와 동일하게 "순수 표시" 원칙, #48 범위 설명과 일치).</li>
+    </ul>
+    <p><b>순위 열 — 동순위 표시</b>: 단순히 <code>rank</code> 숫자를 그대로 찍으면 1,1,3 규칙 자체는
+      맞지만 "동순위 처리"를 시각적으로 증명하지 못한다. 인접 행과 <code>rank</code>가 같은 recorded
+      행에는 <code>공동 N위</code>, 유일한 순위에는 <code>N위</code>를 렌더한다(계산은 이미 끝난
+      <code>rank</code> 값을 보고 컴포넌트가 라벨만 결정 — 재계산 없음).</p>
+    <p><b>정렬 방향 표시(↑↓)</b>: "기록" 열 헤더 옆에 방향 배지를 둔다 — <code>낮을수록</code> →
+      <code>↓ 낮을수록 좋음</code>, <code>높을수록</code> → <code>↑ 높을수록 좋음</code>. 화살표는
+      "값이 이 방향일 때 좋다"는 의미로 통일(값 자체의 정렬 방향이 아니라 direction 문자열과
+      1:1 대응) — 별도 유틸 없이 컴포넌트 내부 상수 맵으로 처리.</p>
+    <p><b>exempt/unmeasured 행</b>: 순위 열에 <code>면제</code>/<code>미측정</code> 텍스트(회색,
+      숫자 없음), 기록 열은 <code>–</code>, 달성 열은 빈 칸. <code>shared/domain.ts</code>의
+      <code>ScoreStatus</code> 라벨과 동일한 한글 문자열을 그대로 재사용해 문서·시트·화면 표기가
+      어긋나지 않게 한다.</p>
+    <p><b>기각한 대안</b>: (a) <code>RankingEntry[]</code>만 받고 exempt/unmeasured는 별도 prop으로
+      분리 — 두 개의 배열을 순서 맞춰 합치는 책임이 호출부로 넘어가 인터페이스가 더 복잡해져 기각.
+      (b) 백엔드 <code>EventRanking</code> 타입을 그대로 쓰고 exempt/unmeasured를 아예 지원하지 않음 —
+      완료 조건이 명시적으로 요구하므로 기각. (c) #48의 <code>PlayerStatus</code> pill을 이 컴포넌트가
+      가져다 쓰기 — #48이 아직 없고 "의존성 없음" 조건과 어긋나 기각(추후 페이지 조립 단계에서
+      합성 가능).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>테스트 인프라 추가 — <code>jsdom</code>, <code>@testing-library/react</code>,
+        <code>@testing-library/dom</code>, <code>@testing-library/jest-dom</code>을 devDependencies에
+        추가하고 <code>npm install</code> 실행. 전역 <code>vitest.config.ts</code>는 그대로 두고
+        (백엔드 <code>functions/lib/*.test.ts</code>가 <code>node</code> 환경에 의존) 컴포넌트 테스트
+        파일 상단에 <code>// @vitest-environment jsdom</code> 도크블록으로 해당 파일만 jsdom 전환.
+        <span class="files"><code>package.json</code></span>
+      </li>
+      <li><code>RankingTableRow</code> 판별 유니온과 방향 라벨 상수를 정의 — <code>RankingEntry</code>,
+        <code>RankDirection</code>은 <code>shared/domain.ts</code>에서 <code>import type</code>
+        (verbatimModuleSyntax 준수, <code>tsconfig.app.json:11</code>).
+        <span class="files"><code>src/components/RankingTable.tsx</code>, <code>shared/domain.ts</code></span>
+      </li>
+      <li><code>RankingTable</code> 컴포넌트 본체 구현 — <code>&lt;table&gt;</code> 마크업, 헤더에
+        방향 배지, 행 매핑에서 recorded/exempt/unmeasured 세 분기 렌더, 동순위(<code>공동 N위</code>)
+        라벨 로직, entries가 빈 배열이면 "표시할 기록이 없습니다" 인라인 문구(별도 EmptyState 컴포넌트
+        없이 최소 처리 — #49 범위와 중복 방지). Tailwind는 <code>src/index.css</code>의
+        <code>brand-*</code>/<code>good</code> 토큰만 사용.
+        <span class="files"><code>src/components/RankingTable.tsx</code></span>
+      </li>
+      <li>목데이터 팩토리 + 렌더 테스트 작성 — <code>functions/lib/compute-rankings.test.ts:5-27</code>의
+        헬퍼 팩토리 패턴(작은 빌더 함수)을 프론트 버전으로 재현. 케이스: (1) 동순위 2명(rank 1,1) +
+        단독 3위, (2) 면제 1명, (3) 미측정 1명, (4) 낮을수록/높을수록 방향별 화살표·문구,
+        (5) 빈 배열일 때 안내 문구. <code>@testing-library/react</code>의 <code>render</code>+
+        <code>screen</code>으로 검증.
+        <span class="files"><code>src/components/RankingTable.test.tsx</code></span>
+      </li>
+      <li><code>npm run typecheck</code>·<code>npm run test</code> 로컬 실행해 기존 <code>functions/lib</code>
+        스위트(23개 테스트 파일)가 jsdom 전환 영향 없이 그대로 통과하는지 함께 확인.
+        <span class="files"><code>vitest.config.ts</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>이 컴포넌트의 <code>RankingTableRow</code>가 실제 백엔드 <code>RankingEntry[]</code>와
+            형태가 다름(exempt/unmeasured 포함)</td>
+          <td>P4에서 실데이터를 붙일 때 변환 로직이 추가로 필요, 계약 오해 가능성</td>
+          <td>타입에 "표시 전용 확장" 주석을 남기고, 이 플랜의 2절 분석을 P4 이슈에서 재확인하도록
+            완료 보고에 명시</td>
+        </tr>
+        <tr>
+          <td>테스트 인프라(jsdom·testing-library)를 이 이슈에서 처음 도입</td>
+          <td>#48·#49가 같은 걸 각자 다시 추가하면 devDependencies 중복/버전 불일치 가능</td>
+          <td>표준 패키지(<code>jsdom</code>, <code>@testing-library/react</code>)만 사용해 다른
+            브랜치와 머지 시 충돌 나더라도 동일 버전으로 쉽게 합쳐지도록 함</td>
+        </tr>
+        <tr>
+          <td>동순위 라벨(<code>공동 N위</code>)이 향후 실제 화면 톤과 다를 수 있음</td>
+          <td>디자인 재조정 필요 가능성 — 다만 로직(어떤 행이 동순위인지)은 재사용 가능</td>
+          <td>순수 표시 로직과 문자열을 분리해 라벨 문구만 바꾸기 쉽게 구현</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm install</code> 후 <code>npm run test</code> — 신규 <code>RankingTable.test.tsx</code>가
+        동순위 2건(공동 1위 라벨 2회 노출)·단독 3위·면제 1건·미측정 1건이 각각 올바른 텍스트로
+        렌더되는지 확인.</li>
+      <li>같은 테스트 파일에서 <code>direction: '낮을수록'</code>과 <code>'높을수록'</code> 각각에 대해
+        헤더의 화살표/문구가 바뀌는지 확인.</li>
+      <li><code>entries: []</code>일 때 안내 문구가 렌더되고 에러 없이 마운트되는지 확인.</li>
+      <li>기존 <code>functions/lib/*.test.ts</code> 전체가 jsdom 도입 이후에도 그대로 통과(node
+        환경 유지 확인 — 회귀 없음).</li>
+      <li><code>npm run typecheck</code> — <code>RankingTableRow</code> 판별 유니온과
+        <code>shared/domain.ts</code> 타입이 어긋나지 않는지, verbatimModuleSyntax 하에서 타입 임포트가
+        올바른지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>동순위(1,1,3)·면제·미측정이 섞인 목데이터가 각각 올바른 라벨(순위 숫자/공동 표시, "면제",
+        "미측정")로 렌더된다.</li>
+      <li>종목 방향(낮을수록/높을수록)에 따라 헤더의 화살표·문구가 올바르게 바뀐다.</li>
+      <li><code>RankingTableRow</code> props 타입이 <code>shared/domain.ts</code>의
+        <code>RankingEntry</code>/<code>RankDirection</code>과 어긋나지 않는다(확장만 하고 필드
+        재정의 없음).</li>
+      <li><code>npm run typecheck</code>·<code>npm run test</code>가 모두 통과한다(기존 백엔드
+        테스트 회귀 없음 포함).</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/50">#50</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
