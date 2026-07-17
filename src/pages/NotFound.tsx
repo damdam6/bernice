@@ -1,0 +1,21 @@
+import { Link } from 'react-router-dom'
+
+export default function NotFound() {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-50 px-6">
+      <main className="w-full max-w-md rounded-2xl border border-brand-200 bg-white p-10 text-center shadow-sm">
+        <p className="text-5xl">🏀</p>
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-brand-900">
+          페이지를 찾을 수 없습니다
+        </h1>
+        <p className="mt-2 text-sm text-brand-700">주소를 다시 확인해 주세요</p>
+        <Link
+          to="/"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-1.5 text-xs font-semibold text-brand-800 hover:bg-brand-200"
+        >
+          홈으로 돌아가기
+        </Link>
+      </main>
+    </div>
+  )
+}
