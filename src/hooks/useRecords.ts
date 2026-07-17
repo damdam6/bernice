@@ -27,7 +27,12 @@ export async function fetchRecords(): Promise<RecordsResponse> {
     throw new ApiError(body?.message ?? `records fetch failed (${res.status})`, res.status)
   }
 
-  return (await res.json()) as RecordsResponse
+  try {
+    return (await res.json()) as RecordsResponse
+  } catch {
+    // 서버 계약상 200 본문은 항상 JSON이지만, 깨진 페이로드도 ApiError 타입 계약 안에서 실패시킨다.
+    throw new ApiError('records fetch failed (invalid json)', res.status)
+  }
 }
 
 // 4xx(401 로그인 필요 포함)는 요청 자체의 문제라 재시도해도 소용없어 제외한다.

@@ -60,6 +60,16 @@ describe('fetchRecords', () => {
     expect((error as ApiError).message).toBe('records fetch failed (500)')
   })
 
+  it('200 응답이라도 본문이 JSON이 아니면 ApiError로 래핑해 던진다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('not json', { status: 200 })))
+
+    const error: unknown = await fetchRecords().catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).status).toBe(200)
+    expect((error as ApiError).message).toBe('records fetch failed (invalid json)')
+  })
+
   it('fetch 자체가 실패(네트워크 오류)하면 status 0의 ApiError로 래핑해 던진다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
 
