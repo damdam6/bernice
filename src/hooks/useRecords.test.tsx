@@ -11,13 +11,8 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// 실제 fetch/Response에 의존하지 않고, fetchRecords가 실제로 쓰는 표면(status/ok/json)만 흉내낸다.
-function fakeResponse(status: number, json: () => unknown | Promise<unknown>): Response {
-  return {
-    status,
-    ok: status >= 200 && status < 300,
-    json: async () => json(),
-  } as Response
+function jsonResponse(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), { status })
 }
 
 const RECORDS_BODY: RecordsResponse = {
@@ -31,13 +26,13 @@ const RECORDS_BODY: RecordsResponse = {
 
 describe('fetchRecords', () => {
   it('200 응답이면 RecordsResponse를 그대로 반환한다', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(200, () => RECORDS_BODY)))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY)))
 
     await expect(fetchRecords()).resolves.toEqual(RECORDS_BODY)
   })
 
   it('401 응답이면 UnauthorizedError를 던진다', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(401, () => ({ error: 'unauthorized' }))))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(401, { error: 'unauthorized' })))
 
     await expect(fetchRecords()).rejects.toBeInstanceOf(UnauthorizedError)
   })
@@ -45,7 +40,7 @@ describe('fetchRecords', () => {
   it('기타 실패(502)는 에러 바디의 message·status를 담은 ApiError를 던진다', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(fakeResponse(502, () => ({ error: 'sheets_api_error', message: '시트 실패' }))),
+      vi.fn().mockResolvedValue(jsonResponse(502, { error: 'sheets_api_error', message: '시트 실패' })),
     )
 
     const error: unknown = await fetchRecords().catch((e: unknown) => e)
@@ -56,14 +51,7 @@ describe('fetchRecords', () => {
   })
 
   it('에러 바디를 JSON으로 파싱할 수 없으면 상태 코드로 기본 메시지를 만든다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(
-        fakeResponse(500, () => {
-          throw new Error('invalid json')
-        }),
-      ),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('not json', { status: 500 })))
 
     const error: unknown = await fetchRecords().catch((e: unknown) => e)
 
@@ -96,7 +84,7 @@ function createWrapper() {
 
 describe('useRecords', () => {
   it('성공 시 타입 적용된 데이터를 반환한다', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(200, () => RECORDS_BODY)))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY)))
 
     const { result } = renderHook(() => useRecords(), { wrapper: createWrapper() })
 
@@ -105,7 +93,7 @@ describe('useRecords', () => {
   })
 
   it('401이면 UnauthorizedError를 반환하고 재시도하지 않는다', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(401, () => ({ error: 'unauthorized' })))
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(401, { error: 'unauthorized' }))
     vi.stubGlobal('fetch', fetchMock)
 
     const { result } = renderHook(() => useRecords(), { wrapper: createWrapper() })
