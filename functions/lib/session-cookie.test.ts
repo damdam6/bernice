@@ -61,6 +61,14 @@ describe('issueSessionToken → verifySessionToken 왕복', () => {
     expect(payload.iat).toBe(NOW / 1000)
     expect(payload.exp - payload.iat).toBe(SESSION_TTL_SECONDS)
   })
+
+  it('서로 다른 secret이 키 캐시 상한을 넘어도 발급·검증이 계속 동작한다', async () => {
+    const token = await issueSessionToken(SECRET)
+    for (let i = 0; i < 20; i++) {
+      expect(await verifySessionToken(await issueSessionToken(`다른시크릿-${i}`), `다른시크릿-${i}`)).toBe(true)
+    }
+    expect(await verifySessionToken(token, SECRET)).toBe(true)
+  })
 })
 
 describe('위조 토큰 거부', () => {

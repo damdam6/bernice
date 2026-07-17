@@ -21,6 +21,10 @@ export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 const TOKEN_VERSION = 'v1'
 
 // secret별 import된 HMAC 키 캐시 — 미들웨어(#42)가 요청마다 검증하므로 재사용한다.
+// 운영에선 단일 SESSION_SECRET이라 항목이 1개지만, isolate가 요청 간에 살아남으므로
+// 여러 secret이 흘러들어도 메모리가 무한히 늘지 않게 상한을 두고 넘치면 통째로 비운다
+// (이 규모에 LRU는 과함 — 정상 경로에선 클리어가 일어나지 않는다).
+const KEY_CACHE_MAX = 8
 const keyCache = new Map<string, Promise<CryptoKey>>()
 
 function getHmacKey(secret: string): Promise<CryptoKey> {
@@ -37,6 +41,7 @@ function getHmacKey(secret: string): Promise<CryptoKey> {
       false,
       ['sign', 'verify'],
     )
+    if (keyCache.size >= KEY_CACHE_MAX) keyCache.clear()
     keyCache.set(secret, key)
   }
   return key
