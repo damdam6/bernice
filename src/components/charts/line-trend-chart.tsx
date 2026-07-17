@@ -1,20 +1,17 @@
-import type { AxisDomainItem } from 'recharts'
+import type { AxisDomainItem, TooltipContentProps } from 'recharts'
+import { useCallback } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { ChartContainer } from './chart-container'
 import { ChartTooltip } from './chart-tooltip'
 import {
   CHART_AXIS_LINE_COLOR,
   CHART_AXIS_TICK_STYLE,
+  CHART_DEFAULT_HEIGHT,
   CHART_GRID_COLOR,
   CHART_LEGEND_STYLE,
   seriesColor,
 } from './chart-theme'
-
-export interface ChartSeries {
-  key: string
-  label: string
-  color?: string
-}
+import type { ChartSeries } from './chart-types'
 
 export interface LineTrendChartProps {
   data: Array<Record<string, unknown>>
@@ -32,7 +29,6 @@ export interface LineTrendChartProps {
   yDomain?: readonly [AxisDomainItem, AxisDomainItem]
 }
 
-const DEFAULT_HEIGHT = 260
 const CHART_MARGIN = { top: 8, right: 16, bottom: 4, left: 4 }
 
 // 추이 프리셋 — 개인 프로필의 종목별 추이(단일 라인)와 전체 추이(멀티라인) 양쪽에서 재사용된다.
@@ -41,12 +37,17 @@ export function LineTrendChart({
   data,
   xKey,
   series,
-  height = DEFAULT_HEIGHT,
+  height = CHART_DEFAULT_HEIGHT,
   xFormatter,
   yFormatter,
   valueFormatter,
   yDomain,
 }: LineTrendChartProps) {
+  const renderTooltip = useCallback(
+    (props: TooltipContentProps) => <ChartTooltip {...props} valueFormatter={valueFormatter} />,
+    [valueFormatter],
+  )
+
   return (
     <ChartContainer height={height}>
       <LineChart data={data} margin={CHART_MARGIN}>
@@ -66,7 +67,7 @@ export function LineTrendChart({
           tickLine={false}
           width={40}
         />
-        <Tooltip content={(props) => <ChartTooltip {...props} valueFormatter={valueFormatter} />} />
+        <Tooltip content={renderTooltip} />
         {series.length > 1 && <Legend wrapperStyle={CHART_LEGEND_STYLE} />}
         {series.map((s, index) => (
           <Line

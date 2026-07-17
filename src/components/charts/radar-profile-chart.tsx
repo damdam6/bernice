@@ -1,9 +1,10 @@
-import type { AxisDomainItem } from 'recharts'
+import type { AxisDomainItem, TooltipContentProps } from 'recharts'
+import { useCallback } from 'react'
 import { Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, Tooltip } from 'recharts'
 import { ChartContainer } from './chart-container'
 import { ChartTooltip } from './chart-tooltip'
 import { CHART_AXIS_TICK_STYLE, CHART_GRID_COLOR, CHART_LEGEND_STYLE, seriesColor } from './chart-theme'
-import type { ChartSeries } from './line-trend-chart'
+import type { ChartSeries } from './chart-types'
 
 export interface RadarProfileChartProps {
   data: Array<Record<string, unknown>>
@@ -32,13 +33,18 @@ export function RadarProfileChart({
   domain = DEFAULT_DOMAIN,
   valueFormatter,
 }: RadarProfileChartProps) {
+  const renderTooltip = useCallback(
+    (props: TooltipContentProps) => <ChartTooltip {...props} valueFormatter={valueFormatter} />,
+    [valueFormatter],
+  )
+
   return (
     <ChartContainer height={height}>
       <RadarChart data={data}>
         <PolarGrid stroke={CHART_GRID_COLOR} />
         <PolarAngleAxis dataKey={axisKey} tick={CHART_AXIS_TICK_STYLE} />
         <PolarRadiusAxis domain={domain} tick={{ ...CHART_AXIS_TICK_STYLE, fontSize: 10 }} angle={90} />
-        <Tooltip content={(props) => <ChartTooltip {...props} valueFormatter={valueFormatter} />} />
+        <Tooltip content={renderTooltip} />
         {series.length > 1 && <Legend wrapperStyle={CHART_LEGEND_STYLE} />}
         {series.map((s, index) => {
           const color = s.color ?? seriesColor(index)

@@ -31,3 +31,7 @@ export const CHART_LEGEND_STYLE = {
   fontFamily: 'var(--font-sans)',
   color: 'var(--color-brand-900)',
 } as const
+
+// 컨테이너·라인 추이 프리셋이 공유하는 기본 높이 — 단일 진실 소스. 레이더는 형태가 달라(정사각에 가까움)
+// 별도 기본값(280)을 쓴다.
+export const CHART_DEFAULT_HEIGHT = 260
