@@ -18,10 +18,16 @@ export default function Home() {
   const [status, setStatus] = useState<ApiStatus>('loading')
 
   useEffect(() => {
-    fetch('/api/health')
+    const controller = new AbortController()
+
+    fetch('/api/health', { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`${res.status}`))))
       .then((data: { ok: boolean }) => setStatus(data.ok ? 'ok' : 'down'))
-      .catch(() => setStatus('down'))
+      .catch(() => {
+        if (!controller.signal.aborted) setStatus('down')
+      })
+
+    return () => controller.abort()
   }, [])
 
   return (
