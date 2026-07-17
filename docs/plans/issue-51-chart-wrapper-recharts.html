@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#51 P3 — 차트 래퍼 (Recharts 설치 + 공통 테마 + 프리셋 2종) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/51">#51</a></span><span class="type-chip">기능 개선</span>
+    <h1>P3 — 차트 래퍼 (Recharts 설치 + 공통 테마 + 프리셋 2종)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/51-chart-wrapper-recharts</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      P3 공통 프론트 컴포넌트 4종(#48~#51) 중 하나로, <code>recharts</code>를 설치하고 이후 모든 화면(개인 프로필의
+      레이더·추이 라인, 전체 추이의 멀티라인)이 공유할 <b>차트 프레젠테이션 계층</b>을 만든다. 반응형
+      <code>ResponsiveContainer</code> 래퍼 하나, <code>src/index.css</code>의 디자인 토큰(브랜드 오렌지·액센트
+      블루·good/warn/bad)을 그대로 참조하는 공통 색·툴팁 테마, 그리고 라인·레이더 프리셋 2종을 구현한다.
+      의존성이 선언되지 않은 독립 이슈이고 실제 화면(개인 프로필 등)은 아직 없으므로, 이번 범위는 도메인
+      데이터에 묶이지 않는 <b>재사용 가능한 제네릭 컴포넌트</b>를 목데이터로 검증하는 것까지다 — 실제
+      <code>/api/records</code> 데이터를 이 프리셋에 꽂는 작업은 P4 개인 프로필·전체 추이 화면 이슈에서 진행한다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>
+      <code>src/</code>는 아직 P0 스캐폴딩 결과물뿐이다 — <code>src/App.tsx:1</code>(헬스체크 placeholder),
+      <code>src/main.tsx</code>, <code>src/index.css:1</code>(Tailwind v4 <code>@theme</code> 토큰)뿐이고
+      <code>src/components/</code> 디렉터리 자체가 없다. P3의 형제 이슈 #44(라우팅) · #45(레이아웃) · #46(TanStack Query)
+      · #48~#50(카드/게이지/랭킹 테이블)에 대응하는 브랜치가 이미 로컬에 존재하지만(<code>feat/44-routing-skeleton</code> 등)
+      전부 <code>main</code>과 diff가 없는 빈 워크트리다 — 즉 참고할 기존 컴포넌트 컨벤션이 아직 없는 그린필드 상태다.
+    </p>
+    <p>
+      <code>package.json:14-24</code>에는 <code>recharts</code>가 없다. 최신 버전은 3.9.2이고
+      <code>peerDependencies</code>가 <code>react ^19.0.0</code>을 포함해 현재 React 19.2 스택과 호환된다.
+    </p>
+    <p>
+      디자인 토큰은 <code>src/index.css:5-32</code>의 Tailwind v4 <code>@theme</code> 블록에 있다 — 브랜드 오렌지
+      스케일(<code>--color-brand-50~950</code>), "차트 대비색"이라고 명시된 보조 블루(<code>--color-accent-400/500/600</code>),
+      시맨틱 <code>--color-good/warn/bad</code>. Tailwind v4의 <code>@theme</code>는 이 값들을 실제 CSS 커스텀
+      프로퍼티로도 방출하므로, <code>var(--color-brand-500)</code> 같은 참조를 SVG <code>stroke</code>/<code>fill</code>에
+      그대로 써도 브라우저에서 정상 동작한다 — 즉 차트 색상 상수를 새 hex로 중복 정의하지 않고 이 토큰을 그대로
+      가리키면 <code>index.css</code>가 단일 진실 소스로 유지된다.
+    </p>
+    <p>
+      실제 앱 UI 톤은 <code>src/App.tsx:29</code>처럼 <b>밝은 카드</b>(흰 배경, <code>border-brand-200</code>,
+      <code>rounded-2xl</code>, <code>shadow-sm</code>)다 — <code>docs/*.html</code> 설계 문서들의 어두운 문서용
+      스타일(<code>--bg:#0f1115</code> 등)과는 무관하니 착각하지 않는다. 차트 테마는 App.tsx 쪽 밝은 카드 톤을 따라야 한다.
+    </p>
+    <p>
+      도메인 모델(<code>shared/domain.ts</code>)에는 라인 프리셋이 소비할 <code>PlayerEventTrend.points</code>
+      (<code>shared/domain.ts:92-104</code>, 회차별 <code>value</code>/<code>display</code>/<code>achieved</code>)와,
+      레이더 프리셋이 훗날 조합할 종목별 값들이 있다. 다만 <code>docs/index.html:234</code>에 "랭킹·추이는 종목별로
+      원값 그대로 다룹니다(종합 점수·정규화 없음). 개인 프로필의 레이더 차트는 종목별 값을 축으로 표시"라고
+      명시돼 있다 — 셔틀런(초 단위 시간) · 골밑슛/자유투/패스캐치(개수)처럼 종목마다 단위가 다르므로, 레이더의
+      공유 반지름 축에 원값을 그대로 얹으면 시각적으로 비교가 안 된다(75초 vs 5/10개). 이 축별 정규화 방식(예:
+      목표 대비 퍼센트) 결정은 아직 존재하지 않는 개인 프로필 화면 이슈의 몫이다 — 이번 이슈는 그 결정을 내리지
+      않고, <code>domain</code> prop을 열어둔 제네릭 레이더 프리셋만 만든다.
+    </p>
+    <p>
+      테스트 인프라: <code>vitest.config.ts:5</code>가 <code>environment: 'node'</code>이고
+      <code>package.json</code>에 <code>@testing-library/react</code>·<code>jsdom</code>이 없다 — 지금까지의 모든
+      테스트(<code>functions/lib/*.test.ts</code>)는 순수 백엔드 로직이고, 프론트 컴포넌트 렌더 테스트 관례가
+      레포에 아직 없다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li>
+        <b>레이어 분리</b>: <code>src/components/charts/</code>를 새 디렉터리로 만든다. 파일명은 <code>functions/lib/</code>
+        전반(<code>compute-rankings.ts</code>, <code>parse-session.ts</code> 등)에서 이미 쓰는 케밥 케이스를 그대로 따른다
+        (<code>App.tsx</code>/<code>main.tsx</code>는 프레임워크 기본 진입점이라 예외로 둔다) — 레포에 통일된 파일명 관례를 만든다.
+      </li>
+      <li>
+        <b>컴포지션</b>: <code>ChartContainer</code>(순수 <code>ResponsiveContainer</code> 래퍼, 기본
+        높이/마진만 담당) 위에 <code>LineTrendChart</code>·<code>RadarProfileChart</code> 두 프리셋을 얹는다.
+        이슈 제목의 세 항목(반응형 컨테이너 / 공통 테마 / 프리셋 2종)을 그대로 세 계층으로 대응시킨 것 —
+        프리셋이 각자 <code>ResponsiveContainer</code>를 중복 구현하지 않는다.
+      </li>
+      <li>
+        <b>제네릭 vs 도메인 결합</b>: 두 프리셋 모두 <code>shared/domain.ts</code> 타입을 직접 import하지 않고
+        <code>xKey</code>/<code>series[]</code> 기반의 범용 props를 받는다. 개인 추이(라인 1개) · 전체 추이(멀티라인) ·
+        레이더 모두 같은 프리셋으로 커버되게 하려는 목적 — 실제 <code>PlayerEventTrend</code> → 차트 데이터 변환은
+        그걸 쓰는 화면(P4) 쪽 책임으로 남긴다. 값 포맷팅(시간 <code>1'15"</code> vs 개수)도 <code>yFormatter</code>/
+        <code>tooltipFormatter</code> 콜백으로 호출자에게 위임 — 래퍼가 종목별 표시 규칙을 하드코딩하지 않는다.
+      </li>
+      <li>
+        <b>카드 크롬 제외</b>: <code>ChartContainer</code>는 카드 테두리/배경을 그리지 않는다. #48(카드·뱃지·상태
+        pill)이 별도 이슈로 예정돼 있고 #51은 그 이슈와 "의존성 없음"으로 명시돼 있으므로, 카드 크롬은 소비하는
+        페이지가 #48의 <code>Card</code>로 감싸는 것으로 역할을 나눈다 — 두 이슈가 같은 책임을 중복 구현하지 않게 한다.
+      </li>
+      <li>
+        <b>공통 테마 소스</b>: <code>chart-theme.ts</code>가 <code>var(--color-brand-500)</code> 등 CSS 변수
+        문자열과 카테고리 색 배열(멀티라인·멀티시리즈 레이더용), 그리드/축 스타일 상수를 export한다. 새 hex
+        상수를 만들지 않고 <code>index.css</code> 토큰만 참조한다.
+      </li>
+      <li>
+        <b>공통 툴팁</b>: Recharts <code>&lt;Tooltip content=&#123;...&#125;&gt;</code>에 꽂는
+        <code>ChartTooltip</code> 커스텀 컴포넌트 하나를 두 프리셋이 공유한다(흰 배경, <code>border-brand-200</code>,
+        <code>rounded-lg</code>, 계열별 색 점 + 라벨 + 포맷된 값) — App.tsx 카드 톤과 통일.
+      </li>
+      <li>
+        <b>테스트 전략</b>: 이슈의 완료 조건 자체가 "목데이터로 렌더" · "컨테이너 크기 변화에 반응"이라는
+        수동/시각 검증 문구다. 레포에 프론트 렌더 테스트 인프라(jsdom·RTL)가 아직 없고, Recharts의
+        <code>ResponsiveContainer</code>는 실제 <code>ResizeObserver</code>/레이아웃에 의존해 jsdom 목킹 비용이
+        크다. 이번 이슈에서 새 테스트 인프라를 부수적으로 들이지 않고, <code>npm run dev</code> 개발 서버에서
+        목데이터로 수동/시각 검증하는 쪽을 택한다 — 자동화 테스트 인프라 도입은 필요해지면 별도 이슈로 분리한다.
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>
+        <code>recharts</code> 설치 (최신 3.x, React 19 peer 호환 확인됨).
+        <span class="files"><code>package.json</code>, <code>package-lock.json</code></span>
+      </li>
+      <li>
+        공통 색/스타일 테마 모듈 작성 — <code>index.css</code>의 <code>--color-brand-*</code>·
+        <code>--color-accent-*</code>·<code>--color-good/warn/bad</code>를 <code>var(...)</code> 문자열로 참조하는
+        카테고리 색 배열, 그리드/축/범례 스타일 상수 export.
+        <span class="files"><code>src/components/charts/chart-theme.ts</code></span>
+      </li>
+      <li>
+        공통 툴팁 컴포넌트 — 라벨 + 계열별 색 점/이름/값(포맷 콜백 위임)을 흰 카드 톤으로 렌더.
+        <span class="files"><code>src/components/charts/chart-tooltip.tsx</code></span>
+      </li>
+      <li>
+        반응형 컨테이너 래퍼 — <code>ResponsiveContainer</code> 얇은 래퍼, 기본 높이/마진 prop.
+        <span class="files"><code>src/components/charts/chart-container.tsx</code></span>
+      </li>
+      <li>
+        라인 프리셋(추이용) — 단일/멀티 시리즈 라인, <code>CartesianGrid</code>·축·범례(2개 이상일 때만)·
+        공통 툴팁 적용, <code>xFormatter</code>/<code>yFormatter</code> 콜백 지원.
+        <span class="files"><code>src/components/charts/line-trend-chart.tsx</code></span>
+      </li>
+      <li>
+        레이더 프리셋(개인 프로필용) — 축별 라벨(<code>dataKey="axis"</code>) · <code>PolarGrid</code>/
+        <code>PolarAngleAxis</code>/<code>PolarRadiusAxis</code>(<code>domain</code> prop, 기본 <code>'auto'</code>) ·
+        단일/멀티 시리즈 <code>Radar</code> · 공통 툴팁. 단위가 다른 원값을 그대로 얹으면 비교가 안 된다는 점을
+        JSDoc 주석으로 명시(정규화는 호출자 책임).
+        <span class="files"><code>src/components/charts/radar-profile-chart.tsx</code></span>
+      </li>
+      <li>
+        배럴 export.
+        <span class="files"><code>src/components/charts/index.ts</code></span>
+      </li>
+      <li>
+        검증용 목데이터로 두 프리셋을 임시로 마운트 — <code>docs/index.html</code>의 더미 표(선수1~6 ×
+        셔틀런/골밑슛/자유투/패스캐치)를 재사용해 라인(개인 추이 1명 + 멀티라인 전체 추이 각각) · 레이더(4축)
+        양쪽을 <code>npm run dev</code>로 렌더 확인 → 브라우저/디바이스 툴바로 컨테이너 리사이즈 반응 확인 →
+        검증 후 임시 마운트 코드는 커밋에서 제거(App.tsx는 P0 placeholder 상태 유지).
+        <span class="files">임시 검증 스니펫(커밋 대상 아님)</span>
+      </li>
+      <li>
+        <code>npm run typecheck</code> && <code>npm test</code>로 회귀 확인.
+        <span class="files"><code>tsconfig.app.json</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>레이더 축별 단위 불일치(시간 vs 개수)</td>
+          <td>미래의 개인 프로필 화면이 원값을 그대로 넣으면 시각적으로 왜곡된 스킬 프로필이 나옴</td>
+          <td>이번 프리셋은 정규화하지 않고 <code>domain</code> prop과 JSDoc으로 호출자에게 책임을 명시 —
+              실제 정규화 전략(목표 대비 %? 순위 percentile?)은 그 화면 이슈에서 결정</td>
+        </tr>
+        <tr>
+          <td>차트 완료 조건("렌더"·"리사이즈 반응")이 자동화 테스트가 아닌 수동 검증 문구</td>
+          <td>PR에 남는 자동 테스트가 없어 회귀 방지력이 약함</td>
+          <td>레포에 프론트 렌더 테스트 인프라가 전무한 상태에서 이번 이슈로 jsdom/RTL을 부수적으로 들이지 않기로
+              결정 — PR 설명에 수동 검증(스크린샷/리사이즈 확인) 근거를 남기고, 인프라 도입 필요성은 사용자에게
+              별도 판단 요청</td>
+        </tr>
+        <tr>
+          <td><code>var(--color-brand-500)</code> 같은 CSS 변수 참조가 Tailwind v4 빌드 산출물에서 기대대로
+              방출되지 않을 가능성</td>
+          <td>차트 색이 비어보이거나(투명) 기본색으로 폴백</td>
+          <td>구현 중 <code>npm run dev</code>에서 실제 렌더 색을 눈으로 1차 확인 — 문제 시 hex 상수로
+              폴백하되 <code>index.css</code> 값과 동일하게 유지</td>
+        </tr>
+        <tr>
+          <td>#48(카드)·#50(랭킹 테이블) 등 형제 이슈가 이후 병렬로 진행되며 컴포넌트 디렉터리 관례가 갈릴 가능성</td>
+          <td>같은 <code>src/components/</code> 하위에서 파일명·구조 스타일이 이슈마다 달라짐</td>
+          <td>이번 이슈에서 세운 케밥 케이스 파일명 · <code>src/components/&lt;도메인&gt;/</code> 하위 배럴 export
+              구조를 향후 이슈에도 그대로 참고하도록 PR 설명에 명시</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 새 컴포넌트들이 <code>tsconfig.app.json</code>의 strict 옵션들을 통과하는지 확인.</li>
+      <li><code>npm test</code> — 기존 <code>functions/lib/*.test.ts</code> 전체가 이번 변경으로 깨지지 않는지 확인(프론트 전용 변경이라 영향 없어야 함).</li>
+      <li><code>npm run dev</code> 개발 서버에서 목데이터(도메인 로직 없이 하드코딩) 기준으로 라인 차트(단일 시리즈 + 멀티 시리즈)와 레이더 차트(4축, 단일 시리즈)가 실제로 그려지는지 브라우저로 확인.</li>
+      <li>브라우저 창 크기 조절 / 디바이스 툴바 폭 변경 시 두 차트가 즉시 리사이즈에 반응하는지(레이아웃 깨짐·오버플로 없는지) 확인.</li>
+      <li>브랜드 오렌지·액센트 블루 색이 실제로 SVG에 적용되는지(투명/기본색 폴백 없는지) 육안 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>목데이터로 라인 차트(단일/멀티 시리즈)와 레이더 차트가 렌더된다.</li>
+      <li>두 차트 모두 부모 컨테이너 크기 변화에 반응해 리사이즈된다.</li>
+      <li><code>recharts</code>가 <code>package.json</code> dependencies에 추가돼 있다.</li>
+      <li>색·툴팁 테마가 <code>src/index.css</code> 디자인 토큰을 참조하며 두 프리셋에서 공통으로 재사용된다.</li>
+      <li><code>npm run typecheck</code> && <code>npm test</code>가 통과한다.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/51">#51</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
