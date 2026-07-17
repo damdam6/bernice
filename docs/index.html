@@ -276,8 +276,9 @@
 │
 └─ <span class="node">🔒 관리자 · 시트 관리하기</span>       <span class="note">"운영자 전용 · 관리자 코드"</span>
      ├─ 기록지 만들기 — 오늘(KST) 회차 탭 생성 (참가자 선택: 활동만·가나다·기본 해제)
-     └─ 기존 기록지에 사람 추가 — 특정 회차에 활동 선수 추가(맨 아래)</div>
-    <p class="muted" style="font-size:13px; margin-top:12px;">🔒 관리자 페이지의 두 기능은 <strong>시트에 쓰기</strong>를 하며, 확정 시마다 관리자 코드로 검증. 자세한 스펙은 아래 06 참고. (구현은 사이트 구축 단계에서)</p>
+     ├─ 기존 기록지에 사람 추가 — 특정 회차에 활동 선수 추가(맨 아래)
+     └─ 기록 입력 — 선수 선택 → 종목 타입별 점수 입력·수정 <span class="note">← PRD 확정 (2026-07-17)</span></div>
+    <p class="muted" style="font-size:13px; margin-top:12px;">🔒 관리자 페이지의 세 기능은 <strong>시트에 쓰기</strong>를 하며, 관리자 세션으로 보호. 자세한 스펙은 아래 05 참고. (구현은 사이트 구축 단계에서)</p>
   </section>
 
   <!-- 4b: 관리자 기능 스펙 -->
@@ -293,7 +294,7 @@
         <tr><td>참가자 선택</td><td><code class="inline">활동</code> 선수만, 가나다 오름차순, 기본 전원 해제 → 체크한 사람만 탭에 생성</td></tr>
         <tr><td>생성 방식</td><td>최근 탭 복제 → 이름열을 선택 참가자 참조(가나다)로 재작성 → 점수 비움</td></tr>
         <tr><td>원자성</td><td>한 번의 batchUpdate — 실패 시 전체 롤백(반쪽 탭 없음)</td></tr>
-        <tr><td>이후</td><td>"시트 열기" 링크 표시. 점수는 시트에서 직접 입력</td></tr>
+        <tr><td>이후</td><td>"시트 열기" 링크 표시. 점수는 사이트 기록 입력(아래 ③)으로 — 시트 직접 입력은 escape hatch로 계속 허용</td></tr>
       </tbody>
     </table>
 
@@ -304,6 +305,18 @@
         <tr><td>대상 회차</td><td>날짜 탭 선택 (기본 = 최근)</td></tr>
         <tr><td>대상 사람</td><td>그 탭에 없는 <code class="inline">활동</code> 선수 멀티선택</td></tr>
         <tr><td>위치</td><td>맨 아래에 추가 (이름 참조 + 빈 점수)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>③ 기록 입력 — 점수 입력·수정 <span class="muted" style="font-size:13px;font-weight:400">(PRD 확정 · <a href="prd-record-input.html" style="color:var(--accent-2);">상세 문서</a>)</span></h3>
+    <table>
+      <thead><tr><th>항목</th><th>동작</th></tr></thead>
+      <tbody>
+        <tr><td>권한</td><td>관리자 세션 전용 (팀 패스코드는 열람만)</td></tr>
+        <tr><td>동선</td><td>회차 선택 → 참가자 목록(가나다·입력 상태 뱃지) → 선수 선택 → 종목 타입별 입력기 (시간 = 분:초 / 개수 = 숫자 키패드 / 면제 토글 / 빈칸 = 미측정)</td></tr>
+        <tr><td>저장</td><td><strong>선수 단위</strong> — 회차 탭 행 1개 업데이트. 자유 수정(과거 회차 포함), 동시 입력은 마지막 저장 승리</td></tr>
+        <tr><td>검증</td><td><code class="inline">normalize-score</code> 규칙 재사용 — 형식 오류(invalid)는 시트에 쓰지 않고 400 거부</td></tr>
+        <tr><td>이후</td><td>저장 성공 시 records 캐시 무효화 → 팀원 열람에 즉시 반영</td></tr>
       </tbody>
     </table>
   </section>
@@ -322,13 +335,14 @@
         <tr><td>호스팅</td><td class="good">확정</td><td>Cloudflare Pages (+ Pages Functions). Netlify 미사용</td></tr>
         <tr><td>시트 연동·시딩</td><td class="good">완료</td><td>서비스 계정 연동 + 21명 명단·1차 기록 시딩 + 보호범위 완료</td></tr>
         <tr><td>공용 패스코드 / 관리자 코드</td><td class="good">확정</td><td>사용자가 <code class="inline">.dev.vars</code>·Cloudflare Secret에 직접 설정 (값은 코드베이스 밖)</td></tr>
+        <tr><td>기록 입력 (사이트에서 점수 입력)</td><td class="good">확정</td><td>PRD 확정 (2026-07-17 인터뷰) — 관리자 전용 · 선수 선택 → 타입별 기입 · 선수 단위 저장 · 마지막 저장 승리. 선행: 회차 파서 이름-매칭 정합화, P2 로그인. <a href="prd-record-input.html" style="color:var(--accent-2);">PRD · 사이트에서 기록 입력</a></td></tr>
         <tr><td>사이트 구축</td><td style="color:var(--warn)">대기</td><td>React 앱·Pages Functions·관리자 페이지 (사용자 요청 시 착수)</td></tr>
       </tbody>
     </table>
   </section>
 
   <div class="footer">
-    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-13 (도메인 타입·API 계약 반영) · 관련: <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a>
+    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-17 (기록 입력 PRD 반영) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a>
   </div>
 
 </div>

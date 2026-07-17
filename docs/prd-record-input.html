@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD · 사이트에서 기록 입력</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --accent: #ff7a45;
+    --accent-2: #4a90ff;
+    --good: #35c07a;
+    --warn: #f5b800;
+    --bad: #ff5c5c;
+    --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 40px; }
+  .badge { display: inline-block; font-size: 12px; letter-spacing: .04em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 12px; margin-bottom: 16px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0; }
+  .status { margin-top: 18px; font-size: 13px; color: var(--good); background: rgba(53,192,122,.08); border: 1px solid rgba(53,192,122,.25); border-radius: 8px; padding: 10px 14px; display: inline-block; }
+  .crumb { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .crumb a { color: var(--accent-2); text-decoration: none; }
+  h2 { font-size: 21px; margin: 48px 0 16px; padding-top: 8px; letter-spacing: -.01em; }
+  h2 .num { color: var(--accent); font-family: var(--mono); font-size: 16px; margin-right: 8px; }
+  h3 { font-size: 16px; margin: 28px 0 10px; }
+  p { color: var(--text); }
+  .muted { color: var(--muted); }
+  section { scroll-margin-top: 24px; }
+  nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 8px; }
+  nav.toc ol { margin: 0; padding-left: 20px; }
+  nav.toc li { margin: 4px 0; }
+  nav.toc a { color: var(--accent-2); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.mono, th.mono { font-family: var(--mono); }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--bad); }
+  .num-cell { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  code.inline { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+  pre.code { font-family: var(--mono); font-size: 12.5px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; overflow-x: auto; white-space: pre; margin: 10px 0; line-height: 1.6; }
+  .tabname { display: inline-block; font-family: var(--mono); font-size: 12px; background: rgba(74,144,255,.12); border: 1px solid rgba(74,144,255,.35); color: var(--accent-2); border-radius: 6px; padding: 2px 9px; margin-right: 6px; }
+  .callout { border-left: 3px solid var(--warn); background: rgba(245,184,0,.06); border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; }
+  .callout.info { border-left-color: var(--accent-2); background: rgba(74,144,255,.06); }
+  .callout.good { border-left-color: var(--good); background: rgba(53,192,122,.06); }
+  .callout.bad { border-left-color: var(--bad); background: rgba(255,92,92,.06); }
+  .flow { font-family: var(--mono); font-size: 13px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; overflow-x: auto; white-space: pre; color: var(--text); margin: 10px 0; }
+  .flow .k { color: var(--accent); }
+  .flow .note { color: var(--muted); }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="build-plan.html">작업 계획</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
+    <span class="badge">PRD · P5 확장 · 인터뷰 확정 반영</span>
+    <h1>📲 PRD — 사이트에서 기록 입력</h1>
+    <p class="sub">측정일에 관리자가 폰으로 사이트에서 직접 점수를 입력·수정하는 기능. 시트는 계속 데이터 원천(SoT)이고, 사이트는 시트에 쓰는 클라이언트다.</p>
+    <div class="status">✅ 열린 결정 전부 사용자 인터뷰로 확정 (2026-07-17) · 이 문서만 읽고 후속 이슈 분할·구현 착수 가능</div>
+  </header>
+
+  <nav class="toc">
+    <strong style="font-size:14px;">목차</strong>
+    <ol>
+      <li><a href="#background">배경 & 문제 정의</a></li>
+      <li><a href="#decisions">확정 결정 요약</a></li>
+      <li><a href="#prereq">전제 & 선행 의존성</a></li>
+      <li><a href="#flow">유저 플로우</a></li>
+      <li><a href="#mobile">모바일 입력 UX</a></li>
+      <li><a href="#api">API 엔드포인트 설계 초안</a></li>
+      <li><a href="#write">시트 쓰기 방식</a></li>
+      <li><a href="#validation">검증 규칙</a></li>
+      <li><a href="#cache">캐시 무효화</a></li>
+      <li><a href="#nonscope">비스코프 (명시적으로 안 하는 것)</a></li>
+      <li><a href="#issues">단계별 이슈 분할 제안</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="background">
+    <h2><span class="num">01</span>배경 & 문제 정의</h2>
+    <p>현재 사이트는 <b>읽기 전용</b>이다 — <code class="inline">/api/records</code>가 시트를 파싱해 랭킹·추이·PB를 계산해 보여줄 뿐, 기록을 넣는 방법은 <b>구글 시트 직접 편집뿐</b>이다. 측정일(3개월마다)의 실제 장면은 "체육관에서 폰으로 구글 시트 앱을 열어 좁은 셀에 점수를 타이핑"이고, 여기서 반복되는 문제가 있다:</p>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>문제</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">1</td><td>폰에서 시트 편집이 불편 — 셀이 작고, 확대/축소·행 찾기에 시간이 든다</td><td>측정 진행이 끊기고 입력 누락이 생김</td></tr>
+        <tr><td class="num-cell">2</td><td>이름·종목 헤더가 <b>참조 수식</b>인데 실수로 덮어쓸 수 있다 (<a href="sheet-rules.html">편집 규칙</a> §01 절대 규칙)</td><td>명단↔회차 연결이 끊어져 복구 작업 필요</td></tr>
+        <tr><td class="num-cell">3</td><td>형식 오류가 조용히 들어간다 — <code class="inline">1:75</code>, 시각 자동 변환(<code class="inline">오전 1:15</code>), 소수 입력 등</td><td>파서가 <code class="inline">invalid</code>로 분류해 랭킹에서 빠지는데, 그 사실을 나중에야 발견</td></tr>
+        <tr><td class="num-cell">4</td><td>입력해도 사이트 반영은 캐시 TTL(6시간)까지 지연 (수동 새로고침 <code class="inline">/api/refresh</code>는 P2 예정)</td><td>측정 직후 팀원들이 결과를 바로 못 봄</td></tr>
+      </tbody>
+    </table>
+    <p><b>목표:</b> 측정일에 시트 앱을 한 번도 열지 않고, 관리자가 폰으로 <b>회차 생성 → 참가자 선택 → 선수별 점수 입력 → 팀원 즉시 열람</b>까지 끝낼 수 있게 한다. 입력 경로가 사이트를 거치면 검증된 값만 들어가고(형식 오류 원천 차단), 참조 수식을 건드릴 일이 없으며, 저장 즉시 캐시가 무효화돼 바로 반영된다.</p>
+    <div class="callout info"><b>포지셔닝:</b> 이 기능은 <a href="build-plan.html">작업 계획</a> <b>P5 관리자 페이지(쓰기)의 확장</b>이다. P5가 계획한 회차 탭 생성(<code class="inline">/api/admin/create-sheet</code>)·참가자 추가(<code class="inline">/api/admin/add-players</code>)에 <b>점수 입력·수정</b>을 더해, 관리자 페이지에서 측정일 운영이 완결되게 한다.</div>
+  </section>
+
+  <!-- 2 -->
+  <section id="decisions">
+    <h2><span class="num">02</span>확정 결정 요약</h2>
+
+    <h3>기존 확정 (뒤집지 않음)</h3>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>항목</th><th>결정</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">A</td><td>데이터 원천</td><td><b>시트 = SoT 유지.</b> 사이트는 시트에 쓰는 클라이언트. 별도 DB 도입 없음. <b>시트 직접 편집(수동 정정)은 계속 허용되는 escape hatch</b></td></tr>
+        <tr><td class="num-cell">B</td><td>회차 탭 포맷</td><td><b>"참가자만, 이름 매칭"</b> — 회차 탭에는 그 회차 참가자 행만 존재(생성 시 가나다 정렬), 명단과의 연결은 위치가 아니라 <b>이름 매칭</b>. §03 선행 의존성 ① 참고</td></tr>
+        <tr><td class="num-cell">C</td><td>점수 검증</td><td>기존 <code class="inline">normalize-score</code> 규칙 <b>재사용</b> — 새 검증 규칙 발명 금지 (§08)</td></tr>
+        <tr><td class="num-cell">D</td><td>캐시</td><td>쓰기 성공 시 records 캐시 무효화 — P5에 계획된 패턴 재사용 (§09)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>이번 인터뷰로 확정 (2026-07-17)</h3>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>항목</th><th>결정</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">1</td><td>입력 권한</td><td><b>관리자만 입력.</b> ADMIN_CODE 세션만 쓰기 API 허용. 팀 패스코드 세션은 열람 전용 유지. 측정 진행자(운영진)가 기록하는 현행 운영 방식과 일치</td></tr>
+        <tr><td class="num-cell">2</td><td>입력 동선</td><td><b>선수 선택 → 종목 타입별 기입.</b> 참가자 목록에서 선수를 고르면 그 선수의 전 종목을 타입별 입력기로 채우는 선수 중심 화면</td></tr>
+        <tr><td class="num-cell">3</td><td>저장 단위</td><td><b>선수 단위.</b> 저장 1회 = 회차 탭에서 그 선수 행의 점수 셀 전체를 요청 값으로 교체(행 1개 업데이트). 화면 동선과 저장 단위가 1:1</td></tr>
+        <tr><td class="num-cell">4</td><td>수정·삭제</td><td><b>자유 수정.</b> 관리자는 언제든(과거 회차 포함) 같은 입력 화면에서 덮어쓰기·빈칸(미측정) 되돌리기 가능. 시트 직접 편집과 동등한 능력이라 별도 잠금·이력 없음</td></tr>
+        <tr><td class="num-cell">5</td><td>동시 입력 충돌</td><td><b>마지막 저장 승리.</b> 저장 단위가 행이라 서로 다른 선수 입력은 충돌 자체가 없고, 같은 선수 행을 동시에 고칠 때만 나중 저장이 이김 — 시트 수동 편집과 같은 의미론</td></tr>
+        <tr><td class="num-cell">6</td><td>쓰기 실패</td><td><b>자동 재시도 후 에러.</b> 429·5xx 계열만 짧은 백오프로 1~2회 자동 재시도. 그래도 실패하면 <b>입력값을 보존한 채</b> 에러 표시 + 수동 재시도 버튼. 캐시 무효화는 쓰기 성공 후에만</td></tr>
+        <tr><td class="num-cell">7</td><td>모바일 입력기</td><td><b>종목 타입별 맞춤 입력기.</b> 시간 종목(셔틀런)은 분:초 2필드 숫자 키패드, 개수 종목은 숫자 키패드, 면제는 토글, 빈칸 = 미측정</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:13px;">※ 인터뷰 과정 기록: 저장 단위는 처음 "종목별 저장"이 선택됐으나, 입력 동선을 "선수 선택 → 타입별 기입"으로 확정하면서 <b>선수 단위 저장으로 대체</b>했다(동선과 저장 단위 1:1). 종목 단위 일괄 기입 화면은 비스코프(§10) — 필요해지면 후속 이슈.</p>
+  </section>
+
+  <!-- 3 -->
+  <section id="prereq">
+    <h2><span class="num">03</span>전제 & 선행 의존성</h2>
+
+    <h3>① 회차 파서 이름-매칭 정합화 <span class="warn">(선행 확정 — 이 PRD 범위 밖, 별도 이슈)</span></h3>
+    <p>현재 <code class="inline">functions/lib/parse-session.ts</code>는 <b>"회차 탭 행 위치 = 명단 순서(전원 미러링)"</b>를 가정한다(데이터 행 N → <code class="inline">playerId = N</code>). 그러나 실제 회차 탭(<span class="tabname">2025-05-16</span>)은 <b>참가자 6명만 가나다순으로 수기 입력</b>돼 있고, P5 <code class="inline">create-sheet</code>도 같은 "참가자만" 포맷을 생성하도록 계획돼 있다 — 파서 가정과 실데이터·계획이 모순이다.</p>
+    <div class="callout"><b>확정된 해소 방향:</b> 회차 탭 포맷은 <b>"참가자만, 이름 매칭"</b>이 정답이고, 파서를 이름 매칭으로 바꾸는 정합화가 <b>이 기능의 선행 작업</b>이다. 이 PRD는 그 포맷을 전제로 쓴다. 파서 정합화 이슈에는 다음이 포함돼야 한다:
+      <ul style="margin:8px 0 0; padding-left:20px; font-size:13.5px;">
+        <li>회차 탭 각 행의 이름 셀(NFC 정규화)을 <span class="tabname" style="margin:0;">버니스명단</span> 이름과 매칭해 <code class="inline">playerId</code> 도출 — 행 위치 가정 제거</li>
+        <li>명단에 없는 이름·명단 내 중복 이름(동명이인 미구분)은 기존 fail-loud 원칙대로 에러</li>
+        <li><code class="inline">Session.entries</code>는 "그 회차 탭에 실제로 존재하는 행만" — 참가자만 포맷과 자연스럽게 일치 (<code class="inline">shared/domain.ts</code>의 주석이 이미 이 의미)</li>
+        <li><a href="sheet-integration.html">시트 연동 확정안</a> §02의 "명단 전원 미러링" 서술 등 관련 문서 갱신</li>
+      </ul>
+    </div>
+
+    <h3>② P2 로그인 + 관리자 세션 구분 <span class="warn">(선행 — 이슈 #41·#42 + 관리자 role)</span></h3>
+    <p><code class="inline">functions/lib/session-cookie.ts</code>(HMAC 서명 토큰 유틸)는 이미 있으나 <code class="inline">POST /api/login</code>(#41)·인증 미들웨어(#42)는 미구현이고, 현행 v1 토큰 페이로드는 <code class="inline">{iat, exp}</code>뿐이라 <b>팀/관리자를 구분할 클레임이 없다</b>. 이 PRD의 쓰기 API는 "관리자 세션"을 요구하므로 다음 중 하나가 선행돼야 한다 (P5 1번 항목 "관리자 코드 검증 유틸"과 같은 자리에서 결정):</p>
+    <ul style="font-size:14px;">
+      <li><b>권장:</b> <code class="inline">/api/login</code>이 입력 코드가 TEAM_PASSCODE인지 ADMIN_CODE인지에 따라 토큰 페이로드에 <code class="inline">role: 'team' | 'admin'</code> 클레임을 넣어 발급 — 쿠키 1개, 미들웨어에서 role 검사</li>
+      <li>대안: 관리자용 별도 쿠키/토큰 — 쿠키 2개 관리 부담이 있어 차선</li>
+    </ul>
+
+    <h3>③ P5 <code class="inline">create-sheet</code> · <code class="inline">add-players</code> <span class="muted">(같은 마일스톤에서 병행)</span></h3>
+    <p>점수 입력 흐름은 "입력할 회차 탭이 존재하고, 선수가 그 회차 참가자로 등록돼 있다"를 전제한다. 회차 탭 생성(참가자 선택 모달 → 가나다 정렬 → 점수 비움)과 늦은 참가자 추가(맨 아래 추가)는 <b>P5에 이미 계획된 기능을 그대로</b> 쓴다 — 이 PRD가 재설계하지 않으며, 함께 구현돼야 입력 E2E가 완성된다.</p>
+  </section>
+
+  <!-- 4 -->
+  <section id="flow">
+    <h2><span class="num">04</span>유저 플로우</h2>
+
+    <h3>측정일 시나리오 (주 시나리오 — 체육관, 폰)</h3>
+    <div class="flow"><span class="k">관리자 로그인</span> (관리자 코드 입력 → role: admin 세션)
+  │
+  ▼
+<span class="k">관리자 페이지</span> — 오늘 회차 탭 없으면:
+  [기록지 만들기] → 참가자 선택 모달(활동만·가나다·기본 해제) → 회차 탭 생성   <span class="note">← P5 create-sheet</span>
+  │
+  ▼
+<span class="k">참가자 목록</span> — 가나다 정렬 · 선수마다 입력 상태 표시 (미입력 / 일부 / 완료)
+  │  선수 탭
+  ▼
+<span class="k">선수별 입력 화면</span> — 전 종목을 타입별 입력기로 기입
+  시간(셔틀런): [분]:[초] · 개수: 숫자 키패드 · 면제: 토글 · 빈칸 = 미측정
+  │  [저장]
+  ▼
+<span class="k">저장</span> = 회차 탭 그 선수 행 1개 업데이트 → 성공 시 records 캐시 무효화
+  │  목록 복귀 (다음 미입력 선수로 이동 유도)
+  ▼
+(늦은 합류자) [참가자 추가] → 회차 탭 맨 아래 추가 → 목록에 등장 → 점수 입력   <span class="note">← P5 add-players</span>
+  │
+  ▼
+<span class="k">전원 완료</span> — 팀원은 열람 패스코드로 랭킹·추이 즉시 확인</div>
+
+    <h3>정정 시나리오 (자유 수정)</h3>
+    <div class="flow"><span class="k">관리자 페이지</span> → 회차 선택 (최신·과거 모두) → 참가자 목록 → 선수 선택
+  → 기존 값이 <span class="k">프리필</span>된 입력 화면 → 값 덮어쓰기 / 비우기(미측정 되돌리기) / 면제 전환
+  → [저장] — 행 전체가 요청 값으로 교체 (마지막 저장 승리)</div>
+    <p class="muted" style="font-size:13.5px;">"삭제"는 별도 동작이 아니라 <b>값을 비우고 저장</b>(= 미측정)이다. 회차 탭 자체의 삭제·날짜 변경, 참가자 행 제거는 비스코프(§10) — 시트에서 직접 한다.</p>
+
+    <h3>실패 시나리오</h3>
+    <div class="flow">[저장] → Sheets API 429·5xx → <span class="k">자동 재시도 1~2회</span> (짧은 백오프)
+   ├─ 성공 → 정상 흐름 (사용자는 지연만 체감)
+   └─ 소진 → <span class="k">에러 표시 + 입력값 보존</span> + [다시 저장] 버튼 · 캐시는 건드리지 않음
+4xx(검증 실패·권한·회차 없음)는 재시도 없이 즉시 사유 표시</div>
+  </section>
+
+  <!-- 5 -->
+  <section id="mobile">
+    <h2><span class="num">05</span>모바일 입력 UX</h2>
+    <p>주 사용 환경은 <b>체육관에서 폰</b>이다. 화면은 두 개뿐이다: 참가자 목록 → 선수별 입력.</p>
+
+    <h3>참가자 목록 화면</h3>
+    <ul style="font-size:14px;">
+      <li>그 회차 참가자를 <b>가나다 정렬</b>로 표시 (add-players로 뒤에 추가된 선수도 사이트에선 정렬해 표시 — 탭 내 물리 순서와 무관)</li>
+      <li>선수마다 입력 상태 뱃지: <b>미입력</b>(전 종목 미측정) / <b>일부</b> / <b>완료</b>(전 종목이 기록·면제 중 하나)</li>
+      <li>저장 후 목록 복귀 시 <b>다음 미입력 선수로 빠른 이동</b> 동선 제공 — 20명 연속 입력을 최소 탭으로</li>
+      <li>[참가자 추가] 버튼 (P5 add-players 재사용)</li>
+    </ul>
+
+    <h3>선수별 입력 화면 — 종목 타입별 입력기</h3>
+    <table>
+      <thead><tr><th>종목 타입</th><th>입력기</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>시간 (<code class="inline">valueKind: time</code> — 드리블셔틀런)</td><td><b>분·초 2필드</b>, <code class="inline">inputmode="numeric"</code> 숫자 키패드, 분 입력 후 초로 자동 포커스</td><td>초 필드는 0–59만 — <code class="inline">1:75</code> 같은 값이 UI에서 성립 불가</td></tr>
+        <tr><td>개수 (<code class="inline">valueKind: count</code> — 골밑슛·자유투·45도패스캐치)</td><td><b>숫자 키패드</b> 단일 필드 (0 이상 정수)</td><td>만점(<code class="inline">maxScore</code>)은 힌트로만 표시(예: "/ 10") — 초과 입력을 막지 않음 (§08)</td></tr>
+        <tr><td>면제</td><td><b>토글</b> — 켜면 값 필드 비활성화</td><td>시트에는 <code class="inline">면제</code> 리터럴로 저장</td></tr>
+        <tr><td>미측정</td><td><b>빈칸으로 두면 됨</b> (별도 조작 없음)</td><td>시트에는 빈 셀 — 기존 값 지우기 = 필드 비우고 저장</td></tr>
+      </tbody>
+    </table>
+    <ul style="font-size:14px;">
+      <li>기존 값이 있으면 <b>프리필</b> (자유 수정과 같은 화면)</li>
+      <li>저장 버튼은 <b>하단 고정</b>, 터치 타깃 크게 — 장갑·땀 손 환경 고려</li>
+      <li>형식 오류(있을 수 없는 값)는 필드 인라인으로 즉시 표시 — 제출 후에야 아는 일이 없게</li>
+      <li>저장 성공 시 짧은 확인 표시 후 목록 복귀. 실패 시 입력값 보존 + 재시도(§04 실패 시나리오)</li>
+    </ul>
+    <div class="callout info">타입별 입력기의 목적은 <b>normalize-score를 통과할 값만 UI에서 만들어지게</b> 하는 것이다 — 시각 자동 변환·<code class="inline">1:75</code>·소수 같은 기존 시트 직접 입력의 사고 유형이 입력기 수준에서 사라진다. 그래도 서버 검증(§08)은 별도로 최종 게이트로 존재한다.</div>
+  </section>
+
+  <!-- 6 -->
+  <section id="api">
+    <h2><span class="num">06</span>API 엔드포인트 설계 초안</h2>
+    <p class="muted" style="font-size:14px;">경로·메서드·요청/응답 개요 수준 — 상세 스키마·에러 바디 확정은 구현 이슈 몫. 모든 <code class="inline">/api/admin/*</code>은 관리자 세션(§03 ②) 필수.</p>
+
+    <table>
+      <thead><tr><th class="mono">엔드포인트</th><th>역할</th><th>출처</th></tr></thead>
+      <tbody>
+        <tr><td class="mono"><b>POST /api/admin/records</b></td><td>선수 단위 점수 저장 (이번 PRD 신규)</td><td>신규</td></tr>
+        <tr><td class="mono">POST /api/admin/create-sheet</td><td>회차 탭 생성 (참가자 선택·가나다·점수 비움, 오늘 KST·중복 가드)</td><td>P5 기존 계획</td></tr>
+        <tr><td class="mono">POST /api/admin/add-players</td><td>대상 회차에 활동 선수 맨 아래 추가</td><td>P5 기존 계획</td></tr>
+        <tr><td class="mono">GET /api/records</td><td>입력 화면 데이터 조회도 이걸 그대로 재사용 — 신규 조회 API 없음</td><td>기존</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code class="inline">POST /api/admin/records</code> — 선수 단위 저장</h3>
+    <p>의미론: <b>그 회차 탭에서 그 선수 행의 점수 셀 전체를 요청 값으로 교체</b>(행 단위 upsert, 부분 업데이트 아님). 화면이 전 종목을 한 번에 보여주므로 요청도 전 종목을 담는다 — 마지막 저장 승리(§02 결정 5)와 의미가 정확히 일치한다.</p>
+    <pre class="code">POST /api/admin/records
+{
+  "sessionDate": "2025-08-16",          // 회차 탭 이름 (YYYY-MM-DD)
+  "playerId": 7,                        // 명단 행 위치 기반 Player.id — 서버가 명단에서 이름을 얻어 회차 탭에서 이름 매칭
+  "scores": {                           // events[] 전체 key 필수 (행 전체 교체)
+    "드리블셔틀런": "1:12",              // 시트 표기 그대로의 문자열
+    "골밑슛": "6",
+    "자유투": "면제",
+    "45도패스캐치": ""                   // 빈 문자열 = 미측정
+  }
+}
+
+→ 200
+{
+  "sessionDate": "2025-08-16",
+  "playerId": 7,
+  "name": "선수7",
+  "scores": {                           // 저장된 값의 정규화 결과 (EventScore 형태) — 프론트 확인 표시용
+    "드리블셔틀런": { "status": "recorded", "value": 72, "display": "1:12" },
+    "골밑슛":       { "status": "recorded", "value": 6,  "display": "6" },
+    "자유투":       { "status": "exempt",   "value": null, "display": null },
+    "45도패스캐치": { "status": "unmeasured", "value": null, "display": null }
+  }
+}</pre>
+    <table>
+      <thead><tr><th style="width:90px;">상태</th><th class="mono">error 코드(안)</th><th>상황</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">400</td><td class="mono">validation_failed</td><td>normalize-score가 invalid로 판정(사유 그대로 반환) · valueKind 불일치(개수 종목에 시간 등) · 알 수 없는/누락된 종목 key · 날짜 형식 오류</td></tr>
+        <tr><td class="mono">401</td><td class="mono">unauthorized</td><td>세션 없음·만료</td></tr>
+        <tr><td class="mono">403</td><td class="mono">forbidden</td><td>팀 세션이지만 관리자 아님</td></tr>
+        <tr><td class="mono">404</td><td class="mono">session_not_found</td><td>해당 날짜의 회차 탭이 없음 → 프론트는 [기록지 만들기] 안내</td></tr>
+        <tr><td class="mono">404</td><td class="mono">not_participant</td><td>그 선수가 그 회차 참가자가 아님(이름 행 없음) → 프론트는 [참가자 추가] 안내</td></tr>
+        <tr><td class="mono">502</td><td class="mono">sheets_api_error</td><td>Sheets API 실패 — 자동 재시도 소진 후. 기존 <code class="inline">/api/records</code>의 에러 바디 형태(<code class="inline">{error, message, upstreamStatus}</code>)를 따름</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:13.5px;">선수 식별을 이름 문자열이 아니라 <code class="inline">playerId</code>로 받는 이유: 프론트가 이미 <code class="inline">/api/records</code>에서 id를 갖고 있고, 이름은 개명될 수 있는 표시값이기 때문. 서버가 id → 명단 이름 → 회차 탭 이름 매칭 순으로 해석한다(§07).</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="write">
+    <h2><span class="num">07</span>시트 쓰기 방식</h2>
+
+    <h3>쓰기 파이프라인 (저장 1회)</h3>
+    <div class="flow">1. 액세스 토큰 — 기존 <span class="k">googleAuth.getAccessToken(env, scope)</span> 재사용,
+   scope만 읽기·쓰기용 <span class="k">https://www.googleapis.com/auth/spreadsheets</span>로
+   <span class="note">(sheetsApi.ts는 readonly scope 고정 — "쓰기는 P5가 별도 scope로 자체 처리" 주석 그대로)</span>
+2. 회차 탭 읽기 — 헤더 행 + 이름 열(A열) 1회 조회
+   ├─ 헤더 → 종목 → 열 매핑 (parse-session의 mapHeaderToEvents와 같은 규칙 — 열 순서 가정 없음)
+   └─ 이름 열 → playerId의 명단 이름과 NFC 매칭 → 대상 행 번호 결정 (없으면 404 not_participant)
+3. 값 검증 — normalize-score + valueKind 교차검증 (§08) · invalid면 여기서 400, 시트에 안 씀
+4. <span class="k">values.update</span> 1건 — 그 행의 점수 셀 범위(예: '2025-08-16'!B7:E7),
+   <span class="k">valueInputOption=RAW</span>
+5. 429·5xx면 짧은 백오프로 1~2회 재시도 (update는 멱등 — 같은 값 재쓰기 무해)
+6. 성공 → records 캐시 무효화 (§09) → 200 응답</div>
+
+    <h3>설계 근거</h3>
+    <ul style="font-size:14px;">
+      <li><b>쓰기 단위 = <code class="inline">values.update</code> 1건.</b> 선수 단위 저장은 항상 <b>단일 행의 연속 범위</b>라 <code class="inline">values.batchUpdate</code>(다중 범위)가 필요 없다. 원자적 <code class="inline">spreadsheets.batchUpdate</code>(탭 복제·구조 변경)는 P5 create-sheet만의 몫 — 점수 저장은 구조를 건드리지 않는다.</li>
+      <li><b><code class="inline">valueInputOption=RAW</code>.</b> <code class="inline">USER_ENTERED</code>는 구글이 <code class="inline">1:15</code>를 시각으로 자동 해석할 수 있다 — 시트 직접 입력에서 이미 알려진 사고 유형(<a href="sheet-rules.html">편집 규칙</a> §04). RAW는 문자열 그대로 저장돼, 읽기 쪽 <code class="inline">FORMATTED_VALUE</code>(문자열 계약)와 왕복이 일관된다.</li>
+      <li><b>이름 열(A열)·헤더에는 절대 쓰지 않는다.</b> 참조 수식 보호 — 쓰는 범위는 점수 셀뿐. 편집 규칙 §01("사람이 채우는 건 점수 숫자뿐")을 API도 동일하게 지킨다.</li>
+      <li><b>행 찾기 ↔ 쓰기 사이 레이스:</b> 회차 탭은 append-only(add-players는 맨 아래 추가만)라 기존 행 번호가 밀리지 않는다 — 조회한 행 번호로 그대로 써도 안전. 회차 탭 내 행 삭제·재배치는 시트 편집 규칙으로 금지돼 있고, 벌어졌다면 파서가 fail-loud로 드러낸다(기존 원칙).</li>
+      <li><b>동시 저장은 마지막 승리(§02 결정 5).</b> 서로 다른 선수 = 서로 다른 행이라 충돌 없음. 같은 선수 행 동시 저장만 나중 요청이 덮어씀 — 잠금·버전 비교 없음.</li>
+      <li><b>재시도는 서버(Pages Function) 안에서.</b> 클라이언트 재전송보다 중복·순서 문제가 없고, 429·5xx에만 적용(4xx는 즉시 실패). 대상이 단일 행 전체 교체 update라 재시도가 항상 멱등.</li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section id="validation">
+    <h2><span class="num">08</span>검증 규칙 — normalize-score 재사용</h2>
+    <p>검증 규칙의 원천은 <b><code class="inline">functions/lib/normalize-score.ts</code> 하나</b>다. 새 규칙을 만들지 않는다. 서버가 최종 게이트, 클라이언트는 같은 규칙의 선반영일 뿐이다.</p>
+    <table>
+      <thead><tr><th>입력</th><th class="mono">normalize-score 결과</th><th>서버 처리</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">1:12 (시간 종목)</td><td class="mono">seconds</td><td class="good">저장 (recorded)</td></tr>
+        <tr><td class="mono">6 (개수 종목)</td><td class="mono">count</td><td class="good">저장 (recorded)</td></tr>
+        <tr><td class="mono">면제</td><td class="mono">exempt</td><td class="good">저장 (면제 리터럴)</td></tr>
+        <tr><td class="mono">"" (빈 문자열)</td><td class="mono">blank</td><td class="good">저장 (빈 셀 = 미측정)</td></tr>
+        <tr><td class="mono">1:75 · 소수 · 음수 · h:mm:ss …</td><td class="mono">invalid</td><td class="bad">400 거부 — <code class="inline">reason</code> 그대로 반환, 시트에 쓰지 않음</td></tr>
+        <tr><td class="mono">1:15 (개수 종목에)</td><td class="mono">seconds ≠ valueKind</td><td class="bad">400 거부 — valueKind 교차검증 (records-schema §03 규칙 그대로)</td></tr>
+      </tbody>
+    </table>
+    <ul style="font-size:14px;">
+      <li><b>사이트 경로로는 invalid가 시트에 들어갈 수 없다.</b> invalid는 앞으로도 시트 직접 편집(escape hatch)에서만 생길 수 있고, 파서·화면의 기존 invalid 처리(원본 보존 + reason)는 그대로 유지된다.</li>
+      <li><b>만점(<code class="inline">maxScore</code>) 초과는 막지 않는다.</b> normalize-score에 없는 규칙이라 발명하지 않음 — 시트 직접 입력과 동일 의미론. UI는 만점을 힌트로만 표시.</li>
+      <li><b>클라이언트 검증:</b> 타입별 입력기(§05)가 형식 오류를 원천 차단하고, 제출 전 같은 규칙으로 인라인 피드백. 프론트가 규칙을 재사용할 수 있도록 <code class="inline">normalize-score</code>를 <code class="inline">shared/</code>로 승격하는 것을 구현 이슈에서 검토한다(순수 함수라 이동 비용 없음).</li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section id="cache">
+    <h2><span class="num">09</span>캐시 무효화</h2>
+    <ul style="font-size:14px;">
+      <li><b>쓰기 성공 시에만</b> <code class="inline">caches.default.delete(RECORDS_CACHE_KEY)</code> — <code class="inline">functions/lib/records-cache.ts</code>의 키를 그대로 import (P2 <code class="inline">/api/refresh</code>·P5와 동일 패턴).</li>
+      <li>무효화는 <b>응답을 돌려주기 전에 await</b> — 프론트가 저장 직후 refetch하므로, 삭제가 응답보다 늦으면(waitUntil) 오래된 캐시를 다시 받을 수 있다.</li>
+      <li>프론트는 저장 성공 콜백에서 TanStack Query의 records 쿼리를 invalidate → 다음 조회가 시트를 재조립. 저장마다 전체 재조립이 일어나지만 팀 규모(약 21명 × 회차 수)에서 비용은 무시 가능.</li>
+      <li>쓰기 실패(재시도 소진 포함) 시 캐시는 건드리지 않는다 — 실패했는데 무효화만 하면 불필요한 재조립만 생긴다.</li>
+    </ul>
+    <div class="callout"><b>알려진 한계 (기존 패턴 그대로 상속):</b> Cloudflare Cache API는 <b>데이터센터(콜로) 로컬</b>이라 <code class="inline">cache.delete</code>는 요청이 닿은 콜로에서만 지워진다. 팀 전원이 같은 지역(한국)에서 접속하는 실사용에선 문제가 안 되지만, 다른 콜로에 남은 캐시는 TTL(6시간)까지 살 수 있다. P2 <code class="inline">/api/refresh</code>와 공유하는 한계이며 이 PRD에서 새로 해결하지 않는다.</div>
+  </section>
+
+  <!-- 10 -->
+  <section id="nonscope">
+    <h2><span class="num">10</span>비스코프 — 명시적으로 안 하는 것</h2>
+    <table>
+      <thead><tr><th>안 하는 것</th><th>이유 / 대안</th></tr></thead>
+      <tbody>
+        <tr><td>팀원 셀프 입력 (본인 점수 입력)</td><td>관리자 전용으로 확정(§02 결정 1). 개인 식별이 없는 현행 인증 모델에선 강제 불가 — 필요해지면 인증 확장과 함께 별도 PRD</td></tr>
+        <tr><td>종목 단위 일괄 기입 화면</td><td>선수 단위 동선으로 확정(§02 결정 2·3). 스테이션 방식 요구가 실제로 생기면 후속 이슈</td></tr>
+        <tr><td>명단·목표 탭 편집 (상태 변경 · 종목/목표/만점 수정)</td><td>시트에서 직접 (편집 규칙 문서가 커버). 사이트 쓰기는 회차 탭 점수만</td></tr>
+        <tr><td>회차 탭 삭제·이름(날짜) 변경 · 참가자 행 제거</td><td>드물고 파괴적 — 시트에서 직접 (escape hatch)</td></tr>
+        <tr><td>입력 이력·감사 로그 · 되돌리기(undo)</td><td>자유 수정 + 마지막 저장 승리로 확정 — 이력 저장소가 없고(시트=SoT) 필요성도 미검증</td></tr>
+        <tr><td>낙관적 잠금·실시간 동시 편집 표시</td><td>마지막 저장 승리로 확정(§02 결정 5). 관리자 소수 운영에서 과잉</td></tr>
+        <tr><td>오프라인 큐 / PWA</td><td>자동 재시도 + 입력값 보존으로 확정(§02 결정 6). 큐 순서·중복 전송 복잡도가 팀 규모 대비 과잉</td></tr>
+        <tr><td>invalid 값 일괄 정리 도구</td><td>기존 invalid는 입력 화면에서 덮어쓰거나 시트에서 정정하면 충분</td></tr>
+        <tr><td>별도 DB·상태 이력 도입</td><td>시트 = SoT 확정 사항 — records-schema §02의 소급 효과 한계도 그대로 유지</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 11 -->
+  <section id="issues">
+    <h2><span class="num">11</span>단계별 이슈 분할 제안</h2>
+    <p class="muted" style="font-size:14px;">위 → 아래 의존 순. W0·W1은 선행 의존성(§03), W2부터가 이 PRD 본체. 각 이슈의 상세 스키마·테스트 설계는 이슈 본문에서.</p>
+    <table>
+      <thead><tr><th style="width:52px;">단계</th><th>이슈</th><th>내용</th><th>의존</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">W0</td><td><b>회차 파서 이름-매칭 정합화</b> <span class="warn">(선행)</span></td><td><code class="inline">parse-session.ts</code>를 행 위치 → 이름 매칭으로 전환("참가자만" 포맷), 동명이인·미등록 이름 fail-loud, 관련 문서(<a href="sheet-integration.html">연동 확정안</a> §02 등) 갱신</td><td>—</td></tr>
+        <tr><td class="num-cell">W1</td><td><b>로그인 + 관리자 세션</b> <span class="warn">(선행 · P2 #41·#42 확장)</span></td><td><code class="inline">POST /api/login</code>(TEAM_PASSCODE/ADMIN_CODE 구분 → <code class="inline">role</code> 클레임), 인증 미들웨어(읽기 = 세션, <code class="inline">/api/admin/*</code> = admin), 로그인 게이트 UI</td><td>—</td></tr>
+        <tr><td class="num-cell">W2</td><td><b>Sheets 쓰기 래퍼</b></td><td>쓰기 scope 토큰(googleAuth 재사용) + <code class="inline">values.update</code>(RAW) + 429·5xx 백오프 재시도. 기존 <code class="inline">sheetsApi.ts</code>는 읽기 전용 유지, 쓰기는 별도 모듈</td><td>—</td></tr>
+        <tr><td class="num-cell">W3</td><td><b><code class="inline">POST /api/admin/records</code></b></td><td>요청 검증(normalize-score + valueKind 교차검증) → 회차 탭 행 찾기(이름 매칭) → 행 업데이트 → 캐시 무효화 → 에러 계약(§06 표)</td><td>W0 W1 W2</td></tr>
+        <tr><td class="num-cell">W4</td><td><b>P5 기존 계획: create-sheet · add-players</b></td><td>P5 계획 그대로 (원자적 batchUpdate 탭 생성 · 활동 선수 맨 아래 추가 · 오늘 KST·중복 가드). 이 PRD 흐름의 전제 기능 — 병행 구현</td><td>W1 W2</td></tr>
+        <tr><td class="num-cell">W5</td><td><b>입력 UI ① — 회차·참가자 목록</b></td><td>관리자 페이지에서 회차 선택(기본 = 최신/오늘), 참가자 가나다 목록 + 입력 상태 뱃지, 다음 미입력 이동, [기록지 만들기]·[참가자 추가] 진입점</td><td>W3 W4</td></tr>
+        <tr><td class="num-cell">W6</td><td><b>입력 UI ② — 선수별 입력 화면</b></td><td>종목 타입별 입력기(분:초 2필드·숫자 키패드·면제 토글), 프리필, 인라인 검증(normalize-score의 <code class="inline">shared/</code> 승격 검토), 저장/실패·재시도 UX</td><td>W5</td></tr>
+        <tr><td class="num-cell">W7</td><td><b>마감 — E2E 검증·문서</b></td><td>측정일 시나리오 스모크(회차 생성 → 전원 입력 → 랭킹 반영 확인), 에러·빈 상태 정리, <a href="build-plan.html">작업 계획</a> P5 섹션·<a href="index.html">설계 개요</a>에 이 기능 반영</td><td>전부</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good"><b>완료 기준 (이 기능 전체):</b> 측정일에 구글 시트 앱을 한 번도 열지 않고 — 관리자 로그인 → 기록지 만들기 → 참가자 선택 → 선수별 점수 입력(수정 포함) → 저장 즉시 팀원이 랭킹·추이에서 확인 — 까지 폰만으로 완결된다. 시트를 열어보면 참조 수식·서식이 온전하고, 사이트가 쓴 값은 전부 normalize-score를 통과한 값뿐이다.</div>
+  </section>
+
+  <div class="footer">
+    PRD · 사이트에서 기록 입력 · 작성 2026-07-17 (사용자 인터뷰로 열린 결정 7건 확정) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획(P5)</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">시트 연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a>
+  </div>
+
+</div>
+</body>
+</html>
