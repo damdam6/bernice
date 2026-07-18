@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD · 모바일 디자인 개편</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --accent: #ff7a45;
+    --accent-2: #4a90ff;
+    --good: #35c07a;
+    --warn: #f5b800;
+    --bad: #ff5c5c;
+    --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 40px; }
+  .badge { display: inline-block; font-size: 12px; letter-spacing: .04em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 12px; margin-bottom: 16px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0; }
+  .status { margin-top: 18px; font-size: 13px; color: var(--good); background: rgba(53,192,122,.08); border: 1px solid rgba(53,192,122,.25); border-radius: 8px; padding: 10px 14px; display: inline-block; }
+  .crumb { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .crumb a { color: var(--accent-2); text-decoration: none; }
+  h2 { font-size: 21px; margin: 48px 0 16px; padding-top: 8px; letter-spacing: -.01em; }
+  h2 .num { color: var(--accent); font-family: var(--mono); font-size: 16px; margin-right: 8px; }
+  h3 { font-size: 16px; margin: 28px 0 10px; }
+  p { color: var(--text); }
+  .muted { color: var(--muted); }
+  section { scroll-margin-top: 24px; }
+  nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 8px; }
+  nav.toc ol { margin: 0; padding-left: 20px; }
+  nav.toc li { margin: 4px 0; }
+  nav.toc a { color: var(--accent-2); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.mono, th.mono { font-family: var(--mono); }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--bad); }
+  .num-cell { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  code.inline { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+  .swatch { display: inline-block; width: 13px; height: 13px; border-radius: 4px; border: 1px solid rgba(255,255,255,.18); vertical-align: -2px; margin-right: 7px; }
+  .tree { font-family: var(--mono); font-size: 13px; line-height: 1.85; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; overflow-x: auto; white-space: pre; color: var(--text); margin: 10px 0; }
+  .tree .node { color: var(--accent); }
+  .tree .note { color: var(--muted); }
+  .callout { border-left: 3px solid var(--warn); background: rgba(245,184,0,.06); border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; }
+  .callout.info { border-left-color: var(--accent-2); background: rgba(74,144,255,.06); }
+  .callout.good { border-left-color: var(--good); background: rgba(53,192,122,.06); }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="build-plan.html">작업 계획</a> · <a href="prd-record-input.html">기록 입력 PRD</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
+    <span class="badge">PRD · 디자인 · 모바일 우선</span>
+    <h1>🎨 PRD — 모바일 디자인 개편</h1>
+    <p class="sub">claude.ai/design "기록 사이트 모바일 디자인" 프로젝트의 확정 목업(<code class="inline">버니스 기록.dc.html</code>)을 구현 가능한 명세로 옮긴 문서. 하단 네비 3탭 IA + 인디고 테마 + 관리자 기록 입력 동선.</p>
+    <div class="status">✅ 디자인 반입 2026-07-17 · 디자인이 함의한 기능 변경 2건(전체 추이 통합, 열람 게이트)은 사용자 인터뷰로 확정 완료</div>
+  </header>
+
+  <nav class="toc">
+    <strong style="font-size:14px;">목차</strong>
+    <ol>
+      <li><a href="#source">디자인 소스 & 읽는 법</a></li>
+      <li><a href="#changes">디자인이 확정한 기능 변경</a></li>
+      <li><a href="#tokens">디자인 토큰</a></li>
+      <li><a href="#ia">IA & 네비게이션</a></li>
+      <li><a href="#screens">화면별 명세 · 도메인 매핑</a></li>
+      <li><a href="#components">공통 컴포넌트</a></li>
+      <li><a href="#charts">차트 명세</a></li>
+      <li><a href="#impact">기존 구현(P3~)에 미치는 영향</a></li>
+      <li><a href="#open">열린 항목 & 비스코프</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="source">
+    <h2><span class="num">01</span>디자인 소스 & 읽는 법</h2>
+    <table>
+      <thead><tr><th>항목</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td>프로젝트</td><td>claude.ai/design · <a href="https://claude.ai/design/p/f64becbc-46cb-4b7c-adde-a17503228fc2?file=%EB%B2%84%EB%8B%88%EC%8A%A4+%EA%B8%B0%EB%A1%9D.dc.html" style="color:var(--accent-2);">기록 사이트 모바일 디자인</a> (소유: 사용자)</td></tr>
+        <tr><td>확정 목업</td><td><code class="inline">버니스 기록.dc.html</code> — 인터랙티브 프로토타입(화면 11개 + 상태 로직). 참고 스크린샷은 프로젝트 <code class="inline">screenshots/</code></td></tr>
+        <tr><td>기준 뷰포트</td><td>모바일 우선 — 폰 프레임 404×852 기준. 태블릿·데스크톱은 §09 참고</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>목업 데모 값은 스펙이 아니다.</b> 선수1~6 · 회차 3개 · 데모 코드 1234 · <code class="inline">참여 인원 = 전체 선수 수</code> · 차트 정규화 상수(90초/64초) 등은 목업 편의값이다. 데이터 의미론은 전부 <a href="records-schema.html" style="color:inherit; text-decoration:underline;">도메인 타입·API 계약</a>이 우선하며, 이 문서 §05의 매핑 표가 그 연결을 정의한다.</div>
+  </section>
+
+  <!-- 2 -->
+  <section id="changes">
+    <h2><span class="num">02</span>디자인이 확정한 기능 변경</h2>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>변경</th><th>내용 · 근거</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">1</td><td><b>전체 추이 페이지 삭제 → 개인 프로필로 통합</b></td><td>하단 네비는 홈·랭킹·개인 3탭. 전체 비교는 개인 프로필의 종목 추이 차트에 <b>전체 선수 배경 라인 + 본인 하이라이트 + 목표선</b>으로 흡수. <span class="good">인터뷰 확정 (2026-07-17)</span></td></tr>
+        <tr><td class="num-cell">2</td><td><b>열람 게이트: 팀 패스코드 유지</b></td><td>디자인에는 게이트 화면이 없지만(잠금 아이콘 = 관리자 로그인만), 시트에 실명 명단·기록이 있어 <b>열람용 팀 패스코드는 유지</b>로 확정. 게이트 화면 1개는 디자인에 추가돼야 함(§09 열린 항목). P2 인증 구조(팀/관리자 구분)는 그대로. <span class="good">인터뷰 확정 (2026-07-17)</span></td></tr>
+        <tr><td class="num-cell">3</td><td><b>랭킹 표시 정책 — 미측정·면제도 하단 노출</b></td><td>순위권(기록 보유자) 아래에 미측정·면제 선수도 행으로 노출: 순위 자리에 <code class="inline">—</code>/<code class="inline">면제</code>, 뱃지로 구분. <b>API 계약 변경 없음</b> — <code class="inline">rankings</code>(제외 유지) + <code class="inline">sessions[].entries</code>를 프론트에서 조합해 표시</td></tr>
+        <tr><td class="num-cell">4</td><td><b>홈 요약 지표 추가 — 평균 목표 달성 %</b></td><td>최신 회차 카드에 참여 인원 + <b>종목별 달성률의 평균</b>(%) 병기. 프론트 파생값 — 계약 변경 없음</td></tr>
+        <tr><td class="num-cell">5</td><td><b>관리자 IA — 기록 입력이 제1 기능</b></td><td>"시트 관리" 홈 버튼 순서: <b>기록 입력</b>(강조) → 참가자 추가 → 기록지 만들기. 기록 입력 동선에 <b>날짜 선택 화면</b>(회차별 완료 n/N)이 명시적 단계로 추가</td></tr>
+        <tr><td class="num-cell">6</td><td><b>면제 토글은 면제 가능 종목에만</b></td><td>입력 화면의 면제 토글은 <b>면제 가능 종목(현재 45도 패스캐치)</b>에만 노출. 서버·파서는 기존대로 모든 종목의 <code class="inline">면제</code>를 수용(시트 직접 편집 escape hatch와 의미론 동일) — UI 노출만 제한</td></tr>
+        <tr><td class="num-cell">7</td><td><b>테마 교체 — 오렌지 → 인디고 + Pretendard</b></td><td>P0의 "농구 오렌지 테마"를 폐기하고 인디고(#3F51B5) 라이트 테마 + Pretendard로 전환 (§03)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section id="tokens">
+    <h2><span class="num">03</span>디자인 토큰</h2>
+
+    <h3>컬러</h3>
+    <table>
+      <thead><tr><th>토큰(안)</th><th class="mono">값</th><th>용도</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">primary</td><td class="mono"><span class="swatch" style="background:#3F51B5"></span>#3F51B5</td><td>주 색 — 버튼·활성 칩·하이라이트 라인·네비 활성</td></tr>
+        <tr><td class="mono">primary-strong</td><td class="mono"><span class="swatch" style="background:#283593"></span>#283593</td><td>primary hover/pressed</td></tr>
+        <tr><td class="mono">primary-tint</td><td class="mono"><span class="swatch" style="background:#E8EAF6"></span>#E8EAF6</td><td>선택 행 배경·안내 박스 배경</td></tr>
+        <tr><td class="mono">primary-soft</td><td class="mono"><span class="swatch" style="background:#C5CAE9"></span>#C5CAE9</td><td>보조 라인(비하이라이트 추이) · 미달 게이지 · 카드 보조 텍스트</td></tr>
+        <tr><td class="mono">bg</td><td class="mono"><span class="swatch" style="background:#f4f5f7"></span>#f4f5f7</td><td>앱 배경</td></tr>
+        <tr><td class="mono">surface / line</td><td class="mono"><span class="swatch" style="background:#ffffff"></span>#fff · <span class="swatch" style="background:#edeef2"></span>#edeef2</td><td>카드 배경 · 카드 보더 (입력 필드 배경 <code class="inline">#f6f7f9</code>, 보더 <code class="inline">#e3e5ec</code>)</td></tr>
+        <tr><td class="mono">text / text-sub</td><td class="mono">#141821 · #232733 / #8b909c · #9096a2</td><td>제목·본문 / 보조 텍스트 (비활성 <code class="inline">#b0b5bf</code>)</td></tr>
+        <tr><td class="mono">good</td><td class="mono"><span class="swatch" style="background:#3f9e6b"></span>#3f9e6b</td><td>개선 ▲ · 목표선. 달성 뱃지는 <code class="inline">#2f7a52</code> on <code class="inline">#e7f4ec</code></td></tr>
+        <tr><td class="mono">bad</td><td class="mono"><span class="swatch" style="background:#c25151"></span>#c25151</td><td>악화 ▼ · 검증 에러 문구</td></tr>
+        <tr><td class="mono">warn-badge</td><td class="mono"><span class="swatch" style="background:#fbf1d7"></span>#8a6d1e on #fbf1d7</td><td>"일부" 입력 상태 뱃지</td></tr>
+        <tr><td class="mono">neutral-badge</td><td class="mono"><span class="swatch" style="background:#f0f1f4"></span>#9096a2 on #f0f1f4</td><td>"미입력"·미측정·면제 뱃지</td></tr>
+        <tr><td class="mono">chart-grid</td><td class="mono"><span class="swatch" style="background:#e7e9ee"></span>#e7e9ee</td><td>차트 그리드·레이더 링</td></tr>
+        <tr><td class="mono">series[]</td><td class="mono">#1A237E #3F51B5 #3949AB #5C6BC0 #7986CB #536DFE</td><td>다중 시리즈가 필요한 경우의 인디고 스케일</td></tr>
+      </tbody>
+    </table>
+
+    <h3>타이포그래피 · 형태 · 모션</h3>
+    <table>
+      <thead><tr><th>항목</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>폰트</td><td><b>Pretendard</b> (웹폰트) → 폴백 -apple-system, Apple SD Gothic Neo. 숫자 강조는 800 웨이트</td></tr>
+        <tr><td>스케일</td><td>화면 제목 22~24px/800 · 카드 제목 14~16px/700 · 본문 13~15px · 보조 11~13px · 입력 숫자 26px/800</td></tr>
+        <tr><td>radius</td><td>카드 16~20px · 버튼 13~15px · 칩 11px · 뱃지 6~8px · 토글 999px</td></tr>
+        <tr><td>모션</td><td>화면 전환 <code class="inline">fadeUp .35s</code>(8px 상승+페이드) · 토스트 <code class="inline">toastIn .3s</code>, 1.9초 후 자동 소멸 · 게이지 width .5s · 토글 노브 .2s</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4 -->
+  <section id="ia">
+    <h2><span class="num">04</span>IA & 네비게이션</h2>
+    <div class="tree"><span class="node">하단 네비 3탭</span> — 🏠 홈 · 🏆 랭킹 · 👤 개인  <span class="note">(활성 = primary, 비활성 = #aab0bc)</span>
+<span class="node">관리자 스택</span> — 하단 네비 없이 ‹ 뒤로가기 텍스트 버튼으로 계층 이동
+  홈 우상단 잠금 아이콘
+   └─ 관리자 로그인 (관리자 코드)
+       └─ 시트 관리 (adminHome · 로그아웃 버튼)
+           ├─ 기록 입력: 날짜 선택 → 참가자 목록 → 선수별 입력 <span class="note">(입력 화면은 하단 고정 저장 바)</span>
+           ├─ 참가자 추가 <span class="note">(하단 고정 확인 바 — "N명 추가하기")</span>
+           └─ 기록지 만들기 <span class="note">(하단 고정 확인 바 — "N명으로 기록지 만들기")</span>
+<span class="note">※ 열람 게이트(팀 패스코드) 화면은 유지 확정이나 목업에 없음 — §09 열린 항목</span></div>
+  </section>
+
+  <!-- 5 -->
+  <section id="screens">
+    <h2><span class="num">05</span>화면별 명세 · 도메인 매핑</h2>
+    <p class="muted" style="font-size:14px;">각 화면의 구성 요소와 <code class="inline">RecordsResponse</code> 필드 매핑. "파생"은 프론트 계산(계약 변경 없음).</p>
+
+    <h3>🏠 홈</h3>
+    <table>
+      <thead><tr><th>요소</th><th>내용</th><th>데이터</th></tr></thead>
+      <tbody>
+        <tr><td>헤더</td><td>BERNICE 워드마크 + 잠금 아이콘(관리자 로그인 진입)</td><td>—</td></tr>
+        <tr><td>최신 회차 카드</td><td>인디고 카드 — "최신 회차 · n차" + 날짜 + 참여 인원(명) + 평균 목표 달성(%)</td><td><code class="inline">home.latestSession.date/participantCount</code> · n차 라벨 = 파생(§09) · 평균 = <code class="inline">achievementRates[].rate</code> 단순 평균 ×100 반올림(파생)</td></tr>
+        <tr><td>종목별 달성률 게이지</td><td>종목명 + "n/m명 달성" + 진행 바. 전원 달성 시 primary, 미만이면 primary-soft</td><td><code class="inline">home.achievementRates[]</code> (achievedCount/eligibleCount)</td></tr>
+        <tr><td>바로가기</td><td>랭킹 · 개인 추이 카드 2개</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>🏆 랭킹</h3>
+    <table>
+      <thead><tr><th>요소</th><th>내용</th><th>데이터</th></tr></thead>
+      <tbody>
+        <tr><td>필터 칩 2줄</td><td>종목 칩(셔틀런/골밑슛/자유투/패스캐치, 가로 스크롤) + 회차 칩(1차/2차/…)</td><td><code class="inline">events[]</code> · <code class="inline">rankings[].sessionDate</code></td></tr>
+        <tr><td>종목 안내문</td><td>예: "목표 1'17" 이내 · 낮을수록 좋음 ↓" / "목표 5개 이상 · / 10"</td><td><code class="inline">EventDefinition.target/maxScore/direction</code> 파생 문구</td></tr>
+        <tr><td>순위 행</td><td>순위(1위 primary 강조) · 이름 · 뱃지(목표 달성=green / 면제·미측정=neutral) · 상대 성능 바 · 원값(개수는 " / 만점" 병기)</td><td>순위권: <code class="inline">rankings[].events[].entries</code> 그대로. <b>미측정·면제·이상값 행은 <code class="inline">sessions[].entries</code>에서 보충해 하단 배치</b>(순위 자리 <code class="inline">—</code>/<code class="inline">면제</code>) — 계약 변경 없음. 성능 바 정규화는 §07</td></tr>
+      </tbody>
+    </table>
+
+    <h3>👤 개인 (프로필 · 전체 추이 통합)</h3>
+    <table>
+      <thead><tr><th>요소</th><th>내용</th><th>데이터</th></tr></thead>
+      <tbody>
+        <tr><td>선수 선택</td><td>드롭다운(체크 표시·바깥 탭으로 닫힘)</td><td><code class="inline">players[]</code> (탈퇴 제외 — 계약대로)</td></tr>
+        <tr><td>회차 칩</td><td>레이더·현재값의 기준 회차 선택</td><td><code class="inline">sessions[]</code></td></tr>
+        <tr><td>레이더 차트</td><td>4종목 축, 선택 회차의 정규화 성능(§07)</td><td><code class="inline">sessions[].entries[].scores</code></td></tr>
+        <tr><td>종목별 성장 카드 ×4</td><td>종목명 + PB / 현재값 + 전회차 대비 델타(▲▼, 시간은 "n초", 동률 "─ 0" 회색). 탭하면 카드가 primary 보더로 선택되고 <b>추이 차트 확장</b></td><td><code class="inline">personalBests[]</code> · 현재값 = 선택 회차 <code class="inline">scores</code> · 델타/개선 = <code class="inline">trends[].points[].deltaFromPrevious/improved</code> (직전 유효 기록 대비 — 계약 의미론 우선, §01 콜아웃)</td></tr>
+        <tr><td>확장 추이 차트</td><td>x=회차, y=정규화 성능. <b>전체 선수 배경 라인(primary-soft 1.6px) + 본인 하이라이트(primary 3.2px+점) + 목표선(green 점선)</b></td><td>본인 <code class="inline">trends[]</code> + 전체 <code class="inline">players[].trends[]</code> · 목표 = <code class="inline">targetValue</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>🔒 관리자 로그인 / 시트 관리</h3>
+    <table>
+      <thead><tr><th>화면</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td>관리자 로그인</td><td>잠금 아이콘 블록 + "측정일 운영진 전용" 카피 + 코드 입력(password·numeric·자간 넓게) + 오류 문구(빨강) + 로그인 버튼. 성공 시 시트 관리로</td></tr>
+        <tr><td>시트 관리</td><td>버튼 3개 세로 스택 — <b>기록 입력(primary 강조)</b> · 참가자 추가 · 기록지 만들기 + 로그아웃 텍스트 버튼 + 안내 박스("시트가 SoT, 저장하면 검증된 값만 들어가고 즉시 반영")</td></tr>
+        <tr><td>기록지 만들기</td><td>"오늘 · YYYY-MM-DD (Asia/Seoul)" + 참가자 선택 리스트(활동·가나다·기본 해제, 선택 시 primary-tint 행 + 체크박스) + 하단 확인 바 "N명으로 기록지 만들기"(0명이면 비활성 회색)</td></tr>
+        <tr><td>참가자 추가</td><td>회차 칩 + 그 회차에 없는 활동 선수 멀티선택 + 하단 확인 바 "N명 추가하기"</td></tr>
+      </tbody>
+    </table>
+
+    <h3>📲 기록 입력 (날짜 → 참가자 → 입력)</h3>
+    <table>
+      <thead><tr><th>화면</th><th>내용</th><th>데이터</th></tr></thead>
+      <tbody>
+        <tr><td>날짜 선택</td><td>회차 카드 리스트(최신부터) — 날짜 + n차 라벨 + <b>완료 x/N</b></td><td><code class="inline">sessions[]</code> · 완료 = 전 종목이 미측정 아닌 참가자 수(파생)</td></tr>
+        <tr><td>참가자 목록</td><td>선수 행 + 입력 상태 뱃지: <b>미입력</b>(neutral) / <b>일부</b>(warn-badge) / <b>완료</b>(green)</td><td><code class="inline">sessions[].entries[].scores</code> 파생 (미입력 = 전 종목 unmeasured / 완료 = 전 종목 unmeasured 아님)</td></tr>
+        <tr><td>선수별 입력</td><td>종목 카드 4개 + 하단 고정 저장 바. 시간: 분·초 2필드(26px/800, 초 0–59 위반 시 인라인 에러) · 개수: 스테퍼(± 46px, 만점 클램프) + 직접 입력 · 면제 토글(면제 가능 종목만, 켜면 입력부 숨김) · 기존 값 프리필. 저장 → 참가자 목록 복귀 + 토스트 "✓ {이름} 저장됨 · 팀원 열람에 반영"</td><td>동작 계약 전체는 <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> (검증·저장 단위·실패 처리)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 6 -->
+  <section id="components">
+    <h2><span class="num">06</span>공통 컴포넌트</h2>
+    <table>
+      <thead><tr><th>컴포넌트</th><th>스펙</th></tr></thead>
+      <tbody>
+        <tr><td>필터 칩</td><td>활성: primary 배경/흰 글자/700 · 비활성: 흰 배경/#5a6070/600, 보더 #e3e5ec. radius 11px, 가로 스크롤 허용</td></tr>
+        <tr><td>카드</td><td>흰 배경 + #edeef2 1px 보더 + radius 16~20px. 선택 상태는 primary 1.5px 보더</td></tr>
+        <tr><td>상태 뱃지</td><td>미입력·미측정·면제 = neutral-badge / 일부 = warn-badge / 완료·목표 달성 = green(#2f7a52 on #e7f4ec). 11px/700, radius 6~8px</td></tr>
+        <tr><td>선택 리스트 행</td><td>토글형 행 — 선택 시 primary-tint 배경 + primary 1.5px 보더 + 우측 체크 사각(primary 배경/✓)</td></tr>
+        <tr><td>스테퍼</td><td>− [값] + 구성. 버튼 46×46, radius 13px. 만점에서 클램프. 가운데는 직접 입력 가능(숫자만)</td></tr>
+        <tr><td>토글(면제)</td><td>48×28 트랙 + 22px 노브. on = primary</td></tr>
+        <tr><td>하단 고정 바</td><td>저장/확인 버튼 전폭, 상단 그라디언트 페이드. 확인 바는 선택 0명일 때 비활성(회색 + 안내 라벨)</td></tr>
+        <tr><td>토스트</td><td>하단 중앙 다크(#141821) 필, 1.9초 자동 소멸 — 저장·생성·추가 성공 피드백</td></tr>
+        <tr><td>하단 네비</td><td>3탭 아이콘+라벨(11px/700). 메인 3화면에서만 노출, 관리자 스택에서는 숨김</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:13.5px;">아이콘은 24px 그리드 스트로크(2px, round cap) — 목업은 lucide 계열 패스 사용. 구현은 lucide-react 권장.</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="charts">
+    <h2><span class="num">07</span>차트 명세</h2>
+    <table>
+      <thead><tr><th>차트</th><th>스펙</th></tr></thead>
+      <tbody>
+        <tr><td>달성률 게이지 (홈)</td><td>8px 트랙(#eef0f4) + 채움 바. 전원 달성 primary / 미만 primary-soft. width 트랜지션 .5s</td></tr>
+        <tr><td>레이더 (개인)</td><td>4축(종목 short 라벨), 링 4개(#e7e9ee) + 채움 폴리곤(primary 14% 투명) + 꼭짓점 도트. 값 = 정규화 성능(아래)</td></tr>
+        <tr><td>종목 추이 라인 (개인, 카드 확장)</td><td>x = 회차(n차 라벨) · y = 정규화 성능. 전체 선수 배경 라인(primary-soft, 1.6px) → 본인(primary, 3.2px + 도트 3.6px) 순서로 위에. 목표선 = green 1.5px 점선(4 4)</td></tr>
+        <tr><td>랭킹 행 성능 바</td><td>5px 미니 바 — 달성자 green, 미달 #c3ccdb. 값 = 동일 정규화</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>⚠️ 정규화 규칙은 열린 항목.</b> 목업은 개수 = <code class="inline">value / maxScore</code>, 시간 = 고정 범위 상수((90−v)/(90−64))를 썼다 — 상수는 데모값이다. 구현 제안: <b>개수 종목 = value/maxScore</b>(만점 있음), <b>시간 종목 = 전체 데이터(전 회차·전 선수)의 min~max 범위 스케일</b>(만점 없음). 레이더·추이·랭킹 바가 같은 함수를 공유해야 함. 확정은 구현 이슈에서(§09).</div>
+  </section>
+
+  <!-- 8 -->
+  <section id="impact">
+    <h2><span class="num">08</span>기존 구현(P3~)에 미치는 영향</h2>
+    <table>
+      <thead><tr><th>기존 산출물</th><th>영향</th></tr></thead>
+      <tbody>
+        <tr><td>디자인 토큰 (P0 — "농구 오렌지 테마")</td><td class="warn">교체 — §03 인디고 라이트 테마로 Tailwind 토큰 재정의 + Pretendard 도입</td></tr>
+        <tr><td>라우팅 골격 (#59 — 빈 페이지 4개 + 404)</td><td class="warn">개편 — 전체 추이 라우트 제거, 3탭 + 관리자 스택(로그인/시트 관리/기록 입력 3단계)으로 재구성. 하단 네비 도입</td></tr>
+        <tr><td>공통 컴포넌트 ① (#52 — 카드·뱃지·상태 pill)</td><td class="warn">스타일 갱신 — §06 스펙으로 색·radius 교체. 구조는 재사용 가능</td></tr>
+        <tr><td>차트 래퍼 (#57 — Recharts 공통 테마 + 프리셋 2종)</td><td class="warn">테마 갱신 + 프리셋 재검토 — 레이더/배경 라인+하이라이트 추이/미니 바는 커스텀 SVG가 더 맞을 수 있음(목업이 전부 경량 SVG). Recharts 유지 여부는 구현 이슈에서</td></tr>
+        <tr><td>TanStack Query 훅 (#54) · <code class="inline">/api/records</code> 계약</td><td class="good">변경 없음 — 이 개편은 표시 레이어만. 신규 파생값(평균 달성 %, n차 라벨, 입력 상태)은 전부 프론트 계산</td></tr>
+        <tr><td>기록 입력 PRD</td><td class="good">동선·입력기 세부가 이 디자인으로 확정됨 — 해당 문서에 반영 완료 (2026-07-17)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 9 -->
+  <section id="open">
+    <h2><span class="num">09</span>열린 항목 & 비스코프</h2>
+    <h3>열린 항목 (구현 이슈에서 확정)</h3>
+    <table>
+      <thead><tr><th>항목</th><th>내용 · 권장안</th></tr></thead>
+      <tbody>
+        <tr><td>팀 패스코드 게이트 화면</td><td>유지 확정인데 목업에 없음 — 관리자 로그인 화면과 같은 레이아웃 문법(아이콘 블록+입력+버튼)으로 1화면 추가 설계. 게이트 통과 후 홈</td></tr>
+        <tr><td>정규화 성능 함수</td><td>§07 콜아웃 — 개수 = value/maxScore, 시간 = 전체 범위 스케일 권장. 레이더·추이·랭킹 바 공유</td></tr>
+        <tr><td>면제 가능 종목 플래그</td><td>목업은 패스캐치만 면제 토글. 권장: <b>프론트 종목 상수로 시작</b>(시트 스키마 변경 없음). 목표 탭 열 추가·<code class="inline">EventDefinition</code> 확장은 필요해질 때 별도 이슈</td></tr>
+        <tr><td>회차 라벨 "n차"</td><td>파생 규칙: sessions 날짜 오름차순 인덱스+1. 표기 "1차 · 2025-05-16"</td></tr>
+        <tr><td>이상값(invalid) 표시</td><td>목업에 없음 — 랭킹 하단 노출 시 원본 표기 + 이상값 뱃지(neutral 계열), 입력 화면 프리필 시엔 비움 + 안내. 기존 계약(<code class="inline">display</code>/<code class="inline">reason</code>) 활용</td></tr>
+      </tbody>
+    </table>
+    <h3>비스코프</h3>
+    <ul style="font-size:14px;">
+      <li>다크 모드 — 목업은 라이트 단일</li>
+      <li>태블릿·데스크톱 전용 레이아웃 — 모바일 우선, 넓은 화면은 중앙 정렬 폭 제한으로만 대응</li>
+      <li>전체 추이 별도 페이지 부활 — 삭제 확정(§02). 필요해지면 별도 결정</li>
+      <li>온보딩·설정·알림 등 목업에 없는 화면 신설</li>
+    </ul>
+  </section>
+
+  <div class="footer">
+    PRD · 모바일 디자인 개편 · 작성 2026-07-17 (디자인 반입 + 기능 변경 인터뷰 확정) · 관련: <a href="index.html" style="color:var(--accent-2);">설계 개요</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a>
+  </div>
+
+</div>
+</body>
+</html>
