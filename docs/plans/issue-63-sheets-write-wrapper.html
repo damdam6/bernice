@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#63 기록 입력 W2 — Sheets 쓰기 래퍼 (write scope · values.update RAW · 재시도) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps li.done { color: var(--muted); }
+  .steps li.done b, .steps li.done code { color: inherit; }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+  .pre {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.82rem;
+    background: var(--code-bg); border-radius: 8px; padding: 12px 14px;
+    white-space: pre; overflow-x: auto; margin: 10px 0;
+  }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/63">#63</a></span><span class="type-chip">기능 추가</span>
+    <h1>기록 입력 W2 — Sheets 쓰기 래퍼 (write scope · values.update RAW · 재시도)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/63-sheets-write-wrapper</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>이슈 #24(읽기 래퍼) 이후 처음으로 시트에 값을 쓰는 경로를 연다. 기존 <code>googleAuth.getAccessToken(env, scope)</code>를 쓰기 scope(<code>https://www.googleapis.com/auth/spreadsheets</code>)로 재호출해 읽기와 별도로 캐시되는 토큰을 발급받고, 신규 모듈 <code>functions/lib/sheetsWriteApi.ts</code>에 단일 범위 <code>values.update</code>(<code>valueInputOption=RAW</code>) 래퍼 <code>updateValues(env, sheetId, range, values)</code>를 추가한다.</p>
+    <p>429·5xx 응답만 짧은 백오프로 최대 2회 자동 재시도하고(대상이 항상 행 전체 교체 update라 재시도가 멱등), 4xx는 재시도 없이 즉시 <code>SheetsApiError</code>(기존 <code>sheetsApi.ts</code>의 에러 타입을 그대로 재사용)로 실패시킨다. 기존 <code>sheetsApi.ts</code>는 한 줄도 수정하지 않는다 — 회차 탭에서 대상 행 찾기·<code>normalize-score</code> 값 검증·실제 API 엔드포인트(<code>POST /api/admin/records</code>)는 전부 후속 이슈(PRD §11의 W3)의 몫이다. 이 이슈는 독립적으로 병행 가능하다고 명시돼 있다(의존성 없음).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>functions/lib/googleAuth.ts:25</code> — <code>getAccessToken(env, scope)</code>가 이미 scope-agnostic하다. scope 문자열이 <code>tokenCache</code>(모듈 전역 <code>Map&lt;string, Promise&lt;CachedToken&gt;&gt;</code>)의 키라서, 읽기 scope와 다른 값을 넘기기만 하면 완전히 독립된 토큰이 별도 발급·캐시된다 — <code>googleAuth.ts</code> 변경이 전혀 필요 없다.</li>
+      <li><code>functions/lib/sheetsApi.ts:10-39</code> — 읽기 래퍼의 형태(<code>SHEETS_BASE_URL</code> 상수 · <code>SheetsApiError</code> · <code>callSheetsApi</code> 내부 헬퍼)가 이번 모듈이 그대로 따라야 할 참조 패턴이다. 다만 <code>callSheetsApi</code>는 <code>READONLY_SCOPE</code>·GET·재시도 없음에 고정된 비공개 함수라 그대로 재사용할 수 없다 — 게다가 <code>sheetsApi.ts:11-12</code>에 이미 <code>"쓰기가 필요한 관리자 기능(P5)은 별도 scope로 자체 처리한다"</code>는 주석이 있어, 별도 모듈로 가는 방향이 코드에 선반영돼 있다.</li>
+      <li><code>functions/lib/sheetsApi.ts:14-22</code> — <code>SheetsApiError</code>(<code>message</code>, <code>status</code>)는 읽기·쓰기 어느 쪽 실패든 같은 형태로 호출자에게 상태코드를 전달하면 되므로, 새 에러 타입을 만들지 않고 그대로 import해 재사용한다.</li>
+      <li><code>scripts/seed-sheet.mjs:86-93,130-135</code> — 과거 1회성 스크립트가 이미 <code>PUT .../values/{range}?valueInputOption=RAW</code> + <code>body: { range, majorDimension: 'ROWS', values }</code> 형태로 이 시트에 실제로 쓰기에 성공한 전례가 있다. <code>node:crypto</code> 기반이라 Workers에는 그대로 못 쓰지만, 요청 형태(URL·쿼리·바디 스키마)는 그대로 검증된 참고 자료다.</li>
+      <li><code>docs/prd-record-input.html</code> §07(줄 297-321)이 이 이슈의 사실상 스펙이다 — 쓰기 파이프라인 6단계 중 이 이슈가 맡는 부분은 1(토큰)·4(<code>values.update</code> RAW)·5(429·5xx 재시도)뿐이고, 2(행 찾기)·3(값 검증)·6(캐시 무효화)은 §11 표에서 W3으로 명시적으로 분리돼 있다. "재시도는 서버 안에서, 429·5xx에만, update가 항상 멱등이라 안전"이라는 설계 근거도 이미 §07에 확정돼 있어 이 이슈에서 새로 정할 것은 없다.</li>
+      <li>저장소 어디에도 재시도/백오프나 <code>vi.useFakeTimers()</code> 패턴이 아직 없다 — 이 이슈가 처음 도입한다. <code>vitest@4.1.10</code>(devDependencies)는 <code>vi.useFakeTimers()</code>/<code>vi.runAllTimersAsync()</code>를 지원하므로 새 의존성 없이 바로 쓸 수 있다.</li>
+      <li><code>functions/lib/sheetsApi.test.ts:11-88</code> — 테스트용 RSA 키페어 생성(<code>beforeAll</code>) + <code>vi.stubGlobal('fetch', ...)</code>로 oauth2 토큰 엔드포인트와 <code>sheets.googleapis.com</code>을 함께 스텁하는 패턴이 이미 있다. 새 테스트 파일이 이 패턴을 그대로 확장(PUT 스텁 + 실패 시퀀스 스텁 추가)하면 된다.</li>
+      <li><code>wrangler.jsonc</code> — <code>SHEET_ID</code>는 이미 평문 vars로 설정돼 있고, 그 시트에 쓰기 권한을 가진 서비스계정 자격증명은 <code>seed-sheet.mjs</code>가 같은 scope(<code>.../auth/spreadsheets</code>)로 이미 성공적으로 썼던 바로 그 계정이라 권한 문제는 없다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ol>
+      <li><b>파일 위치</b>: <code>functions/lib/sheetsWriteApi.ts</code> (+ <code>sheetsWriteApi.test.ts</code>) — <code>sheetsApi.ts</code>와 동일 계층의 새 형제 모듈. <code>sheetsApi.ts</code>는 전혀 수정하지 않는다.</li>
+      <li><b>scope 상수</b>: <code>WRITE_SCOPE = 'https://www.googleapis.com/auth/spreadsheets'</code>. <code>import { getAccessToken, type Env } from './googleAuth'</code>로 토큰 발급 재사용, <code>export type { Env }</code>도 <code>sheetsApi.ts</code>와 동일하게 재노출(다음 이슈가 이 모듈만 import해도 <code>Env</code>를 바로 쓸 수 있게).</li>
+      <li><b>에러 재사용</b>: <code>import { SheetsApiError } from './sheetsApi'</code> — 새 에러 클래스를 만들지 않는다.</li>
+      <li><b>단일 진입점</b> <code>updateValues(env: Env, sheetId: string, range: string, values: string[][]): Promise&lt;void&gt;</code>. <code>range</code>는 호출자가 이미 조립한 A1 표기 전체 문자열(예: <code>"'2025-08-16'!B7:E7"</code>) — 탭 이름 quoting은 기존 <code>sheetsApi.ts</code>의 <code>quoteSheetName</code>을 호출자(W3)가 그대로 재사용하면 되므로 이 모듈이 다시 구현하지 않는다(읽기 래퍼의 <code>batchGetValues(env, sheetId, ranges: string[])</code>와 같은 "range는 이미 완성된 문자열" 계약).</li>
+      <li><b>요청 형태</b> (<code>scripts/seed-sheet.mjs</code> 전례 그대로): <code>PUT {SHEETS_BASE_URL}/{encodeURIComponent(sheetId)}/values/{encodeURIComponent(range)}?valueInputOption=RAW</code>, 바디 <code>{ range, majorDimension: 'ROWS', values }</code>. <code>sheetId</code>·<code>range</code> 둘 다 인코딩하는 이유는 읽기 래퍼가 이미 하는 것과 동일한 방어(특수문자가 경로를 벗어나지 못하게).</li>
+      <li><b>재시도 정책</b>: <code>RETRY_DELAYS_MS = [300, 900]</code> 같은 명시적 배열 상수로 "최대 2회 재시도"를 표현(지수적으로 벌어지는 간격, 총 대기 1.2초 이내). 배열 길이가 곧 재시도 횟수라 테스트에서 정확한 시퀀스를 검증하기 쉽고, 나중에 정책을 바꿀 때도 상수 하나만 건드리면 된다 — 이슈 문구의 "1~2회"를 "최대 2회"로 확정해서 구현한다(정확히 1회로 좁히고 싶다면 배열을 <code>[500]</code>로 바꾸기만 하면 되는 구조).
+        <div class="pre">function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500
+}
+
+export async function updateValues(env: Env, sheetId: string, range: string, values: string[][]): Promise&lt;void&gt; {
+  const accessToken = await getAccessToken(env, WRITE_SCOPE)
+  const url = `${SHEETS_BASE_URL}/${encodeURIComponent(sheetId)}/values/${encodeURIComponent(range)}?valueInputOption=RAW`
+  const body = JSON.stringify({ range, majorDimension: 'ROWS', values })
+
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body,
+    })
+    if (response.ok) return
+
+    const error = new SheetsApiError(
+      `Sheets API 쓰기 실패 (${response.status}): ${await response.text()}`,
+      response.status,
+    )
+    if (!isRetryableStatus(response.status) || attempt >= RETRY_DELAYS_MS.length) throw error
+    await sleep(RETRY_DELAYS_MS[attempt])
+  }
+}</div>
+        토큰은 루프 진입 전 1회만 발급(재시도 구간이 최대 ~1.2초라 만료 걱정 없음 — 읽기 래퍼의 <code>callSheetsApi</code>와 동일한 전제).
+      </li>
+      <li><b>지연 구현</b>: <code>sleep(ms) = new Promise(resolve =&gt; setTimeout(resolve, ms))</code>. 테스트에서 <code>vi.useFakeTimers()</code> + <code>vi.runAllTimersAsync()</code>로 실제 대기 없이 재시도 시퀀스를 즉시 진행시킨다 — 프로덕션 코드에 테스트 전용 훅(주입 가능한 delay 파라미터 등)을 추가하지 않는다.</li>
+      <li><b>기각한 대안 1</b>: <code>sheetsApi.ts</code>의 <code>callSheetsApi</code>를 확장해 메서드·재시도까지 처리 — 기각. 이슈가 "기존 sheetsApi.ts는 읽기 전용 유지"를 명시하고, 재시도는 읽기 경로엔 없는 책임이라 섞으면 읽기 헬퍼가 불필요하게 복잡해진다.</li>
+      <li><b>기각한 대안 2</b>: 클라이언트(브라우저) 쪽 재전송 — 기각. PRD §07이 "재시도는 서버(Pages Function) 안에서"로 이미 확정한 결정이라 이 이슈에서 재론하지 않는다.</li>
+      <li><b>기각한 대안 3</b>: <code>fetch</code> 자체가 던지는 네트워크 예외(타임아웃 등)까지 잡아서 재시도 — 기각. 이슈 문구가 "429·5xx 한정"으로 명시하고, 읽기 래퍼도 이런 예외를 별도 처리하지 않는 동일 선례가 있어 일관성을 위해 그대로 전파시킨다.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><code>functions/lib/sheetsWriteApi.ts</code> 신규 생성 — <code>SHEETS_BASE_URL</code>·<code>WRITE_SCOPE</code>·<code>RETRY_DELAYS_MS</code> 상수, <code>SheetsApiError</code> import, <code>isRetryableStatus</code>·<code>sleep</code> 내부 헬퍼 작성.
+        <span class="files"><code>functions/lib/sheetsWriteApi.ts</code></span>
+      </li>
+      <li class="done"><code>updateValues(env, sheetId, range, values)</code> 구현 — §3의 pseudo-code대로 토큰 발급 → PUT 요청 → 성공 시 반환, 실패 시 재시도 가능 여부 판단 → 백오프 후 루프 또는 <code>SheetsApiError</code> throw.
+        <span class="files"><code>functions/lib/sheetsWriteApi.ts</code></span>
+      </li>
+      <li class="done">단위 테스트 작성 — <code>sheetsApi.test.ts</code>의 스텁 패턴(RSA 키페어 + <code>vi.stubGlobal('fetch', ...)</code>)을 확장해 oauth2 토큰과 PUT <code>.../values/...</code> 엔드포인트를 함께 스텁하고, 실패를 순서대로 흘려주는 응답 큐를 추가. <code>vi.useFakeTimers()</code> + <code>vi.runAllTimersAsync()</code>로 재시도 대기를 즉시 진행. 커버 케이스:
+        <ul>
+          <li>정상 응답 → 1회 호출로 성공, 요청이 <code>PUT</code>·<code>valueInputOption=RAW</code> 쿼리·<code>{range, majorDimension: 'ROWS', values}</code> 바디로 나감을 검증</li>
+          <li>429 1회 → 성공: 재시도 후 정상 완료</li>
+          <li>500 2회 → 성공: 재시도 상한(2회)까지 써도 복구되면 성공</li>
+          <li>500 3회 연속: 재시도 소진 후 <code>SheetsApiError</code>(status 500)로 실패, fetch가 정확히 3회(초기 1 + 재시도 2) 호출됐는지 카운트 검증</li>
+          <li>400 같은 4xx: 재시도 없이 즉시 <code>SheetsApiError</code>, fetch가 정확히 1회만 호출됨</li>
+          <li>쓰기 scope 토큰이 읽기 scope와 별도로 발급됨(oauth2 요청의 <code>assertion</code> JWT를 디코드해 <code>scope</code> 클레임이 <code>WRITE_SCOPE</code>인지 확인)</li>
+          <li><code>sheetId</code>·<code>range</code>에 경로 구분자 등 특수문자가 있어도 <code>encodeURIComponent</code>로 안전하게 인코딩됨(읽기 래퍼의 동일 테스트 패턴)</li>
+        </ul>
+        <span class="note">구현 노트: 계획은 7개 케이스를 별도 <code>it()</code>로 나열했지만, "정상 응답" 케이스와 "쓰기 scope 검증" 케이스를 하나로 합쳐 6개 <code>it()</code>로 구현했다 — scope는 고정 상수라 파일 내 모든 테스트가 googleAuth의 모듈 전역 <code>tokenCache</code>를 공유하고, 첫 테스트 이후로는 캐시 히트라 토큰이 재발급되지 않는다. JWT <code>scope</code> 클레임을 안정적으로 검증하려면 캐시가 비어 있는 파일의 "첫 테스트"에서만 가능해, 별도 테스트로 분리하면 실행 순서에 암묵적으로 의존하게 된다. 커버리지는 7개 항목 그대로 유지된다. 또한 fake timers 사용 시 <code>expect(promise).rejects...</code>를 <code>vi.runAllTimersAsync()</code> 이전에 먼저 attach해야 unhandled rejection 경고가 나지 않는다는 점을 재시도-소진 테스트에서 확인·반영했다.</span>
+        <span class="files"><code>functions/lib/sheetsWriteApi.test.ts</code></span>
+      </li>
+      <li class="done"><code>npm run typecheck</code> · <code>npm test</code> 전체 통과 확인. 실제 시트에 대한 라이브 쓰기 스모크 테스트는 이 이슈에서 하지 않는다(§5 리스크 참고) — 유닛 테스트(fetch 모킹)만으로 동작을 검증한다.
+        <span class="note">결과: <code>npm run typecheck</code> 통과(에러 0). <code>npm test</code> 전체 20개 파일 · 255개 테스트 전부 통과(신규 6개 포함), 회귀 없음.</span>
+        <span class="files">(검증만)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>실제 시트에 대한 라이브 쓰기 확인은 팀 실데이터(회차 점수)를 덮어쓸 수 있어 파괴적</td><td>잘못 실행하면 실제 기록이 훼손될 수 있음</td><td>이 이슈는 유닛 테스트(fetch 모킹)로만 검증하고 라이브 쓰기 확인을 하지 않는다. 실제 API 왕복 확인은 행 찾기·검증까지 갖춰진 W3(<code>POST /api/admin/records</code>) 통합 시점, 필요하면 그때 디스포저블 시트 사본으로</td></tr>
+        <tr><td>백오프 파라미터(<code>[300, 900]</code>ms, 최대 2회)는 이슈 문구 "1~2회"에 대한 이 계획의 해석 — PRD가 정확한 숫자를 못박지 않음</td><td>실제 운영에서 기대와 다른 재시도 횟수/타이밍일 수 있음</td><td>상수 하나(<code>RETRY_DELAYS_MS</code>)로 정의해 리뷰에서 바로 조정 가능하게 설계. 계획 승인 시 이 숫자에 이견이 있으면 지금 조정</td></tr>
+        <tr><td><code>fetch</code> 자체의 네트워크 예외(타임아웃 등)는 429/5xx 재시도 대상 밖</td><td>일시적 네트워크 문제도 재시도 없이 즉시 실패로 전파</td><td>이슈 문구가 "429·5xx 한정"으로 명시하고 읽기 래퍼도 동일 — 의도된 범위. 필요해지면 별도 이슈</td></tr>
+        <tr><td>재시도가 "행 전체 교체라 멱등"이라는 PRD 전제에 의존</td><td>호출자가 부분 업데이트 용도로 이 함수를 오용하면 재시도가 더 이상 안전하지 않음</td><td>이 모듈 자체는 <code>range</code>/<code>values</code>를 그대로 전달만 할 뿐이고, "행 전체 교체로만 쓸 것"은 다음 이슈(W3)가 지켜야 할 호출 계약 — 함수 설계 의도를 §3 주석과 이 문서에 명시</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test -- functions/lib/sheetsWriteApi.test.ts</code> — 신규 유닛 테스트 전체 통과 (정상 쓰기 · 429/5xx 재시도 후 성공 · 재시도 소진 후 실패 · 4xx 즉시 실패 · 쓰기 scope 분리 · URL 인코딩).</li>
+      <li><code>npm test</code> (전체) — 기존 <code>sheetsApi.test.ts</code>·<code>googleAuth.test.ts</code> 등 회귀 없음 확인 (이 모듈은 기존 파일을 수정하지 않으므로 회귀 위험은 낮지만 전체 스위트로 확인).</li>
+      <li><code>npm run typecheck</code> — 기존 tsconfig(functions) 기준 타입 통과.</li>
+      <li>라이브 시트 쓰기 확인은 이 이슈 범위에서 의도적으로 제외(§5) — 유닛 테스트로만 완료 조건을 충족한다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>RAW 쓰기 계약 — <code>valueInputOption=RAW</code>가 모든 요청에 고정돼 <code>1:15</code> 같은 문자열이 시각으로 자동 변환되지 않음(테스트로 쿼리 파라미터 검증).</li>
+      <li>429/5xx는 짧은 백오프 후 최대 2회까지 자동 재시도, 소진 시 <code>SheetsApiError</code>(status 포함)로 실패 전파. 4xx는 재시도 없이 즉시 <code>SheetsApiError</code>.</li>
+      <li>테스트(vitest) — <code>functions/lib/sheetsWriteApi.test.ts</code>가 §4의 커버 케이스를 모두 포함해 통과.</li>
+      <li><code>functions/lib/sheetsApi.ts</code>는 한 글자도 수정되지 않음 — 읽기 전용 유지.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/63">#63</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
