@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#60 선행 — 회차 파서 이름-매칭 정합화 (참가자만 포맷) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/60">#60</a></span><span class="type-chip">설계 정합화</span>
+    <h1>선행 — 회차 파서 이름-매칭 정합화 (참가자만 포맷)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/60-session-parser-name-matching</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-17</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>functions/lib/parse-session.ts</code>는 아직도 "회차 탭 데이터 행 N = 버니스명단 행 위치 N+1"이라는 전원-미러링 가정으로 <code>playerId</code>를 도출한다. 그런데 실제 2025-05-16 회차 탭은 참가자 6명만 가나다순으로 손으로 입력돼 있고, PRD(<code>docs/prd-record-input.html</code> §03①)도 이 파서 정합화를 기록 입력 기능 전체의 필수 선행 작업으로 못박아 뒀다. 이 작업은 파서를 "이름 셀 텍스트 → 버니스명단 이름 매칭 → playerId" 방식으로 다시 짜고, 미등록 이름·동명이인을 fail-loud로 막고, 관련 문서의 "전원 미러링" 서술을 걷어낸다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><b>현재 파서의 위치 기반 도출</b> — <code>parse-session.ts:63</code> <code>const playerId = index + 1</code>이 회차 탭의 데이터 행 순서를 그대로 버니스명단 행 위치로 취급한다. 이름 셀은 <code>parse-session.ts:79-85</code>에서 이 <code>playerId</code>로 조회한 <code>player.name</code>과 일치하는지 확인하는 <b>2차 검증</b>으로만 쓰이고, 불일치하면 "명단 행 순서가 어긋났을 수 있습니다"라는 메시지로 Error를 던진다 — 참가자만·순서 무관 탭에서는 애초에 이 가정 자체가 성립하지 않는다.</p>
+    <p><b>명단 쪽 id 체계는 그대로 둔다</b> — <code>functions/lib/roster.ts:67</code>에서 <code>Player.id</code>는 버니스명단의 원본 행 위치(빈 행·이상값 행을 스킵해도 뒤 id를 당기지 않는 sparse 배열)로 이미 확정돼 있다. 이 이슈는 <b>회차 탭 쪽</b>의 매칭 방식만 바꾼다 — 명단 파서(#25)·<code>Player.id</code> 정의는 손대지 않는다.</p>
+    <p><b>호출 경로</b> — <code>functions/lib/build-records-response.ts:47-53</code>에서 <code>parseRoster</code>가 만든 <code>players[]</code>(활동·탈퇴·비대상·휴식 전부 포함, 탈퇴 필터링 이전)가 그대로 <code>parseSession</code>에 넘어간다. 탈퇴 필터링은 <code>excludeWithdrawn</code>으로 파서 이후에 한 번만 하므로, 파서 자체는 여전히 <b>모든 상태의 선수 이름</b>을 매칭 대상으로 봐야 한다(과거 회차에 탈퇴자 기록이 남아 있을 수 있음) — 이 부분은 바꿀 필요 없다.</p>
+    <p><b>하류 소비자의 암묵적 전제</b> — <code>functions/lib/player-summary.ts:37</code> <code>session.entries.find(candidate => candidate.playerId === player.id)</code>는 한 세션 안에 같은 <code>playerId</code>가 <b>두 번 나타나지 않는다</b>고 전제하고 첫 매치만 쓴다. 지금까지는 <code>playerId = index + 1</code>이라 세션 내 유일성이 자동으로 보장됐지만, 이름 매칭으로 바꾸면 같은 이름이 실수로 두 행에 입력되는 경우 이 유일성이 더 이상 자동으로 보장되지 않는다.</p>
+    <p><b>문서 불일치</b> — <code>docs/sheet-integration.html:136-142</code>는 2025-05-16 탭 예시를 "명단 전원 미러링, 참여자만 점수 입력"이라고 서술하고, 미참여자(선수7)도 빈 점수로 행이 존재하는 것으로 그린다. 같은 파일 <code>:107</code> 결정 표 8번 항목도 "회차는 이름 참조 수식"이라고 못박는다. 둘 다 이슈가 지적하는 실제 운영(참가자만, 가나다순, 수기 입력)과 모순된다. <code>docs/prd-record-input.html:146-155</code>가 이 정합화를 P5 이전 필수 선행 작업으로 명시한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>채택안 — 이름 텍스트 매칭.</b> <code>players[]</code>로부터 <code>Map&lt;정규화된 이름, Player[]&gt;</code>를 만들고, 각 데이터 행의 이름 셀(trim + NFC 정규화)로 이 맵을 조회해 <code>playerId</code>를 도출한다.</p>
+    <ul>
+      <li>매칭 0건 → <code>"회차 탭 N행 이름(...)이 명단에 없습니다"</code> Error (오타·미등록).</li>
+      <li>매칭 2건 이상(명단 내 동명이인, <code>sheet-rules.html</code> §03이 이름 구분을 권장하지만 강제하진 않음) → <code>"...동명이인으로 N명 있어 특정할 수 없습니다"</code> Error.</li>
+      <li>매칭 1건 → 그 <code>Player.id</code>를 <code>playerId</code>로 사용.</li>
+    </ul>
+    <p><b>추가 안전장치 — 탭 내 중복 검사.</b> 위치 기반 도출 시절엔 <code>playerId</code>가 세션 내에서 자동으로 유일했지만, 이름 매칭으로는 같은 이름이 실수로 두 행에 입력되는 경우가 새로 가능해진다. 이미 골라잡은 <code>player.id</code>를 <code>Set</code>으로 추적해, 같은 회차 탭 안에서 두 번째로 같은 사람이 나오면 즉시 Error를 던진다. 이슈의 완료 조건에 문구로 명시돼 있진 않지만, 현황 분석의 <code>player-summary.ts:37</code> <code>.find()</code>가 조용히 첫 매치만 쓰는 실제 위험을 막기 위한, 기존 fail-loud 원칙의 자연스러운 연장이다.</p>
+    <p><b>기각한 대안 1 — 회차 탭에 별도 id 열 추가.</b> 명시적이지만 시트 스키마 변경이 필요하고(<code>sheet-rules.html</code> §01 "헤더·컬럼 순서 고정" 규칙과 충돌), 사람이 관리해야 할 값이 하나 늘어난다 — 애초에 "선수 식별은 참조 구조, id 없음"이 확정 결정(<code>sheet-integration.html</code> §01)이라 그 결정 자체를 뒤집는 셈이라 기각.</p>
+    <p><b>기각한 대안 2 — 위치 기반 유지 + "앞에서부터 채움" 가정 추가.</b> 참가자만 앞에서부터 순서대로 채운다면 여전히 위치로 풀 수 있다는 발상이지만, 이슈가 지적하는 실제 데이터는 <b>가나다순</b>이라 명단 순서(가입순)와 애초에 무관하다 — 위치 기반으로는 원천적으로 풀리지 않아 기각.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li><s>파서 재작성: <code>players[]</code>로 <code>Map&lt;NFC 정규화 이름, Player[]&gt;</code>를 만들고, 데이터 행마다 이 맵으로 <code>playerId</code>를 조회하도록 <code>parseSession</code> 로직을 바꾼다. 매칭 0건/2건 이상/탭 내 중복 각각 전용 메시지로 Error. 기존 "명단에 없는 위치를 참조합니다(playerId=N)" 에러와 위치 기반 무결성 검증 분기는 제거한다. 파일 상단 주석(1~27행, "행 위치가 1차 키" 설명)도 이름 매칭 기준으로 다시 쓴다.</s>
+        <span class="files"><code>functions/lib/parse-session.ts</code> — 완료</span>
+      </li>
+      <li><s>기존 테스트 정리: "이름 셀이 명단과 일치하지 않으면"과 "명단에 없는 위치를 참조하면"을 "미등록 이름 → Error" 한 케이스로 통합하고, "결번 위치를 참조하는 행"(위치 기반 전용 시나리오라 이름 매칭 하에서는 성립 자체가 안 됨)은 제거한다. "결번 위치의 빈 행 스킵"은 이름 매칭으로도 여전히 유효한 회귀 케이스라 유지하되 설명 문구만 다듬는다.</s>
+        <span class="files"><code>functions/lib/parse-session.test.ts</code> — 완료</span>
+      </li>
+      <li><s>신규 테스트 추가: (a) 참가자만·명단 순서와 무관한 나열(명단은 가입순 4명, 회차는 그중 3명만 가나다순)이 정상 파싱되는 케이스, (b) 명단에 없는 이름 → Error, (c) 명단 내 동명이인 → Error, (d) 같은 회차 탭에 같은 사람이 두 행으로 나타남 → Error.</s>
+        <span class="files"><code>functions/lib/parse-session.test.ts</code> — 완료 (27개 테스트 그린)</span>
+      </li>
+      <li><s>통합 테스트 추가: 실제 2025-05-16 형태(명단 5명 가입순, 회차엔 4명만 가나다순·명단 순서와 다르게 등장)를 흉내 낸 픽스처로 <code>buildRecordsResponse</code>가 에러 없이 정상 조립되고 <code>sessions[0].entries</code>가 올바른 <code>playerId</code>로 매핑됨을 검증한다 — 완료 조건의 "실제 탭 형태로 /api/records 정상 응답"에 대응.</s>
+        <span class="files"><code>functions/lib/build-records-response.test.ts</code> — 완료</span>
+      </li>
+      <li><s>문서 갱신 — <code>sheet-integration.html</code>: §01 결정 표 8번 행의 "회차는 이름 참조 수식" 문구를 "회차는 이름 텍스트 매칭"으로 완화하고, §02 회차 탭 절의 부제("명단 전원 미러링, 참여자만 점수 입력")와 예시를 "참가자만 입력, 이름 매칭" + 명단 순서와 다른 나열로 교체한다. "이름 칸은 참조 수식, 직접 타이핑 X" 콜아웃도 실제 운영(수기 입력 확인됨)에 맞게 완화한다.</s>
+        <span class="files"><code>docs/sheet-integration.html</code> — 완료 (§01 표 8번 행, §02 회차 탭 절, §03 "선수 식별 & 명단 변화"의 개명 전파 서술도 함께 정합화 — 계획에 없던 추가 수정)</span>
+      </li>
+      <li><s>문서 갱신 — <code>sheet-rules.html</code>: §01 "이름·종목명 칸은 참조 수식" 규칙 중 <b>이름 칸</b>에 한해 참조 수식·직접 입력 모두 허용(텍스트가 명단과 일치해야 한다는 전제는 유지)으로 완화한다. §02 "새 회차 추가" 절의 "미참여자는 점수만 비운다(행 삭제 X)" 서술을 "참가자만 행에 남기고 미참여자 행은 만들지 않는다"로 갱신한다. 이 절이 설명하는 수동 편집 절차 자체의 전면 개편은 P5 <code>create-sheet</code> 몫이므로, 여기서는 이번 정합화와 직접 모순되는 문구만 최소 수정한다.</s>
+        <span class="files"><code>docs/sheet-rules.html</code> — 완료 (§05 "현재 시트 구조" 참고 다이어그램도 함께 정합화 — 계획에 없던 추가 수정)</span>
+      </li>
+      <li><s>검증: <code>npm test</code>(vitest 전체)와 <code>npm run typecheck</code>(tsc -b)가 모두 그린인지 확인한다.</s>
+        <span class="files">완료 — vitest 19개 파일 251개 테스트 전체 통과, tsc -b 타입 에러 없음</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>실제 명단에 동명이인이 등록돼 있는 상태에서 여러 회차가 이미 쌓여있는 경우</td><td>배포 즉시 그 이름이 나오는 모든 회차 파싱이 Error로 막힘(fail-loud라 의도된 동작이지만 즉시 영향)</td><td>배포 전 버니스명단(현재 21명 규모)에 동명이인이 있는지 한 번 수동 확인, 있다면 <code>sheet-rules.html</code> §03 안내대로 이름 구분(예: 선수5, 선수5B)</td></tr>
+        <tr><td>회차 탭 이름 셀에 미세한 오타(트레일링 공백 외의 실제 철자 차이)</td><td>그 참가자가 "명단에 없음" Error로 회차 전체 파싱이 막힘</td><td>에러 메시지에 원본 셀 값을 그대로 포함해 관리자가 시트에서 바로 찾아 고칠 수 있게 함(기존 관례 유지)</td></tr>
+        <tr><td><code>scripts/seed-sheet.mjs</code>는 여전히 "명단 전원 미러링" 포맷으로 새 회차를 생성함(코드 상 <code>scripts/seed-sheet.mjs:142</code>)</td><td>낮음 — 새 파서는 이름만 일치하면 전원 미러링 포맷도 참가자만 포맷도 동일하게 파싱하는 상위 호환</td><td>이번 이슈 범위 밖으로 남겨둠. P5 <code>create-sheet</code>가 참가자만 생성 방식으로 자연히 대체할 예정</td></tr>
+        <tr><td>탭 내 중복 이름 검사는 이슈 완료 조건 문구에 명시되지 않은 추가 안전장치(설계 §3 참고)</td><td>없음 — 오히려 <code>player-summary.ts</code>의 잠재적 조용한 오류를 막음</td><td>계획 단계에서 근거를 명시했으니 리뷰 시 범위 동의 여부만 확인</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run functions/lib/parse-session.test.ts</code> — 기존 케이스(면제·미측정·헤더 순서 무관 매칭·빈 트레일링 행 스킵 등) 회귀 없음 + 신규 이름-매칭 케이스(순서 무관 참가자만·미등록 이름·동명이인·탭 내 중복) 통과.</li>
+      <li><code>npx vitest run functions/lib/build-records-response.test.ts</code> — 실제 2025-05-16 형태(참가자 일부·명단 순서와 다름) 통합 케이스 통과, 기존 탈퇴 필터링·랭킹 집계 케이스 회귀 없음.</li>
+      <li><code>npm test</code> — 전체 vitest 스위트(roster·compute-rankings·player-summary·compute-home-summary·records API 등) 회귀 없음 확인.</li>
+      <li><code>npm run typecheck</code> — <code>parse-session.ts</code> 재작성 후 타입 에러 없음.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <p class="muted" style="font-size:13px; margin-bottom:10px;">✅ 모두 충족 — 구현 완료 (vitest 251개 전체 통과, tsc -b 클린)</p>
+    <ul class="done-list">
+      <li><s>참가자만·순서 무관 탭이 정상 파싱된다 (기존 테스트 갱신 + 신규 케이스로 검증).</s></li>
+      <li><s>명단에 없는 이름 / 명단 내 동명이인은 fail-loud 원칙대로 Error로 처리된다.</s></li>
+      <li><s>실제 2025-05-16 탭 형태(참가자 일부·명단 순서와 다른 나열)로 <code>buildRecordsResponse</code>(<code>/api/records</code> 경로)가 정상 응답한다.</s></li>
+      <li><s><code>docs/sheet-integration.html</code> §01·§02와 <code>docs/sheet-rules.html</code> §01·§02가 "참가자만·이름 매칭" 포맷에 맞게 갱신된다.</s></li>
+      <li><s><code>npm test</code> 전체 통과 + <code>npm run typecheck</code> 통과.</s></li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/60">#60</a> · 2026-07-17</footer>
+</main>
+</body>
+</html>
