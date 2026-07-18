@@ -16,6 +16,11 @@
 // 있을 수 있지만(functions/lib/roster.ts), 이름 매칭은 배열 인덱스가 아니라 이름→Player
 // 맵으로 조회하므로 결번 자체가 이 파서에 영향을 주지 않는다.
 //
+// 이름→Player 맵(buildPlayersByName)은 호출부에서 한 번만 만들어 parseSession에 넘긴다 —
+// build-records-response.ts는 같은 players[]로 회차 탭을 여러 번(bundle.rounds 개수만큼)
+// 파싱하는데, 맵을 parseSession 내부에서 매번 재생성하면 그만큼 정규화·삽입 비용이
+// 반복된다. players[]는 그 요청 안에서 절대 바뀌지 않으므로 맵도 한 번만 만들면 된다.
+//
 // 탭 내 중복 검사: 위치 기반 도출 시절엔 playerId가 세션 안에서 자동으로 유일했지만,
 // 이름 매칭에서는 같은 사람이 실수로 두 행에 입력될 수 있다. player-summary.ts의
 // session.entries.find(...)가 첫 매치만 쓰고 조용히 무시하는 위험이 있어, 같은 playerId가
@@ -43,7 +48,7 @@ interface EventColumn {
 export function parseSession(
   tabName: string,
   rows: string[][],
-  players: Player[],
+  playersByName: Map<string, Player[]>,
   events: EventDefinition[],
 ): Session {
   if (rows.length === 0) {
@@ -52,7 +57,6 @@ export function parseSession(
 
   const eventColumns = mapHeaderToEvents(rows[0], events)
   const dataRows = rows.slice(1)
-  const playersByName = buildPlayersByName(players)
 
   const entries: SessionEntry[] = []
   const seenPlayerIds = new Set<number>()
@@ -103,7 +107,7 @@ export function parseSession(
   return { date: tabName, entries }
 }
 
-function buildPlayersByName(players: Player[]): Map<string, Player[]> {
+export function buildPlayersByName(players: Player[]): Map<string, Player[]> {
   const byName = new Map<string, Player[]>()
   for (const player of players) {
     const key = player.name.normalize('NFC')
