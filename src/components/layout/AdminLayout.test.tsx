@@ -37,4 +37,12 @@ describe('AdminLayout', () => {
 
     expect(screen.getByText('홈 스텁')).toBeInTheDocument()
   })
+
+  it('앱 내 이전 히스토리가 없으면(직접 링크 진입) 뒤로가기 대신 홈으로 이동한다', () => {
+    renderApp(['/admin'], 0)
+
+    fireEvent.click(screen.getByRole('button', { name: /뒤로/ }))
+
+    expect(screen.getByText('홈 스텁')).toBeInTheDocument()
+  })
 })
