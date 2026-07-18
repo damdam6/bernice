@@ -1,32 +1,52 @@
 @import 'tailwindcss';
+@import 'pretendard/dist/web/variable/pretendardvariable.css';
 
-/* 디자인 토큰 — 농구 오렌지 테마
-   근거 색: 시트 헤더 #E8623A(scripts/seed-sheet.mjs) · 설계 문서 액센트 #FF7A45 */
+/* 디자인 토큰 — 인디고 라이트 테마 + Pretendard
+   2026-07-17 모바일 디자인 개편으로 "농구 오렌지" 테마 폐기 (근거: docs/prd-design.html §03) */
 @theme {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI',
-    'Noto Sans KR', sans-serif;
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Segoe UI', 'Noto Sans KR', sans-serif;
 
-  /* 프라이머리: 농구 오렌지 스케일 */
-  --color-brand-50: #fff6f1;
-  --color-brand-100: #ffe9dd;
-  --color-brand-200: #ffd3bd;
-  --color-brand-300: #ffb495;
-  --color-brand-400: #ff9469;
-  --color-brand-500: #ff7a45;
-  --color-brand-600: #e8623a;
-  --color-brand-700: #c04e2e;
-  --color-brand-800: #9a3f26;
-  --color-brand-900: #7c3521;
-  --color-brand-950: #431a0f;
+  /* 프라이머리 — 인디고 */
+  --color-primary: #3f51b5;
+  --color-primary-strong: #283593;
+  --color-primary-tint: #e8eaf6;
+  --color-primary-soft: #c5cae9;
 
-  /* 보조 블루 (링크·차트 대비색) */
-  --color-accent-400: #74aaff;
-  --color-accent-500: #4a90ff;
-  --color-accent-600: #3671d9;
+  /* 표면 */
+  --color-canvas: #f4f5f7;
+  --color-surface: #ffffff;
+  --color-line: #edeef2;
 
-  /* 시맨틱 (목표 달성 뱃지 등) */
-  --color-good: #35c07a;
-  --color-warn: #f5b800;
-  --color-bad: #ff5c5c;
+  /* 텍스트 */
+  --color-ink: #141821;
+  --color-ink-sub: #8b909c;
+  --color-ink-muted: #b0b5bf;
+
+  /* 시맨틱 */
+  --color-good: #3f9e6b;
+  --color-good-tint: #e7f4ec;
+  --color-good-strong: #2f7a52;
+  --color-bad: #c25151;
+  --color-bad-tint: #f9e7e7;
+  --color-bad-strong: #c25151;
+  --color-warn-tint: #fbf1d7;
+  --color-warn-strong: #8a6d1e;
+  --color-neutral-tint: #f0f1f4;
+  --color-neutral-strong: #9096a2;
+
+  /* 차트 */
+  --color-chart-grid: #e7e9ee;
+  --color-gauge-track: #eef0f4;
+  --color-series-1: #1a237e;
+  --color-series-2: #3f51b5;
+  --color-series-3: #3949ab;
+  --color-series-4: #5c6bc0;
+  --color-series-5: #7986cb;
+  --color-series-6: #536dfe;
+
+  /* radius */
+  --radius-card: 18px;
+  --radius-badge: 7px;
 }

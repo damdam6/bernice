@@ -33,7 +33,7 @@ function findTiedRanks(entries: RankingTableRow[]): Set<number> {
 export default function RankingTable({ entries, direction }: RankingTableProps) {
   if (entries.length === 0) {
     return (
-      <p className="rounded-xl border border-brand-200 bg-brand-50 p-6 text-center text-sm text-brand-700">
+      <p className="rounded-xl border border-line bg-canvas p-6 text-center text-sm text-ink-sub">
         표시할 기록이 없습니다.
       </p>
     )
@@ -44,34 +44,34 @@ export default function RankingTable({ entries, direction }: RankingTableProps) 
   return (
     <table className="w-full border-collapse text-sm">
       <thead>
-        <tr className="border-b border-brand-200 text-left text-brand-600">
+        <tr className="border-b border-line text-left text-ink-sub">
           <th className="py-2 pr-3 font-semibold">순위</th>
           <th className="py-2 pr-3 font-semibold">이름</th>
           <th className="py-2 pr-3 font-semibold">
-            기록 <span className="ml-1 font-normal text-brand-500">{DIRECTION_LABEL[direction]}</span>
+            기록 <span className="ml-1 font-normal text-ink-sub">{DIRECTION_LABEL[direction]}</span>
           </th>
           <th className="py-2 font-semibold">달성</th>
         </tr>
       </thead>
       <tbody>
         {entries.map((entry) => (
-          <tr key={entry.playerId} className="border-b border-brand-100 last:border-none">
+          <tr key={entry.playerId} className="border-b border-line last:border-none">
             <td className="py-2 pr-3">
               {entry.status === 'recorded' ? (
                 tiedRanks.has(entry.rank) ? `공동 ${entry.rank}위` : `${entry.rank}위`
               ) : (
-                <span className="text-brand-400">{ROW_STATUS_LABEL[entry.status]}</span>
+                <span className="text-ink-muted">{ROW_STATUS_LABEL[entry.status]}</span>
               )}
             </td>
-            <td className="py-2 pr-3 font-medium text-brand-900">{entry.name}</td>
+            <td className="py-2 pr-3 font-medium text-ink">{entry.name}</td>
             <td className="py-2 pr-3 tabular-nums">{entry.status === 'recorded' ? entry.display : '–'}</td>
             <td className="py-2">
               {entry.status === 'recorded' && entry.achieved ? (
-                <span className="inline-flex items-center rounded-full bg-good/15 px-2 py-0.5 text-xs font-semibold text-good">
+                <span className="inline-flex items-center rounded-badge bg-good-tint px-2 py-0.5 text-[11px] font-bold text-good-strong">
                   달성
                 </span>
               ) : (
-                <span className="text-brand-300">–</span>
+                <span className="text-ink-muted">–</span>
               )}
             </td>
           </tr>
