@@ -2,20 +2,29 @@
 // 스키마 근거: docs/sheet-integration.html §02, 편집 규칙: docs/sheet-rules.html §01.
 // 값 정규화는 normalize-score.ts(이슈 #6 → #20)를 그대로 재사용한다.
 //
-// 선수 식별 — 행 위치가 1차 키, 이름은 무결성 검증:
-// 회차 탭 데이터 행 N(1부터, 헤더 제외)은 항상 '버니스명단'!A(N+1)을 참조하는 수식이라
-// (전원 미러링 + append-only 규칙, docs/sheet-rules.html §01), playerId = N을 행 위치로
-// 직접 도출한다 — Player.id(shared/domain.ts, "행 위치 기반 파생값")와 같은 축이다.
-// 이름 셀은 그 수식이 실제로 명단과 일치하는지 확인하는 2차 검증으로만 쓴다. 불일치는
-// 명단 행 삭제·재배치 같은 편집 규칙 위반이 실제로 일어났다는 뜻이라 조용히 넘기지
+// 선수 식별 — 이름 텍스트 매칭 (이슈 #60):
+// 회차 탭은 "참가자만, 이름 매칭" 포맷이다 — 참가자만 행이 존재하고(비참여자는 행 자체가
+// 없음), 행 순서는 명단 행 위치와 무관하다(예: 가나다순 수기 입력). 그래서 행 위치로
+// playerId를 도출할 수 없다 — 각 행의 이름 셀(NFC 정규화)을 버니스명단 이름과 매칭해
+// playerId를 찾는다. 명단에 없는 이름·명단 내 동명이인(두 명 이상 매칭)은 조용히 넘기지
 // 않고 Error를 던진다 — 잘못 매칭된 점수가 다른 사람 기록으로 섞이는 것보다, 새로고침
 // 시 에러로 드러나 관리자가 시트를 고치는 편이 안전하다.
 //
-// players[]는 배열 인덱스가 아니라 id로 조회한다: 명단 파서(#25)는 이름 없음·알 수 없는
-// 상태값 같은 행을 issues로 빼고 players에서 제외하되 id는 원본 행 위치로 고정하므로
-// (functions/lib/roster.ts), players 배열은 간극이 있을 수 있다(id 1,3만 있고 2는 없는
-// 식). 배열 인덱스로 접근하면(players[index]) 그 간극만큼 뒤의 모든 행이 엉뚱한 선수와
-// 매칭된다 — 반드시 Map<id, Player>로 조회해야 한다.
+// players[]는 여전히 모든 상태(활동/탈퇴/비대상/휴식)를 포함한 채로 받는다 — 과거 회차엔
+// 지금은 탈퇴한 선수의 기록도 남아있을 수 있어서다(탈퇴 필터링은 build-records-response.ts
+// 가 파서 이후에 한 번만 한다). id는 명단 파서(#25)가 원본 행 위치로 고정하므로 결번이
+// 있을 수 있지만(functions/lib/roster.ts), 이름 매칭은 배열 인덱스가 아니라 이름→Player
+// 맵으로 조회하므로 결번 자체가 이 파서에 영향을 주지 않는다.
+//
+// 이름→Player 맵(buildPlayersByName)은 호출부에서 한 번만 만들어 parseSession에 넘긴다 —
+// build-records-response.ts는 같은 players[]로 회차 탭을 여러 번(bundle.rounds 개수만큼)
+// 파싱하는데, 맵을 parseSession 내부에서 매번 재생성하면 그만큼 정규화·삽입 비용이
+// 반복된다. players[]는 그 요청 안에서 절대 바뀌지 않으므로 맵도 한 번만 만들면 된다.
+//
+// 탭 내 중복 검사: 위치 기반 도출 시절엔 playerId가 세션 안에서 자동으로 유일했지만,
+// 이름 매칭에서는 같은 사람이 실수로 두 행에 입력될 수 있다. player-summary.ts의
+// session.entries.find(...)가 첫 매치만 쓰고 조용히 무시하는 위험이 있어, 같은 playerId가
+// 한 회차 탭에 두 번 나오면 이 파서가 즉시 Error를 던진다.
 //
 // valueKind 교차검증: docs/records-schema.html §03이 "조립 단계(파서/엔드포인트)의 책임"
 // 이라고만 적어둔 검증(예: 개수 종목 셀에 1:15 입력)을 이 파서가 흡수한다 — 이미 events[]
@@ -24,7 +33,7 @@
 //
 // 상태(탈퇴 등) 필터링은 이 파서의 책임이 아니다: 활동/비대상·휴식/탈퇴별로 하류
 // 소비자(#28 랭킹은 활동만, #29 추이는 비대상·휴식도 포함)마다 포함 규칙이 달라, 여기서
-// 미리 걸러내면 그 정보를 복원할 수 없다. players[]는 오직 이름 무결성 검증에만 쓴다.
+// 미리 걸러내면 그 정보를 복원할 수 없다.
 
 import type { EventDefinition, EventScore, Session, SessionEntry, Player } from '../../shared/domain'
 import { normalizeScore } from './normalize-score'
@@ -39,7 +48,7 @@ interface EventColumn {
 export function parseSession(
   tabName: string,
   rows: string[][],
-  players: Player[],
+  playersByName: Map<string, Player[]>,
   events: EventDefinition[],
 ): Session {
   if (rows.length === 0) {
@@ -48,41 +57,42 @@ export function parseSession(
 
   const eventColumns = mapHeaderToEvents(rows[0], events)
   const dataRows = rows.slice(1)
-  const playersById = new Map(players.map((player) => [player.id, player]))
 
-  // 행 수가 players.length를 넘는지는 여기서 일괄 검사하지 않는다 — 초과분이 완전히 빈
-  // 트레일링 행(범위 조회 아티팩트)이면 아래 루프에서 스킵되는 게 맞고, 실제로 명단에
-  // 없는 위치를 참조하는 행이어야만 아래 !player 체크에서 걸린다.
   const entries: SessionEntry[] = []
+  const seenPlayerIds = new Set<number>()
   dataRows.forEach((row, index) => {
+    const rowNumber = index + 2 // 헤더 제외 시트 행 번호
     const nameCell = (row[0] ?? '').trim()
     const restCells = row.slice(1)
     const isFullyBlank = nameCell === '' && restCells.every((cell) => (cell ?? '').trim() === '')
     if (isFullyBlank) return // Sheets 범위 조회가 실제 데이터보다 더 가져온 경우의 트레일링 아티팩트로 취급
 
-    const playerId = index + 1
-
     if (nameCell === '') {
       // restCells 중 하나라도 채워져 있어 isFullyBlank는 아니지만 이름만 없는 경우 — 이름
-      // 무결성 검증(아래)에 맡기면 "명단과 불일치"로 오진된다. 실제로는 이름 참조 수식이
-      // 깨졌거나 지워졌다는 뜻이라 별도 메시지로 정확히 알린다.
-      throw new Error(
-        `회차 탭 ${index + 2}행 이름 셀이 비어 있는데 점수가 입력돼 있습니다 (playerId=${playerId}) — 이름 참조 수식이 깨졌을 수 있습니다`,
-      )
-    }
-
-    const player = playersById.get(playerId)
-    if (!player) {
-      throw new Error(`회차 탭 ${index + 2}행이 명단에 없는 위치를 참조합니다 (playerId=${playerId})`)
+      // 매칭(아래)에 맡기면 "명단에 없음"으로 오진된다. 실제로는 이름 참조 수식이나 수기
+      // 입력이 깨졌거나 지워졌다는 뜻이라 별도 메시지로 정확히 알린다.
+      throw new Error(`회차 탭 ${rowNumber}행 이름 셀이 비어 있는데 점수가 입력돼 있습니다 — 이름 입력이 빠졌을 수 있습니다`)
     }
 
     const normalizedNameCell = nameCell.normalize('NFC')
-    const normalizedPlayerName = player.name.normalize('NFC')
-    if (normalizedNameCell !== normalizedPlayerName) {
+    const matches = playersByName.get(normalizedNameCell) ?? []
+
+    if (matches.length === 0) {
       throw new Error(
-        `회차 탭 ${index + 2}행 이름("${nameCell}")이 명단 ${playerId}번("${player.name}")과 일치하지 않습니다 — 명단 행 순서가 어긋났을 수 있습니다`,
+        `회차 탭 ${rowNumber}행 이름("${nameCell}")이 명단에 없습니다 — 오타이거나 버니스명단에 등록되지 않았을 수 있습니다`,
       )
     }
+    if (matches.length > 1) {
+      throw new Error(
+        `회차 탭 ${rowNumber}행 이름("${nameCell}")이 명단에 동명이인으로 ${matches.length}명 있어 특정할 수 없습니다 — 버니스명단에서 이름을 구분해 주세요(예: 선수5, 선수5B)`,
+      )
+    }
+
+    const player = matches[0]
+    if (seenPlayerIds.has(player.id)) {
+      throw new Error(`회차 탭 ${rowNumber}행 이름("${nameCell}")이 같은 탭에 중복으로 나타납니다 — 같은 사람이 두 번 입력됐을 수 있습니다`)
+    }
+    seenPlayerIds.add(player.id)
 
     const scores: Record<string, EventScore> = {}
     for (const { event, columnIndex } of eventColumns) {
@@ -91,10 +101,24 @@ export function parseSession(
 
     const participated = Object.values(scores).some((score) => score.status !== 'unmeasured')
 
-    entries.push({ playerId, name: normalizedNameCell, scores, participated })
+    entries.push({ playerId: player.id, name: normalizedNameCell, scores, participated })
   })
 
   return { date: tabName, entries }
+}
+
+export function buildPlayersByName(players: Player[]): Map<string, Player[]> {
+  const byName = new Map<string, Player[]>()
+  for (const player of players) {
+    const key = player.name.normalize('NFC')
+    const bucket = byName.get(key)
+    if (bucket) {
+      bucket.push(player)
+    } else {
+      byName.set(key, [player])
+    }
+  }
+  return byName
 }
 
 function mapHeaderToEvents(header: string[], events: EventDefinition[]): EventColumn[] {

@@ -12,7 +12,7 @@ import type { Player, RecordsResponse, Session } from '../../shared/domain'
 import type { SheetRawBundle } from './sheetsApi'
 import { parseRoster } from './roster'
 import { parseGoals } from './parse-goals'
-import { parseSession } from './parse-session'
+import { buildPlayersByName, parseSession } from './parse-session'
 import { computeSessionRankings } from './compute-rankings'
 import { computePlayerSummaries } from './player-summary'
 import { computeHomeSummary } from './compute-home-summary'
@@ -47,9 +47,13 @@ export function buildRecordsResponse(bundle: SheetRawBundle, generatedAt: string
   const { players } = parseRoster(bundle.roster.values)
   const events = parseGoals(bundle.goals.values)
   const playersById = new Map(players.map((player) => [player.id, player]))
+  // 회차 탭마다 이름→Player 맵을 다시 만들지 않도록 한 번만 생성해 재사용한다 —
+  // players[]는 이 요청 안에서 바뀌지 않으므로 bundle.rounds 개수만큼 반복해서
+  // 정규화·삽입 비용을 치를 이유가 없다(functions/lib/parse-session.ts 상단 주석 참고).
+  const playersByName = buildPlayersByName(players)
 
   const sessions = bundle.rounds.map((round) => {
-    const parsed = parseSession(round.name, round.values, players, events)
+    const parsed = parseSession(round.name, round.values, playersByName, events)
     return excludeWithdrawn(parsed, playersById)
   })
 
