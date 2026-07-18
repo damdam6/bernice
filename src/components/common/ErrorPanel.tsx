@@ -11,16 +11,16 @@ export function ErrorPanel({ title = '문제가 발생했어요', message, title
   return (
     <div
       role="alert"
-      className="w-full max-w-md rounded-2xl border border-brand-200 bg-white p-8 text-center shadow-sm"
+      className="w-full max-w-md rounded-card border border-line bg-white p-8 text-center shadow-sm"
     >
       <p className="text-4xl">⚠️</p>
-      <Title className="mt-3 text-lg font-bold text-brand-900">{title}</Title>
-      <p className="mt-2 text-sm text-brand-700">{message}</p>
+      <Title className="mt-3 text-lg font-bold text-ink">{title}</Title>
+      <p className="mt-2 text-sm text-ink-sub">{message}</p>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="mt-6 rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+          className="mt-6 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-strong"
         >
           다시 시도
         </button>

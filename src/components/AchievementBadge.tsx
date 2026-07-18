@@ -5,8 +5,8 @@ type AchievementBadgeProps = {
 }
 
 const ACHIEVEMENT_BADGE_STYLE: Record<'achieved' | 'notAchieved', string> = {
-  achieved: 'bg-good/15 text-good',
-  notAchieved: 'bg-slate-200 text-slate-600',
+  achieved: 'bg-good-tint text-good-strong',
+  notAchieved: 'bg-neutral-tint text-neutral-strong',
 }
 
 export function AchievementBadge({ achieved }: AchievementBadgeProps) {
