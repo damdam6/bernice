@@ -7,9 +7,9 @@ export function AdminLayout() {
       <header className="flex h-12 items-center px-4">
         <BackButton />
       </header>
-      <main className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col">
         <Outlet />
-      </main>
+      </div>
     </div>
   )
 }
