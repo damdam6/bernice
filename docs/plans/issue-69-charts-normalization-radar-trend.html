@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#69 디자인 개편 — 차트: 정규화 함수 확정 + 레이더·추이·게이지·미니바 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "\2713"; background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+  .steps li.done { color: var(--muted); }
+  .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/69">#69</a></span><span class="type-chip">기능 개선</span>
+    <h1>디자인 개편 — 차트: 정규화 함수 확정 + 레이더·추이·게이지·미니바</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/69-charts-normalization-radar-trend</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-18</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>디자인 PRD §07의 열린 항목이던 정규화 성능 함수를 단일 모듈로 확정하고(개수 = value/maxScore, 시간 = 전 회차·전 선수 min~max 범위 스케일 + 방향 반전), 확정 디자인의 차트 4종(레이더 · 종목 추이 · 달성률 게이지 바 · 랭킹 미니바)을 경량 SVG로 새로 구현한다. 기존 Recharts 프리셋 2종(#51/#57)은 구 IA 기준이고 사용처가 전무하므로 recharts 의존성과 함께 제거한다. 페이지 통합(홈/랭킹/개인)은 후속 화면 이슈의 몫 — 이 이슈는 컴포넌트 레이어 + 테스트까지다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>기존 차트 래퍼(#51/#57)</b>: <code>src/components/charts/</code>에 Recharts 기반 프리셋 2종 — <code>line-trend-chart.tsx</code>(멀티라인 추이), <code>radar-profile-chart.tsx</code>(레이더) + <code>chart-container.tsx</code>/<code>chart-tooltip.tsx</code>/<code>use-chart-tooltip-renderer.tsx</code>/<code>chart-theme.ts</code>/<code>chart-types.ts</code>. <b>페이지 어디에서도 import되지 않음</b>(grep 전수 확인). 멀티라인 전체 추이 페이지는 §02/§08에서 삭제 확정이라 멀티시리즈 프리셋의 존재 이유도 소멸.</li>
+      <li><b>정규화 부재</b>: <code>radar-profile-chart.tsx:16-22</code> 주석이 "이 프리셋은 정규화하지 않으므로 호출자가 알아서" — §07이 요구하는 레이더·추이·미니바 공유 정규화 함수가 코드베이스에 없다.</li>
+      <li><b>구 원형 게이지(#49)</b>: <code>src/components/common/Gauge.tsx</code> + <code>gauge-math.ts</code> — 원형 SVG 게이지. 확정 디자인의 달성률 게이지는 <b>가로 8px 바</b>(§07: 트랙 <code>#eef0f4</code> + 채움, 전원 달성 primary / 미만 primary-soft, width 트랜지션 .5s)라 형태 자체가 다름. 원형 게이지도 사용처 전무.</li>
+      <li><b>데이터 계약(변경 없음)</b>: <code>shared/domain.ts</code> — <code>EventDefinition</code>(valueKind count/time, maxScore(null 가능), targetValue, direction 낮을수록/높을수록), <code>Session.entries[].scores</code>(전 종목 key 완전성 보장), <code>PlayerSummary.trends[]</code>(유효 기록 회차만, 날짜 오름차순), <code>HomeSummary.achievementRates[]</code>(rate 0~1). 시간 종목 범위 스케일에 필요한 "전 회차·전 선수" 원천은 <code>sessions[].entries[].scores</code>의 <code>recorded</code> 값 전수.</li>
+      <li><b>테마 토큰(#61→#75 완료)</b>: <code>src/index.css</code>에 §03 인디고 토큰 방출 완료 — <code>--color-chart-grid: #e7e9ee</code>(레이더 링), <code>--color-gauge-track: #eef0f4</code>, primary/primary-soft/good 등. 단, §07 미니바 미달 색 <code>#c3ccdb</code>는 토큰이 아직 없다.</li>
+      <li><b>테스트 관례</b>: 순수 계산은 render와 분리해 node 환경 테스트(<code>gauge-math.test.ts</code> 패턴), 컴포넌트는 파일 상단 <code>// @vitest-environment jsdom</code> 프래그마 + testing-library(<code>RankingTable.test.tsx</code> 패턴).</li>
+      <li><b>후속 이슈 경계</b>: #70(랭킹 화면)이 미니바를 소비, 홈/개인 화면 이슈는 미생성. 이 이슈의 완료 조건은 컴포넌트 렌더까지 — 페이지 배선은 범위 밖.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>① 정규화 함수 확정 (§07 권장안 채택 + 방어 보강)</b> — <code>src/lib/performance-scale.ts</code> 신설, 반환값은 항상 0~1 클램프:</p>
+    <ul>
+      <li><b>개수 종목</b>(valueKind=count, maxScore≠null, direction=높을수록): <code>value / maxScore</code>.</li>
+      <li><b>시간 종목 및 만점 없는 종목</b>(valueKind=time 또는 maxScore=null): 전 회차·전 선수 <code>recorded</code> 값의 min~max 범위 스케일. direction 반영 — 낮을수록: <code>(max−v)/(max−min)</code>, 높을수록: <code>(v−min)/(max−min)</code>. 만점이 있어도 direction이 낮을수록면 <code>value/maxScore</code>가 의미 역전이라 범위 스케일로 폴백.</li>
+      <li><b>엣지</b>: min==max(관측값 전원 동률·단일 기록) → 0.5 중립. 관측값 0건 종목 → 0.5. 목표선 y = <code>normalize(event, targetValue)</code> — 목표가 관측 범위 밖이면 0/1로 클램프되어 차트 가장자리에 붙음(의도된 동작, 주석 문서화).</li>
+      <li><b>API</b>: <code>buildPerformanceScale(events, sessions)</code> → <code>{ normalize(eventKey, value): number }</code>. 레이더·추이·미니바가 이 인스턴스 하나를 공유 → 세 차트의 y값이 정의상 항상 일치.</li>
+    </ul>
+    <p><b>② Recharts 제거, 경량 SVG 채택</b> — 목업이 전부 경량 SVG이고 §07 스펙이 픽셀 단위(1.6px/3.2px 라인, 점선 4 4, 폴리곤 14% 투명)라 라이브러리 기본값과 싸우는 것보다 직접 그리는 편이 정확하고 짧다. 4개 차트 모두 툴팁·줌 등 인터랙션 요구가 없고(모바일 우선), recharts는 번들에서 통째로 빠진다. 기각안: Recharts 유지 — 배경 라인(선수별 희소 시리즈) 피벗이 번거롭고, 미니바·게이지 바에는 애초에 불필요.</p>
+    <p><b>③ 컴포넌트 4종</b> (모두 dumb — 정규화된 0~1 값과 라벨을 props로 받고, 데이터 결합은 후속 화면 이슈가 담당):</p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>컴포넌트</th><th>§07 스펙</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td><code>radar-chart.tsx</code></td><td>N축(4) short 라벨 · 링 4개(chart-grid) · 폴리곤 primary fill-opacity 0.14 + stroke · 꼭짓점 도트</td><td>좌표 계산은 <code>radar-math.ts</code> 분리(node 테스트)</td></tr>
+        <tr><td><code>trend-chart.tsx</code></td><td>x=회차 라벨 · y=정규화. 배경 라인 전체 선수(primary-soft 1.6px) → 본인(primary 3.2px + 도트 r3.6) 순서로 위에 · 목표선 good 1.5px 점선 4 4</td><td>희소 시리즈(중간 미기록 회차 스킵) 지원 — 경로 계산은 <code>trend-math.ts</code> 분리</td></tr>
+        <tr><td><code>achievement-gauge.tsx</code></td><td>8px 트랙(gauge-track) + 채움 바 · rate 1.0(전원 달성) primary / 미만 primary-soft · width 트랜지션 .5s</td><td>바만 담당(종목명·n/m명 텍스트는 홈 화면 이슈)</td></tr>
+        <tr><td><code>performance-bar.tsx</code></td><td>5px 미니 바 — 달성자 good, 미달 <code>#c3ccdb</code>(신규 토큰)</td><td>#70 랭킹 화면이 소비</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>④ 정리</b>: Recharts 프리셋 7파일 + <code>recharts</code> 의존성 제거. 구 원형 <code>Gauge.tsx</code>/<code>gauge-math.ts</code>(+테스트)도 신형 바 게이지로 대체되므로 삭제(#49의 게이지 파트는 이 개편으로 대체 — PR에 명시). 색은 <code>Gauge.tsx</code> 선례대로 Tailwind 유틸(<code>stroke-primary</code> 등)로 참조해 <code>index.css</code>를 단일 진실 소스로 유지 — Recharts용 <code>chart-theme.ts</code> 상수는 소멸.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">정규화 성능 함수 모듈 + 테스트 — 개수/시간·방향 반전·클램프·min==max·maxScore null 폴백·목표선 정규화 케이스
+        <span class="files"><code>src/lib/performance-scale.ts</code>, <code>src/lib/performance-scale.test.ts</code></span>
+        <span class="note">✓ 13 테스트 그린 — clamp01 공유 유틸 포함</span>
+      </li>
+      <li class="done">미니바 미달 색 토큰 추가 (§07 <code>#c3ccdb</code> — 기존 토큰에 없음)
+        <span class="files"><code>src/index.css</code></span>
+        <span class="note">✓ --color-perf-muted 추가, 빌드 CSS에 유틸 생성 확인</span>
+      </li>
+      <li class="done">Recharts 프리셋·의존성 제거 (사용처 전무 확인 완료) — <code>npm uninstall recharts</code>
+        <span class="files"><code>src/components/charts/chart-container.tsx</code>, <code>chart-tooltip.tsx</code>, <code>use-chart-tooltip-renderer.tsx</code>, <code>line-trend-chart.tsx</code>, <code>radar-profile-chart.tsx</code>, <code>chart-theme.ts</code>, <code>chart-types.ts</code>, <code>package.json</code></span>
+        <span class="note">✓ 7파일 삭제 + npm uninstall recharts (번들 262KB)</span>
+      </li>
+      <li class="done">레이더 차트 — 좌표 계산(<code>radar-math</code>: 축 각도·폴리곤 포인트·링) node 테스트 + jsdom 렌더 테스트(링 4개, fill-opacity 0.14, 도트 수)
+        <span class="files"><code>src/components/charts/radar-math.ts</code>, <code>radar-math.test.ts</code>, <code>radar-chart.tsx</code>, <code>radar-chart.test.tsx</code></span>
+        <span class="note">✓ radar-math 8 + 렌더 7 테스트 그린</span>
+      </li>
+      <li class="done">종목 추이 차트 — 경로 계산(<code>trend-math</code>: x 매핑·희소 시리즈·목표선 y) node 테스트 + jsdom 렌더 테스트(배경 1.6px/본인 3.2px 두께, 점선 4 4, 렌더 순서)
+        <span class="files"><code>src/components/charts/trend-math.ts</code>, <code>trend-math.test.ts</code>, <code>trend-chart.tsx</code>, <code>trend-chart.test.tsx</code></span>
+        <span class="note">✓ trend-math 8 + 렌더 8 테스트 그린 (배경→목표선→본인 렌더 순서 고정)</span>
+      </li>
+      <li class="done">달성률 게이지 바 + 랭킹 미니바 — 색 분기(전원 달성/미달성, 달성자/미달)·width %·트랜지션·ARIA 라벨 렌더 테스트. 구 원형 게이지 삭제
+        <span class="files"><code>src/components/charts/achievement-gauge.tsx</code>, <code>achievement-gauge.test.tsx</code>, <code>performance-bar.tsx</code>, <code>performance-bar.test.tsx</code>, 삭제: <code>src/components/common/Gauge.tsx</code>, <code>gauge-math.ts</code>, <code>gauge-math.test.ts</code></span>
+        <span class="note">✓ 렌더 8 테스트 그린, 구 원형 게이지 삭제</span>
+      </li>
+      <li class="done">배럴 갱신 — 신규 4종 + 수학 모듈 export, 구 프리셋 export 제거
+        <span class="files"><code>src/components/charts/index.ts</code></span>
+        <span class="note">✓ 신규 4종 + prop 타입 export</span>
+      </li>
+      <li class="done">전체 검증 — <code>npm run typecheck</code> · <code>npm test</code> · <code>npm run build</code> 그린 확인
+        <span class="files">—</span>
+        <span class="note">✓ typecheck·298 테스트·빌드 전부 그린 + 데모 데이터 시각 미리보기 확인</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>시간 종목 범위 스케일은 새 기록이 min/max를 갱신하면 과거 점의 y값도 함께 움직임</td><td>회차가 쌓이면 같은 기록의 차트 위치가 달라져 보일 수 있음</td><td>§07이 선택한 상대 성능 표현의 본질 — 모듈 주석에 명시. 세 차트가 단일 scale 공유라 화면 간 불일치는 없음</td></tr>
+        <tr><td>목표선이 관측 범위 밖(전원 미달/전원 초과)이면 0/1 클램프로 차트 가장자리에 붙음</td><td>목표선이 데이터와 겹쳐 보일 수 있음</td><td>의미상 자연스러움("목표가 전원 밖") — 주석 문서화, 테스트로 고정</td></tr>
+        <tr><td>min==max(초기 데이터 1건·전원 동률) → 0.5 중립값</td><td>레이더가 절반 크기로 그려짐</td><td>데이터 축적 시 자연 해소 — 테스트로 규칙 고정</td></tr>
+        <tr><td>구 원형 Gauge 삭제가 열린 이슈 #49와 겹침</td><td>#49 완료 조건 일부가 무의미해짐</td><td>사용처 전무 + 디자인 개편으로 형태 자체가 대체됨 — PR 본문에 #49 게이지 파트 대체를 명시</td></tr>
+        <tr><td>recharts 제거</td><td>후속 이슈에서 복잡한 차트가 필요해지면 재도입 비용</td><td>사용처 전무 grep 확인 완료, 삭제 확정된 전체 추이 외 수요 없음 — 재도입은 npm install 한 줄</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>performance-scale.test.ts</code> — 개수: value/maxScore·만점 초과 클램프. 시간: min~max 스케일·낮을수록 반전(최소값→1.0)·높을수록. 폴백: 개수+maxScore null → 범위 스케일, 개수+낮을수록 → 범위 스케일. 엣지: min==max→0.5, 관측 0건→0.5, 목표선 범위 밖→클램프. 레이더·추이·미니바 공유 시나리오(동일 scale 인스턴스 → 동일 값).</li>
+      <li><code>radar-math.test.ts</code> — 4축 각도 배치(12시 시작·시계방향), 값→좌표 변환, 링/폴리곤 포인트 문자열.</li>
+      <li><code>trend-math.test.ts</code> — 회차 인덱스→x 매핑, 희소 시리즈(미기록 회차 건너뜀) 경로, 목표선 y 좌표.</li>
+      <li>컴포넌트 jsdom 렌더 테스트 — 레이더: 링 4개 + <code>fill-opacity 0.14</code> 폴리곤 + 꼭짓점 도트 수. 추이: 배경 라인 1.6px/본인 3.2px + <code>stroke-dasharray 4 4</code> 목표선 + 배경→본인 DOM 순서. 게이지: rate 1.0 primary / 미만 primary-soft 클래스 분기 + width %. 미니바: 달성 good / 미달 신규 토큰 분기. 각 컴포넌트 ARIA 라벨.</li>
+      <li>기존 동작 회귀 — <code>npm test</code> 전체 그린(구 gauge-math 테스트는 컴포넌트와 함께 제거), <code>npm run typecheck</code>, <code>npm run build</code>(recharts 제거 후 번들 정상).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>정규화 성능 함수 단일 모듈(<code>src/lib/performance-scale.ts</code>) + 테스트 — 개수 = value/maxScore, 시간 = 전체 데이터 min~max 범위 스케일(방향 반영), 레이더·추이·미니바가 동일 인스턴스 공유</li>
+      <li>레이더 / 종목 추이(전체 선수 배경 라인 + 본인 하이라이트 + 목표선 점선) / 랭킹 미니바가 §07 스펙(색·두께·점선)대로 렌더되고 렌더 테스트로 고정</li>
+      <li>달성률 게이지 바(8px 트랙 + 전원 달성 색 분기 + .5s 트랜지션) 렌더 — 구 원형 게이지 대체</li>
+      <li>Recharts 의존성·프리셋 제거, typecheck·테스트·빌드 전체 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/69">#69</a> · 2026-07-18</footer>
+</main>
+</body>
+</html>
