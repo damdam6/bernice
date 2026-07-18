@@ -1,6 +1,7 @@
 // GET /api/records — #21 계약(RecordsResponse)대로 시트 데이터를 조립해 반환한다.
-// 인증 게이트는 P2 범위 — 여기서는 적용하지 않는다. 무효화는 P2의 /api/refresh가
-// records-cache.ts의 같은 키로 cache.delete를 호출해 담당한다(이 이슈 범위 밖).
+// 인증은 _middleware.ts(#42)가 /api/* 전체에서 담당한다 — 여기 도달한 요청은 이미 세션 검증
+// 통과. 무효화는 P2의 /api/refresh가 records-cache.ts의 같은 키로 cache.delete를 호출해
+// 담당한다(이 이슈 범위 밖).
 
 import type { Env as SheetsEnv } from '../lib/sheetsApi'
 import { SheetsApiError, fetchSheetBundle } from '../lib/sheetsApi'
