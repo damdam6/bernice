@@ -9,7 +9,7 @@ const PLAYER_STATUS_PILL_STYLE: Record<PlayerStatus, string> = {
   활동: 'bg-good-tint text-good-strong',
   휴식: 'bg-warn-tint text-warn-strong',
   비대상: 'bg-neutral-tint text-neutral-strong',
-  탈퇴: 'bg-bad/10 text-bad',
+  탈퇴: 'bg-bad-tint text-bad-strong',
 }
 
 export function PlayerStatusPill({ status }: PlayerStatusPillProps) {
