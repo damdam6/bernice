@@ -2,8 +2,9 @@
 // 여기서 "세션"은 로그인 인증 세션이다 — 훈련 회차를 다루는 parse-session.ts와 무관.
 // Workers 런타임에는 node:crypto가 없어 crypto.subtle(Web Crypto)만 사용한다.
 //
-// 토큰 포맷: v1.<base64url(JSON{iat,exp})>.<base64url(HMAC-SHA256("v1."+payload))>
-// - iat/exp는 epoch 초. 팀 공용 패스코드 게이트라 사용자 식별 클레임이 없고 exp만 필수.
+// 토큰 포맷: v1.<base64url(JSON{iat,exp,role})>.<base64url(HMAC-SHA256("v1."+payload))>
+// - iat/exp는 epoch 초, role은 'team' | 'admin'. 사용자 식별 클레임은 없고, 팀/관리자 구분은 role로 한다.
+// - 검증은 exp(만료)와 role(허용값)을 모두 확인한 뒤 SessionClaims를 돌려준다 — 실패는 전부 null.
 // - 버전 프리픽스가 서명 입력에 포함되므로, 포맷이 진화해도(v2) v1 서명을 재해석할 수 없다.
 // - base64url + '.'만 쓰므로 쿠키 값 인코딩이 따로 필요 없다.
 // - 표준 JWT(HS256)를 쓰지 않는 이유: 자체 발급·자체 검증이라 상호운용 요구가 없고,
@@ -19,6 +20,16 @@ export const SESSION_COOKIE_NAME = 'bernice_session'
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 
 const TOKEN_VERSION = 'v1'
+
+// 세션 role — 팀 공용 패스코드는 'team'(열람 전용), 관리자 코드는 'admin'(쓰기 권한).
+export type SessionRole = 'team' | 'admin'
+
+// verifySessionToken이 검증에 성공했을 때 돌려주는 페이로드 클레임.
+export interface SessionClaims {
+  iat: number
+  exp: number
+  role: SessionRole
+}
 
 // secret별 import된 HMAC 키 캐시 — 미들웨어(#42)가 요청마다 검증하므로 재사용한다.
 // 운영에선 단일 SESSION_SECRET이라 항목이 1개지만, isolate가 요청 간에 살아남으므로
@@ -47,57 +58,65 @@ function getHmacKey(secret: string): Promise<CryptoKey> {
   return key
 }
 
-export async function issueSessionToken(secret: string, now = Date.now()): Promise<string> {
+export async function issueSessionToken(
+  secret: string,
+  role: SessionRole,
+  now = Date.now(),
+): Promise<string> {
   const key = await getHmacKey(secret)
   const iat = Math.floor(now / 1000)
   const payload = base64UrlEncodeBytes(
-    new TextEncoder().encode(JSON.stringify({ iat, exp: iat + SESSION_TTL_SECONDS })),
+    new TextEncoder().encode(JSON.stringify({ iat, exp: iat + SESSION_TTL_SECONDS, role })),
   )
   const signingInput = `${TOKEN_VERSION}.${payload}`
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput))
   return `${signingInput}.${base64UrlEncodeBytes(new Uint8Array(signature))}`
 }
 
-// 구조 → 서명(crypto.subtle.verify: 타이밍 세이프 비교 내장) → 만료 순으로 검사한다.
+// 구조 → 서명(crypto.subtle.verify: 타이밍 세이프 비교 내장) → 만료 → role 순으로 검사한다.
 // payload 해석은 서명 확인 뒤에만 — 검증 안 된 입력을 신뢰하는 지점을 만들지 않는다.
-// 비정상 입력은 전부 throw 없이 false — 미들웨어가 try/catch 없이 쓰는 것이 계약이다.
-// 단 빈 secret은 설정 누락이므로 조용한 401 대신 명확한 에러로 던진다.
+// 성공하면 SessionClaims(role 포함)를, 비정상 입력은 전부 throw 없이 null을 돌려준다
+// — 미들웨어(#42)가 try/catch 없이 쓰고 role로 분기하는 것이 계약이다.
+// 단 빈 secret은 설정 누락이므로 조용한 null 대신 명확한 에러로 던진다.
 export async function verifySessionToken(
   token: string | null | undefined,
   secret: string,
   now = Date.now(),
-): Promise<boolean> {
+): Promise<SessionClaims | null> {
   const key = await getHmacKey(secret)
-  if (!token) return false
+  if (!token) return null
 
   const parts = token.split('.')
-  if (parts.length !== 3 || parts[0] !== TOKEN_VERSION) return false
+  if (parts.length !== 3 || parts[0] !== TOKEN_VERSION) return null
   const [, payloadB64, signatureB64] = parts
 
   const signature = base64UrlDecodeBytes(signatureB64)
-  if (!signature) return false
+  if (!signature) return null
   const valid = await crypto.subtle.verify(
     'HMAC',
     key,
     signature,
     new TextEncoder().encode(`${TOKEN_VERSION}.${payloadB64}`),
   )
-  if (!valid) return false
+  if (!valid) return null
 
   const payloadBytes = base64UrlDecodeBytes(payloadB64)
-  if (!payloadBytes) return false
+  if (!payloadBytes) return null
   let claims: unknown
   try {
     claims = JSON.parse(new TextDecoder().decode(payloadBytes))
   } catch {
-    return false
+    return null
   }
-  if (typeof claims !== 'object' || claims === null) return false
+  if (typeof claims !== 'object' || claims === null) return null
 
-  const { exp } = claims as { exp?: unknown }
-  if (typeof exp !== 'number' || !Number.isFinite(exp)) return false
+  const { iat, exp, role } = claims as { iat?: unknown; exp?: unknown; role?: unknown }
+  if (typeof iat !== 'number' || !Number.isFinite(iat)) return null
+  if (typeof exp !== 'number' || !Number.isFinite(exp)) return null
+  if (role !== 'team' && role !== 'admin') return null
+  if (now >= exp * 1000) return null
 
-  return now < exp * 1000
+  return { iat, exp, role }
 }
 
 // Cookie 요청 헤더를 이름→값 레코드로 파싱한다. 절대 throw하지 않는다.

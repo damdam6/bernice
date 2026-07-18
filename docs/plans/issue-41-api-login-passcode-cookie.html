@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#41 P2 — POST /api/login (패스코드 검증 → HttpOnly 쿠키) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.ok::before { background: var(--ok); }
+  .done-list li.ok::after {
+    content: "✓"; position: absolute; left: 4px; top: 4px;
+    color: #fff; font-size: 11px; font-weight: 700; line-height: 1;
+  }
+  .status-banner {
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 14px 20px; margin-top: 18px; font-size: 0.92rem;
+  }
+  .status-banner b { color: var(--accent); }
+  .step-note { display: block; margin-top: 4px; font-size: 0.83rem; color: var(--ok); }
+  .step-note.warn { color: var(--warn); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/41">#41</a></span><span class="type-chip">기능 개선</span>
+    <h1>P2 — POST /api/login (패스코드 검증 → HttpOnly 쿠키)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/41-api-login-passcode-cookie</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-18</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      팀 공용 패스코드와 관리자 코드를 검증해 HttpOnly 세션 쿠키를 발급하는
+      <code>POST /api/login</code> 엔드포인트를 신규 작성한다. 입력 코드를
+      <code>TEAM_PASSCODE</code>·<code>ADMIN_CODE</code>와 <b>고정시간(constant-time) 비교</b>해
+      일치한 쪽에 따라 세션 role(<code>team</code>/<code>admin</code>)을 정하고, 이미 완료된 #40의
+      세션 쿠키 유틸(<code>functions/lib/session-cookie.ts</code>)을 확장해 토큰 페이로드를
+      <code>{iat, exp}</code> → <code>{iat, exp, role}</code>로 넓힌다. 성공 시
+      <code>Set-Cookie</code>(HttpOnly·Secure·SameSite=Lax·Max-Age), 실패 시 401 JSON을 돌려주며,
+      검증 유틸은 role을 노출하도록 확장해 후속 #42 미들웨어가 그대로 소비하게 한다. vitest 테스트 포함.
+    </p>
+  </section>
+
+  <div class="status-banner">
+    <b>✅ 구현·테스트·검증 완료 (2026-07-18).</b> vitest 전체 <b>272개 통과</b>,
+    <code>tsc -b</code> typecheck 무오류. <code>wrangler pages dev</code>로 실제 HTTP 스모크 확인 —
+    팀/관리자 코드가 각각 <code>role=team</code>/<code>role=admin</code> 쿠키(HttpOnly·SameSite=Lax·Max-Age=2592000,
+    http에선 Secure 생략) 발급, 오답·누락 401(쿠키 없음), 비-JSON 400. 발급 쿠키 payload가
+    <code>{iat, exp, role}</code>로 디코드됨.
+  </div>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>
+        <b>세션 쿠키 유틸은 이미 있으나 role 개념이 없다.</b>
+        <code>functions/lib/session-cookie.ts</code>는 #40에서 완료됐고,
+        <code>issueSessionToken(secret, now)</code>(<code>session-cookie.ts:50</code>)는
+        페이로드를 <code>{ iat, exp }</code>만으로 발급한다(<code>session-cookie.ts:54</code>).
+        <code>verifySessionToken</code>은 <code>boolean</code>만 반환하고
+        <code>exp</code>만 검사한다(<code>session-cookie.ts:97-100</code>) — 팀/관리자를 구분할 클레임이 없다.
+      </li>
+      <li>
+        <b>쿠키 조립·파싱은 이미 #41 계약대로 준비돼 있다.</b>
+        <code>buildSessionSetCookie</code>(<code>session-cookie.ts:135</code>)가
+        HttpOnly·Secure·SameSite=Lax·Max-Age를 이미 붙이고, <code>secure</code> 옵션으로 로컬 http를
+        위한 Secure 끄기까지 지원한다(<code>session-cookie.ts:129, 136-138</code>).
+        <code>SESSION_COOKIE_NAME='bernice_session'</code>·<code>SESSION_TTL_SECONDS</code>(30일)도 상수로 있다
+        (<code>session-cookie.ts:16, 19</code>). 즉 <b>토큰 발급/검증의 role 확장 + 새 핸들러</b>가 이 이슈의 핵심이다.
+      </li>
+      <li>
+        <b>Pages Function 핸들러 패턴이 확립돼 있다.</b>
+        <code>functions/api/records.ts:14</code>는 <code>onRequestGet: PagesFunction&lt;Env&gt;</code>로
+        선언하고 <code>interface Env</code>로 필요한 바인딩만 타입한다(<code>records.ts:10-12</code>).
+        응답은 <code>Response.json(body, { status })</code>로 만든다(<code>records.ts:37-48</code>).
+        <code>login.ts</code>는 이 패턴을 <code>onRequestPost</code>로 따른다.
+      </li>
+      <li>
+        <b>필요한 시크릿은 이미 문서·설정에 자리가 있다.</b>
+        <code>.dev.vars.example</code>에 <code>TEAM_PASSCODE</code>·<code>SESSION_SECRET</code>·<code>ADMIN_CODE</code>가
+        모두 정의돼 있고(값은 <code>change-me</code> 플레이스홀더), <code>wrangler.jsonc</code> 주석은 이 셋을
+        Secret으로 관리하라고 명시한다(로컬 <code>.dev.vars</code> / 프로덕션 Pages Secret).
+      </li>
+      <li>
+        <b>Workers 런타임엔 <code>node:crypto</code>가 없다.</b>
+        기존 코드는 전부 <code>crypto.subtle</code>(Web Crypto)만 쓴다
+        (<code>session-cookie.ts:3, 37, 57</code>, <code>googleAuth.ts:2, 118</code>). 따라서 고정시간 비교도
+        <code>node:crypto.timingSafeEqual</code>이 아니라 Web Crypto로 구현해야 한다.
+      </li>
+      <li>
+        <b>테스트 환경.</b> vitest는 node 환경(<code>vitest.config.ts</code>)이며, 기존
+        <code>records.test.ts</code>는 <code>Response.json</code>·<code>new Request</code>·<code>crypto.subtle</code>를
+        전역으로 그대로 쓴다. <code>lib/*.ts</code>마다 짝이 되는 <code>*.test.ts</code>가 있는 컨벤션(순수 유틸 = 전용 단위테스트).
+      </li>
+      <li>
+        <b>현재 <code>/api/login</code>·role 소비자는 없다.</b> 프론트/미들웨어에 <code>role</code>·<code>verifySessionToken</code>
+        소비처가 아직 없어(grep 결과 유틸 자기 자신·주석뿐) 검증 유틸의 반환 타입을 지금 바꿔도 깨질 외부 호출부가 없다.
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>PRD 확정안(§03②, <code>docs/prd-record-input.html:171</code>)을 그대로 채택한다:</b>
+      쿠키는 1개, 토큰 페이로드에 <code>role: 'team' | 'admin'</code> 클레임을 넣어 미들웨어(#42)에서 role을 검사한다.
+      (대안인 "관리자용 별도 쿠키"는 쿠키 2개 관리 부담으로 PRD가 이미 차선으로 정리.)</p>
+    <ul>
+      <li>
+        <b>토큰 발급 시그니처: <code>issueSessionToken(secret, role, now?)</code>.</b>
+        role을 필수 위치 인자로 추가하고 페이로드에 <code>role</code>을 써넣는다. TOKEN_VERSION은 <code>v1</code> 유지 —
+        role이 없던 구 v1 토큰은 검증 단계에서 role 누락으로 거부되므로(아래) 사실상 무효화된다(운영에 발급된 토큰 없음).
+      </li>
+      <li>
+        <b>검증 유틸은 role을 노출하도록 확장: <code>verifySessionToken → SessionClaims | null</code>.</b>
+        기존 <code>boolean</code> 대신 성공 시 <code>{ role, iat, exp }</code>, 실패 시 <code>null</code>을 반환한다.
+        이유: (1) 이슈 범위가 "발급·<b>검증</b> 유틸 확장 포함"을 명시, (2) 후속 #42 미들웨어가 role을 필요로 함,
+        (3) 현재 외부 소비자가 없어 지금이 반환 타입을 바꿀 유일하게 깨끗한 시점. <code>if (await verify…)</code>식
+        불리언 사용도 truthy/null로 그대로 성립한다. role이 <code>'team'|'admin'</code>이 아니면 <code>null</code>(엄격 검증).
+        <span class="files">대안 "boolean 유지 + role 검증만" → #42에서 반환 타입을 또 깨야 해 기각.</span>
+      </li>
+      <li>
+        <b>고정시간 비교는 double-HMAC 방식으로 신규 유틸 분리:</b> <code>functions/lib/constant-time-equal.ts</code>.
+        요청마다 임의 키를 만들어 두 문자열의 HMAC-SHA256을 각각 계산하고 <code>crypto.subtle.verify</code>(타이밍 세이프 내장)로
+        비교한다 — 항상 32바이트 다이제스트를 비교하므로 <b>길이 노출이 없고</b>, 임의 키라 사전계산 공격면도 없다. JS 수동 XOR
+        루프(JIT로 상수시간 보장 불가·길이 노출)보다 Workers에서 견고. <code>lib/*</code> = 전용 테스트 컨벤션에 맞춰 단위테스트를 붙인다.
+      </li>
+      <li>
+        <b>role 결정 순서와 빈 코드 가드(보안 핵심).</b> 제출 코드를 <code>ADMIN_CODE</code>·<code>TEAM_PASSCODE</code>
+        <b>양쪽 모두</b> 비교(단락 없이)한 뒤 role을 정한다. 관리자 우선(둘이 같게 설정된 오설정 시 admin). <b>단,
+        설정값이 빈 문자열이면 그 경로는 절대 매치로 치지 않는다</b> — 그렇지 않으면 <code>change-me</code> 미설정 상태에서
+        빈 입력이 통과하는 구멍이 생긴다. 제출 코드가 없거나 빈 문자열이어도 401.
+      </li>
+      <li>
+        <b>핸들러 응답 계약.</b> 성공 → 200 <code>{ ok: true, role }</code> + <code>Set-Cookie</code>
+        (<code>buildSessionSetCookie(token, { secure })</code>). 실패(코드 불일치·누락·빈값) → 401
+        <code>{ error: 'invalid_passcode' }</code>, <b>Set-Cookie 없음</b>. 바디 파싱 실패(비-JSON) → 400
+        <code>{ error: 'bad_request' }</code>. 열거 오라클을 피하려 team/admin 성공은 role만 다르고 실패는 단일 메시지로 통일.
+      </li>
+      <li>
+        <b>로컬 http 개발 대응.</b> <code>Set-Cookie</code>의 Secure는 요청 스킴으로 결정한다 —
+        <code>secure: new URL(request.url).protocol === 'https:'</code>. 프로덕션(https)은 Secure 포함(계약 충족),
+        <code>wrangler pages dev</code>의 http://localhost에선 Secure 생략(브라우저가 저장 가능). 유틸의 <code>secure</code>
+        옵션(<code>session-cookie.ts:129</code>)이 정확히 이 용도로 이미 존재.
+      </li>
+      <li>
+        <b>메서드 제한.</b> <code>onRequestPost</code>만 export하면 다른 메서드는 Pages가 405로 처리한다(추가 코드 불필요).
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>고정시간 비교 유틸 신규 작성 — 요청별 임의 키 double-HMAC(<code>crypto.subtle.sign</code>/<code>verify</code>)으로 상수시간 문자열 동등 비교. 빈 입력·다른 길이 처리 포함.
+        <span class="files"><code>functions/lib/constant-time-equal.ts</code></span>
+        <span class="step-note">✔ 완료 — 계획대로 double-HMAC로 구현.</span>
+      </li>
+      <li>고정시간 비교 유틸 단위테스트 — 같은 문자열 true / 다른 문자열 false / 다른 길이 false / 빈 문자열 경계.
+        <span class="files"><code>functions/lib/constant-time-equal.test.ts</code></span>
+        <span class="step-note">✔ 완료 — 4개 케이스 통과.</span>
+      </li>
+      <li>세션 유틸 role 확장 — <code>SessionRole</code>·<code>SessionClaims</code> 타입 export, <code>issueSessionToken(secret, role, now?)</code>가 페이로드에 <code>role</code> 기록, <code>verifySessionToken</code>이 <code>SessionClaims | null</code> 반환 + role(<code>'team'|'admin'</code>) 엄격 검증. 파일 상단 계약 주석도 갱신.
+        <span class="files"><code>functions/lib/session-cookie.ts</code></span>
+        <span class="step-note">✔ 완료 — iat/exp/role 모두 검증 후 claims 반환. 상단 계약 주석 갱신.</span>
+      </li>
+      <li>세션 유틸 테스트 갱신 — 기존 <code>issueSessionToken</code> 호출에 role 인자 추가, <code>.toBe(true/false)</code> 어서션을 <code>toBeNull</code>/<code>toMatchObject({ role })</code>로 조정. 신규: 페이로드에 role 포함 / role 누락·이상값 토큰은 <code>null</code>(<code>signPayload</code> 헬퍼로 위조).
+        <span class="files"><code>functions/lib/session-cookie.test.ts</code></span>
+        <span class="step-note">✔ 완료 — 파일 재작성, 'role 클레임' describe 추가.</span>
+      </li>
+      <li><code>POST /api/login</code> 핸들러 신규 — <code>interface Env { TEAM_PASSCODE; ADMIN_CODE; SESSION_SECRET }</code>, JSON 바디 <code>{ code }</code> 파싱, 빈 설정값 가드 + 양쪽 고정시간 비교로 role 결정(admin 우선), 성공 시 토큰 발급·<code>Set-Cookie</code>(스킴 기반 secure)·200 <code>{ ok, role }</code>, 실패 401 / 비-JSON 400.
+        <span class="files"><code>functions/api/login.ts</code></span>
+        <span class="step-note">✔ 완료 — <code>onRequestPost</code>만 export. 빈 code는 검증 전 차단 + <code>matches</code> 이중 방어.</span>
+      </li>
+      <li><code>/api/login</code> 핸들러 테스트 — 팀→role=team·관리자→role=admin(쿠키 파싱해 <code>verifySessionToken</code> 왕복 확인), 오답·빈코드→401·Set-Cookie 없음, 빈 설정값→401, 비-JSON→400, 쿠키 속성(HttpOnly·SameSite=Lax·https일 때 Secure) 검증. <code>records.test.ts</code>의 context 조립 패턴 참고.
+        <span class="files"><code>functions/api/login.test.ts</code></span>
+        <span class="step-note">✔ 완료 — admin 우선 케이스·http Secure 생략 케이스 추가.</span>
+      </li>
+      <li>검증 — <code>npm run test</code>(전체 vitest)와 <code>npm run typecheck</code>(<code>tsc -b</code>, strict·noUnusedLocals) 그린 확인. <code>/verify</code> 스킬로 실제 흐름 점검(가능 시 <code>wrangler pages dev</code>로 login 호출 → 쿠키 수신 확인).
+        <span class="files">—</span>
+        <span class="step-note">✔ 완료 — test 272개·typecheck 그린. <code>wrangler pages dev</code> 스모크로 실제 쿠키 발급/401/400 확인.</span>
+        <span class="step-note warn">참고: 프론트 <code>npm run build</code>는 <code>pretendard</code> woff2 미해결로 실패하나 <b>이 변경과 무관한 기존 이슈</b>(<code>src/main.tsx:6</code>, functions/ 미변경). 스모크는 스텁 dist로 진행. GET <code>/api/login</code>은 로컬 스텁에서 SPA 폴백 index.html(200)로 응답 — 함수는 POST만 처리하며 프레임워크 자산 폴백 동작임.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>빈/미설정 코드(<code>change-me</code> 방치, secret 누락)가 빈 입력과 매치</td>
+          <td>인증 우회 — 누구나 로그인</td>
+          <td>설정값이 빈 문자열이면 그 비교는 매치 불가로 강제. 제출 코드 빈값도 401. 전용 테스트로 회귀 방지.</td>
+        </tr>
+        <tr>
+          <td>고정시간 비교가 실제로 상수시간이 아님(타이밍 사이드채널)</td>
+          <td>패스코드 브루트포스 가속</td>
+          <td>수동 JS 루프 대신 임의키 double-HMAC + <code>crypto.subtle.verify</code>(타이밍 세이프). 동일 길이 다이제스트 비교로 길이 노출 제거.</td>
+        </tr>
+        <tr>
+          <td><code>verifySessionToken</code> 반환 타입 변경(boolean → claims|null)</td>
+          <td>기존 호출부·테스트 파손</td>
+          <td>현재 외부 소비자 0(유틸/주석뿐). 세션 테스트를 같은 PR에서 갱신. 불리언 문맥(<code>if</code>)은 truthy/null로 그대로 동작.</td>
+        </tr>
+        <tr>
+          <td>로컬 http 개발에서 Secure 쿠키 미저장</td>
+          <td>로컬 로그인 검증 불가</td>
+          <td>요청 스킴으로 Secure 결정(https만 Secure). 유틸의 <code>secure</code> 옵션 활용 — 프로덕션 계약은 유지.</td>
+        </tr>
+        <tr>
+          <td>role 없던 구 v1 토큰이 있었다면 확장 후 거부됨</td>
+          <td>기존 세션 강제 로그아웃</td>
+          <td>운영 발급 이력 없음(#41이 최초 발급 경로). 버전 <code>v1</code> 유지가 안전 — 재로그인만 필요.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>고정시간 유틸</b>(<code>constant-time-equal.test.ts</code>): 같은 값 → true, 다른 값 → false, 길이가 다른 값 → false, 빈 문자열 경계 처리.</li>
+      <li><b>팀 로그인</b>: <code>TEAM_PASSCODE</code> 제출 → 200 + <code>Set-Cookie</code> 존재. 쿠키에서 토큰 추출 → <code>verifySessionToken</code>이 <code>role='team'</code> 클레임 반환.</li>
+      <li><b>관리자 로그인</b>: <code>ADMIN_CODE</code> 제출 → 200, 토큰 <code>role='admin'</code>.</li>
+      <li><b>오답/빈 코드</b>: 틀린 코드·빈 문자열·<code>code</code> 누락 → 401 <code>invalid_passcode</code>, <code>Set-Cookie</code> 헤더 없음.</li>
+      <li><b>빈 설정값 회귀</b>: <code>TEAM_PASSCODE=''</code>·<code>ADMIN_CODE=''</code>에 빈 입력 → 401(우회 없음).</li>
+      <li><b>바디 오류</b>: 비-JSON 바디 → 400 <code>bad_request</code>.</li>
+      <li><b>쿠키 속성</b>: <code>Set-Cookie</code>가 <code>HttpOnly</code>·<code>SameSite=Lax</code>·<code>Max-Age</code> 포함, https 요청에서 <code>Secure</code> 포함/ http 요청에서 미포함.</li>
+      <li><b>세션 유틸 왕복·위조</b>(<code>session-cookie.test.ts</code>): 발급→검증 role 왕복, role 누락/이상값 위조 토큰은 <code>null</code>. 기존 만료·위조·parseCookies·buildSessionSetCookie 테스트 계속 통과(회귀).</li>
+      <li><b>전체 그린</b>: <code>npm run test</code>(전 스위트) + <code>npm run typecheck</code> 무오류.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="ok">팀 패스코드 → <code>role=team</code> 세션 쿠키 발급(HttpOnly·SameSite=Lax·Max-Age, https에서 Secure)</li>
+      <li class="ok">관리자 코드 → <code>role=admin</code> 세션 쿠키 발급</li>
+      <li class="ok">틀린/빈/누락 코드 → 401 JSON, 쿠키 없음</li>
+      <li class="ok"><code>session-cookie.ts</code> 발급·검증 유틸이 <code>role</code> 클레임을 쓰고 노출(<code>verifySessionToken → SessionClaims | null</code>) — #42가 소비 가능</li>
+      <li class="ok">고정시간 비교로 코드 검증(타이밍/길이 사이드채널 방어)</li>
+      <li class="ok">vitest 신규·갱신 테스트 및 전체 스위트 통과(272개), <code>tsc -b</code> typecheck 통과</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/41">#41</a> · 2026-07-18</footer>
+</main>
+</body>
+</html>
