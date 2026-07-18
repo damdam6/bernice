@@ -94,4 +94,39 @@ describe('buildRecordsResponse', () => {
 
     expect(result.generatedAt).toBe('2026-01-01T00:00:00.000Z')
   })
+
+  it('실제 2025-05-16 탭 형태(명단은 가입순, 회차는 참가자 일부만 가나다순)도 정상 조립된다 (이슈 #60)', () => {
+    // 명단(가입순): 다솜(1), 가영(2), 라희(3), 나은(4), 마루(5) — 회차엔 라희를 뺀 4명만, 가나다순으로 수기 입력
+    const roster = [
+      ['이름', '상태'],
+      ['다솜', '활동'],
+      ['가영', '활동'],
+      ['라희', '활동'],
+      ['나은', '활동'],
+      ['마루', '활동'],
+    ]
+    const round = [
+      ['이름', '골밑슛'],
+      ['가영', '6'],
+      ['나은', '5'],
+      ['다솜', '4'],
+      ['마루', '3'],
+    ]
+    const bundle = baseBundle({
+      roster: { name: '버니스명단', values: roster },
+      rounds: [{ name: '2025-05-16', date: new Date('2025-05-16'), values: round }],
+    })
+
+    const result = buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')
+
+    expect(result.sessions[0].entries.map((e) => ({ playerId: e.playerId, name: e.name }))).toEqual([
+      { playerId: 2, name: '가영' },
+      { playerId: 4, name: '나은' },
+      { playerId: 1, name: '다솜' },
+      { playerId: 5, name: '마루' },
+    ])
+    expect(result.rankings[0].events[0].entries.map((e) => e.name)).toEqual(
+      expect.arrayContaining(['가영', '나은', '다솜', '마루']),
+    )
+  })
 })
