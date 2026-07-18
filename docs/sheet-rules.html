@@ -85,9 +85,9 @@
     </div>
 
     <div class="rule">
-      <div class="title">🔒 이름 · 종목명 칸은 참조 수식 — 손대지 않기</div>
-      회차 탭의 <strong>이름 열</strong>과 <strong>종목 헤더</strong>는 <code class="inline">='버니스명단'!A2</code>·<code class="inline">='목표'!A2</code> 같은 수식이다. 직접 타이핑해서 덮어쓰지 않는다. 사람이 채우는 건 <strong>점수 숫자뿐.</strong>
-      <div class="why"><b>왜:</b> 참조라서 <b>명단·목표에서 이름/종목명을 바꾸면 회차에도 자동 반영</b>된다. 덮어쓰면 이 연결이 끊긴다.</div>
+      <div class="title">🔒 종목명 칸은 참조 수식 — 손대지 않기 (이름 칸은 직접 입력 가능)</div>
+      회차 탭의 <strong>종목 헤더</strong>는 <code class="inline">='목표'!A2</code> 같은 수식이다. 직접 타이핑해서 덮어쓰지 않는다. <strong>이름 열</strong>은 <code class="inline">='버니스명단'!A2</code> 참조 수식이든 이름을 직접 타이핑한 텍스트든 둘 다 된다 — 사이트가 <b>이름 텍스트로 버니스명단과 매칭</b>하기 때문. 단, 명단의 이름과 정확히 일치해야 하고(오타 시 에러), 회차 탭엔 <b>참가자만</b> 행을 만든다(미참여자는 행 자체를 만들지 않음).
+      <div class="why"><b>왜:</b> 종목 헤더는 참조라서 <b>목표에서 종목명을 바꾸면 회차에도 자동 반영</b>된다 — 덮어쓰면 이 연결이 끊긴다. 이름 칸은 참조 대신 텍스트로 매칭하므로 직접 입력해도 되지만, 명단에서 <b>개명</b>하면 참조 수식을 쓴 회차만 자동으로 따라가고 직접 입력한 과거 회차는 손으로 함께 고쳐야 계속 파싱된다.</div>
     </div>
 
     <div class="rule">
@@ -119,21 +119,22 @@
   <section>
     <h2><span class="num">02</span>자주 하는 작업 ① — 새 회차 추가 (3개월마다)</h2>
     <ol class="steps">
-      <li>가장 최근 <strong>회차 탭을 복제</strong> (탭 우클릭 → 복사) — 이름·종목 참조 수식과 서식이 그대로 따라옴</li>
+      <li>가장 최근 <strong>회차 탭을 복제</strong> (탭 우클릭 → 복사) — 종목 헤더 참조 수식과 서식이 그대로 따라옴</li>
       <li>복제된 탭 이름을 <strong>측정한 날짜</strong>로 변경 (예: <code class="inline">2025-08-16</code>)</li>
-      <li>이전 점수를 지우고 <strong>이번 기록의 점수 숫자만</strong> 입력. <strong>이름·헤더 칸은 건드리지 않는다</strong>(참조라 자동)</li>
-      <li>그 회차 <strong>미참여자는 점수만 비운다</strong> (행 삭제 X — 이름은 그대로 남겨둠)</li>
-      <li><span class="tabname">버니스명단</span>에 새 팀원이 늘었으면, 이름 열의 참조 수식을 <strong>맨 아래로 한 칸 더 끌어내려</strong> 포함(드래그)</li>
+      <li>이번 회차에 <strong>참가하지 않은 사람의 행은 삭제</strong>한다 — 참가자만 포맷이라 미참여자는 행 자체를 만들지 않는다. 새로 참가하는 사람(신규 가입자 포함)이 있으면 이름 행을 추가한다(<span class="tabname" style="margin:0;">버니스명단</span> 참조 수식 또는 이름 직접 타이핑, 순서는 자유 — 가나다순 권장)</li>
+      <li>남은 행의 이전 점수를 지우고 <strong>이번 기록의 점수 숫자만</strong> 입력. <strong>종목 헤더 칸은 건드리지 않는다</strong>(참조라 자동)</li>
     </ol>
     <div class="dodont">
       <div class="do"><h4 class="good">✓ 이렇게</h4><ul>
-        <li>기존 회차 복제해서 참조·서식 유지</li>
+        <li>기존 회차 복제해서 종목 헤더 참조·서식 유지</li>
         <li>날짜 형식 탭 이름</li>
+        <li>이번 회차 참가자만 행에 남기기(이름은 참조 수식 또는 직접 입력)</li>
         <li>점수 숫자만 입력, 면제는 <code class="inline">면제</code></li>
       </ul></div>
       <div class="dont"><h4 class="bad">✗ 이러지 말기</h4><ul>
-        <li>이름·헤더 칸에 직접 타이핑(참조 수식 덮어쓰기)</li>
+        <li>종목 헤더 칸에 직접 타이핑(참조 수식 덮어쓰기)</li>
         <li>탭 이름을 <code class="inline">3차</code>, <code class="inline">8월</code> 등으로</li>
+        <li>미참여자 행을 남겨두고 점수만 비우기(구 포맷 — 이제는 행 자체를 삭제)</li>
         <li>미참여자에게 0점 입력 (0점 ≠ 미참여)</li>
       </ul></div>
     </div>
@@ -184,8 +185,8 @@
     <p class="muted" style="font-size:14px;">탭 3종. 회차 탭만 3개월마다 늘어남.</p>
     <div class="sheet"><span class="tabname">버니스명단</span>   <span class="h">이름 | 상태</span>                  ← 팀 명단 (행 위치=신원, 상태 드롭다운)
 <span class="tabname">목표</span>       <span class="h">종목 | 목표 | 만점 | 방향</span>       ← 종목 기준 (방향 드롭다운)
-<span class="tabname">2025-05-16</span> <span class="h">이름 | 드리블셔틀런 | 골밑슛 | 자유투 | 45도패스캐치</span>   ← 회차 기록
-           <span class="note">(이름 = ='버니스명단'!A행,  종목 헤더 = ='목표'!A행,  점수만 직접 입력)</span></div>
+<span class="tabname">2025-05-16</span> <span class="h">이름 | 드리블셔틀런 | 골밑슛 | 자유투 | 45도패스캐치</span>   ← 회차 기록 (참가자만)
+           <span class="note">(이름 = ='버니스명단'!A행 또는 직접 입력,  종목 헤더 = ='목표'!A행,  점수는 직접 입력)</span></div>
     <p class="muted" style="font-size:13px;">자세한 스키마·설계 근거는 <a href="sheet-integration.html" style="color:var(--accent-2)">시트 연동 확정안</a> 참고.</p>
   </section>
 

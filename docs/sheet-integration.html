@@ -104,7 +104,7 @@
         <tr><td class="num-cell">5</td><td>점수 표시</td><td>종목별 <strong>원값 그대로</strong> (정규화·합산 없음). 목표 달성은 뱃지 <span class="good">← 변경됨</span></td></tr>
         <tr><td class="num-cell">6</td><td>사이트 접근</td><td>팀 전용 · 공용 패스코드 (서버에서 검증)</td></tr>
         <tr><td class="num-cell">7</td><td>시트 접근</td><td><strong>서비스 계정</strong>(읽기+쓰기) + <strong>비공개</strong> 시트 <span class="good">← 변경됨</span></td></tr>
-        <tr><td class="num-cell">8</td><td>선수 식별</td><td><strong>참조 구조</strong> — id 없음. 버니스명단 <strong>행 위치</strong>가 신원, 회차는 이름 참조 수식 <span class="good">← 변경됨</span></td></tr>
+        <tr><td class="num-cell">8</td><td>선수 식별</td><td><strong>참조 구조</strong> — id 없음. 버니스명단 <strong>행 위치</strong>가 신원, 회차는 <strong>이름 텍스트 매칭</strong>(행 위치 무관) <span class="good">← 변경됨</span></td></tr>
         <tr><td class="num-cell">9</td><td>명단 원천</td><td><span class="tabname">버니스명단</span> 탭</td></tr>
         <tr><td class="num-cell">10</td><td>가입/탈퇴</td><td><code class="inline">상태</code> 열 소프트 탈퇴 (행 삭제 금지)</td></tr>
         <tr><td class="num-cell">11</td><td>캐싱</td><td>긴 캐시 + 관리자 새로고침 버튼</td></tr>
@@ -133,14 +133,12 @@
 45도패스캐치  |  5   |  7   | 높을수록</div>
     <p class="muted" style="font-size:13px;">※ <code class="inline">만점</code>은 표시용 분모(예: 골밑슛 <code class="inline">6/10</code>). <code class="inline">방향</code>은 종목별 랭킹 정렬 기준(셔틀런만 낮을수록 상위).</p>
 
-    <h3><span class="tabname">2025-05-16</span> 회차 탭 — 명단 전원 미러링, 참여자만 점수 입력</h3>
-    <div class="sheet"><span class="h">이름(참조)          | 드리블셔틀런 | 골밑슛 | 자유투 | 45도패스캐치</span>   <span class="note">← 헤더 종목명 = ='목표'!A2:A5</span>
-='버니스명단'!A2 → 선수1 | 1:12       |  5    |  2    |  6
-='버니스명단'!A3 → 선수2 | 1:14       |  6    |  1    |  7
-='버니스명단'!A6 → 선수5 | 1:16       |  8    |  2    |  면제      <span class="note">← 면제 = '면제'</span>
-='버니스명단'!A7 → 선수6 | 1:19       |  6    |  3    |  6
-='버니스명단'!A8 → 선수7 |             |       |       |            <span class="note">← 미참여 = 점수 빈칸</span></div>
-    <div class="callout info"><strong>이름·종목명 칸은 참조 수식</strong>입니다 (직접 타이핑 X). <span class="tabname" style="margin:0;">버니스명단</span>·<span class="tabname" style="margin:0;">목표</span>에서 이름/종목명을 바꾸면 <strong>회차에도 자동 반영</strong>. 사람이 채우는 건 <strong>점수 숫자뿐</strong>.</div>
+    <h3><span class="tabname">2025-05-16</span> 회차 탭 — 참가자만 입력, 이름 매칭</h3>
+    <div class="sheet"><span class="h">이름          | 드리블셔틀런 | 골밑슛 | 자유투 | 45도패스캐치</span>   <span class="note">← 헤더 종목명 = ='목표'!A2:A5</span>
+선수2         | 1:14       |  6    |  1    |  7        <span class="note">← 버니스명단 순서(가입순)와 무관하게, 참가자만 가나다순 등으로</span>
+선수5         | 1:16       |  8    |  2    |  면제      <span class="note">← 면제 = '면제'</span>
+선수6         | 1:19       |  6    |  3    |  6</div>
+    <div class="callout info"><strong>참가자만 행이 존재</strong>합니다 — 미참여자는 행 자체를 만들지 않습니다(빈 점수로 남기지 않음). <strong>이름 칸</strong>은 <code class="inline">='버니스명단'!A행</code> 참조 수식이든 직접 입력한 텍스트든 둘 다 가능하며, 사이트는 그 값을 <span class="tabname" style="margin:0;">버니스명단</span> 이름과 <strong>텍스트로 매칭</strong>해 선수를 식별합니다(행 위치는 보지 않음) — 명단에 없는 이름·명단 내 동명이인은 에러로 표시됩니다. <strong>종목 헤더</strong>는 여전히 <code class="inline">='목표'!A행</code> 참조 수식을 유지해 주세요.</div>
   </section>
 
   <!-- 3 -->
@@ -169,12 +167,12 @@
 
     <h3>선수 식별 & 명단 변화 (참조 구조)</h3>
     <ul style="font-size:14px;">
-      <li>회차 이름은 <code class="inline">='버니스명단'!A행</code> 참조 → <strong>개명하면 회차도 자동 반영</strong>(추이 안 끊김).</li>
+      <li>사이트는 회차 탭 이름 셀의 <strong>텍스트</strong>를 버니스명단 이름과 매칭해 선수를 식별한다(행 위치 무관). 이름 칸을 <code class="inline">='버니스명단'!A행</code> 참조 수식으로 채운 회차는 <strong>개명 시 자동 반영</strong>되지만, 직접 타이핑한 회차는 자동 반영되지 않는다 — 개명 시 그 이름을 손으로 입력해 둔 과거 회차가 있다면 함께 고쳐야 "명단에 없음" 에러 없이 계속 파싱된다.</li>
       <li>신원 = <strong>버니스명단 행 위치.</strong> 그래서 <strong>버니스명단·목표의 행 순서를 바꾸지 않는다</strong>(추가만). 이름순 등 <strong>정렬은 사이트에서</strong> 처리.</li>
-      <li>동명이인은 <span class="tabname" style="margin:0;">버니스명단</span>에서 이름 구분(예: <code class="inline">선수5</code>, <code class="inline">선수5B</code>).</li>
+      <li>동명이인은 <span class="tabname" style="margin:0;">버니스명단</span>에서 이름 구분(예: <code class="inline">선수5</code>, <code class="inline">선수5B</code>) — 구분하지 않으면 그 이름이 나오는 회차 탭 파싱이 "동명이인" 에러로 막힌다.</li>
       <li>과거 회차 랭킹은 그 당시 참여자 스냅샷 → 이후 탈퇴해도 지난 순위는 불변.</li>
     </ul>
-    <div class="callout">⚠️ <strong>탈퇴/정렬 = 행 삭제·재배치 금지.</strong> 명단 행을 지우거나 순서를 바꾸면, 그 행을 참조하던 회차 이름이 <strong>다른 사람으로 밀려 점수가 어긋납니다.</strong> 탈퇴는 <code class="inline">상태=탈퇴</code>로만, 명단은 맨 아래로 추가만.</div>
+    <div class="callout">⚠️ <strong>탈퇴/정렬 = 행 삭제·재배치 금지.</strong> 명단 행을 지우면, 그 이름을 참조하던 회차의 이름 참조 수식이 <strong>다른 사람으로 밀려 점수가 어긋납니다.</strong>(직접 타이핑한 이름 칸은 이 위험이 없지만, 명단에서 이름 자체가 사라지면 마찬가지로 "명단에 없음" 에러가 납니다.) 탈퇴는 <code class="inline">상태=탈퇴</code>로만, 명단은 맨 아래로 추가만.</div>
   </section>
 
   <!-- 4 -->
