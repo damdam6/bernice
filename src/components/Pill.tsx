@@ -8,7 +8,7 @@ type PillProps = {
 export function Pill({ colorClassName, children }: PillProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${colorClassName}`}
+      className={`inline-flex items-center rounded-badge px-2.5 py-1 text-[11px] font-bold ${colorClassName}`}
     >
       {children}
     </span>

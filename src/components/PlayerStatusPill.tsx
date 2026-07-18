@@ -6,10 +6,10 @@ type PlayerStatusPillProps = {
 }
 
 const PLAYER_STATUS_PILL_STYLE: Record<PlayerStatus, string> = {
-  활동: 'bg-good/15 text-good',
-  휴식: 'bg-warn/15 text-warn',
-  비대상: 'bg-slate-200 text-slate-600',
-  탈퇴: 'bg-bad/15 text-bad',
+  활동: 'bg-good-tint text-good-strong',
+  휴식: 'bg-warn-tint text-warn-strong',
+  비대상: 'bg-neutral-tint text-neutral-strong',
+  탈퇴: 'bg-bad-tint text-bad-strong',
 }
 
 export function PlayerStatusPill({ status }: PlayerStatusPillProps) {

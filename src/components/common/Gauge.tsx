@@ -29,7 +29,7 @@ export function Gauge({ value, size = 'md', label }: GaugeProps) {
         aria-label={`달성률 ${Math.round(clamped)}%`}
       >
         <svg viewBox="0 0 100 100" className="size-full -rotate-90">
-          <circle cx="50" cy="50" r={GAUGE_RADIUS} fill="none" strokeWidth={strokeWidth} className="stroke-brand-100" />
+          <circle cx="50" cy="50" r={GAUGE_RADIUS} fill="none" strokeWidth={strokeWidth} className="stroke-gauge-track" />
           <circle
             cx="50"
             cy="50"
@@ -38,16 +38,16 @@ export function Gauge({ value, size = 'md', label }: GaugeProps) {
             strokeWidth={strokeWidth}
             strokeLinecap={isPartial ? 'round' : 'butt'}
             strokeDasharray={getGaugeDashArray(clamped)}
-            className="stroke-brand-500"
+            className="stroke-primary"
           />
         </svg>
         <span
-          className={`absolute inset-0 flex items-center justify-center font-semibold text-brand-900 ${TEXT_SIZE[size]}`}
+          className={`absolute inset-0 flex items-center justify-center font-semibold text-ink ${TEXT_SIZE[size]}`}
         >
           {Math.round(clamped)}%
         </span>
       </div>
-      {label && <span className="text-xs text-brand-700">{label}</span>}
+      {label && <span className="text-xs text-ink-sub">{label}</span>}
     </div>
   )
 }

@@ -15,7 +15,7 @@ export function Spinner({ size = 'md', label = '불러오는 중…' }: SpinnerP
   return (
     <div className="inline-flex items-center justify-center" role="status">
       <span
-        className={`inline-block animate-spin rounded-full border-brand-100 border-t-brand-600 ${SIZE_CLASS[size]}`}
+        className={`inline-block animate-spin rounded-full border-line border-t-primary ${SIZE_CLASS[size]}`}
       />
       <span className="sr-only">{label}</span>
     </div>
