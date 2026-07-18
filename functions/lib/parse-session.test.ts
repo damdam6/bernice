@@ -112,11 +112,54 @@ describe('parseSession', () => {
     }
   })
 
-  it('회차 탭 이름 셀이 명단과 일치하지 않으면 Error를 던진다', () => {
-    const rows = [HEADER, ['선수1', '1:12', '5', '2', '6']]
-    const players = buildPlayers(['다른사람']) // 1번 위치 이름이 다름
+  it('회차 탭 이름 셀이 명단에 없는 이름이면 Error를 던진다', () => {
+    const rows = [HEADER, ['모르는사람', '1:12', '5', '2', '6']]
 
-    expect(() => parseSession('2025-05-16', rows, players, buildEvents())).toThrow(/일치하지 않습니다/)
+    expect(() => parseSession('2025-05-16', rows, buildPlayers(), buildEvents())).toThrow(/명단에 없습니다/)
+  })
+
+  it('명단에 동명이인이 있으면 이름만으로 특정할 수 없어 Error를 던진다', () => {
+    const rows = [HEADER, ['선수1', '1:12', '5', '2', '6']]
+    const players: Player[] = [
+      { id: 1, name: '선수1', status: '활동' },
+      { id: 5, name: '선수1', status: '활동' }, // 동명이인 — 버니스명단에서 구분되지 않은 경우
+    ]
+
+    expect(() => parseSession('2025-05-16', rows, players, buildEvents())).toThrow(/동명이인/)
+  })
+
+  it('같은 회차 탭에 같은 사람이 두 행으로 나타나면 Error를 던진다', () => {
+    const rows = [
+      HEADER,
+      ['선수1', '1:12', '5', '2', '6'],
+      ['선수1', '1:14', '6', '1', '7'], // 같은 이름이 실수로 한 번 더 입력됨
+    ]
+
+    expect(() => parseSession('2025-05-16', rows, buildPlayers(['선수1']), buildEvents())).toThrow(/중복으로 나타납니다/)
+  })
+
+  it('명단은 가입순, 회차 탭은 참가자 일부만 가나다순으로 나열돼도 이름 매칭으로 정상 파싱한다', () => {
+    // 명단(가입순): 다솜(1), 가영(2), 바다(3), 나은(4) — 회차엔 이 중 3명만, 가나다순으로 입력
+    const players: Player[] = [
+      { id: 1, name: '다솜', status: '활동' },
+      { id: 2, name: '가영', status: '활동' },
+      { id: 3, name: '바다', status: '활동' },
+      { id: 4, name: '나은', status: '활동' },
+    ]
+    const rows = [
+      HEADER,
+      ['가영', '1:12', '5', '2', '6'],
+      ['나은', '1:14', '6', '1', '7'],
+      ['바다', '1:20', '4', '2', '5'],
+    ]
+
+    const session = parseSession('2025-05-16', rows, players, buildEvents())
+
+    expect(session.entries.map((e) => ({ playerId: e.playerId, name: e.name }))).toEqual([
+      { playerId: 2, name: '가영' },
+      { playerId: 4, name: '나은' },
+      { playerId: 3, name: '바다' },
+    ])
   })
 
   it('이름 셀이 NFD(자모 분해)로 들어와도 NFC 정규화 후 일치하면 정상 통과한다', () => {
@@ -157,13 +200,6 @@ describe('parseSession', () => {
     const rows = [['이름', '드리블셔틀런', '드리블셔틀런', '골밑슛', '자유투', '45도패스캐치']]
 
     expect(() => parseSession('2025-05-16', rows, buildPlayers(), buildEvents())).toThrow(/중복/)
-  })
-
-  it('데이터 행이 명단에 없는 위치를 참조하면 Error를 던진다', () => {
-    const rows = [HEADER, ['선수1', '1:12', '5', '2', '6'], ['선수2', '1:14', '6', '1', '7']]
-    const players = buildPlayers(['선수1']) // 명단 1명뿐인데 행은 2개
-
-    expect(() => parseSession('2025-05-16', rows, players, buildEvents())).toThrow(/명단에 없는 위치/)
   })
 
   it('데이터 행 수가 명단보다 적은 것(신규 가입자 미포함)은 정상이다', () => {
@@ -239,7 +275,7 @@ describe('parseSession', () => {
   })
 
   describe('players 배열에 결번이 있는 경우 (명단 파서(#25)가 이름 없음·알 수 없는 상태값 행을 issues로 빼고 players에서 제외 — id는 원본 행 위치로 고정, functions/lib/roster.ts)', () => {
-    it('결번 위치를 참조하는 행은 엉뚱한 선수와 매칭되지 않고 "명단에 없는 위치"로 Error를 던진다', () => {
+    it('결번이 있어도 이름 매칭에는 영향을 주지 않고, 빈 행은 스킵되며 그 뒤 행은 이름으로 정확히 매칭된다', () => {
       const players: Player[] = [
         { id: 1, name: '선수1', status: '활동' },
         { id: 3, name: '선수3', status: '활동' }, // id=2는 명단에서 상태값 오타 등으로 제외된 행
@@ -247,24 +283,7 @@ describe('parseSession', () => {
       const rows = [
         HEADER,
         ['선수1', '1:12', '5', '2', '6'],
-        ['선수2', '1:14', '6', '1', '7'], // 명단 2번 위치를 참조 — players엔 없음
-        ['선수3', '1:20', '4', '2', '5'],
-      ]
-
-      expect(() => parseSession('2025-05-16', rows, players, buildEvents())).toThrow(
-        /명단에 없는 위치를 참조합니다 \(playerId=2\)/,
-      )
-    })
-
-    it('결번 위치의 회차 탭 행이 빈 행이면 스킵되고, 그 뒤 행은 id 기반으로 정확히 매칭된다', () => {
-      const players: Player[] = [
-        { id: 1, name: '선수1', status: '활동' },
-        { id: 3, name: '선수3', status: '활동' },
-      ]
-      const rows = [
-        HEADER,
-        ['선수1', '1:12', '5', '2', '6'],
-        ['', '', '', '', ''], // 2번 위치는 명단 자체가 빈 행이었던 경우
+        ['', '', '', '', ''], // 회차 탭 자체도 그 사람은 빈 행(참가자만 포맷이라 애초에 없을 수도 있음)
         ['선수3', '1:20', '4', '2', '5'],
       ]
 
