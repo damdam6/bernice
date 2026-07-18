@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#42 P2 — 인증 미들웨어 (/api/* 보호, 401 응답 계약 확정) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/42">#42</a></span><span class="type-chip">기능 개선</span>
+    <h1>P2 — 인증 미들웨어 (/api/* 보호, 401 응답 계약 확정)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/42-auth-middleware</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-18</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>모든 <code>/api/*</code> 요청 앞에 세션 쿠키 검증 미들웨어를 세운다. 쿠키 없음·무효·만료면
+    <code>401 {"error":"unauthorized"}</code>, <code>/api/admin/*</code>에 team 세션이 오면
+    <code>403 {"error":"forbidden"}</code>으로 응답 계약을 여기서 확정한다(프론트 P3-3 useRecords·관리자 UI가 참조).
+    예외 경로는 <code>/api/login</code>·<code>/api/health</code> 두 개. 검증 로직은 #40이 만든
+    <code>functions/lib/session-cookie.ts</code>의 <code>parseCookies</code>+<code>verifySessionToken</code>을
+    그대로 소비만 한다 — 이 유틸은 처음부터 #42 미들웨어를 소비자로 설계돼 있다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>토큰 발급은 완료</b> — <code>functions/api/login.ts:16</code>이 패스코드 검증 후
+        <code>issueSessionToken</code>+<code>buildSessionSetCookie</code>로 role(<code>team|admin</code>) 세션 쿠키를 발급한다(#41, 머지됨).
+        <code>functions/api/login.ts:5</code> 주석이 "role 검사는 후속 #42 미들웨어 몫"이라고 분업을 명시.</li>
+      <li><b>검증 유틸도 완료</b> — <code>functions/lib/session-cookie.ts:81</code> <code>verifySessionToken</code>은
+        서명→만료→role 순 검사, 모든 비정상 입력에 throw 없이 <code>null</code> 반환
+        (<code>session-cookie.ts:79</code>: "미들웨어(#42)가 try/catch 없이 쓰고 role로 분기하는 것이 계약").
+        <code>parseCookies</code>(<code>session-cookie.ts:126</code>)와 쿠키명 상수
+        <code>SESSION_COOKIE_NAME</code>(<code>session-cookie.ts:17</code>)도 준비돼 있다.
+        HMAC 키 캐시(<code>session-cookie.ts:38</code>)가 요청마다 도는 미들웨어 비용을 이미 흡수한다.</li>
+      <li><b>보호는 아직 없음</b> — <code>functions/api/records.ts:2</code> 주석 그대로
+        "인증 게이트는 P2 범위 — 여기서는 적용하지 않는다". 현재 <code>/api/records</code>는 누구나 호출 가능.
+        <code>functions/_middleware.ts</code>·<code>functions/api/_middleware.ts</code> 모두 부재.</li>
+      <li><b>에러 계약 근거</b> — <code>docs/prd-record-input.html:305-306</code>:
+        401 <code>unauthorized</code>(세션 없음·만료) · 403 <code>forbidden</code>(팀 세션이지만 관리자 아님).
+        기존 에러 바디는 전부 <code>{error, message}</code> 형태(<code>login.ts:60</code>, <code>records.ts:40-47</code>).</li>
+      <li><b>/api/admin/* 엔드포인트는 아직 없다</b> — 계약(403)만 미리 확정하는 단계. 미들웨어가
+        <code>/api/*</code> 전체에 걸리므로 admin 라우트가 생기기 전에도 게이트는 즉시 유효하다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>파일 위치: <code>functions/api/_middleware.ts</code></b> (이슈 본문의 <code>functions/_middleware.ts</code>에서 의도적 변경).
+        루트 미들웨어는 Pages 자동 라우팅에 <code>/*</code>를 추가해 <b>정적 자산 요청까지 전부 Function 호출로</b> 끌어들인다.
+        <code>functions/api/</code> 하위 배치는 라우트가 정확히 <code>/api/*</code>로 잡혀 보호 대상과 실행 범위가 일치하고,
+        정적 서빙은 기존 무료 경로를 유지한다. 이슈의 기능 요구(<code>/api/*</code> 보호)는 동일하게 충족.</li>
+      <li><b>흐름</b>: ① <code>pathname</code>이 예외 경로(<code>/api/login</code>·<code>/api/health</code> 정확 일치)면 <code>next()</code>
+        → ② <code>parseCookies</code>로 <code>bernice_session</code> 추출, <code>verifySessionToken</code> 호출, <code>null</code>이면
+        <code>401 {error:'unauthorized', message}</code> → ③ <code>/api/admin</code> 또는 <code>/api/admin/*</code>인데
+        <code>claims.role !== 'admin'</code>이면 <code>403 {error:'forbidden', message}</code> → ④ <code>next()</code>.</li>
+      <li><b>admin 판정</b>: <code>pathname === '/api/admin' || pathname.startsWith('/api/admin/')</code> —
+        <code>/api/adminx</code> 같은 접두 오탐 방지. 판정 전에 pathname을 <code>decodeURIComponent</code>로 정규화
+        (실패 시 원문 사용) — 라우터가 <code>%2F</code>를 디코드해 매칭하는 경우에도 미들웨어 판정이 더 좁아지는(우회) 일이 없게 한다.</li>
+      <li><b>에러 바디</b>: 계약 필드는 <code>error</code>(<code>unauthorized</code>/<code>forbidden</code>), 기존 컨벤션대로
+        한국어 <code>message</code> 동봉. 401에 <code>Set-Cookie</code> 삭제는 하지 않는다(만료 쿠키는 무해, 로그아웃은 별도 이슈).</li>
+      <li><b>기각한 대안</b>: 각 엔드포인트에 검증 헬퍼 호출(신규 라우트마다 누락 위험 — fail-open) ·
+        루트 <code>functions/_middleware.ts</code>에서 pathname 필터링(위의 정적 자산 비용) ·
+        예외 경로 prefix 매칭(<code>/api/login-x</code> 같은 의도치 않은 통과 — 정확 일치가 fail-closed).</li>
+      <li><b>SESSION_SECRET 미설정</b>: <code>verifySessionToken</code>이 명시적 throw(<code>session-cookie.ts:42</code>) → 500.
+        설정 누락을 조용한 401로 위장하지 않는 fail-loud가 유틸의 설계 의도이므로 그대로 둔다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><code>functions/api/_middleware.ts</code> 신규 — <code>onRequest</code> 하나로 위 설계 흐름 구현.
+        <code>session-cookie.ts</code>에서 <code>SESSION_COOKIE_NAME</code>·<code>parseCookies</code>·<code>verifySessionToken</code> 임포트,
+        <code>Env</code>는 <code>SESSION_SECRET</code>만. 파일 머리에 계약(401/403)과 예외 경로, 위치 결정 이유 주석.
+        <span class="files"><code>functions/api/_middleware.ts</code></span>
+      </li>
+      <li class="done">테스트 신규 — <code>login.test.ts</code> 스타일(makeContext 헬퍼) 그대로, mock <code>next()</code> 주입.
+        케이스: 쿠키 없음→401 · 변조/쓰레기 토큰→401 · 만료 토큰→401(과거 <code>now</code>로 발급) · 다른 secret 서명→401 ·
+        유효 team→통과(next 호출 확인) · <code>/api/admin/*</code>+team→403 · +admin→통과 · <code>/api/admin</code>(맨몸)+team→403 ·
+        <code>/api/adminx</code>+team→통과(접두 오탐 없음) · <code>/api/login</code>·<code>/api/health</code> 쿠키 없이 통과 ·
+        401/403 바디의 <code>error</code> 필드 계약 검증.
+        <span class="files"><code>functions/api/_middleware.test.ts</code></span>
+      </li>
+      <li class="done"><code>records.ts</code> 머리 주석 갱신 — "인증 게이트는 P2 범위, 여기서는 적용하지 않는다"를
+        "인증은 <code>_middleware.ts</code>(#42)가 담당"으로. 코드 변경 없음.
+        <span class="files"><code>functions/api/records.ts</code></span>
+      </li>
+      <li class="done">검증 — <code>npm run typecheck</code> + <code>npm test</code>(기존 스위트 포함 전체 그린 확인).
+        <span class="files"><code>package.json</code> scripts</span>
+        <span class="note">✓ typecheck 통과 · 31파일/331테스트 그린(신규 12 포함). 워크트리에 <code>npm ci</code> 필요했음
+        (메인 체크아웃 node_modules에 lucide-react 미설치 — 본 변경과 무관). 추가로 <code>wrangler pages dev</code>
+        e2e 실측: 무쿠키 records 401 · health/login 통과 · team→admin경로 403 · admin 통과 · 핸들러 없는
+        /api/admin/*도 미들웨어에 걸림 확인.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>머지 직후 프론트 <code>/api/records</code>가 401</td>
+            <td>P2-5(로그인 게이트 UI) 전까지 화면 데이터 빈 상태</td>
+            <td>이슈에 이미 명시된 계획된 공백 — 프로덕션 배포 전이라 실사용 영향 없음. 로컬은 <code>curl</code>로 로그인 쿠키 받아 확인</td></tr>
+        <tr><td>로컬 <code>.dev.vars</code>에 SESSION_SECRET 누락</td>
+            <td><code>wrangler pages dev</code>에서 모든 보호 경로 500</td>
+            <td>fail-loud 의도(설정 누락 은폐 방지). <code>.dev.vars.example</code>에 이미 항목 존재 — 에러 메시지가 원인을 직접 지목</td></tr>
+        <tr><td>이슈 본문과 다른 파일 위치(<code>functions/api/_middleware.ts</code>)</td>
+            <td>이슈-코드 대조 시 혼선 가능</td>
+            <td>설계 §3에 근거 문서화, PR 본문에도 명시</td></tr>
+        <tr><td>향후 admin 라우트 추가 시 경로 인코딩 판정 불일치</td>
+            <td><code>%2F</code> 류 우회 가능성(이론상)</td>
+            <td>판정 전 <code>decodeURIComponent</code> 정규화로 미들웨어 판정을 라우터보다 넓게 유지</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li>신규 <code>functions/api/_middleware.test.ts</code> — 작업 단계 2의 전 케이스(vitest). 토큰은 실제
+        <code>issueSessionToken</code>으로 발급해 서명·만료 경로를 실물로 검증.</li>
+      <li>기존 스위트 회귀 — <code>npm test</code> 전체 그린(특히 <code>login.test.ts</code>·<code>session-cookie.test.ts</code> 무변경 통과).</li>
+      <li><code>npm run typecheck</code> — <code>functions/tsconfig.json</code> strict 통과.</li>
+      <li>수동 확인(로컬) — <code>npm run dev:api</code> 후: 쿠키 없이 <code>curl /api/records</code> → 401 ·
+        <code>curl /api/health</code> → 200 · <code>/api/login</code>으로 쿠키 받아 재요청 → 200.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>쿠키 없음/무효/만료 → <code>401 {"error":"unauthorized"}</code>, 유효 세션 → 통과 (테스트로 증명)</li>
+      <li><code>/api/admin/*</code>: team 세션 → <code>403 {"error":"forbidden"}</code>, admin 세션 → 통과</li>
+      <li><code>/api/login</code>·<code>/api/health</code>는 쿠키 없이 접근 가능</li>
+      <li>vitest 신규 테스트 + 기존 전체 스위트 그린, typecheck 통과</li>
+      <li>401·403 응답 계약이 미들웨어 코드·주석으로 확정 — 프론트 P3-3·관리자 UI가 참조할 단일 근거</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/42">#42</a> · 2026-07-18</footer>
+</main>
+</body>
+</html>
