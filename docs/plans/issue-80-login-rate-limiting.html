@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#80 /api/login 로그인 시도 rate limiting — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/80">#80</a></span><span class="type-chip">기능 개선 (보안)</span>
+    <h1>P2 — /api/login 로그인 시도 rate limiting (무차별 대입 방어)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/80-login-rate-limiting</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-18</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>PR #77 코드리뷰의 🟠 major(security) 지적에 대한 후속 작업. <code>/api/login</code>에 시도 제한이 없어 패스코드 무차별 대입이 가능하다. 이슈의 방안 A~D 중 <b>B안(KV 카운터)</b>으로 확정한다 — 이 앱은 무료 <code>*.pages.dev</code> 도메인이라 WAF 규칙(A)을 붙일 존이 없고, Rate Limiting 바인딩(D)은 Workers 전용이라 Pages Functions에서 못 쓰며, DO(C)는 별도 Worker 배포가 필요해 팀 앱 규모에 과하다. IP당 실패 5회를 넘으면 10분 슬라이딩 윈도우 동안 429 + <code>Retry-After</code>를 반환하고, 성공 로그인은 카운터를 지운다. KV 바인딩이 없으면 기존 동작 그대로(fail-open) — 배포 순서에 안전하다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>functions/api/login.ts:16-40</code> — <code>onRequestPost</code>는 JSON 파싱 → 빈/비문자열 code 거르기 → <code>resolveRole</code> 고정시간 비교 → 성공 시 세션 쿠키 발급, 실패 시 즉시 401. <b>시도 횟수 제한·지연·차단이 전혀 없다.</b></li>
+      <li><code>functions/api/login.ts:53-56</code> — <code>constantTimeEqual</code>은 타이밍 오라클만 막는다. 반복 시도는 자유.</li>
+      <li><code>wrangler.jsonc</code> — 바인딩은 <code>vars.SHEET_ID</code>뿐. KV·DO·Rate Limiting 등 상태 저장 바인딩이 없어 애플리케이션 레벨 카운팅 인프라가 아직 없다.</li>
+      <li><code>docs/sheet-integration.html</code> — 호스팅은 "우선 무료 <code>*.pages.dev</code> → 이후 커스텀 도메인" 확정. 현재 커스텀 도메인(존)이 없다.</li>
+      <li><code>functions/api/login.test.ts:11-26</code> — 테스트는 <code>makeContext</code>로 request/env만 채워 핸들러를 직접 호출하는 패턴. KV는 in-memory 모의 객체로 같은 패턴에 얹을 수 있다.</li>
+      <li>클라이언트 IP는 Cloudflare가 모든 요청에 붙이는 <code>CF-Connecting-IP</code> 헤더로 얻을 수 있다(로컬 <code>wrangler pages dev</code>에서도 세팅됨).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>선정: B안 — KV 실패 카운터.</b> 탈락 사유:</p>
+    <ul>
+      <li><b>A. WAF Rate Limiting 규칙</b> — 존(커스텀 도메인) 단위 기능. 현재 <code>*.pages.dev</code>만 쓰므로 적용할 존이 없고, 코드/레포 밖 설정이라 vitest 검증도 불가.</li>
+      <li><b>C. Durable Object</b> — Pages Functions는 DO를 직접 정의 못 해 별도 Worker 배포가 필요. 소규모 팀 앱 로그인에 강한 일관성은 과투자.</li>
+      <li><b>D. Rate Limiting 바인딩</b> — <code>unsafe.bindings</code> 기반 Workers 전용 API. Pages Functions(wrangler.jsonc의 <code>pages_build_output_dir</code> 구성)에서 지원되지 않음.</li>
+    </ul>
+    <p><b>동작 설계</b> (새 모듈 <code>functions/lib/login-rate-limit.ts</code>):</p>
+    <ul>
+      <li>상수: <code>MAX_FAILURES = 5</code>, <code>WINDOW_SECONDS = 600</code>(10분). KV 키 <code>login-fail:{ip}</code>, 값 <code>{ count, resetAt }</code> JSON.</li>
+      <li><b>차단 판정</b>: 핸들러 진입 시 <code>count ≥ MAX_FAILURES</code>이고 <code>now &lt; resetAt</code>이면 429 + <code>Retry-After: resetAt−now</code> + <code>{ error: 'too_many_attempts' }</code>. 차단 중에는 카운터를 갱신하지 않는다(차단 연장 없음 → 마지막 실패로부터 10분 뒤 자동 해제).</li>
+      <li><b>실패 기록</b>: 401(패스코드 불일치)마다 <code>count+1</code>, <code>resetAt = now + WINDOW</code>, <code>expirationTtl = WINDOW</code>로 put — 슬라이딩 윈도우(연속 실패가 이어지면 창이 밀린다). TTL이 항상 600초라 KV 최소 TTL(60초) 제약과 충돌 없음.</li>
+      <li><b>성공/무관 요청</b>: 200 성공 시 키 delete(정상 이용자 오입력 흔적 초기화). 400(비-JSON)은 패스코드 추측이 아니므로 카운트하지 않음.</li>
+      <li><b>키 식별자</b>: <code>CF-Connecting-IP</code>, 없으면 <code>'unknown'</code>(로컬 개발 공용 버킷 — 무해).</li>
+      <li><b>fail-open</b>: <code>env.LOGIN_RATE_LIMIT</code>(KVNamespace)이 미바인딩이면 제한 로직 전체를 건너뛴다. 바인딩 생성 전에도 배포가 깨지지 않고, 로컬 dev는 wrangler가 KV를 로컬 시뮬레이션해준다.</li>
+      <li>테스트 주입을 위해 시간은 <code>now</code> 인자(기본 <code>Date.now()</code>)로 받는다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ 레이트리밋 모듈 신설 — <code>isBlocked</code>/<code>recordFailure</code>/<code>clearFailures</code>(가칭)와 상수·타입. KV 인터페이스는 get/put/delete만 쓰는 최소 타입으로 받아 모의 주입 가능하게.
+        <span class="files"><code>functions/lib/login-rate-limit.ts</code></span>
+      </li>
+      <li>✅ 모듈 단위 테스트 — 카운트 누적, 임계 도달 시 차단 + Retry-After 계산, 윈도우 경과 후 해제, delete 동작. in-memory KV 모의 + <code>now</code> 주입.
+        <span class="files"><code>functions/lib/login-rate-limit.test.ts</code></span>
+      </li>
+      <li>✅ 로그인 핸들러 통합 — Env에 <code>LOGIN_RATE_LIMIT?: KVNamespace</code> 추가, 진입부에서 차단 검사(429), 401 경로에서 실패 기록, 200 경로에서 카운터 삭제, 미바인딩 시 fail-open.
+        <span class="files"><code>functions/api/login.ts</code></span>
+      </li>
+      <li>✅ 핸들러 통합 테스트 — 5회 실패 후 6번째 429(+Retry-After 헤더), 차단 중엔 올바른 코드도 429, 성공 시 카운터 리셋, IP별 독립 카운트, 400은 미집계, KV 미바인딩 시 기존 401/200 동작 유지(기존 테스트 전부 그대로 통과해야 함).
+        <span class="files"><code>functions/api/login.test.ts</code></span>
+      </li>
+      <li>✅ KV 네임스페이스 생성 + 바인딩 — <code>npx wrangler kv namespace create LOGIN_RATE_LIMIT</code> 후 <code>wrangler.jsonc</code>에 <code>kv_namespaces</code> 추가. wrangler 미인증 등으로 생성 불가 시: fail-open 덕에 코드만 먼저 머지 가능 — 생성·바인딩 명령을 PR 본문에 후속 체크리스트로 기록. <b>실행 결과: 네임스페이스 생성 완료(id <code>9ddc73ab7790437b9bdd88e9286af43f</code>), wrangler.jsonc 바인딩 반영 — 폴백 불필요.</b>
+        <span class="files"><code>wrangler.jsonc</code></span>
+      </li>
+      <li>✅ 결정 근거 기록 — 이슈 완료 조건 "방식 결정 및 근거"는 이 플랜 문서와 PR 본문(B안 선정 + A/C/D 탈락 사유 요약)으로 충족.
+        <span class="files"><code>docs/plans/issue-80-login-rate-limiting.html</code></span>
+      </li>
+      <li>✅ 전체 검증 — <code>npm run typecheck</code> + <code>npm test</code> 그린 확인 후 커밋·푸시·PR(<code>Closes #80</code>). <b>실행 결과: typecheck 통과, 31파일 332테스트 전부 그린</b> (워크트리에 <code>npm ci</code> 선행 — 신규 워크트리라 의존성 미설치였던 환경 이슈로, 코드 변경과 무관).
+        <span class="files"><code>package.json</code> scripts</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>KV eventual consistency — 여러 엣지 PoP에서 동시 시도하면 임계(5회)를 몇 회 초과해 통과 가능</td><td>낮음 — 차단이 수 초~수십 초 늦어질 뿐, 무차별 대입 자체는 여전히 무력화</td><td>이슈에 이미 명시된 KV의 알려진 한계로 수용하고 PR에 기록. 정밀 보장이 필요해지면 C안(DO)으로 승격</td></tr>
+        <tr><td>공유 IP(NAT·사내망)에서 한 명의 오입력 5회가 팀 전체를 10분 차단</td><td>중간 — 정상 이용자 일시 차단</td><td>임계 5회/10분은 보수적 값 + 성공 로그인 시 카운터 즉시 삭제로 오입력 흔적 초기화. 필요 시 상수만 조정</td></tr>
+        <tr><td><code>LOGIN_RATE_LIMIT</code> 바인딩을 프로덕션에 붙이지 않으면 fail-open이라 방어가 비활성</td><td>중간 — 기능이 조용히 꺼진 상태 유지</td><td>PR 본문에 네임스페이스 생성·바인딩을 완료 체크리스트로 명시, wrangler.jsonc 주석에도 기록</td></tr>
+        <tr><td>429 신설로 프론트 로그인 폼(후속 이슈)의 에러 처리 계약 변화</td><td>낮음</td><td>응답 스키마를 기존 401과 동형(<code>{ error, message }</code>)으로 맞추고 <code>Retry-After</code> 헤더 제공</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>모듈 테스트</b> (<code>login-rate-limit.test.ts</code>): 실패 1~4회 누적 시 비차단 → 5회째부터 차단, <code>Retry-After = resetAt − now</code> 정확성, 윈도우 경과(<code>now</code> 전진) 후 해제, <code>clearFailures</code> 후 재카운트 0부터.</li>
+      <li><b>통합 테스트</b> (<code>login.test.ts</code> 확장): 틀린 코드 5회 → 6번째 요청 429 + <code>Retry-After</code> 헤더 + <code>error: 'too_many_attempts'</code>; 차단 중 올바른 코드도 429·Set-Cookie 없음; 4회 실패 후 성공 → 200이고 카운터 삭제돼 다음 실패는 1회부터; IP가 다르면 서로 독립; 비-JSON 400은 카운터 미증가; <code>LOGIN_RATE_LIMIT</code> 미바인딩이면 무제한 시도에도 기존 401.</li>
+      <li><b>회귀</b>: 기존 <code>login.test.ts</code> 9개 케이스가 수정 없이(또는 KV 모의만 추가된 채) 전부 통과 — 성공/정상 이용 영향 없음 확인.</li>
+      <li><b>전체</b>: <code>npm run typecheck</code> && <code>npm test</code> 그린.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>✅ 짧은 시간 창(10분) 내 실패 5회 초과 시 429 + <code>Retry-After</code> 응답, 성공·정상 이용엔 영향 없음 (vitest로 증명)</li>
+      <li>✅ 방식 B(KV 카운터) 확정 및 A/C/D 탈락 근거가 플랜 문서·PR 본문에 기록됨</li>
+      <li>✅ vitest 테스트 신규(모듈) + 확장(핸들러 통합) 전부 그린, 기존 테스트 회귀 없음</li>
+      <li>✅ KV 네임스페이스 바인딩(<code>LOGIN_RATE_LIMIT</code>)이 wrangler.jsonc에 반영되거나, 불가 시 생성 절차가 PR 체크리스트로 명시됨</li>
+      <li>PR이 <code>Closes #80</code>으로 열리고 CI 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/80">#80</a> · 2026-07-18</footer>
+</main>
+</body>
+</html>
