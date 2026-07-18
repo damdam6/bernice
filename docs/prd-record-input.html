@@ -67,11 +67,11 @@
 <div class="wrap">
 
   <header class="hero">
-    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="build-plan.html">작업 계획</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
-    <span class="badge">PRD · P5 확장 · 인터뷰 확정 반영</span>
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="build-plan.html">작업 계획</a> · <a href="prd-design.html">디자인 PRD</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
+    <span class="badge">PRD · P5 확장 · 인터뷰 + 디자인 확정 반영</span>
     <h1>📲 PRD — 사이트에서 기록 입력</h1>
     <p class="sub">측정일에 관리자가 폰으로 사이트에서 직접 점수를 입력·수정하는 기능. 시트는 계속 데이터 원천(SoT)이고, 사이트는 시트에 쓰는 클라이언트다.</p>
-    <div class="status">✅ 열린 결정 전부 사용자 인터뷰로 확정 (2026-07-17) · 이 문서만 읽고 후속 이슈 분할·구현 착수 가능</div>
+    <div class="status">✅ 열린 결정 전부 사용자 인터뷰로 확정 + 같은 날 모바일 확정 목업 반영 (2026-07-17, <a href="prd-design.html" style="color:inherit; text-decoration:underline;">디자인 PRD</a>) · 이 문서만 읽고 후속 이슈 분할·구현 착수 가능</div>
   </header>
 
   <nav class="toc">
@@ -136,6 +136,17 @@
         <tr><td class="num-cell">7</td><td>모바일 입력기</td><td><b>종목 타입별 맞춤 입력기.</b> 시간 종목(셔틀런)은 분:초 2필드 숫자 키패드, 개수 종목은 숫자 키패드, 면제는 토글, 빈칸 = 미측정</td></tr>
       </tbody>
     </table>
+
+    <h3>모바일 디자인 목업으로 확정 (2026-07-17, <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a>)</h3>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>항목</th><th>결정</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">8</td><td>기록 입력 동선</td><td><b>날짜 선택 화면이 명시적 단계로 추가.</b> 시트 관리 → 기록 입력 → <b>날짜 선택(회차별 완료 n/N 표시)</b> → 참가자 목록 → 선수별 입력. "시트 관리" 홈에서 기록 입력이 제1 기능(강조 버튼)</td></tr>
+        <tr><td class="num-cell">9</td><td>개수 입력기</td><td>숫자 필드 + <b>스테퍼(−/+)</b> 병행. 스테퍼는 만점에서 클램프(편의), 직접 입력은 만점 초과 허용 유지(§08과 일관)</td></tr>
+        <tr><td class="num-cell">10</td><td>면제 토글 노출</td><td><b>면제 가능 종목(현재 45도 패스캐치)에만 토글 노출.</b> 서버·파서는 기존대로 모든 종목의 <code class="inline">면제</code>를 수용(escape hatch 동일 의미론) — UI 노출만 제한. 면제 가능 플래그는 프론트 종목 상수로 시작(디자인 PRD §09)</td></tr>
+        <tr><td class="num-cell">11</td><td>저장 후 동선</td><td>저장 성공 → <b>참가자 목록 복귀 + 토스트</b>("✓ {이름} 저장됨 · 팀원 열람에 반영"). 별도의 "다음 미입력 선수 자동 이동"은 두지 않음 — 목록의 상태 뱃지로 다음 대상 식별</td></tr>
+      </tbody>
+    </table>
     <p class="muted" style="font-size:13px;">※ 인터뷰 과정 기록: 저장 단위는 처음 "종목별 저장"이 선택됐으나, 입력 동선을 "선수 선택 → 타입별 기입"으로 확정하면서 <b>선수 단위 저장으로 대체</b>했다(동선과 저장 단위 1:1). 종목 단위 일괄 기입 화면은 비스코프(§10) — 필요해지면 후속 이슈.</p>
   </section>
 
@@ -170,22 +181,26 @@
     <h2><span class="num">04</span>유저 플로우</h2>
 
     <h3>측정일 시나리오 (주 시나리오 — 체육관, 폰)</h3>
-    <div class="flow"><span class="k">관리자 로그인</span> (관리자 코드 입력 → role: admin 세션)
+    <div class="flow"><span class="k">관리자 로그인</span> (홈 잠금 아이콘 → 관리자 코드 입력 → role: admin 세션)
   │
   ▼
-<span class="k">관리자 페이지</span> — 오늘 회차 탭 없으면:
-  [기록지 만들기] → 참가자 선택 모달(활동만·가나다·기본 해제) → 회차 탭 생성   <span class="note">← P5 create-sheet</span>
+<span class="k">시트 관리</span> — 버튼 3개: <span class="k">기록 입력</span>(강조) · 참가자 추가 · 기록지 만들기
+  오늘 회차 탭 없으면:
+  [기록지 만들기] → 참가자 선택(활동만·가나다·기본 해제) → [N명으로 기록지 만들기]   <span class="note">← P5 create-sheet</span>
   │
   ▼
-<span class="k">참가자 목록</span> — 가나다 정렬 · 선수마다 입력 상태 표시 (미입력 / 일부 / 완료)
+<span class="k">기록 입력 · 날짜 선택</span> — 회차 카드(최신부터) · 완료 n/N 표시
+  │  날짜 탭
+  ▼
+<span class="k">참가자 목록</span> — 가나다 정렬 · 선수마다 입력 상태 뱃지 (미입력 / 일부 / 완료)
   │  선수 탭
   ▼
-<span class="k">선수별 입력 화면</span> — 전 종목을 타입별 입력기로 기입
-  시간(셔틀런): [분]:[초] · 개수: 숫자 키패드 · 면제: 토글 · 빈칸 = 미측정
+<span class="k">선수별 입력 화면</span> — 전 종목을 타입별 입력기로 기입 · 하단 고정 [저장]
+  시간(셔틀런): [분]:[초] · 개수: 스테퍼(−/+) + 숫자 키패드 · 면제: 토글(면제 가능 종목만) · 빈칸 = 미측정
   │  [저장]
   ▼
 <span class="k">저장</span> = 회차 탭 그 선수 행 1개 업데이트 → 성공 시 records 캐시 무효화
-  │  목록 복귀 (다음 미입력 선수로 이동 유도)
+  │  참가자 목록 복귀 + 토스트 "✓ {이름} 저장됨 · 팀원 열람에 반영"
   ▼
 (늦은 합류자) [참가자 추가] → 회차 탭 맨 아래 추가 → 목록에 등장 → 점수 입력   <span class="note">← P5 add-players</span>
   │
@@ -193,7 +208,7 @@
 <span class="k">전원 완료</span> — 팀원은 열람 패스코드로 랭킹·추이 즉시 확인</div>
 
     <h3>정정 시나리오 (자유 수정)</h3>
-    <div class="flow"><span class="k">관리자 페이지</span> → 회차 선택 (최신·과거 모두) → 참가자 목록 → 선수 선택
+    <div class="flow"><span class="k">시트 관리</span> → 기록 입력 → 날짜 선택 (최신·과거 모두) → 참가자 목록 → 선수 선택
   → 기존 값이 <span class="k">프리필</span>된 입력 화면 → 값 덮어쓰기 / 비우기(미측정 되돌리기) / 면제 전환
   → [저장] — 행 전체가 요청 값으로 교체 (마지막 저장 승리)</div>
     <p class="muted" style="font-size:13.5px;">"삭제"는 별도 동작이 아니라 <b>값을 비우고 저장</b>(= 미측정)이다. 회차 탭 자체의 삭제·날짜 변경, 참가자 행 제거는 비스코프(§10) — 시트에서 직접 한다.</p>
@@ -208,31 +223,36 @@
   <!-- 5 -->
   <section id="mobile">
     <h2><span class="num">05</span>모바일 입력 UX</h2>
-    <p>주 사용 환경은 <b>체육관에서 폰</b>이다. 화면은 두 개뿐이다: 참가자 목록 → 선수별 입력.</p>
+    <p>주 사용 환경은 <b>체육관에서 폰</b>이다. 화면은 세 개다: <b>날짜 선택 → 참가자 목록 → 선수별 입력</b>. 시각 스펙(토큰·컴포넌트·수치)은 <a href="prd-design.html">디자인 PRD</a> §05~§06이 원천이고, 여기서는 동작 계약만 적는다.</p>
+
+    <h3>날짜 선택 화면</h3>
+    <ul style="font-size:14px;">
+      <li>회차 카드 리스트(최신부터): 날짜 + n차 라벨 + <b>완료 n/N</b>(전 종목이 미측정 아닌 참가자 수 / 참가자 수)</li>
+      <li>측정일에는 보통 맨 위(오늘) 카드 하나만 쓰지만, 과거 회차 정정도 같은 진입점</li>
+    </ul>
 
     <h3>참가자 목록 화면</h3>
     <ul style="font-size:14px;">
       <li>그 회차 참가자를 <b>가나다 정렬</b>로 표시 (add-players로 뒤에 추가된 선수도 사이트에선 정렬해 표시 — 탭 내 물리 순서와 무관)</li>
-      <li>선수마다 입력 상태 뱃지: <b>미입력</b>(전 종목 미측정) / <b>일부</b> / <b>완료</b>(전 종목이 기록·면제 중 하나)</li>
-      <li>저장 후 목록 복귀 시 <b>다음 미입력 선수로 빠른 이동</b> 동선 제공 — 20명 연속 입력을 최소 탭으로</li>
-      <li>[참가자 추가] 버튼 (P5 add-players 재사용)</li>
+      <li>선수마다 입력 상태 뱃지: <b>미입력</b>(전 종목 미측정) / <b>일부</b> / <b>완료</b>(전 종목이 기록·면제 중 하나) — 다음 입력 대상은 이 뱃지로 식별</li>
+      <li>[참가자 추가] 진입점 (P5 add-players 재사용)</li>
     </ul>
 
     <h3>선수별 입력 화면 — 종목 타입별 입력기</h3>
     <table>
       <thead><tr><th>종목 타입</th><th>입력기</th><th>비고</th></tr></thead>
       <tbody>
-        <tr><td>시간 (<code class="inline">valueKind: time</code> — 드리블셔틀런)</td><td><b>분·초 2필드</b>, <code class="inline">inputmode="numeric"</code> 숫자 키패드, 분 입력 후 초로 자동 포커스</td><td>초 필드는 0–59만 — <code class="inline">1:75</code> 같은 값이 UI에서 성립 불가</td></tr>
-        <tr><td>개수 (<code class="inline">valueKind: count</code> — 골밑슛·자유투·45도패스캐치)</td><td><b>숫자 키패드</b> 단일 필드 (0 이상 정수)</td><td>만점(<code class="inline">maxScore</code>)은 힌트로만 표시(예: "/ 10") — 초과 입력을 막지 않음 (§08)</td></tr>
-        <tr><td>면제</td><td><b>토글</b> — 켜면 값 필드 비활성화</td><td>시트에는 <code class="inline">면제</code> 리터럴로 저장</td></tr>
+        <tr><td>시간 (<code class="inline">valueKind: time</code> — 드리블셔틀런)</td><td><b>분·초 2필드</b>, <code class="inline">inputmode="numeric"</code> 숫자 키패드</td><td>초 필드 0–59 위반 시 인라인 에러("초는 0–59만 입력할 수 있어요") — <code class="inline">1:75</code> 같은 값이 UI에서 성립 불가</td></tr>
+        <tr><td>개수 (<code class="inline">valueKind: count</code> — 골밑슛·자유투·45도패스캐치)</td><td><b>스테퍼(−/+) + 숫자 필드</b> (0 이상 정수)</td><td>스테퍼는 만점(<code class="inline">maxScore</code>)에서 클램프, 직접 입력은 만점 초과 허용 (§08). 만점은 "/ 10" 힌트로 표시</td></tr>
+        <tr><td>면제</td><td><b>토글</b> — 켜면 값 입력부 숨김</td><td><b>면제 가능 종목(현재 45도 패스캐치)에만 노출</b>(§02 결정 10). 시트에는 <code class="inline">면제</code> 리터럴로 저장</td></tr>
         <tr><td>미측정</td><td><b>빈칸으로 두면 됨</b> (별도 조작 없음)</td><td>시트에는 빈 셀 — 기존 값 지우기 = 필드 비우고 저장</td></tr>
       </tbody>
     </table>
     <ul style="font-size:14px;">
-      <li>기존 값이 있으면 <b>프리필</b> (자유 수정과 같은 화면)</li>
-      <li>저장 버튼은 <b>하단 고정</b>, 터치 타깃 크게 — 장갑·땀 손 환경 고려</li>
+      <li>기존 값이 있으면 <b>프리필</b> (자유 수정과 같은 화면). 기존 값이 invalid(시트 수동 편집 유래)면 해당 필드는 비우고 원본·사유를 안내</li>
+      <li>저장 버튼은 <b>하단 고정 바</b>(그라디언트 페이드), 터치 타깃 크게 — 장갑·땀 손 환경 고려</li>
       <li>형식 오류(있을 수 없는 값)는 필드 인라인으로 즉시 표시 — 제출 후에야 아는 일이 없게</li>
-      <li>저장 성공 시 짧은 확인 표시 후 목록 복귀. 실패 시 입력값 보존 + 재시도(§04 실패 시나리오)</li>
+      <li>저장 성공 시 참가자 목록 복귀 + 토스트("✓ {이름} 저장됨 · 팀원 열람에 반영"). 실패 시 입력값 보존 + 재시도(§04 실패 시나리오)</li>
     </ul>
     <div class="callout info">타입별 입력기의 목적은 <b>normalize-score를 통과할 값만 UI에서 만들어지게</b> 하는 것이다 — 시각 자동 변환·<code class="inline">1:75</code>·소수 같은 기존 시트 직접 입력의 사고 유형이 입력기 수준에서 사라진다. 그래도 서버 검증(§08)은 별도로 최종 게이트로 존재한다.</div>
   </section>
@@ -385,8 +405,8 @@
         <tr><td class="num-cell">W2</td><td><b>Sheets 쓰기 래퍼</b></td><td>쓰기 scope 토큰(googleAuth 재사용) + <code class="inline">values.update</code>(RAW) + 429·5xx 백오프 재시도. 기존 <code class="inline">sheetsApi.ts</code>는 읽기 전용 유지, 쓰기는 별도 모듈</td><td>—</td></tr>
         <tr><td class="num-cell">W3</td><td><b><code class="inline">POST /api/admin/records</code></b></td><td>요청 검증(normalize-score + valueKind 교차검증) → 회차 탭 행 찾기(이름 매칭) → 행 업데이트 → 캐시 무효화 → 에러 계약(§06 표)</td><td>W0 W1 W2</td></tr>
         <tr><td class="num-cell">W4</td><td><b>P5 기존 계획: create-sheet · add-players</b></td><td>P5 계획 그대로 (원자적 batchUpdate 탭 생성 · 활동 선수 맨 아래 추가 · 오늘 KST·중복 가드). 이 PRD 흐름의 전제 기능 — 병행 구현</td><td>W1 W2</td></tr>
-        <tr><td class="num-cell">W5</td><td><b>입력 UI ① — 회차·참가자 목록</b></td><td>관리자 페이지에서 회차 선택(기본 = 최신/오늘), 참가자 가나다 목록 + 입력 상태 뱃지, 다음 미입력 이동, [기록지 만들기]·[참가자 추가] 진입점</td><td>W3 W4</td></tr>
-        <tr><td class="num-cell">W6</td><td><b>입력 UI ② — 선수별 입력 화면</b></td><td>종목 타입별 입력기(분:초 2필드·숫자 키패드·면제 토글), 프리필, 인라인 검증(normalize-score의 <code class="inline">shared/</code> 승격 검토), 저장/실패·재시도 UX</td><td>W5</td></tr>
+        <tr><td class="num-cell">W5</td><td><b>입력 UI ① — 날짜·참가자 목록</b></td><td>시트 관리 홈(기록 입력 강조 버튼) → 날짜 선택(회차 카드·완료 n/N) → 참가자 가나다 목록 + 입력 상태 뱃지, [기록지 만들기]·[참가자 추가] 진입점. 시각 스펙은 <a href="prd-design.html">디자인 PRD</a> §05</td><td>W3 W4</td></tr>
+        <tr><td class="num-cell">W6</td><td><b>입력 UI ② — 선수별 입력 화면</b></td><td>종목 타입별 입력기(분:초 2필드·스테퍼+숫자 키패드·면제 토글은 면제 가능 종목만), 프리필, 인라인 검증(normalize-score의 <code class="inline">shared/</code> 승격 검토), 하단 고정 저장 바 + 토스트, 실패·재시도 UX</td><td>W5</td></tr>
         <tr><td class="num-cell">W7</td><td><b>마감 — E2E 검증·문서</b></td><td>측정일 시나리오 스모크(회차 생성 → 전원 입력 → 랭킹 반영 확인), 에러·빈 상태 정리, <a href="build-plan.html">작업 계획</a> P5 섹션·<a href="index.html">설계 개요</a>에 이 기능 반영</td><td>전부</td></tr>
       </tbody>
     </table>
@@ -394,7 +414,7 @@
   </section>
 
   <div class="footer">
-    PRD · 사이트에서 기록 입력 · 작성 2026-07-17 (사용자 인터뷰로 열린 결정 7건 확정) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획(P5)</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">시트 연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a>
+    PRD · 사이트에서 기록 입력 · 작성 2026-07-17 (인터뷰 확정 7건 + 같은 날 모바일 디자인 확정 4건 반영) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획(P5)</a> · <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">시트 연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a>
   </div>
 
 </div>

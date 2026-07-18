@@ -252,39 +252,35 @@
   <!-- 4 -->
   <section id="sitemap">
     <h2><span class="num">04</span>사이트 구조도</h2>
-    <div class="tree"><span class="node">🏀 버니스 실력 기록</span>
+    <div class="tree"><span class="node">🏀 버니스 실력 기록</span>   <span class="note">모바일 우선 · 하단 네비 3탭 (2026-07-17 디자인 개편)</span>
 │
-├─ <span class="node">🏠 홈 (대시보드)</span>              <span class="note">"이번 분기 한눈에"</span>
-│    ├─ 최신 회차 요약 (참여인원 / 날짜)
-│    └─ 종목별 팀 목표 달성률 게이지
+├─ <span class="node">🏠 홈</span>                        <span class="note">"이번 분기 한눈에"</span>
+│    ├─ 최신 회차 카드 (n차·날짜 / 참여 인원 / 평균 목표 달성 %)
+│    ├─ 종목별 팀 목표 달성률 게이지 (달성 n/m명)
+│    ├─ 바로가기 (랭킹 / 개인 추이)
+│    └─ 🔒 관리자 로그인 진입 (우상단 잠금 아이콘)
 │
 ├─ <span class="node">🏆 랭킹</span>                       <span class="note">"누가 제일 잘해?"</span>
-│    ├─ [종목별] 셔틀런 / 골밑슛 / 자유투 / 45도패스캐치
-│    ├─ 회차 선택 (1차 / 2차 / ...)
-│    └─ 목표 달성 뱃지
+│    ├─ 종목 칩 (셔틀런/골밑슛/자유투/패스캐치) + 회차 칩 (1차/2차/…)
+│    └─ 순위 행 — 목표 달성 뱃지 · 미측정/면제 선수도 하단 노출
 │
-├─ <span class="node">👤 개인 프로필</span>                <span class="note">"내 성장 추이"</span>
-│    ├─ 선수 선택
+├─ <span class="node">👤 개인</span>                       <span class="note">"내 성장 추이" · 전체 추이 페이지 통합</span>
+│    ├─ 선수 드롭다운 + 회차 칩
 │    ├─ 레이더 차트 (4종목 스킬 프로필)
-│    ├─ 종목별 추이 라인차트 (회차 누적)
-│    ├─ 개인 최고기록(PB) & 목표 대비 달성률
-│    └─ 전 회차 대비 변화 (▲▼)
+│    └─ 종목별 성장 카드 (현재값 · PB · 전 회차 대비 ▲▼)
+│         └─ 탭 → 추이 차트 확장: 전체 선수 배경 라인 + 본인 하이라이트 + 목표선
 │
-├─ <span class="node">📈 전체 추이</span>                 <span class="note">"모든 선수 · 모든 회차 한눈에"</span>
-│    ├─ 전체 인원 회차별 추이 (멀티라인 차트 / 매트릭스)
-│    └─ 종목별 보기 전환
-│
-└─ <span class="node">🔒 관리자 · 시트 관리하기</span>       <span class="note">"운영자 전용 · 관리자 코드"</span>
-     ├─ 기록지 만들기 — 오늘(KST) 회차 탭 생성 (참가자 선택: 활동만·가나다·기본 해제)
-     ├─ 기존 기록지에 사람 추가 — 특정 회차에 활동 선수 추가(맨 아래)
-     └─ 기록 입력 — 선수 선택 → 종목 타입별 점수 입력·수정 <span class="note">← PRD 확정 (2026-07-17)</span></div>
-    <p class="muted" style="font-size:13px; margin-top:12px;">🔒 관리자 페이지의 세 기능은 <strong>시트에 쓰기</strong>를 하며, 관리자 세션으로 보호. 자세한 스펙은 아래 05 참고. (구현은 사이트 구축 단계에서)</p>
+└─ <span class="node">🔒 관리자 · 시트 관리</span>          <span class="note">"운영자 전용 · 관리자 코드"</span>
+     ├─ 기록 입력 — 날짜 선택(완료 n/N) → 참가자 목록(미입력/일부/완료) → 선수별 입력
+     ├─ 참가자 추가 — 기존 회차에 활동 선수 추가(맨 아래)
+     └─ 기록지 만들기 — 오늘(KST) 회차 탭 생성 (참가자 선택: 활동만·가나다·기본 해제)</div>
+    <p class="muted" style="font-size:13px; margin-top:12px;">🔒 관리자의 세 기능은 <strong>시트에 쓰기</strong>를 하며, 관리자 세션으로 보호. 자세한 스펙은 아래 05 참고. 열람(홈·랭킹·개인)은 <strong>팀 패스코드 게이트 유지</strong> — 게이트 화면은 디자인에 추가 예정(<a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a> §09). 기존 "📈 전체 추이" 별도 페이지는 2026-07-17 디자인 개편에서 <strong>삭제 확정</strong> — 개인 탭의 추이 차트로 통합.</p>
   </section>
 
   <!-- 4b: 관리자 기능 스펙 -->
   <section id="admin">
-    <h2><span class="num">05</span>관리자 페이지 "시트 관리하기" — 기능 스펙</h2>
-    <p class="muted" style="font-size:14px;">사이트 → 시트 <strong>쓰기</strong> 기능. 관리자 코드로 보호(생성/추가 확정 시마다 입력·서버 검증), 성공 시 캐시 자동 무효화.</p>
+    <h2><span class="num">05</span>관리자 페이지 "시트 관리" — 기능 스펙</h2>
+    <p class="muted" style="font-size:14px;">사이트 → 시트 <strong>쓰기</strong> 기능. 관리자 세션으로 보호, 성공 시 캐시 자동 무효화. 시트 관리 홈의 버튼 순서는 <strong>기록 입력(강조) → 참가자 추가 → 기록지 만들기</strong> (2026-07-17 디자인 확정).</p>
 
     <h3>① 기록지 만들기</h3>
     <table>
@@ -313,8 +309,8 @@
       <thead><tr><th>항목</th><th>동작</th></tr></thead>
       <tbody>
         <tr><td>권한</td><td>관리자 세션 전용 (팀 패스코드는 열람만)</td></tr>
-        <tr><td>동선</td><td>회차 선택 → 참가자 목록(가나다·입력 상태 뱃지) → 선수 선택 → 종목 타입별 입력기 (시간 = 분:초 / 개수 = 숫자 키패드 / 면제 토글 / 빈칸 = 미측정)</td></tr>
-        <tr><td>저장</td><td><strong>선수 단위</strong> — 회차 탭 행 1개 업데이트. 자유 수정(과거 회차 포함), 동시 입력은 마지막 저장 승리</td></tr>
+        <tr><td>동선</td><td>날짜 선택(회차 카드·완료 n/N) → 참가자 목록(가나다·미입력/일부/완료 뱃지) → 선수별 입력 — 시간 = 분:초 2필드 / 개수 = 스테퍼(−/+)+숫자 키패드 / 면제 토글(면제 가능 종목만) / 빈칸 = 미측정</td></tr>
+        <tr><td>저장</td><td><strong>선수 단위</strong> — 회차 탭 행 1개 업데이트. 자유 수정(과거 회차 포함), 동시 입력은 마지막 저장 승리. 저장 후 목록 복귀 + 토스트</td></tr>
         <tr><td>검증</td><td><code class="inline">normalize-score</code> 규칙 재사용 — 형식 오류(invalid)는 시트에 쓰지 않고 400 거부</td></tr>
         <tr><td>이후</td><td>저장 성공 시 records 캐시 무효화 → 팀원 열람에 즉시 반영</td></tr>
       </tbody>
@@ -335,14 +331,15 @@
         <tr><td>호스팅</td><td class="good">확정</td><td>Cloudflare Pages (+ Pages Functions). Netlify 미사용</td></tr>
         <tr><td>시트 연동·시딩</td><td class="good">완료</td><td>서비스 계정 연동 + 21명 명단·1차 기록 시딩 + 보호범위 완료</td></tr>
         <tr><td>공용 패스코드 / 관리자 코드</td><td class="good">확정</td><td>사용자가 <code class="inline">.dev.vars</code>·Cloudflare Secret에 직접 설정 (값은 코드베이스 밖)</td></tr>
-        <tr><td>기록 입력 (사이트에서 점수 입력)</td><td class="good">확정</td><td>PRD 확정 (2026-07-17 인터뷰) — 관리자 전용 · 선수 선택 → 타입별 기입 · 선수 단위 저장 · 마지막 저장 승리. 선행: 회차 파서 이름-매칭 정합화, P2 로그인. <a href="prd-record-input.html" style="color:var(--accent-2);">PRD · 사이트에서 기록 입력</a></td></tr>
+        <tr><td>기록 입력 (사이트에서 점수 입력)</td><td class="good">확정</td><td>PRD 확정 (2026-07-17 인터뷰 + 디자인) — 관리자 전용 · 날짜 선택 → 참가자 목록 → 선수별 타입별 기입 · 선수 단위 저장 · 마지막 저장 승리. 선행: 회차 파서 이름-매칭 정합화, P2 로그인. <a href="prd-record-input.html" style="color:var(--accent-2);">PRD · 사이트에서 기록 입력</a></td></tr>
+        <tr><td>모바일 디자인</td><td class="good">확정</td><td>2026-07-17 디자인 개편 반입 — 하단 네비 3탭(전체 추이 페이지 삭제·개인 탭 통합), 인디고(#3F51B5)+Pretendard 테마(기존 오렌지 폐기), 랭킹에 미측정·면제 하단 노출, 열람 팀 패스코드 유지. <a href="prd-design.html" style="color:var(--accent-2);">PRD · 모바일 디자인 개편</a></td></tr>
         <tr><td>사이트 구축</td><td style="color:var(--warn)">대기</td><td>React 앱·Pages Functions·관리자 페이지 (사용자 요청 시 착수)</td></tr>
       </tbody>
     </table>
   </section>
 
   <div class="footer">
-    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-17 (기록 입력 PRD 반영) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a>
+    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-17 (기록 입력 PRD + 모바일 디자인 개편 반영) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> · <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a>
   </div>
 
 </div>
