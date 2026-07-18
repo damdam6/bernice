@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AdminLayout } from './components/layout/AdminLayout'
+import { MainLayout } from './components/layout/MainLayout'
 import Home from './pages/Home.tsx'
 import Rankings from './pages/Rankings.tsx'
 import Players from './pages/Players.tsx'
@@ -14,18 +16,22 @@ import AddPlayers from './pages/admin/AddPlayers.tsx'
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/rankings" element={<Rankings />} />
-      <Route path="/players" element={<Players />} />
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/rankings" element={<Rankings />} />
+        <Route path="/players" element={<Players />} />
+      </Route>
       <Route path="/trends" element={<Navigate to="/players" replace />} />
 
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<SheetManagementHome />} />
-      <Route path="/admin/records" element={<RecordsDateSelect />} />
-      <Route path="/admin/records/:sessionDate" element={<RecordsParticipants />} />
-      <Route path="/admin/records/:sessionDate/:playerId" element={<RecordsPlayerInput />} />
-      <Route path="/admin/create-sheet" element={<CreateSheet />} />
-      <Route path="/admin/add-players" element={<AddPlayers />} />
+      <Route element={<AdminLayout />}>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<SheetManagementHome />} />
+        <Route path="/admin/records" element={<RecordsDateSelect />} />
+        <Route path="/admin/records/:sessionDate" element={<RecordsParticipants />} />
+        <Route path="/admin/records/:sessionDate/:playerId" element={<RecordsPlayerInput />} />
+        <Route path="/admin/create-sheet" element={<CreateSheet />} />
+        <Route path="/admin/add-players" element={<AddPlayers />} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>

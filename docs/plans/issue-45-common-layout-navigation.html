@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#45 P3 — 공통 레이아웃 + 네비게이션 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::marker, .steps li.done { color: var(--ink); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/45">#45</a></span><span class="type-chip">기능 개선</span>
+    <h1>P3 — 공통 레이아웃 + 네비게이션</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/45-common-layout-navigation</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-18</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>#62가 만든 flat 라우트 테이블(메인 3탭 + 관리자 7라우트)을 두 개의 pathless 레이아웃 라우트로 감싼다. 메인 3탭(홈·랭킹·개인)은 <code>MainLayout</code>이 감싸 화면 하단에 3탭 <code>BottomNav</code>(활성=primary, 비활성=ink-muted)를 고정 노출하고, 관리자 스택(로그인·시트 관리·기록 입력 등 7라우트)은 <code>AdminLayout</code>이 감싸 <code>BottomNav</code> 대신 <code>‹ 뒤로</code> 텍스트 버튼만 노출한다. 두 레이아웃 모두 <code>Outlet</code> 기반이라 탭 전환 시 레이아웃 자체는 리마운트되지 않는다. 아이콘은 PRD 권장대로 <code>lucide-react</code>를 신규 도입하고, 기존 8개 placeholder 페이지의 풀스크린 wrapper를 레이아웃에 맞게 조정한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>src/App.tsx:1-33</code> — <code>&lt;Routes&gt;</code> 하나에 12개 라우트가 평면 나열되어 있고 레이아웃 래퍼가 전혀 없다. <code>docs/plans/issue-62-routing-three-tabs-admin-stack.html</code>의 "설계" 절에 "Outlet 기반 레이아웃은 #45가 별도로 감쌀 예정이라 지금 만들면 곧 갈아엎힌다"고 명시되어 있어, 현재 flat 구조는 의도된 상태이며 이번 이슈가 그 감싸기 작업을 맡는다.</p>
+    <p>메인 3탭(<code>src/pages/Home.tsx</code>, <code>Rankings.tsx</code>, <code>Players.tsx</code>)과 관리자 6페이지(<code>src/pages/admin/*.tsx</code>) + <code>NotFound.tsx</code> 총 8개 파일이 각자 동일한 풀스크린 wrapper를 반복한다: <code>&lt;div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6"&gt;</code> 안에 흰 카드 하나. 레이아웃 도입 시 <code>min-h-dvh</code>·<code>bg-canvas</code>를 레이아웃 루트로 옮기고 각 페이지는 남은 영역을 채우도록 조정해야 겹치지 않는다.</p>
+    <p><code>src/index.css:6-52</code> — Tailwind v4 <code>@theme</code> 토큰에 <code>--color-primary: #3f51b5</code>, <code>--color-ink-muted: #b0b5bf</code>, <code>--color-line</code>, <code>--color-surface</code>, <code>--color-canvas</code>가 이미 정의되어 있다(#61에서 완료). <code>docs/prd-design.html</code> §04의 네비 비활성 색 <code>#aab0bc</code>은 §03 토큰 표에 없는 인라인 참고값이며, 기존 <code>ink-muted(#b0b5bf)</code>과 사실상 동일해 별도 토큰 신설이 불필요하다.</p>
+    <p>아이콘 라이브러리가 프로젝트에 전무하다 — <code>package.json</code> dependencies에 아이콘 패키지가 없고, <code>src/</code> 전체에서 <code>lucide</code> 검색 결과가 0건이다. 유일한 기존 아이콘형 렌더링은 <code>src/components/common/Gauge.tsx:31-43</code>의 손수 그린 도메인 전용 SVG(게이지 아크)뿐이라, 범용 아이콘 패턴을 재사용할 수 없다. <code>docs/prd-design.html</code> §06 각주는 "아이콘은 24px 그리드 스트로크(2px, round cap) … 구현은 lucide-react 권장"이라고 명시한다.</p>
+    <p><code>package.json:16</code> — <code>react-router-dom@^7.18.1</code>이 이미 설치되어 있어 <code>&lt;Route element={&lt;Layout/&gt;}&gt;…&lt;/Route&gt;</code> 형태의 pathless 레이아웃 라우트(자식은 <code>&lt;Outlet/&gt;</code>로 렌더)를 추가 의존성 없이 쓸 수 있다.</p>
+    <p>테스트 관례: <code>src/components/RankingTable.test.tsx</code>·<code>useRecords.test.tsx</code>는 상단에 <code>// @vitest-environment jsdom</code>을 붙이고 <code>@testing-library/react</code>로 렌더/상호작용을 검증한다(파일 최상단 pragma 방식). 반면 <code>PlayerStatusPill.test.tsx</code>류 순수 표시 컴포넌트는 <code>renderToStaticMarkup</code> + <code>src/test/html-utils.ts</code> 헬퍼를 쓴다. <code>src/pages/</code>에는 테스트 파일이 아직 하나도 없다 — 페이지는 얇은 wrapper이고 로직은 컴포넌트에 있다는 이 저장소의 관행상, 이번 이슈의 테스트도 페이지가 아니라 <code>BottomNav</code>/<code>AdminLayout</code> 컴포넌트에 붙여야 한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>선택한 설계</b> — <code>src/components/layout/</code>에 4개 컴포넌트 신설: <code>MainLayout</code>(메인 3탭용, <code>Outlet</code> + 하단 고정 <code>BottomNav</code>), <code>AdminLayout</code>(관리자 스택용, 상단 슬림 헤더의 <code>BackButton</code> + <code>Outlet</code>, 네비 없음), 그리고 그 안에서 쓰는 <code>BottomNav</code>·<code>BackButton</code>. <code>App.tsx</code>는 두 개의 pathless <code>&lt;Route element={...}&gt;</code>로 기존 자식 라우트들을 그룹화하기만 하고, #62가 확정한 URL 표(경로·컴포넌트 매핑)는 그대로 둔다. <code>/trends</code> 리다이렉트와 <code>*</code> 404는 두 레이아웃 밖에 남긴다 — 404는 "메인 3화면"이 아니므로 하단 네비를 노출하면 안 된다는 스펙(§04)을 문자 그대로 지키는 선택이다.</p>
+    <p>아이콘은 <code>lucide-react</code>를 신규 설치해 홈·랭킹(트로피)·개인(사람)·뒤로가기(쉐브론) 4개를 가져다 쓴다. PRD가 명시적으로 권장하고, 이후 #67/#68(잠금 아이콘, 스테퍼, 토글)에서도 같은 니즈가 반복될 것이므로 지금 손그림 SVG로 땜질하면 곧 교체될 코드를 만드는 셈이다.</p>
+    <p>색상은 신규 토큰 없이 기존 <code>text-primary</code>(활성)/<code>text-ink-muted</code>(비활성)를 그대로 재사용한다 — §03 토큰 표에 정식으로 있는 값이고 PRD §04의 인라인 참고색과 사실상 동일하다.</p>
+    <p>하단 네비는 <code>position: fixed</code>로 뷰포트 하단에 고정하고(<code>env(safe-area-inset-bottom)</code> 패딩 포함), 메인 컨텐츠 영역에 그 높이만큼 <code>padding-bottom</code>을 준다 — 콘텐츠가 길어져도 네비가 스크롤에 묻히지 않아야 앱 셸다운 지속성이 생긴다.</p>
+    <p><b>기각한 대안</b></p>
+    <ul>
+      <li><b>BottomNav를 flex 정상 흐름에 놓기(고정 아님)</b> — 기각: 콘텐츠가 뷰포트보다 길어지면 네비가 스크롤에 딸려 사라져 "탭 전환 시 레이아웃 유지"라는 완료 조건의 취지(항상 보이는 앱 셸)에 어긋난다.</li>
+      <li><b>Layout 하나 + variant prop으로 메인/관리자 분기</b> — 기각: 헤더 유무·네비 종류·정렬이 서로 달라 결국 컴포넌트 내부에서 다시 분기하게 된다. 라우트 선언부에서 바로 어떤 레이아웃인지 보이는 두 개의 작은 컴포넌트가 더 읽기 쉽다.</li>
+      <li><b>손그림 인라인 SVG 아이콘</b> — 기각: PRD가 명시적으로 lucide-react를 권장했고, 곧 이어질 이슈(#67/#68)에서 같은 니즈가 반복돼 지금 서드파티를 들이는 편이 중복 작업을 줄인다.</li>
+      <li><b>NotFound도 MainLayout으로 감싸 시각적 일관성 확보</b> — 기각: §04 스펙이 "메인 3화면에서만" 하단 네비 노출을 명시하고, 404는 그 3화면에 속하지 않는다. 감싸면 404가 유효한 앱 섹션인 것처럼 오독될 수 있다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">아이콘 라이브러리 추가 — <code>npm install lucide-react</code>(PRD §06 권장)
+        <span class="files"><code>package.json</code>, <code>package-lock.json</code></span>
+      </li>
+      <li class="done"><code>BottomNav</code> 신설 — 홈·랭킹·개인 3탭, <code>NavLink</code>로 활성 판정(<code>/</code>는 <code>end</code>), 활성=<code>text-primary</code>/비활성=<code>text-ink-muted</code>, 24px 아이콘 + 11px/700 라벨, 화면 하단 <code>fixed</code> + safe-area 패딩
+        <span class="files"><code>src/components/layout/BottomNav.tsx</code></span>
+      </li>
+      <li class="done"><code>BackButton</code> 신설 — <code>ChevronLeft</code> 아이콘 + "뒤로" 텍스트, 클릭 시 <code>useNavigate()(-1)</code>
+        <span class="files"><code>src/components/layout/BackButton.tsx</code></span>
+      </li>
+      <li class="done"><code>MainLayout</code>·<code>AdminLayout</code> 신설 — 각각 <code>&lt;Outlet/&gt;</code> + 위 컴포넌트 조합. <code>min-h-dvh</code>·<code>bg-canvas</code>를 레이아웃 루트로 옮기고, <code>MainLayout</code>의 <code>&lt;main&gt;</code>에는 네비 높이만큼 <code>padding-bottom</code> 부여
+        <span class="files"><code>src/components/layout/MainLayout.tsx</code>, <code>src/components/layout/AdminLayout.tsx</code></span>
+      </li>
+      <li class="done"><code>App.tsx</code>를 pathless 레이아웃 라우트 2개로 재구성 — 메인 3탭은 <code>MainLayout</code> 자식, 관리자 7라우트는 <code>AdminLayout</code> 자식으로 옮기고, <code>/trends</code> 리다이렉트·<code>*</code> 404는 그대로 최상위에 둠(경로·컴포넌트 매핑은 #62 표 그대로 유지)
+        <span class="files"><code>src/App.tsx</code></span>
+      </li>
+      <li class="done">10개 placeholder 페이지의 풀스크린 wrapper(<code>min-h-dvh … bg-canvas</code>)를 레이아웃 내부에서 동작하도록 조정(<code>flex-1</code> 기반 센터링으로 교체) — <code>NotFound.tsx</code>는 레이아웃 밖이라 변경 없음
+        <span class="files"><code>src/pages/Home.tsx</code>, <code>src/pages/Rankings.tsx</code>, <code>src/pages/Players.tsx</code>, <code>src/pages/admin/AdminLogin.tsx</code>, <code>src/pages/admin/SheetManagementHome.tsx</code>, <code>src/pages/admin/RecordsDateSelect.tsx</code>, <code>src/pages/admin/RecordsParticipants.tsx</code>, <code>src/pages/admin/RecordsPlayerInput.tsx</code>, <code>src/pages/admin/CreateSheet.tsx</code>, <code>src/pages/admin/AddPlayers.tsx</code></span>
+        <span class="note">참고: 요약/리스크 절의 "8개"는 집계 오기 — 실제 wrapper 보유 페이지는 10개(NotFound 제외)였고, 파일 목록은 처음부터 정확했다.</span>
+      </li>
+      <li class="done">테스트 작성 — <code>BottomNav</code>는 경로별로 대응 탭만 활성 스타일인지, <code>AdminLayout</code>은 하단 네비 미노출 + <code>BackButton</code> 클릭 시 이전 경로로 이동하는지 검증(<code>MemoryRouter</code> + <code>@testing-library/react</code>)
+        <span class="files"><code>src/components/layout/BottomNav.test.tsx</code>, <code>src/components/layout/AdminLayout.test.tsx</code></span>
+      </li>
+      <li class="done"><code>npm run typecheck</code> · <code>npm run build</code> · <code>npm test</code> 통과 확인 + claude-in-chrome으로 모바일 뷰포트(≈404×852)에서 3탭 전환·관리자 진입·뒤로가기 수동 확인
+        <span class="files">(파일 없음 · 커맨드 + 수동 확인)</span>
+        <span class="note">참고: typecheck·build(266KB JS/gzip 84KB)·test(22개 파일 262개 테스트) 전부 통과. claude-in-chrome으로 로컬 vite 서버를 띄워 홈→랭킹 탭 전환(활성 강조 유지), /admin/login 진입(하단 네비 소실 + ‹ 뒤로 노출), 뒤로가기 클릭(이전 경로 복귀), 임의 경로 404(레이아웃 밖 단독 렌더)까지 확인함. 다만 브라우저 창 resize_window가 이 cmux 서피스에서 실제로 적용되지 않아 404×852 픽셀 단위 확인은 못했고, 넓은 뷰포트에서 동일 컴포넌트로 기능 동작만 검증했다 — CSS 자체는 모바일 우선(fixed 하단바 + flex-1 센터링)이라 좁은 폭에서도 동일하게 동작할 것으로 판단.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>lucide-react 신규 의존성이 번들 크기에 영향</td><td>낮음 — named import 4개뿐, PRD가 명시적으로 권장한 선택</td><td>tree-shakable named import만 사용, <code>npm run build</code> 산출물 크기 확인</td></tr>
+        <tr><td><code>BackButton</code>의 <code>navigate(-1)</code>이 히스토리 없이 관리자 라우트에 직접 진입(딥링크)했을 때 앱 밖으로 이탈</td><td>낮음 — 내부 팀 전용 앱, 관리자 라우트를 외부 공유하지 않음</td><td>이번 이슈 범위 밖으로 명시. 필요해지면 <code>navigate('/admin')</code> 폴백은 후속 이슈에서</td></tr>
+        <tr><td>8개 placeholder 페이지 wrapper 변경이 병행 진행 중인 #67/#68과 같은 파일을 건드려 충돌 가능</td><td>중간 — 동일 파일을 다른 브랜치가 동시에 수정 중일 수 있음</td><td>변경을 wrapper 클래스 한 줄 수준으로 최소화하고 내부 콘텐츠(h1·안내문)는 그대로 둬 병합 충돌 표면을 줄임</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 신규 레이아웃 컴포넌트·재구성된 라우트 트리에 타입 오류 없는지 확인</li>
+      <li><code>npm run build</code> — 빌드 통과, <code>lucide-react</code> 포함 정상 번들 확인</li>
+      <li><code>npm test</code> — 기존 스위트 회귀 없음 + 신규 <code>BottomNav</code>/<code>AdminLayout</code> 테스트 통과</li>
+      <li>신규 유닛: <code>MemoryRouter</code>로 <code>/</code>·<code>/rankings</code>·<code>/players</code> 각각 렌더 시 대응 탭만 활성 스타일(<code>aria-current="page"</code> 또는 <code>text-primary</code>)을 갖는지 확인</li>
+      <li>신규 유닛: <code>AdminLayout</code> 렌더 시 <code>BottomNav</code>가 DOM에 없고, <code>BackButton</code> 클릭 시 <code>history</code>가 이전 경로로 이동하는지 확인</li>
+      <li>수동(claude-in-chrome, 모바일 뷰포트): 홈→랭킹→개인 탭 전환 시 하단 네비가 리마운트 없이 유지되고 활성 탭이 바뀌는지, 홈 잠금 아이콘 대신 <code>/admin/login</code> 직접 진입 시 하단 네비가 사라지고 <code>‹ 뒤로</code>가 보이는지, 뒤로가기 클릭 시 이전 화면으로 돌아가는지 확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>3개 탭(홈·랭킹·개인) 전환 시 <code>BottomNav</code>가 리마운트 없이 유지되고 활성 탭이 primary 색으로 강조된다</li>
+      <li>관리자 라우트(<code>/admin/*</code> 7개) 전체에서 하단 네비가 노출되지 않고 <code>‹ 뒤로</code> 텍스트 버튼이 대신 노출된다</li>
+      <li>모바일 뷰포트에서 하단 네비·뒤로가기 버튼이 겹침·잘림 없이 정상 동작한다(safe-area 여백 포함)</li>
+      <li><code>npm run typecheck</code> · <code>npm run build</code> · <code>npm test</code> 모두 통과한다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/45">#45</a> · 2026-07-18</footer>
+</main>
+</body>
+</html>
