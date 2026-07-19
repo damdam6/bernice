@@ -1,7 +1,7 @@
 // 버니스 실력 기록 — 공용 도메인 타입. 파서·계산(functions)과 프론트(src)가 함께 import.
 // 근거: docs/sheet-integration.html(시트 스키마) · docs/sheet-rules.html(운영 규칙) · docs/records-schema.html(이 타입의 JSON 계약 문서)
 
-// ── 선수 상태 — 버니스명단 상태 드롭다운 4종 (scripts/seed-sheet.mjs와 동일해야 함) ──
+// ── 선수 상태 — 버니스명단 상태 드롭다운 4종 (scripts/seed-sheet.mjs도 여기서 import) ──
 export const PLAYER_STATUSES = ['활동', '탈퇴', '비대상', '휴식'] as const
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number]
 
@@ -10,6 +10,8 @@ export const RANK_DIRECTIONS = ['낮을수록', '높을수록'] as const
 export type RankDirection = (typeof RANK_DIRECTIONS)[number]
 
 // ── 점수 값 형식 — 셀 표기로 파서가 판별(콜론 포함 = 시간) ────────────────
+// 'time'은 정규화 결과 ScoreValue.kind의 'seconds'(초 단위)와 대응 —
+// 둘의 교차검증(매핑)은 shared/build-event-score.ts 한 곳이 담당한다.
 export const EVENT_VALUE_KINDS = ['count', 'time'] as const
 export type EventValueKind = (typeof EVENT_VALUE_KINDS)[number]
 

@@ -1,6 +1,4 @@
-export const PLAYER_STATUSES = ['활동', '탈퇴', '비대상', '휴식'] as const
-
-export type PlayerStatus = (typeof PLAYER_STATUSES)[number]
+import { PLAYER_STATUSES, type PlayerStatus } from '../../shared/domain'
 
 export type StatusValue =
   | { kind: 'known'; value: PlayerStatus }

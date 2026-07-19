@@ -2,6 +2,8 @@ const EXEMPT_LITERAL = '면제'
 const INTEGER_RE = /^\d+$/
 const MAX_MINUTES = 999
 
+// 'seconds'는 셀 표기를 초로 접은 값 — 종목 기준 EventValueKind의 'time'과 대응한다.
+// 이 함수는 종목 정보를 모르므로 둘의 교차검증(매핑)은 build-event-score.ts가 담당.
 export type ScoreValue =
   | { kind: 'count'; value: number; raw: string }
   | { kind: 'seconds'; value: number; raw: string }

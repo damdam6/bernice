@@ -5,7 +5,7 @@
 //   · 구조: 이름으로 참조 (회차 시트에 수기 id 없음, 이름 드롭다운 = 버니스명단 참조)
 //   · 서식: 1행+1열 고정, 헤더/이름열 색상
 //   · 드롭다운: 버니스명단 상태(활동/탈퇴/비대상/휴식), 목표 방향(낮을수록/높을수록), 회차 이름(버니스명단 참조)
-//   · 의존성 없음 — Node 18+ 내장 crypto + fetch
+//   · 의존성 없음 — Node 23.6+ (내장 crypto + fetch, shared/domain.ts는 TS type-stripping으로 import)
 //
 // 실행:
 //   GOOGLE_APPLICATION_CREDENTIALS=./secrets/sa-key.json \
@@ -14,6 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import { createSign } from 'node:crypto';
+import { PLAYER_STATUSES, RANK_DIRECTIONS } from '../shared/domain.ts';
 
 const SHEET_ID = process.env.SHEET_ID || '1Emv2rbm1vakp2aEUfLD2V9GTmghHQ2SdaNqPwMBZNDw';
 const KEY_PATH = process.env.GOOGLE_APPLICATION_CREDENTIALS || './secrets/sa-key.json';
@@ -173,12 +174,12 @@ async function main() {
   // 버니스명단 상태 드롭다운 (B열)
   fmt.push({ setDataValidation: {
     range: { sheetId: idOf.get('버니스명단'), startRowIndex: 1, endRowIndex: 1000, startColumnIndex: 1, endColumnIndex: 2 },
-    rule: { condition: { type: 'ONE_OF_LIST', values: [{ userEnteredValue: '활동' }, { userEnteredValue: '탈퇴' }, { userEnteredValue: '비대상' }, { userEnteredValue: '휴식' }] }, showCustomUi: true, strict: true },
+    rule: { condition: { type: 'ONE_OF_LIST', values: PLAYER_STATUSES.map((v) => ({ userEnteredValue: v })) }, showCustomUi: true, strict: true },
   } });
   // 목표 방향 드롭다운 (D열)
   fmt.push({ setDataValidation: {
     range: { sheetId: idOf.get('목표'), startRowIndex: 1, endRowIndex: 100, startColumnIndex: 3, endColumnIndex: 4 },
-    rule: { condition: { type: 'ONE_OF_LIST', values: [{ userEnteredValue: '낮을수록' }, { userEnteredValue: '높을수록' }] }, showCustomUi: true, strict: true },
+    rule: { condition: { type: 'ONE_OF_LIST', values: RANK_DIRECTIONS.map((v) => ({ userEnteredValue: v })) }, showCustomUi: true, strict: true },
   } });
   // (회차 이름 열은 드롭다운이 아니라 버니스명단 참조 수식 — 데이터확인 없음)
 
