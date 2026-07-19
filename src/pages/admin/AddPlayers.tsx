@@ -4,7 +4,6 @@
 // 기본값이다.
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
@@ -13,20 +12,19 @@ import { FilterChip } from '../../components/FilterChip'
 import { SelectablePlayerList } from '../../components/SelectablePlayerList'
 import { addPlayers } from '../../lib/add-players-api'
 import { compareKorean } from '../../lib/korean-sort'
-import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
+import { useRecords } from '../../hooks/useRecords'
 import { useMultiSelect } from '../../hooks/useMultiSelect'
+import { useSubmitMutation } from '../../hooks/useSubmitMutation'
 
 export default function AddPlayers() {
   const navigate = useNavigate()
   const location = useLocation()
-  const queryClient = useQueryClient()
   const { data, isError, error, refetch } = useRecords()
 
   const requestedSessionDate = (location.state as { sessionDate?: string } | null)?.sessionDate
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(requestedSessionDate ?? null)
   const { selected, toggle, reset } = useMultiSelect()
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { submitting, submitError, submit, clearError } = useSubmitMutation()
 
   if (isError) {
     return (
@@ -72,25 +70,18 @@ export default function AddPlayers() {
   function selectSession(date: string) {
     setSelectedSessionDate(date)
     reset()
-    setSubmitError(null)
+    clearError()
   }
 
   async function handleConfirm() {
-    setSubmitting(true)
-    setSubmitError(null)
-
-    const result = await addPlayers(session.date, [...selected])
-
-    if (!result.ok) {
-      setSubmitError(result.message)
-      setSubmitting(false)
-      return
-    }
-
-    await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
-    navigate(`/admin/records/${result.sessionDate}`, {
-      state: { toast: `✓ ${result.added.length}명 추가됨 · 참가자 목록에 반영` },
-    })
+    await submit(
+      () => addPlayers(session.date, [...selected]),
+      (result) => {
+        navigate(`/admin/records/${result.sessionDate}`, {
+          state: { toast: `✓ ${result.added.length}명 추가됨 · 참가자 목록에 반영` },
+        })
+      },
+    )
   }
 
   return (

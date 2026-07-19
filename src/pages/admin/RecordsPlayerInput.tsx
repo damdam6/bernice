@@ -4,7 +4,6 @@
 // 재사용해 서버와 동일한 규칙으로 판정한다(PRD §08 "검증 규칙의 원천은 하나").
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
 import type { EventDefinition, Session, SessionEntry } from '../../../shared/domain'
 import { buildEventScore } from '../../../shared/build-event-score'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
@@ -14,7 +13,8 @@ import { Spinner } from '../../components/common/Spinner'
 import { CountScoreInput } from '../../components/CountScoreInput'
 import { ExemptToggle } from '../../components/ExemptToggle'
 import { TimeScoreInput } from '../../components/TimeScoreInput'
-import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
+import { useRecords } from '../../hooks/useRecords'
+import { useSubmitMutation } from '../../hooks/useSubmitMutation'
 import { isExemptable } from '../../lib/exemptable-events'
 import { buildFieldRaw, initFieldState, initialFieldNotice, type FieldState } from '../../lib/player-input-field'
 import { saveRecord } from '../../lib/records-write-api'
@@ -85,12 +85,10 @@ function PlayerInputContent({
   roundLabel: number
   onSaved: (toast: string) => void
 }) {
-  const queryClient = useQueryClient()
   const [fields, setFields] = useState<Record<string, FieldState>>(() =>
     Object.fromEntries(events.map((event) => [event.key, initFieldState(event, entry.scores[event.key])])),
   )
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { submitting, submitError, submit } = useSubmitMutation()
 
   function updateField(eventKey: string, next: FieldState) {
     setFields((prev) => ({ ...prev, [eventKey]: next }))
@@ -102,20 +100,11 @@ function PlayerInputContent({
   const hasInvalid = Object.values(scores).some((score) => score.status === 'invalid')
 
   async function handleSave() {
-    setSubmitting(true)
-    setSubmitError(null)
-
     const raw = Object.fromEntries(events.map((event) => [event.key, buildFieldRaw(fields[event.key])]))
-    const result = await saveRecord(session.date, entry.playerId, raw)
-
-    if (!result.ok) {
-      setSubmitError(result.message)
-      setSubmitting(false)
-      return
-    }
-
-    await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
-    onSaved(`✓ ${entry.name} 저장됨 · 팀원 열람에 반영`)
+    await submit(
+      () => saveRecord(session.date, entry.playerId, raw),
+      () => onSaved(`✓ ${entry.name} 저장됨 · 팀원 열람에 반영`),
+    )
   }
 
   return (
