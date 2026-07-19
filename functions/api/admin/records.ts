@@ -191,6 +191,7 @@ function errorResponse(err: unknown): Response {
   }
   // 명확한 무결성 오류만 sheet_data_invalid로, 그 외 예기치 못한 오류는 internal_error로 분리한다.
   if (err instanceof SheetIntegrityError) return sheetDataInvalid(err.message)
-  const message = err instanceof Error ? err.message : '알 수 없는 오류'
-  return Response.json({ error: 'internal_error', message }, { status: 500 })
+  // 예기치 못한 오류(코드 버그·런타임 예외)의 내부 메시지는 클라이언트에 노출하지 않고 서버 로그로만 남긴다.
+  console.error('POST /api/admin/records 처리 중 예기치 못한 오류:', err)
+  return Response.json({ error: 'internal_error', message: '서버 오류가 발생했습니다.' }, { status: 500 })
 }

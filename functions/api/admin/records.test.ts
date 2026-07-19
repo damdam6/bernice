@@ -248,4 +248,21 @@ describe('POST /api/admin/records', () => {
     expect(((await res.json()) as { error: string }).error).toBe('validation_failed')
     expect(fetchSheetBundleMock).not.toHaveBeenCalled()
   })
+
+  it('예기치 못한 오류는 내부 메시지를 노출하지 않고 500 internal_error로 응답한다', async () => {
+    fetchSheetBundleMock.mockResolvedValue(makeBundle())
+    cacheDelete.mockRejectedValueOnce(new Error('INTERNAL_SECRET_스택_흔적'))
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await onRequestPost(makeContext({ sessionDate: '2025-08-16', playerId: 2, scores: FULL_SCORES }))
+
+    expect(res.status).toBe(500)
+    const body = (await res.json()) as { error: string; message: string }
+    expect(body.error).toBe('internal_error')
+    expect(body.message).toBe('서버 오류가 발생했습니다.')
+    expect(body.message).not.toContain('INTERNAL_SECRET') // 내부 메시지 비노출
+    expect(errorLog).toHaveBeenCalled() // 상세는 서버 로그로만
+
+    errorLog.mockRestore()
+  })
 })
