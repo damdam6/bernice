@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#64 POST /api/admin/records (선수 단위 점수 저장) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  .mono { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+  .tag { font-size: 0.78rem; font-weight: 700; padding: 1px 7px; border-radius: 5px; }
+  .t400 { color: var(--warn); border: 1px solid var(--warn); }
+  .t404 { color: var(--accent); border: 1px solid var(--accent); }
+  .t502 { color: #c0392b; border: 1px solid #c0392b; }
+  .t200 { color: var(--ok); border: 1px solid var(--ok); }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/64">#64</a></span><span class="type-chip">기능 개선 · 신규 API</span>
+    <h1>기록 입력 W3 — POST /api/admin/records (선수 단위 점수 저장)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/64-api-admin-records</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>관리자가 입력 화면에서 저장한 <b>한 선수의 회차 점수 전체</b>를 회차 탭의 해당 행에 기록하는
+      신규 엔드포인트 <code>POST /api/admin/records</code>를 만든다. 요청은
+      <code>{ sessionDate, playerId, scores }</code>로 받고, 서버는 <b>id → 명단 이름 → 회차 탭 이름 매칭</b>
+      순으로 대상 행을 찾아 <b>점수 셀 범위만</b> <code>values.update</code>(RAW)로 덮어쓴다(행 단위 upsert, 마지막 저장 승리).</p>
+    <p>검증은 새 규칙을 만들지 않고 기존 <code>normalize-score</code> + valueKind 교차검증을 그대로 재사용한다 —
+      invalid·형식 불일치는 <b>400으로 거부하고 시트에 쓰지 않는다</b>. 저장 성공 시에만
+      <code>RECORDS_CACHE_KEY</code>를 <b>응답 전 await</b>로 무효화한 뒤 정규화 결과(EventScore)를 돌려준다.
+      인증(401/403)은 이미 배포된 <code>_middleware.ts</code>가 담당하므로 이 이슈는 <b>200/400/404×2/502</b> 계약만 구현한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>플랫폼</b> — Cloudflare Pages Functions. 파일 경로가 곧 라우트라
+        <code>functions/api/admin/records.ts</code>의 <code>onRequestPost</code>가
+        <code>POST /api/admin/records</code>로 매핑된다. 기존 <code>functions/api/records.ts</code>는
+        <code>GET /api/records</code>(다른 경로)라 충돌 없음.</li>
+      <li><b>인증은 이미 완료</b> — <code>functions/api/_middleware.ts:37</code>이 <code>/api/admin/*</code>에
+        admin 세션이 아니면 403, 세션 없으면 401을 fail-closed로 반환한다. 아직 함수 파일이 없는 admin 경로에도
+        걸리게 설계돼 있어(주석 8–10행), 이 핸들러는 <b>인증을 다시 구현하지 않는다</b>.</li>
+      <li><b>쓰기 래퍼(#63)는 준비됨</b> — <code>functions/lib/sheetsWriteApi.ts:28</code>
+        <code>updateValues(env, sheetId, range, values)</code>가 쓰기 scope 토큰 발급 +
+        <code>values.update</code>(RAW) + 429·5xx 재시도(멱등)를 담당하고, 4xx는 즉시
+        <code>SheetsApiError</code>. 범위 문자열 조립·행 찾기·검증은 "이 모듈 범위 밖"으로 남겨져(주석 4행) 이번 이슈 몫이다.</li>
+      <li><b>파서·검증 로직도 준비됨</b> — <code>functions/lib/parse-session.ts</code>의
+        <code>mapHeaderToEvents</code>(헤더→종목 열 매핑, 열 순서 가정 없음)와
+        <code>buildEventScore</code>(normalize-score + valueKind 교차검증 → EventScore)가 이미 존재하나
+        <b>모듈 밖으로 export되지 않은 내부 함수</b>다. PRD §07이 "parse-session의 mapHeaderToEvents와 같은 규칙"을
+        명시하므로 재구현 대신 <b>export해 재사용</b>한다.</li>
+      <li><b>읽기 경로</b> — <code>functions/lib/sheetsApi.ts</code>의 <code>fetchSheetBundle</code>가
+        메타(탭 목록) + <code>batchGet</code>으로 명단·목표·전 회차 원시값을 한 번에 가져오고,
+        <code>quoteSheetName</code>으로 A1 탭 이름을 인용한다. <code>classifySheetTabs</code>(<code>sheetTabs.ts</code>)가
+        <code>YYYY-MM-DD</code> 회차 탭을 캘린더 유효성까지 왕복 검증한다.</li>
+      <li><b>도메인 계약</b> — <code>shared/domain.ts:48</code> <code>EventScore</code>(recorded/exempt/unmeasured/invalid),
+        <code>EventDefinition</code>(key·valueKind·direction 등). 200 응답의 <code>scores</code>는
+        정확히 <code>buildEventScore</code>가 만드는 <code>Record&lt;string, EventScore&gt;</code>다.</li>
+      <li><b>캐시</b> — <code>functions/lib/records-cache.ts:7</code> <code>RECORDS_CACHE_KEY</code>는
+        고정 합성 URL. GET 경로가 <code>caches.default</code>에 이 키로 저장하므로(<code>records.ts:29</code>),
+        무효화는 같은 키로 <code>cache.delete</code>.</li>
+      <li><b>테스트 관행</b> — 핸들러 단위 테스트는 <code>records.test.ts</code>처럼
+        <code>vi.mock</code>으로 <code>fetchSheetBundle</code>을 스텁하고 <code>caches</code>를
+        <code>stubGlobal</code>로 대체해 <code>onRequestGet(context)</code>를 직접 호출한다.
+        쓰기 래퍼 테스트(<code>sheetsWriteApi.test.ts</code>)는 <code>fetch</code>를 큐로 스텁한다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>핵심 원칙</b>: 새 코드는 오케스트레이션(요청 파싱 → 읽기 → 대상 행 찾기 → 검증 → 쓰기 → 캐시 → 응답)과
+      A1 범위 조립뿐. 검증·헤더 매핑·이름 매칭 규칙은 기존 순수 함수를 <b>재사용</b>한다(PRD §08 "규칙 원천은 하나").</p>
+
+    <h3 style="font-size:0.95rem; margin:14px 0 6px;">읽기 전략 — <code>fetchSheetBundle</code> 재사용</h3>
+    <ul>
+      <li>대상 행을 찾으려면 <b>명단(playerId→이름)·목표(events·valueKind)·해당 회차 탭</b> 3종이 필요하다.
+        전용 메타+batchGet을 새로 짜는 대신 <b>GET 경로와 동일한 <code>fetchSheetBundle</code></b>을 재사용해
+        번들에서 셋을 골라 쓴다 — 회차 탭 전부를 읽는 약간의 초과 비용은 팀 규모(약 21명 × 소수 회차)에서 무시 가능하고,
+        검증된 단일 읽기 경로를 유지하는 이점이 더 크다. (회차 탭 존재 판정 = <code>bundle.rounds</code>에서 날짜 매칭 → 404 자연 도출.)</li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin:14px 0 6px;">쓰기 범위 조립</h3>
+    <ul>
+      <li><code>mapHeaderToEvents</code>는 <b>이름 열(A) 뒤 모든 열이 종목이고 전 종목이 빠짐없이 존재</b>함을 강제한다.
+        따라서 점수 열은 <b>B열부터 연속</b>이며 개수 = <code>events.length</code>. 쓰기 범위는
+        <code>'{탭}'!B{행}:{마지막열}{행}</code> 한 건 — <b>이름 열·헤더에는 절대 쓰지 않는다</b>(PRD §07).</li>
+      <li>쓰는 값은 요청 원본 문자열을 <b>헤더 열 순서대로</b> 재배열한 배열(요청 key 순서가 아님). RAW로 저장돼
+        읽기 쪽 FORMATTED_VALUE와 왕복 일관. 빈 문자열 <code>""</code>은 셀 비움 = 미측정.</li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin:14px 0 6px;">에러 계약 &amp; 판정 순서</h3>
+    <p style="font-size:0.9rem; margin:0 0 8px;">순서: <b>요청 형식(400) → 자원 존재(404) → 값 유효성(400) → 쓰기(502)</b>. "잘 만들어진 요청인가 →
+      대상이 있는가 → 값이 유효한가" 흐름. 401/403은 미들웨어가 이 핸들러 도달 전에 처리.</p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th style="width:120px;">코드</th><th>상황 / 판정</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag t400">400</span> <span class="mono">validation_failed</span></td>
+          <td>비-JSON 바디 · 타입 오류(sessionDate/playerId/scores) · <code>sessionDate</code> 날짜 형식 오류 ·
+            존재하지 않는 <code>playerId</code> · scores key 집합이 events와 불일치(누락·미지) · normalize-score invalid ·
+            valueKind 불일치. invalid·불일치는 <b>사유(reason) 포함</b>해 반환, <b>시트 미기록</b>.</td></tr>
+        <tr><td><span class="tag t404">404</span> <span class="mono">session_not_found</span></td>
+          <td>형식은 맞으나 그 날짜의 회차 탭이 번들에 없음 → 프론트 [기록지 만들기] 안내.</td></tr>
+        <tr><td><span class="tag t404">404</span> <span class="mono">not_participant</span></td>
+          <td>id→이름은 풀렸으나 회차 탭 이름 열에 그 이름 행이 없음 → 프론트 [참가자 추가] 안내.</td></tr>
+        <tr><td><span class="tag t502">502</span> <span class="mono">sheets_api_error</span></td>
+          <td>읽기/쓰기 Sheets API 실패(재시도 소진 포함). GET과 동일한 <code>{error, message, upstreamStatus}</code>.</td></tr>
+        <tr><td><span class="tag t400">500</span> <span class="mono">sheet_data_invalid</span></td>
+          <td>시트 무결성 문제(헤더 깨짐 · 목표/명단 탭 누락 · 회차 탭 이름 열 <b>동명 중복</b>으로 대상 행 특정 불가).
+            GET 경로의 파서 Error → 500 매핑과 일관. (계약표 밖 방어적 폴백.)</td></tr>
+        <tr><td><span class="tag t200">200</span></td>
+          <td><code>{ sessionDate, playerId, name, scores: Record&lt;key, EventScore&gt; }</code> —
+            저장값의 정규화 결과. <code>name</code>은 명단 기준 이름.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 style="font-size:0.95rem; margin:14px 0 6px;">검토했으나 택하지 않은 것</h3>
+    <ul>
+      <li><b>전용 3-range batchGet</b>(회차 탭 1개만) — 데이터는 줄지만 메타+인용+오케스트레이션을 재구현해야 함.
+        절감 효과가 팀 규모에서 미미해 <code>fetchSheetBundle</code> 재사용을 택함.</li>
+      <li><b>normalize-score를 <code>shared/</code>로 승격</b> — PRD §08이 "구현 이슈에서 검토"로만 남긴 항목.
+        프론트 재사용(후속 입력 화면 이슈) 필요 시점에 옮기는 게 맞고, 이 백엔드 이슈에서는
+        <code>functions/</code> 내부에서 직접 import하면 충분하므로 <b>이번 범위 밖</b>.</li>
+      <li><b>parse-session 전체를 회차 탭에 실행</b> — Session 전체를 파싱하면 대상 <b>시트 행 번호</b>를 얻을 수 없어
+        쓰기 범위를 못 만든다. 헤더 매핑·행 찾기만 뽑아 쓰는 소형 헬퍼로 분리.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <p style="margin:0 0 10px; color:var(--ok); font-weight:700;">✅ 전 단계 완료 — 397 테스트 그린 · typecheck 통과</p>
+    <ol class="steps">
+      <li><b style="color:var(--ok);">✓</b> 기존 순수 함수 <code>mapHeaderToEvents</code>·<code>buildEventScore</code>·<code>EventColumn</code>을 재사용 가능하도록 <b>export</b>(내부 동작 불변),
+        회차 날짜 형식 검증 <code>isValidRoundTabName</code>을 <code>parseRoundDate</code> 기반으로 export.
+        <span class="files"><code>functions/lib/parse-session.ts</code>, <code>functions/lib/sheetTabs.ts</code></span>
+      </li>
+      <li><b style="color:var(--ok);">✓</b> 쓰기용 순수 헬퍼 모듈 신설: <code>columnLetter(n)</code>(1-based→A1 열문자),
+        <code>locateParticipantRow(rows, nameNFC)</code>(이름 열 NFC 매칭 → 시트 행번호;
+        0건=not_participant 유니온, 2건 이상=중복 throw), <code>buildWritePlan</code>(점수 셀 A1 범위 + 헤더순 값 조립),
+        <code>validateScoreKeys</code>·<code>evaluateScores</code>(정규화 EventScore 맵 · invalid 목록).
+        <span class="files"><code>functions/lib/record-write.ts</code> (신규)</span>
+      </li>
+      <li><b style="color:var(--ok);">✓</b> 순수 헬퍼 단위 테스트(16개): 열문자 경계(B·Z·AA·AZ·BA), 행 매칭(정상/미참가/동명중복/NFC/빈칸),
+        범위 조립(연속 열·따옴표 이스케이프), 검증(정상·invalid·valueKind 불일치·빈칸=미측정·NFC key).
+        <span class="files"><code>functions/lib/record-write.test.ts</code> (신규)</span>
+      </li>
+      <li><b style="color:var(--ok);">✓</b> 엔드포인트 핸들러 <code>onRequestPost</code> 구현: 바디 파싱·형식 검증(400) → <code>fetchSheetBundle</code> →
+        목표/명단 파싱·playerId 해석(400/500) → scores key 집합 검증(400) → 회차 탭 존재(404) →
+        헤더 매핑·대상 행 찾기(404/500) → 값 검증(400, 시트 미기록) → <code>updateValues</code>(502) →
+        <code>caches.default.delete(RECORDS_CACHE_KEY)</code> <b>await</b> → 200(EventScore).
+        <span class="files"><code>functions/api/admin/records.ts</code> (신규)</span>
+      </li>
+      <li><b style="color:var(--ok);">✓</b> 엔드포인트 통합 테스트(13개, 핸들러 직접 호출, <code>fetchSheetBundle</code>·<code>updateValues</code>·<code>caches</code> 스텁):
+        정상 저장(범위 <code>B3:E3</code>·헤더순 값·캐시 delete·응답 바디 검증) · invalid/valueKind 400+시트 미기록(updateValues 미호출) ·
+        key 누락/미지 400 · playerId 미존재 400 · 날짜형식 400(읽기 없음) · session_not_found 404 · not_participant 404 ·
+        동명중복 500 · 읽기·쓰기 SheetsApiError 502 · 비-JSON 400.
+        <span class="files"><code>functions/api/admin/records.test.ts</code> (신규)</span>
+      </li>
+      <li><b style="color:var(--ok);">✓</b> 전체 <code>npm test</code>(397 그린) + <code>npm run typecheck</code>(통과) → 기존 parse-session/records 회귀 없음 →
+        플랜 체크 반영 → 커밋 → PR(<code>Closes #64</code>).
+        <span class="files" style="color:var(--muted);">비고: 이 워크트리는 <code>node_modules</code>가 비어 있어 테스트 전 <code>npm install</code> 1회 수행(플랜 외 환경 셋업).</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>이름 열·헤더에 실수로 쓰기</td><td>참조 수식 파괴 → 명단/랭킹 붕괴</td>
+          <td>쓰기 범위를 <b>B{행}부터</b>로 고정, 값 배열 길이 = events.length. 테스트로 범위 시작열이 B임을 단언.</td></tr>
+        <tr><td>요청 key 순서 ≠ 시트 열 순서</td><td>다른 종목 칸에 값 저장</td>
+          <td>쓰기 배열을 <b>헤더 열 순서(eventColumns)</b>로 재배열. key는 값 조회에만 사용.</td></tr>
+        <tr><td>회차 탭 이름 열 동명이인</td><td>엉뚱한 행 덮어쓰기</td>
+          <td>2건 이상 매칭이면 쓰지 않고 500 <code>sheet_data_invalid</code>(parse-session과 동일한 fail-loud).</td></tr>
+        <tr><td>invalid가 시트에 유입</td><td>사고 유형 재발</td>
+          <td>검증을 <b>쓰기 이전</b>에 완료, 하나라도 invalid면 400 후 즉시 반환(updateValues 미호출).</td></tr>
+        <tr><td>캐시 무효화가 응답보다 늦음</td><td>프론트가 오래된 데이터 refetch</td>
+          <td><code>cache.delete</code>를 <code>waitUntil</code> 아닌 <b>await</b>로 응답 전에 수행(PRD §09).</td></tr>
+        <tr><td>행 찾기↔쓰기 사이 행 이동</td><td>레이스로 다른 행 기록</td>
+          <td>회차 탭은 append-only(행 삭제·재배치 금지). 벌어지면 파서가 fail-loud로 드러냄(PRD §07 근거).</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>순수 헬퍼</b>(<code>record-write.test.ts</code>): <code>columnLetter</code> 경계(1→A,2→B,26→Z,27→AA),
+        <code>locateParticipantRow</code> 정상 행번호·미참가·동명중복·NFC 정규화 매칭, 범위 조립이 <code>B..</code> 연속인지,
+        scores 평가가 recorded/exempt/unmeasured/invalid/valueKind불일치를 정확히 분류하고 빈칸을 미측정으로 두는지.</li>
+      <li><b>엔드포인트</b>(<code>admin/records.test.ts</code>): 정상 저장 → 200 + <code>updateValues</code>가
+        올바른 range·행 순서 값으로 1회 호출 + <code>caches.default.delete</code>가 <b>응답 전</b> 호출 + 바디의 EventScore 맵 일치.</li>
+      <li>invalid 점수·valueKind 불일치 → 400 <code>validation_failed</code>(reason 포함) + <code>updateValues</code> <b>미호출</b>.</li>
+      <li>scores key 누락/미지 → 400, playerId 미존재 → 400, sessionDate 형식오류 → 400.</li>
+      <li>회차 탭 없음 → 404 <code>session_not_found</code>, 이름 행 없음 → 404 <code>not_participant</code>.</li>
+      <li>쓰기 <code>SheetsApiError</code> → 502 <code>sheets_api_error</code>(+upstreamStatus), 동명중복 → 500.</li>
+      <li><b>회귀</b>: <code>npm test</code> 전체 그린 — export 추가로 기존 parse-session·records 테스트가 깨지지 않음.
+        <code>npm run typecheck</code> 통과.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>정상 저장 → 회차 탭 점수 셀 반영 + <code>RECORDS_CACHE_KEY</code> 무효화(응답 전 await) + EventScore 200 응답.</li>
+      <li>invalid · valueKind 불일치 → 400 + reason, <b>시트 미기록</b>(updateValues 미호출로 검증).</li>
+      <li>미참가자 → 404 <code>not_participant</code> / 회차 탭 없음 → 404 <code>session_not_found</code> 코드 구분.</li>
+      <li>이름 열·헤더 비침범(점수 셀 범위 B{행}부터만 쓰기) — 테스트로 단언.</li>
+      <li>vitest 신규 테스트(순수 헬퍼 + 엔드포인트) 통과 + 기존 전체 그린 + typecheck 통과.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/64">#64</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>

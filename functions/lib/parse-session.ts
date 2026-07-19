@@ -40,7 +40,7 @@ import { normalizeScore } from './normalize-score'
 
 const NAME_HEADER = '이름'.normalize('NFC')
 
-interface EventColumn {
+export interface EventColumn {
   event: EventDefinition
   columnIndex: number
 }
@@ -121,7 +121,9 @@ export function buildPlayersByName(players: Player[]): Map<string, Player[]> {
   return byName
 }
 
-function mapHeaderToEvents(header: string[], events: EventDefinition[]): EventColumn[] {
+// export: 회차 탭 쓰기 경로(POST /api/admin/records, #64)가 같은 규칙으로 헤더→종목 열을
+// 매핑해야 한다(PRD §07 "parse-session의 mapHeaderToEvents와 같은 규칙"). 재구현 대신 재사용.
+export function mapHeaderToEvents(header: string[], events: EventDefinition[]): EventColumn[] {
   const firstCell = (header[0] ?? '').trim().normalize('NFC')
   if (firstCell !== NAME_HEADER) {
     throw new Error(`회차 탭 헤더 첫 열이 "이름"이 아닙니다: "${header[0] ?? ''}"`)
@@ -162,7 +164,9 @@ function mapHeaderToEvents(header: string[], events: EventDefinition[]): EventCo
   return columns
 }
 
-function buildEventScore(cell: string | undefined, event: EventDefinition): EventScore {
+// export: 쓰기 경로(#64)가 저장 전 값 검증 + 200 응답의 EventScore를 이 함수로 만든다 —
+// normalize-score + valueKind 교차검증 규칙의 단일 원천을 공유한다(PRD §08).
+export function buildEventScore(cell: string | undefined, event: EventDefinition): EventScore {
   const normalized = normalizeScore(cell ?? null)
 
   switch (normalized.kind) {

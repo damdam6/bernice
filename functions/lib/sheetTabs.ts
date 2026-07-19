@@ -50,6 +50,13 @@ function parseRoundDate(normalizedName: string): Date | null {
   return isValidCalendarDate ? date : null
 }
 
+// 회차 탭 이름 규칙(YYYY-MM-DD + 캘린더 유효)에 맞는지만 판정한다 — 쓰기 경로(#64)가
+// 요청 sessionDate의 "날짜 형식 오류(400)"와 "회차 탭 없음(404)"을 구분하기 위해 형식 검증만
+// 먼저 수행할 때 쓴다. 분류(classifySheetTabs)와 같은 parseRoundDate를 재사용해 규칙이 어긋나지 않게 한다.
+export function isValidRoundTabName(name: string): boolean {
+  return parseRoundDate(name.normalize('NFC')) !== null
+}
+
 export function classifySheetTabs(tabNames: string[]): SheetTabClassification {
   let roster: string | null = null
   let goals: string | null = null
