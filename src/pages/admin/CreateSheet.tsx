@@ -7,7 +7,9 @@ import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
+import { SelectablePlayerList } from '../../components/SelectablePlayerList'
 import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
+import { useMultiSelect } from '../../hooks/useMultiSelect'
 import { createSheet } from '../../lib/create-sheet-api'
 import { compareKorean } from '../../lib/korean-sort'
 import { formatSeoulDate } from '../../lib/seoul-date'
@@ -16,7 +18,7 @@ export default function CreateSheet() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data, isError, error, refetch } = useRecords()
-  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const { selected, toggle } = useMultiSelect()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -39,15 +41,6 @@ export default function CreateSheet() {
   const candidates = data.players
     .filter((player) => player.status === '활동')
     .sort(compareKorean)
-
-  function toggle(playerId: number) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(playerId)) next.delete(playerId)
-      else next.add(playerId)
-      return next
-    })
-  }
 
   async function handleConfirm() {
     setSubmitting(true)
@@ -77,31 +70,7 @@ export default function CreateSheet() {
       {candidates.length === 0 ? (
         <EmptyState title="활동 중인 선수가 없습니다" description="명단에서 선수 상태를 먼저 확인해주세요" />
       ) : (
-        <div className="flex flex-col gap-2">
-          {candidates.map((player) => {
-            const isSelected = selected.has(player.id)
-            return (
-              <button
-                key={player.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => toggle(player.id)}
-                className={`flex w-full items-center justify-between rounded-card border px-5 py-4 text-left transition-colors ${
-                  isSelected ? 'border-primary bg-primary-tint' : 'border-line bg-white'
-                }`}
-              >
-                <span className="text-sm font-bold text-ink">{player.name}</span>
-                <span
-                  className={`flex size-5 items-center justify-center rounded-md text-xs font-bold text-white ${
-                    isSelected ? 'bg-primary' : 'border border-input-line bg-transparent'
-                  }`}
-                >
-                  {isSelected ? '✓' : ''}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <SelectablePlayerList players={candidates} selected={selected} onToggle={toggle} />
       )}
 
       {submitError && (

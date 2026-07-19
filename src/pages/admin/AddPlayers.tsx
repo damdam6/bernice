@@ -10,9 +10,11 @@ import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
 import { FilterChip } from '../../components/FilterChip'
+import { SelectablePlayerList } from '../../components/SelectablePlayerList'
 import { addPlayers } from '../../lib/add-players-api'
 import { compareKorean } from '../../lib/korean-sort'
 import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
+import { useMultiSelect } from '../../hooks/useMultiSelect'
 
 export default function AddPlayers() {
   const navigate = useNavigate()
@@ -22,7 +24,7 @@ export default function AddPlayers() {
 
   const requestedSessionDate = (location.state as { sessionDate?: string } | null)?.sessionDate
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(requestedSessionDate ?? null)
-  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const { selected, toggle, reset } = useMultiSelect()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -67,18 +69,9 @@ export default function AddPlayers() {
     .filter((player) => player.status === '활동' && !participantIds.has(player.id))
     .sort(compareKorean)
 
-  function toggle(playerId: number) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(playerId)) next.delete(playerId)
-      else next.add(playerId)
-      return next
-    })
-  }
-
   function selectSession(date: string) {
     setSelectedSessionDate(date)
-    setSelected(new Set())
+    reset()
     setSubmitError(null)
   }
 
@@ -115,31 +108,7 @@ export default function AddPlayers() {
       {candidates.length === 0 ? (
         <EmptyState title="추가할 선수가 없습니다" description="활동 중인 선수가 모두 이 회차에 참가 중이에요" />
       ) : (
-        <div className="flex flex-col gap-2">
-          {candidates.map((player) => {
-            const isSelected = selected.has(player.id)
-            return (
-              <button
-                key={player.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => toggle(player.id)}
-                className={`flex w-full items-center justify-between rounded-card border px-5 py-4 text-left transition-colors ${
-                  isSelected ? 'border-primary bg-primary-tint' : 'border-line bg-white'
-                }`}
-              >
-                <span className="text-sm font-bold text-ink">{player.name}</span>
-                <span
-                  className={`flex size-5 items-center justify-center rounded-md text-xs font-bold text-white ${
-                    isSelected ? 'bg-primary' : 'border border-input-line bg-transparent'
-                  }`}
-                >
-                  {isSelected ? '✓' : ''}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <SelectablePlayerList players={candidates} selected={selected} onToggle={toggle} />
       )}
 
       {submitError && (
