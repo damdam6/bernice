@@ -5,6 +5,8 @@
 //
 // role은 서버가 항상 성공 응답에 실어 보내지만(functions/api/login.ts) 팀 게이트(LoginGate)는
 // 쓰지 않는다 — 관리자 로그인(#67, AdminLogin)만 team/admin 코드 오분기 방지에 role로 분기한다.
+import { isPlainObject } from '../../shared/is-plain-object'
+
 export type LoginRole = 'team' | 'admin'
 
 export interface LoginResult {
@@ -20,9 +22,14 @@ export async function loginWithPasscode(code: string): Promise<LoginResult> {
     body: JSON.stringify({ code }),
   })
 
-  const body = (await res.json().catch(() => null)) as { role?: LoginRole; message?: string } | null
+  // 필드 단위 검증 추출(#93) — role은 AdminLogin의 admin 분기에 쓰이는 값이라 화이트리스트로
+  // 좁히고, 그 외 값은 없는 것으로 친다(role 없는 ok:true는 AdminLogin이 실패로 처리).
+  const body: unknown = await res.json().catch(() => null)
+  const fields: Record<string, unknown> = isPlainObject(body) ? body : {}
+  const role = fields.role === 'team' || fields.role === 'admin' ? fields.role : undefined
+  const message = typeof fields.message === 'string' ? fields.message : undefined
 
-  if (res.ok) return { ok: true, role: body?.role }
+  if (res.ok) return { ok: true, role }
 
-  return { ok: false, message: body?.message }
+  return { ok: false, message }
 }

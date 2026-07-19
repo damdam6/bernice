@@ -6,6 +6,7 @@
 // 쓰기 방식(PRD §07): 회차 탭은 append-only라 "마지막 비공백 행 다음"으로 계산한 범위에 update
 // 1건이면 되고 재시도가 멱등하다. A열 이름 참조 수식은 RAW로 쓰면 리터럴이 되므로 USER_ENTERED.
 
+import { isPlainObject } from '../../../shared/is-plain-object'
 import type { Env as SheetsEnv } from '../../lib/sheetsApi'
 import {
   SheetsApiError,
@@ -28,15 +29,16 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context
 
-  let sessionDate: unknown
-  let playerIds: unknown
+  // 바디 파싱은 admin/records.ts와 같은 관용구(#93) — as 단언 없이 unknown에서 좁힌다.
+  let raw: unknown
   try {
-    const body = (await request.json()) as { sessionDate?: unknown; playerIds?: unknown } | null
-    sessionDate = body?.sessionDate
-    playerIds = body?.playerIds
+    raw = await request.json()
   } catch {
     return Response.json({ error: 'bad_request', message: 'JSON 바디가 필요합니다.' }, { status: 400 })
   }
+  const body: Record<string, unknown> = isPlainObject(raw) ? raw : {}
+  const sessionDate = body.sessionDate
+  const playerIds = body.playerIds
 
   // 형태 검증은 여기서(값 검증은 buildAddPlayersPlan). 날짜 형식 오류는 PRD 계약대로 400.
   if (typeof sessionDate !== 'string' || !DATE_PATTERN.test(sessionDate)) {

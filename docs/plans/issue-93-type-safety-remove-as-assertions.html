@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#93 타입 안정성 — API 응답 as 타입 단언 제거 + 런타임 검증 도입 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 18px 0 8px; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.checked::before { background: var(--ok); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/93">#93</a></span><span class="type-chip">타입 안정성 개선</span>
+    <h1>타입 안정성 — API 응답 as 타입 단언 제거 + 런타임 검증 도입</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/93-type-safety-remove-as-assertions</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>프론트가 자체 백엔드 응답을 <code>as</code>로 단언해 쓰는 5개 파일(useRecords·login-api·add-players-api·create-sheet-api·records-write-api)에서 단언을 제거하고, 레포 관용구에 맞는 <b>손수 조립형 파서("parse, don't validate")</b>로 런타임 검증을 도입한다. zod는 도입하지 않는다(사유는 §3). 서버측은 완료 조건이 명시한 <code>request.json()</code> 단언 3곳을 이미 모범인 <code>records.ts</code>의 <code>raw: unknown</code> 관용구로 통일한다. 검증 실패 시 에러 경로는 읽기(useRecords)=<code>ApiError</code> throw, 쓰기 래퍼=기존 기본값 폴백(UX 불변)으로 정의한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <h3>클라이언트 — 자체 API 응답 <code>as</code> 단언 5곳</h3>
+    <ul>
+      <li><code>src/hooks/useRecords.ts:33</code> — <code>(await res.json()) as RecordsResponse</code>. <b>방어 로직 없는 날것</b>이며, 이 응답은 7개 화면(Rankings·AddPlayers·CreateSheet·RecordsDateSelect·RecordsParticipants·RecordsPlayerInput 등)이 깊게 소비한다. <code>src/hooks/useRecords.ts:28</code>의 에러 바디 <code>as ErrorBody | null</code>도 동일 파일.</li>
+      <li><code>src/lib/login-api.ts:23</code> — <code>as { role?: LoginRole; message?: string } | null</code>. <code>role</code>은 <code>AdminLogin.tsx:29</code>가 <code>result.role !== 'admin'</code>으로 분기하는 보안 관련 값인데 런타임 검증이 없다.</li>
+      <li><code>src/lib/add-players-api.ts:42</code> · <code>src/lib/create-sheet-api.ts:39</code> · <code>src/lib/records-write-api.ts:48</code> — <code>.catch(() => null) as {…} | null</code> 후 <code>body?.x ?? 기본값</code> 방어형. 성공 필드 소비는 얕다(토스트 문구·네비게이션: <code>AddPlayers.tsx:91-92</code>, <code>CreateSheet.tsx:58-59</code>, <code>RecordsPlayerInput.tsx:111-112</code>는 <code>ok</code>/<code>message</code>만 사용).</li>
+    </ul>
+    <h3>서버 — <code>request.json()</code> 단언 3곳 + 사내 모범 선례 1곳</h3>
+    <ul>
+      <li><code>functions/api/login.ts:35</code> · <code>functions/api/admin/add-players.ts:34</code> · <code>functions/api/admin/create-sheet.ts:34</code> — <code>as { x?: unknown } | null</code> 컨테이너 단언 후 값은 <code>typeof</code>로 검증. 값 수준에선 안전하지만 관용구가 갈라져 있다.</li>
+      <li><code>functions/api/admin/records.ts:44-48, 134-162</code> — <b>이미 모범</b>: <code>raw: unknown</code>으로 받고 <code>parseBody</code>(+<code>isPlainObject</code>, <code>records.ts:130</code>)가 값을 검증하며 새 객체를 조립해 반환. 이 관용구가 이번 작업의 표준이다.</li>
+    </ul>
+    <h3>리뷰 스레드(미해결) 및 테스트 기반</h3>
+    <ul>
+      <li>PR #54(useRecords, "zod/io-ts 도입" 제안) · #91(add-players/create-sheet) · #92(records-write, "타입 단언 제거") — 모두 미해결. #91 스레드의 CSRF 지적은 이 이슈 범위가 아니다(별도 처리 대상).</li>
+      <li>테스트 픽스처는 전부 <code>RecordsResponse</code>로 타입돼 있어(예: <code>src/hooks/useRecords.test.tsx:18</code>, <code>src/App.e2e.test.tsx:124</code>) 완전한 형태다 — 엄격 파서를 도입해도 기존 픽스처가 그대로 통과하며, E2E가 실제 <code>fetchRecords</code> 경로로 파서를 검증하게 된다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <h3>결정 ① 도입 방식 — zod 기각, 손수 조립형 파서 채택</h3>
+    <ul>
+      <li><b>레포 관용구</b>: 이 레포는 constant-time-equal(<code>functions/lib/constant-time-equal.ts</code>), 세션 쿠키 HMAC(<code>session-cookie.ts</code>), Google 서비스 계정 JWT 서명(<code>googleAuth.ts</code>)까지 전부 무의존 손수 구현이고, 런타임 의존성은 React 계열뿐이다. <code>records.ts</code>의 <code>parseBody</code>가 정확히 같은 문제의 사내 선례.</li>
+      <li><b>계약의 원천 유지</b>: <code>shared/domain.ts</code>가 서버·프론트 공용 계약이다. zod를 쓰면 스키마·타입 이중 관리 또는 domain.ts의 z.infer 전면 개편이 필요 — 이번 이슈 규모(M)를 넘는 전역 개편이라 기각.</li>
+      <li><b>조립형("parse, don't validate")의 강점</b>: <code>raw is T</code> 단언형 가드는 domain.ts에 필수 필드가 추가돼도 조용히 통과하지만, 값을 꺼내 <code>T</code>를 새로 조립해 반환하면 필수 필드 누락이 <b>컴파일 에러</b>로 강제된다.</li>
+    </ul>
+    <h3>결정 ② 검증 실패 시 에러 처리 경로</h3>
+    <ul>
+      <li><b>읽기(useRecords)</b>: 200 + 계약 위반 바디 → <code>ApiError('records fetch failed (invalid body)', res.status)</code> throw. 기존 invalid json 경로(<code>useRecords.ts:36</code>)와 같은 분류라 재시도 규칙(<code>shouldRetryRecordsQuery</code>: 200은 4xx가 아니므로 재시도 허용)도 그대로 맞아떨어진다.</li>
+      <li><b>쓰기 래퍼 3종 + login</b>: 필드 단위 검증 추출 + 기존 기본값 폴백 유지(UX 불변). 2xx인데 바디가 깨진 경우 서버 쓰기는 이미 성공한 상태라, 실패로 표시해 재시도를 유도하면 add-players는 409 충돌을 만든다 — 관대한 폴백이 옳다. 에러 경로(비-2xx)는 기존 <code>unknown_error</code> + 일반 메시지 폴백 그대로. <code>login-api</code>의 <code>role</code>은 <code>'team' | 'admin'</code> 화이트리스트 검증(그 외 값 → <code>undefined</code> → AdminLogin이 실패로 처리, 기존 분기 재사용).</li>
+    </ul>
+    <h3>결정 ③ 서버측 범위 — <code>request.json()</code> 3곳만, 나머지는 제외(사유 기록)</h3>
+    <ul>
+      <li><b>반영</b>: <code>functions/api/login.ts</code> · <code>admin/add-players.ts</code> · <code>admin/create-sheet.ts</code>의 컨테이너 단언을 <code>records.ts</code> 관용구(<code>raw: unknown</code> + <code>isPlainObject</code> 좁히기)로 통일. 동작·응답 계약 불변(기존 핸들러 테스트가 회귀 방어).</li>
+      <li><b>제외</b>: <code>sheetsApi.ts:46,75,105</code>(외부 Google API 메타데이터 — 다운스트림 파서가 방어, 전면 스키마 검증은 ROI 낮음) · <code>googleAuth.ts:67</code>·<code>session-cookie.ts:113</code>(값을 <code>unknown</code>으로 받아 이미 런타임 검증하는 안전 패턴) · <code>login-rate-limit.ts:39</code>(자체 직렬화 KV 값) · 테스트 파일의 <code>as</code>(목 조립용) · <code>location.state as</code>(라우터 상태 — API 응답 아님, 이슈 제목 범위 밖).</li>
+    </ul>
+    <h3>새 모듈 배치</h3>
+    <ul>
+      <li><code>shared/is-plain-object.ts</code> — <code>records.ts:130</code>의 <code>isPlainObject</code>를 승격(서버·프론트 공용, 중복 제거).</li>
+      <li><code>src/lib/parse-records-response.ts</code> — <code>parseRecordsResponse(raw: unknown): RecordsResponse | null</code> 전체 깊이 조립 파서. <code>parseEventScore</code>도 export해 records-write-api의 성공 <code>scores</code> 검증과 단일 소스로 공유. 소비자가 프론트뿐이라 shared/가 아닌 src/lib에 둔다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">공용 <code>isPlainObject</code>를 shared/로 승격하고 <code>functions/api/admin/records.ts</code>가 import하도록 교체 + 단위 테스트.
+        <span class="files"><code>shared/is-plain-object.ts</code>(신설), <code>shared/is-plain-object.test.ts</code>(신설), <code>functions/api/admin/records.ts</code></span>
+      </li>
+      <li class="done"><code>RecordsResponse</code> 전체 깊이 조립 파서 작성 — domain.ts의 유니온(<code>EventScore</code> 4종 status)·제약(<code>PlayerSummary.status</code>는 '탈퇴' 제외) 반영, 필수 필드는 조립 반환으로 컴파일 강제 + 전용 테스트(완전 응답 통과 / 최상위·중첩 필드 누락·타입 오류 거부 / EventScore 상태별 왕복).
+        <span class="files"><code>src/lib/parse-records-response.ts</code>(신설), <code>src/lib/parse-records-response.test.ts</code>(신설)</span>
+        <span class="note">✓ 완료 — 계획의 parseEventScore에 더해 parseScores(맵 파서)도 export: records-write-api가 맵 검증 루프를 중복 구현하지 않도록.</span>
+      </li>
+      <li class="done"><code>useRecords.ts</code>의 <code>as</code> 2곳 제거 — 200 바디는 <code>parseRecordsResponse</code>로 검증(실패 시 <code>ApiError('records fetch failed (invalid body)', res.status)</code>), 에러 바디 <code>message</code>는 isPlainObject + typeof 추출. 테스트에 계약 위반 바디 케이스 추가.
+        <span class="files"><code>src/hooks/useRecords.ts</code>, <code>src/hooks/useRecords.test.tsx</code></span>
+      </li>
+      <li class="done"><code>login-api.ts</code>의 <code>as</code> 제거 — <code>role</code>을 <code>'team' | 'admin'</code> 화이트리스트로 검증(그 외 → undefined), <code>message</code>는 string일 때만. role 이상값 테스트 추가.
+        <span class="files"><code>src/lib/login-api.ts</code>, <code>src/lib/login-api.test.ts</code></span>
+      </li>
+      <li class="done"><code>add-players-api.ts</code>의 <code>as</code> 제거 — 바디 파서 도입(<code>added</code>는 원소 단위 <code>playerId: number</code>·<code>name: string</code> 검증), 기존 기본값 폴백 유지. 이상 바디 테스트 추가.
+        <span class="files"><code>src/lib/add-players-api.ts</code>, <code>src/lib/add-players-api.test.ts</code></span>
+      </li>
+      <li class="done"><code>create-sheet-api.ts</code>의 <code>as</code> 제거 — 동일 패턴(<code>sessionDate</code>·<code>participantCount</code> 검증 추출). 이상 바디 테스트 추가.
+        <span class="files"><code>src/lib/create-sheet-api.ts</code>, <code>src/lib/create-sheet-api.test.ts</code></span>
+      </li>
+      <li class="done"><code>records-write-api.ts</code>의 <code>as</code> 제거 — 성공 <code>scores</code>는 <code>parseEventScore</code> 재사용으로 원소 단위 검증(실패 원소는 버리고 기본값 <code>{}</code> 방향 폴백), 나머지 필드 typeof 검증. 이상 바디 테스트 추가.
+        <span class="files"><code>src/lib/records-write-api.ts</code>, <code>src/lib/records-write-api.test.ts</code></span>
+        <span class="note">✓ 완료 — scores 폴백은 "실패 원소만 드랍"이 아니라 하나라도 위반 시 전체 {} 폴백으로 구현(부분 성공을 조용히 섞지 않는 파서 원칙과 일관, added와 동일).</span>
+      </li>
+      <li class="done">서버 <code>request.json()</code> 단언 3곳을 <code>records.ts</code> 관용구로 통일 — <code>const raw: unknown = await request.json()</code> + isPlainObject 좁히기. 응답 계약·상태코드 불변, 기존 핸들러 테스트로 회귀 확인.
+        <span class="files"><code>functions/api/login.ts</code>, <code>functions/api/admin/add-players.ts</code>, <code>functions/api/admin/create-sheet.ts</code></span>
+      </li>
+      <li class="done">마감 — <code>npm run typecheck</code> · <code>npm test</code> 전체 그린 확인, <code>src/</code> 응답 파싱 <code>as</code> 잔존 grep 검사, 플랜 체크오프·커밋 정리 후 PR 오픈(<code>Closes #93</code>).
+        <span class="files"><code>docs/plans/issue-93-type-safety-remove-as-assertions.html</code></span>
+        <span class="note">✓ 완료 — typecheck·전체 627 테스트 그린. 신규 코드의 넓히기 방향 as 3곳(any[]→unknown[], T[]→string[])도 대입 선언으로 바꿔 수정 파일 6곳의 as는 as const 제외 0개.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>파서가 <code>domain.ts</code>와 어긋나 정상 응답을 거부</td>
+          <td>전 화면 데이터 로드 실패(가장 큰 리스크)</td>
+          <td>조립형 파서라 신규 필수 필드는 컴파일 에러로 강제. <code>App.e2e.test.tsx</code>가 실제 <code>fetchRecords</code> 경로로 완전 픽스처를 통과시켜 회귀 감지. 파서 실패는 재시도 가능한 <code>ApiError</code>로 화면 에러 UI에 안착.</td>
+        </tr>
+        <tr>
+          <td>엄격 검증이 기존에 통과하던 관대한 응답을 거부(동작 변화)</td>
+          <td>쓰기 성공이 실패로 표시 → 재시도 유도 → add-players 409 혼란</td>
+          <td>엄격 모드는 읽기(useRecords)만. 쓰기 래퍼·login은 필드 단위 폴백으로 기존 UX 완전 보존.</td>
+        </tr>
+        <tr>
+          <td>서버 바디 파싱 개편의 회귀</td>
+          <td>400/응답 계약 변화</td>
+          <td>동작 불변 원칙(컨테이너 단언 → unknown 좁히기만 교체). 각 핸들러의 기존 테스트(비-JSON 400, 검증 실패 케이스)가 커버.</td>
+        </tr>
+        <tr>
+          <td><code>EventScore</code> 검증 로직 이중화로 인한 불일치</td>
+          <td>읽기/쓰기 경로 간 판정 상이</td>
+          <td><code>parseEventScore</code>를 단일 소스로 두고 parse-records-response와 records-write-api가 공유.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>신규</b> <code>parse-records-response.test.ts</code>: 완전 응답 왕복 · 최상위 필드 누락/타입 오류 거부 · <code>EventScore</code> 4종 status 각각 통과와 위반 셀 거부 · <code>PlayerSummary.status</code> '탈퇴' 거부.</li>
+      <li><b>신규</b> <code>is-plain-object.test.ts</code>: 객체 통과, null/배열/원시값 거부.</li>
+      <li><code>useRecords.test.tsx</code> 추가: 200 + 계약 위반 바디(<code>{}</code> 등) → <code>ApiError</code>(message <code>invalid body</code>, status 200) — 기존 invalid json 케이스와 대칭.</li>
+      <li><code>login-api.test.ts</code> 추가: <code>role: 'root'</code> 등 이상값 → <code>role: undefined</code>, 비객체 바디 → 기존 실패 경로.</li>
+      <li>쓰기 래퍼 3종 테스트 추가: 필드 타입 이상 바디 → 기본값 폴백 확인(기존 성공/실패 케이스는 무수정 통과가 목표).</li>
+      <li><b>회귀 전체</b>: <code>npm run typecheck</code> · <code>npm test</code>(E2E 포함) 그린. 서버 핸들러 기존 테스트(비-JSON 400 등) 무수정 통과.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="checked">도입 방식 결정 기록 — 손수 조립형 파서 채택, zod 기각 사유 문서화(§3)</li>
+      <li class="checked"><code>src/</code> 응답 파싱 <code>as</code> 단언 5개 파일 전부 제거(grep로 잔존 0 확인)</li>
+      <li class="checked">검증 실패 에러 처리 경로 정의·구현 — 읽기=<code>ApiError</code>, 쓰기·login=필드 폴백</li>
+      <li class="checked">서버측 <code>request.json()</code> 단언 3곳 통일 반영 + 제외 범위 사유 기록(§3)</li>
+      <li class="checked"><code>npm run typecheck</code> · <code>npm test</code> 전체 통과</li>
+      <li class="checked">PR 오픈(<code>Closes #93</code>) — 미해결 리뷰 스레드 #54·#91·#92의 타입 단언 지적 해소</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/93">#93</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>

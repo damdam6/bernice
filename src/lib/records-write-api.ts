@@ -4,6 +4,8 @@
 // 만들지 않고 서버가 이미 사람이 읽을 수 있게 준 message를 신뢰한다. 429·5xx 재시도는 서버
 // (functions/lib/sheetsWriteApi.ts) 안에서 끝나므로 여기서는 한 번만 호출한다.
 import type { EventScore } from '../../shared/domain'
+import { isPlainObject } from '../../shared/is-plain-object'
+import { parseScores } from './parse-records-response'
 
 export interface SaveRecordSuccess {
   ok: true
@@ -45,30 +47,26 @@ export async function saveRecord(
     }
   }
 
-  const body = (await res.json().catch(() => null)) as
-    | {
-        sessionDate?: string
-        playerId?: number
-        name?: string
-        scores?: Record<string, EventScore>
-        error?: string
-        message?: string
-      }
-    | null
+  // 필드 단위 검증 추출(#93) — 2xx인데 바디가 깨진 경우 저장은 이미 성공한 상태라 실패로 바꾸지
+  // 않고 기본값으로 폴백한다(저장은 행 단위 upsert라 재시도해도 안전하지만, 성공을 실패로 보이는 쪽이
+  // 더 큰 혼란). scores는 읽기 경로와 같은 파서(parseScores)로 판정을 단일화하고, 하나라도 계약을
+  // 위반하면 {}로 폴백한다 — 소비부(RecordsPlayerInput)는 ok/message만 쓰므로 표시 영향은 없다.
+  const body: unknown = await res.json().catch(() => null)
+  const fields: Record<string, unknown> = isPlainObject(body) ? body : {}
 
   if (res.ok) {
     return {
       ok: true,
-      sessionDate: body?.sessionDate ?? sessionDate,
-      playerId: body?.playerId ?? playerId,
-      name: body?.name ?? '',
-      scores: body?.scores ?? {},
+      sessionDate: typeof fields.sessionDate === 'string' ? fields.sessionDate : sessionDate,
+      playerId: typeof fields.playerId === 'number' ? fields.playerId : playerId,
+      name: typeof fields.name === 'string' ? fields.name : '',
+      scores: parseScores(fields.scores) ?? {},
     }
   }
 
   return {
     ok: false,
-    error: body?.error ?? 'unknown_error',
-    message: body?.message ?? '저장에 실패했어요. 다시 시도해주세요.',
+    error: typeof fields.error === 'string' ? fields.error : 'unknown_error',
+    message: typeof fields.message === 'string' ? fields.message : '저장에 실패했어요. 다시 시도해주세요.',
   }
 }

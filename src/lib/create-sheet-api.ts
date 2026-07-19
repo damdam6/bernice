@@ -2,6 +2,8 @@
 // 409 sheet_already_exists · 400 no_participants/invalid_participants · 500 missing_*_tab ·
 // 502 sheets_api_error). 호출부(CreateSheet)는 error 코드를 그대로 message로 보여준다 —
 // 코드별 문구를 새로 만들지 않고 서버가 이미 사람이 읽을 수 있게 준 message를 신뢰한다.
+import { isPlainObject } from '../../shared/is-plain-object'
+
 export interface CreateSheetSuccess {
   ok: true
   sessionDate: string
@@ -36,17 +38,23 @@ export async function createSheet(participantIds: number[]): Promise<CreateSheet
     }
   }
 
-  const body = (await res.json().catch(() => null)) as
-    | { sessionDate?: string; participantCount?: number; error?: string; message?: string }
-    | null
+  // 필드 단위 검증 추출(#93) — 2xx인데 바디가 깨진 경우 시트 생성은 이미 성공한 상태라 실패로
+  // 바꾸지 않고 기본값으로 폴백한다(실패 표시로 재시도를 유도하면 409 sheet_already_exists 충돌).
+  const body: unknown = await res.json().catch(() => null)
+  const fields: Record<string, unknown> = isPlainObject(body) ? body : {}
 
   if (res.ok) {
-    return { ok: true, sessionDate: body?.sessionDate ?? '', participantCount: body?.participantCount ?? 0 }
+    return {
+      ok: true,
+      sessionDate: typeof fields.sessionDate === 'string' ? fields.sessionDate : '',
+      participantCount: typeof fields.participantCount === 'number' ? fields.participantCount : 0,
+    }
   }
 
   return {
     ok: false,
-    error: body?.error ?? 'unknown_error',
-    message: body?.message ?? '기록지 생성에 실패했어요. 다시 시도해주세요.',
+    error: typeof fields.error === 'string' ? fields.error : 'unknown_error',
+    message:
+      typeof fields.message === 'string' ? fields.message : '기록지 생성에 실패했어요. 다시 시도해주세요.',
   }
 }
