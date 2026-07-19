@@ -50,6 +50,10 @@ export default function RecordsParticipants() {
 
   return (
     <ParticipantsContent
+      // session.date를 key로 둬 회차가 바뀌면 강제 리마운트한다 — 아래 useEffect가 "진입 시
+      // 1회"를 마운트 시점으로만 판단해도, 향후 같은 라우트 안에서 회차를 직접 전환하는
+      // 진입점이 생기더라도 toast 판정이 이전 회차의 location.state를 들고 있지 않게 한다.
+      key={session.date}
       data={data}
       session={session}
       onSelectPlayer={(playerId) => navigate(`/admin/records/${session.date}/${playerId}`)}
@@ -75,7 +79,9 @@ function ParticipantsContent({
   useEffect(() => {
     const state = location.state as { toast?: string } | null
     if (state?.toast) show(state.toast)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 진입 시 1회만: location.state는 이 마운트의 히스토리 엔트리에 고정된 값.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 진입 시 1회만: location.state는 이 마운트의
+    // 히스토리 엔트리에 고정된 값이라 재조회해도 바뀌지 않는다. 부모가 key={session.date}로 회차마다
+    // 이 컴포넌트를 새로 마운트시키므로("진입"의 단위는 회차) 빈 의존성 배열이 곧 "회차 진입 시 1회"다.
   }, [])
 
   const roundLabel = data.sessions.findIndex((candidate) => candidate.date === session.date) + 1
