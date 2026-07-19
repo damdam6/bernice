@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#70 디자인 개편 — 랭킹 화면 (카드 행 리스트 · 미측정/면제 하단 노출) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/70">#70</a></span><span class="type-chip">기능 개선</span>
+    <h1>디자인 개편 — 랭킹 화면 (카드 행 리스트 · 미측정/면제 하단 노출)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/70-ranking-screen-redesign</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>src/pages/Rankings.tsx</code>를 P4 플레이스홀더에서 확정 카드 행 리스트 화면으로 구현한다. #69가 만든 <code>useRecords</code>·<code>buildPerformanceScale</code>·<code>PerformanceBar</code>·<code>AchievementBadge</code>를 처음으로 실제 화면에 배선하고, 종목·회차 필터 칩(신규 공통 컴포넌트)과 순위 행 카드를 새로 만든다. 순위권(<code>rankings[].events[].entries</code>)은 그대로 쓰고, 면제·미측정·이상값은 <code>sessions[].entries</code>에서 활동 상태 선수만 보충해 하단에 붙인다 — <b>API 계약 변경 없음</b>. 구 테이블 컴포넌트(<code>RankingTable.tsx</code>, #50)는 사용처가 없어 새 카드 컴포넌트로 대체하며 삭제한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>화면은 아직 플레이스홀더</b>: <code>src/pages/Rankings.tsx:1-10</code> — "P4에서 채워집니다" 안내문만 렌더. <code>src/App.tsx:21</code>에 <code>/rankings</code> 라우트는 이미 연결돼 있고 <code>BottomNav</code>(<code>src/components/layout/BottomNav.tsx:14</code>)에도 탭이 있어 라우팅·네비는 손댈 필요 없음.</li>
+      <li><b>구 테이블 컴포넌트는 죽은 코드</b>: <code>src/components/RankingTable.tsx</code>(#50, 구 IA 기준 <code>&lt;table&gt;</code>)는 자기 테스트(<code>RankingTable.test.tsx</code>) 외 어디서도 import되지 않는다(grep 전수 확인) — <code>Rankings.tsx</code>가 한 번도 소비한 적이 없다. 다만 <code>RankingTableRow</code> 판별 유니온(recorded/exempt/unmeasured)과 <code>findTiedRanks</code> 동점 판정 로직은 그대로 재사용할 가치가 있다 — invalid 상태만 추가하면 된다.</li>
+      <li><b>정규화·미니바·게이지는 이미 완성, 아직 무소비</b>: <code>src/lib/performance-scale.ts</code>(<code>buildPerformanceScale</code>), <code>src/components/charts/performance-bar.tsx</code>(주석에 "#70 랭킹 화면이 소비"라고 명시), <code>achievement-gauge.tsx</code> 모두 #69(커밋 d74e60b)에서 완성됐지만 어떤 페이지도 import하지 않는다 — 이 이슈가 첫 소비처.</li>
+      <li><b><code>useRecords</code>도 아직 무소비</b>: <code>src/hooks/useRecords.ts</code>(#54)는 자기 테스트(<code>useRecords.test.tsx</code>) 밖에서 쓰인 적이 없다(grep 확인). <code>Rankings.tsx</code>가 로딩/에러/성공 3상태를 실제로 배선하는 첫 화면이라 이 패턴이 이후 홈·개인 화면의 선례가 된다. 전역 <code>QueryClientProvider</code>는 <code>src/main.tsx:22</code>가 이미 감싸고 있어 페이지에서 새로 만들 필요 없음.</li>
+      <li><b>랭킹 데이터 계약</b>: <code>shared/domain.ts:70-89</code> — <code>EventRanking.entries</code>(=<code>RankingEntry[]</code>)는 이미 활동+recorded만 담고 rank 오름차순이다(<code>functions/lib/compute-rankings.ts:31-64</code>, 표준 공동순위 1,1,3 — 동점자는 시트 행 순서 유지, <code>compute-rankings.test.ts</code>로 고정됨). 면제·미측정·이상값은 <code>Session.entries[].scores[eventKey]</code>(domain.ts:48-51)에만 있고, 그 키는 <code>events[]</code> 전체에 대해 항상 존재가 보장된다(파서 계약).</li>
+      <li><b>활동 필터를 프론트에서 다시 적용해야 함</b>: <code>functions/lib/build-records-response.ts:32-37,55-58</code> — <code>sessions[]</code>는 탈퇴만 제외하고 비대상·휴식은 그대로 남긴다. 반면 랭킹은 활동만 대상(<code>compute-rankings.ts:34</code>). <code>compute-home-summary.ts:18</code>가 이미 같은 문제를 <code>players.filter(status === '활동')</code> Set으로 풀어놨으므로, 프론트 보충 로직도 같은 방식을 따라야 비대상·휴식 선수가 "미측정"으로 잘못 노출되지 않는다.</li>
+      <li><b>그 회차에 없는 선수는 "미측정"이 아니라 그냥 미노출</b>: domain.ts:65-66 주석 — "이후 가입자는 과거 회차에 엔트리 자체가 없음". 실제 시딩 데이터(<code>scripts/seed-sheet.mjs:24-34,40-59</code>)가 이를 보여준다 — 명단은 21명인데 유일한 회차 탭 점수는 6행뿐. 보충 로직이 <code>players[]</code> 전체가 아니라 <code>session.entries</code>를 순회 기준으로 삼으면 이 구분이 자동으로 맞아떨어진다 — 별도 처리 불필요.</li>
+      <li><b>디자인 토큰은 대부분 준비됐지만 칩 색이 빠져 있음</b>: <code>src/index.css:1-53</code> — primary/good/neutral/gauge-track/perf-muted 등 기존 정의로 랭킹 행·뱃지·바는 전부 커버된다. 그러나 PRD §06 필터 칩의 비활성 텍스트 <code>#5a6070</code>·보더 <code>#e3e5ec</code>는 기존 토큰(<code>ink-sub #8b909c</code>, <code>line #edeef2</code>)과 다른 값이라 신규 토큰이 필요하다 — #69가 <code>--color-perf-muted</code>를 추가한 선례와 동일 패턴.</li>
+      <li><b>칩 컴포넌트 자체가 없음</b>: grep 전수 확인 — "칩/Chip" 컴포넌트가 코드베이스에 아직 없다. PRD §06은 필터 칩을 화면 전용이 아닌 공통 컴포넌트로 명세하므로(개인 화면 회차 칩·관리자 회차 칩 등 후속 재사용 예정) <code>src/components/</code>에 <code>Card.tsx</code>/<code>Pill.tsx</code>와 같은 층위로 만든다.</li>
+      <li><b>"n차" 라벨 파생 규칙은 아직 어디에도 구현돼 있지 않음</b>: <code>src/components/charts/trend-chart.tsx:8</code> 주석이 "파생 규칙은 화면 쪽 책임(§09)"이라며 명시적으로 화면 쪽으로 떠넘겨 놨고, 실제로 어느 화면도 아직 구현하지 않았다(개인 화면은 #71+ 미착수). 이 이슈가 처음 필요로 하므로 화면 쪽에 인라인 구현하고, 공유 유틸 추출은 두 번째 소비처가 생길 때로 미룬다(YAGNI).</li>
+      <li><b>열람 게이트(401)는 별도 열린 항목</b>: PRD §09 — 팀 패스코드 게이트 화면은 유지 확정이나 아직 미착수(라우트 자체가 없음, <code>src/App.tsx</code> 확인). 이 이슈에서 <code>/api/records</code> 401은 다른 에러와 동일하게 <code>ErrorPanel</code>로 처리하고, 게이트 리디렉션은 범위 밖으로 둔다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+
+    <p><b>① 행 데이터 모델</b> — 구 <code>RankingTableRow</code> 판별 유니온을 확장해 <code>invalid</code>를 추가한다: <code>{ status: 'recorded', ...RankingEntry } | { status: 'exempt'|'unmeasured', playerId, name } | { status: 'invalid', playerId, name, display }</code>.</p>
+
+    <p><b>② 병합 알고리즘</b> (<code>buildRankingRows</code>) — 입력은 선택된 종목의 <code>EventRanking</code> + 선택된 회차의 <code>Session</code> + 활동 선수 Set(<code>players[]</code>에서 파생, <code>compute-home-summary.ts:18</code>와 동일 방식):</p>
+    <ul>
+      <li>순위권 행 = <code>eventRanking.entries</code> 그대로(이미 rank 오름차순).</li>
+      <li>보충 행 = <code>session.entries</code>를 순회하며 (활동 Set에 있고 AND 이미 순위권에 없는) 선수만, <code>scores[eventKey].status</code>(exempt/unmeasured/invalid)로 매핑. <code>session.entries</code> 기준으로 순회하므로 그 회차에 엔트리 자체가 없는 선수는 자동으로 제외된다(현황 분석 참고) — 별도 가드 불필요.</li>
+      <li>보충 행 순서는 <code>session.entries</code> 원래 순서를 그대로 유지한다(재정렬하지 않음) — <code>compute-rankings.ts</code>의 "동점자는 입력 순서 유지" 원칙과 같은 결의 선택.</li>
+      <li>동점 판정(<code>findTiedRanks</code>)은 구 <code>RankingTable.tsx</code> 로직을 그대로 이식 — recorded 행만 대상으로 rank별 개수를 세어 2개 이상이면 "공동" 처리.</li>
+    </ul>
+
+    <p><b>③ 상태별 표시 규칙</b> — 아래 표가 <code>RankingRow</code> 컴포넌트의 전체 명세다. 뱃지 3종(면제/미측정/이상값)은 전부 neutral 톤이라 별도 컴포넌트 없이 <code>RankingRow.tsx</code> 안에서 라벨 맵 하나로 <code>Pill</code>을 직접 호출한다.</p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>상태</th><th>순위 자리</th><th>뱃지</th><th>값</th><th>성능 미니바</th></tr></thead>
+      <tbody>
+        <tr><td><code>recorded</code></td><td>숫자 또는 "공동 N위" — <code>rank===1</code>(공동 포함)은 primary로 강조</td><td><code>AchievementBadge</code> 재사용 — 달성/미달성</td><td><code>display</code> (+ <code>valueKind==='count' && maxScore!=null</code>이면 <code>" / {maxScore}"</code> 병기)</td><td><code>PerformanceBar</code> — <code>value=scale.normalize(eventKey, value)</code>, <code>achieved</code> 그대로 전달</td></tr>
+        <tr><td><code>exempt</code></td><td>"면제"</td><td>"면제" (neutral)</td><td>"–"</td><td>없음</td></tr>
+        <tr><td><code>unmeasured</code></td><td>"—"</td><td>"미측정" (neutral)</td><td>"–"</td><td>없음</td></tr>
+        <tr><td><code>invalid</code></td><td>"—" — <i>이슈 본문에 명시 없음, unmeasured와 동일 취급으로 해석(아래 리스크 참고)</i></td><td>"이상값" (neutral, §09)</td><td>원본 <code>display</code> 그대로(원본 표기 유지, §09)</td><td>없음</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>④ 종목 안내문 공식</b> — PRD §05의 두 예시("목표 1'17" 이내 · 낮을수록 좋음 ↓" / "목표 5개 이상 · / 10")를 <code>maxScore</code> 유무와 <code>direction</code> 두 축만으로 재현한다:</p>
+    <ul>
+      <li><b>목표 문구</b>: <code>valueKind==='count'</code>면 <code>목표 {target}개</code>, 아니면(time) <code>목표 {target}</code>.</li>
+      <li><b>이내/이상</b>: <code>direction==='낮을수록'</code> → "이내", <code>'높을수록'</code> → "이상".</li>
+      <li><b>꼬리말</b>: <code>maxScore != null</code> → <code>· / {maxScore}</code>, 없으면 → <code>· {"낮을수록 좋음 ↓" 또는 "높을수록 좋음 ↑"}</code>.</li>
+      <li><b>검증</b>: 드리블셔틀런(time·maxScore 없음·낮을수록·target "1:17") → "목표 1:17 이내 · 낮을수록 좋음 ↓". 골밑슛(count·maxScore 10·높을수록·target "5") → "목표 5개 이상 · / 10" — PRD §05 예시와 일치(목업의 아포스트로피 "1'17""는 스타일링으로 보고 원본 <code>target</code> 문자열을 그대로 사용).</li>
+    </ul>
+
+    <p><b>⑤ "n차" 라벨</b> — <code>sessions</code>는 이미 날짜 오름차순이 보장되므로(domain.ts) <code>sessions.map((s, i) => `${i+1}차`)</code>를 <code>Rankings.tsx</code> 안에 인라인으로 둔다. 공유 유틸로 추출하지 않는 이유는 §02에 적었듯 현재 소비처가 하나뿐이라서다.</p>
+
+    <p><b>⑥ 기본 선택값</b> — 회차는 최신(<code>sessions.at(-1)</code>), 종목은 첫 번째(<code>events[0]</code>). <code>useState&lt;string | null&gt;(null)</code> + <code>selected ?? default</code> 폴백으로 구현해 데이터 로딩 완료 시점을 맞추는 <code>useEffect</code>를 따로 두지 않는다.</p>
+
+    <p><b>⑦ 새 파일 배치</b> — 기존 컨벤션을 그대로 따른다: <code>FilterChip</code>은 화면 전용이 아닌 공통 원자 컴포넌트라 <code>Card.tsx</code>/<code>Pill.tsx</code>와 같은 층위(<code>src/components/</code>)에, 순수 병합/파생 로직(<code>buildRankingRows</code>·<code>findTiedRanks</code>·<code>buildEventGuidance</code>)은 <code>performance-scale.ts</code>와 같은 층위(<code>src/lib/</code>)에 <code>ranking-view.ts</code> 한 파일로 묶는다. 카드 1행 프레젠테이션(<code>RankingRow</code>)은 구 <code>RankingTable.tsx</code>를 대체하므로 같은 자리(<code>src/components/</code>)에 둔다.</p>
+
+    <p><b>⑧ 에러·빈 상태</b> — <code>useRecords</code> 로딩 중엔 <code>Spinner</code>, 에러(401 포함)는 <code>ErrorPanel</code>(재시도=refetch), <code>sessions.length===0 || events.length===0</code>이면 칩·안내문을 렌더하지 않고 <code>EmptyState</code>, 선택된 회차·종목의 병합 행이 0건이면 구 <code>RankingTable</code>의 "표시할 기록이 없습니다" 카피를 그대로 계승해 보여준다.</p>
+
+    <p><b>기각안</b> — 구 <code>RankingTable.tsx</code>를 <code>&lt;table&gt;</code> 유지한 채 CSS만 카드처럼 패치하는 안: invalid 지원과 활동 필터 보강이 어차피 병합 로직 전체를 다시 요구해서 이득이 없고, "카드 행 리스트"라는 확정 디자인과 시맨틱(표 vs 리스트)이 어긋나 접근성 트리도 부자연스러워진다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">디자인 토큰 추가 — PRD §06 필터 칩 비활성 텍스트/보더 색(신규, 기존 토큰과 값이 다름). 이름은 구현 시 확정(예: 후속 화면의 입력 필드 보더와 공유 가능성을 고려해 용도 중립적으로)
+        <span class="files"><code>src/index.css</code></span>
+        <span class="note">✓ --color-chip-ink/--color-chip-line/--radius-chip 추가</span>
+      </li>
+      <li class="done"><code>FilterChip</code> 공통 컴포넌트 — active/inactive 스타일(§06), <code>aria-pressed</code>, 가로 스크롤 컨테이너는 호출자 책임
+        <span class="files"><code>src/components/FilterChip.tsx</code>, <code>src/components/FilterChip.test.tsx</code></span>
+        <span class="note">✓ 렌더 3 테스트 그린</span>
+      </li>
+      <li class="done">랭킹 뷰 파생 로직 — <code>buildRankingRows</code>(활동 필터 + 순위권/보충 병합 + 회차 미참여 자동 배제), <code>findTiedRanks</code>(구 <code>RankingTable.tsx</code>에서 이식), <code>buildEventGuidance</code>. 구 <code>RankingTable.test.tsx</code>의 동순위·면제·미측정 케이스를 이식하고 invalid·비활동(비대상/휴식) 배제·회차 미참여 배제·안내문 4개 조합 케이스를 추가
+        <span class="files"><code>src/lib/ranking-view.ts</code>, <code>src/lib/ranking-view.test.ts</code></span>
+        <span class="note">✓ 12 테스트 그린</span>
+      </li>
+      <li class="done"><code>RankingRow</code> 카드 컴포넌트 — §3-③ 표 그대로 구현(순위 자리·뱃지·값·성능바), <code>AchievementBadge</code>·<code>PerformanceBar</code>·<code>Pill</code> 재사용
+        <span class="files"><code>src/components/RankingRow.tsx</code>, <code>src/components/RankingRow.test.tsx</code></span>
+        <span class="note">✓ 렌더 7 테스트 그린</span>
+      </li>
+      <li class="done"><code>Rankings.tsx</code> 재작성 — <code>useRecords</code> 배선(로딩/에러/빈 sessions·events/성공), 종목·회차 칩(기본값 최신 회차+첫 종목), "n차" 라벨, 안내문, <code>buildPerformanceScale</code> 1회 생성(<code>useMemo</code>), 선택된 종목·회차로 <code>buildRankingRows</code> 호출 후 <code>RankingRow</code> 리스트 렌더
+        <span class="files"><code>src/pages/Rankings.tsx</code>, <code>src/pages/Rankings.test.tsx</code></span>
+        <span class="note">✓ 로딩/에러(재시도)/빈 상태/기본 선택/칩 전환 4 테스트 그린. TanStack 판별 유니온의 isLoading narrowing이 불확실해 data 자체의 truthy 체크로 로딩을 좁히도록 설계를 조정(§3 대비 소폭 변경)</span>
+      </li>
+      <li class="done">구 파일 삭제 — 사용처 전무 확인 완료(§02)
+        <span class="files">삭제: <code>src/components/RankingTable.tsx</code>, <code>src/components/RankingTable.test.tsx</code></span>
+        <span class="note">✓ grep 재확인 후 삭제</span>
+      </li>
+      <li class="done">전체 검증 — <code>npm run typecheck</code>·<code>npm test</code>·<code>npm run build</code> 그린 확인 + <code>npm run dev:all</code>로 <code>/rankings</code> 수동 확인(시딩된 유일한 회차 기준 순위·동순위·면제 1건 노출)
+        <span class="files">—</span>
+        <span class="note">✓ typecheck·341 테스트·빌드 전부 그린. 수동 dev 서버 확인은 이 워크트리에 .dev.vars/서비스 계정 키가 없어 생략(리스크에 이미 명시된 한계) — 자동화 테스트로 대체 담보</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>선택된 회차에 참가자 행 자체가 없으면 병합 결과가 0건</td><td>화면이 비어 보일 수 있음</td><td><code>EmptyState</code>로 구 <code>RankingTable</code>의 "표시할 기록이 없습니다" 카피 계승</td></tr>
+        <tr><td><code>sessions</code>/<code>events</code>가 아예 0건(초기 배포)인 상태에서 기본 선택값(<code>sessions.at(-1)</code>, <code>events[0]</code>) 계산</td><td>가드 없으면 칩·안내문 렌더가 깨질 수 있음</td><td>렌더 전 <code>sessions.length===0 || events.length===0</code> 가드 → 상위 <code>EmptyState</code></td></tr>
+        <tr><td>시딩 데이터(<code>scripts/seed-sheet.mjs</code>)에 미측정·이상값·복수 회차 표본이 없음</td><td>로컬 dev 서버로는 그 경로들을 눈으로 확인할 수 없음</td><td><code>ranking-view.test.ts</code>·<code>RankingRow.test.tsx</code>에서 픽스처 기반으로 커버, PR에 수동 확인의 한계 명시</td></tr>
+        <tr><td><code>invalid</code> 순위 자리 텍스트("—")는 이슈 본문·PRD에 명시적 규정이 없어 이 플랜의 해석</td><td>실제 의도와 다르게 보일 가능성</td><td>뱃지/순위자리 라벨을 <code>ranking-view.ts</code> 한 곳에 모아 리뷰에서 쉽게 뒤집을 수 있게 함, PR 설명에 해석 근거 명시</td></tr>
+        <tr><td>신규 칩 토큰(§06)이 후속 화면(기록 입력 인풋 보더 등)과 같은 값을 다른 이름으로 또 추가할 가능성</td><td>토큰이 흩어져 §03 단일 진실 소스 원칙이 흐려짐</td><td>이름을 용도 중립적으로 짓고 PR에 재사용 의도 명시</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>ranking-view.test.ts</code> — 순위권 그대로 유지, 면제/미측정/이상값 하단 보충, 비활동(비대상/휴식) 제외, 회차에 엔트리 자체가 없는 선수는 아예 미노출, 동순위(1,1,3) 판정 + 1위 강조 플래그(공동 포함), 안내문 4개 조합(개수+높을수록+만점, 개수+낮을수록, 시간+낮을수록, 시간+높을수록) 문자열 고정.</li>
+      <li><code>FilterChip.test.tsx</code> — active/inactive 클래스·<code>aria-pressed</code> 분기, 클릭 핸들러 호출.</li>
+      <li><code>RankingRow.test.tsx</code> — recorded(순위 숫자/공동 표기/1위 강조, 달성 뱃지, 성능바 렌더, "/만점" 병기), exempt("면제" 순위칸+뱃지, 값 "–", 바 없음), unmeasured("—"+"미측정"+"–"), invalid("—"+"이상값"+원본 display).</li>
+      <li><code>Rankings.test.tsx</code> — <code>useRecords.test.tsx</code>와 동일한 <code>vi.stubGlobal('fetch', …)</code> + <code>QueryClientProvider</code> 패턴으로: 로딩→<code>Spinner</code>, 에러→<code>ErrorPanel</code>(재시도 버튼이 refetch 호출), 성공 시 기본 선택(최신 회차/첫 종목) 렌더, 칩 클릭으로 선택 회차·종목 전환 시 행 목록 갱신, <code>sessions</code>/<code>events</code> 0건이면 <code>EmptyState</code>.</li>
+      <li>회귀 — <code>npm test</code> 전체 그린(구 <code>RankingTable</code> 테스트 삭제 반영), <code>npm run typecheck</code>, <code>npm run build</code>.</li>
+      <li>수동 — <code>npm run dev:all</code>로 <code>/rankings</code> 접속, 4개 종목 칩 전환 시 순위·동순위·면제 1건(선수5·45도패스캐치) 노출 확인. 미측정·이상값·다중 회차 전환은 시딩 데이터 한계로 자동화 테스트에 위임(리스크 참고).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>순위권(<code>rankings[].events[].entries</code>) 아래에 활동 상태의 면제·미측정 선수 행이 노출되고, 순위 자리에 각각 "면제"/"—" 텍스트가 표시된다</li>
+      <li>이상값(invalid) 선수도 하단에 원본 표기(<code>display</code>) + "이상값" 뱃지로 노출된다(§09)</li>
+      <li>공동순위(1,1,3) 표기와 목표 달성 뱃지가 기존 계약대로 유지되고, 1위(공동 포함)는 primary로 강조된다</li>
+      <li>종목 칩 + 회차 칩으로 선택을 전환할 수 있고, 선택된 종목의 목표·방향에서 파생한 안내문이 표시된다</li>
+      <li>순위 행에 §07 정규화 기준 상대 성능 미니바(recorded만)와 원값(개수 종목은 "/ 만점" 병기)이 표시된다</li>
+      <li><code>/api/records</code> 계약 변경 없음 — 신규 표시는 전부 프론트 파생</li>
+      <li>비대상·휴식 선수, 그리고 그 회차에 참가 기록 자체가 없는 선수는 랭킹 화면에 노출되지 않는다</li>
+      <li>구 <code>RankingTable</code> 컴포넌트가 제거되고 <code>npm run typecheck</code>·<code>npm test</code>·<code>npm run build</code>가 모두 그린이다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/70">#70</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>
