@@ -1,7 +1,7 @@
 // 시간 종목 입력기(§05·§06) — 분·초 2필드, inputmode=numeric 숫자 키패드, 26px/800.
 // 형식 검증(초 0–59 등)은 호출자가 buildEventScore(shared/)로 판정해 error로 내려준다 —
 // 이 컴포넌트는 숫자 외 문자만 걸러내는 입력 정제만 맡고 검증 규칙을 갖지 않는다.
-const DIGITS_ONLY = /\D/g
+import { DIGITS_ONLY } from '../lib/regex'
 
 interface TimeScoreInputProps {
   /** 접근성 라벨 접두어 — 종목 카드 하나에 여러 인스턴스가 동시에 렌더되므로 "분"/"초"만으로는

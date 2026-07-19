@@ -1,7 +1,7 @@
 // 개수 종목 입력기(§05·§06) — 스테퍼(−/+, 46×46px·radius 13px) + 직접 입력.
 // 스테퍼는 만점(maxScore)에서 상한 클램프, 하한은 0(normalize-score의 정수 전용 규칙과 일관).
 // 직접 입력은 만점 초과를 허용한다(§08 "만점 초과는 막지 않는다") — 숫자 외 문자만 걸러낸다.
-const DIGITS_ONLY = /\D/g
+import { DIGITS_ONLY } from '../lib/regex'
 
 interface CountScoreInputProps {
   /** 접근성 라벨 접두어 — 종목 카드 하나에 여러 인스턴스가 동시에 렌더되므로 "개수"만으로는
