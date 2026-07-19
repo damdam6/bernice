@@ -5,7 +5,10 @@
 //
 // 세 API 래퍼(add-players-api·create-sheet-api·records-write-api)가 모두
 // { ok: true, … } | { ok: false, message } 로 항상 resolve하는(네트워크 오류도 ok:false로
-// 변환) 계약을 공유하므로, 이 훅은 그 계약만 믿고 try/catch 없이 결과를 분기한다.
+// 변환) 계약을 공유하므로, 이 훅은 그 계약을 믿고 결과를 분기한다. 다만 재사용 훅이라
+// 계약을 어긴 mutationFn(예상치 못한 throw)이 들어와도 UI가 잠기지 않도록 방어적 try/catch를
+// 한 겹 둔다 — 잡으면 submitError를 세우고 submitting을 되돌려 버튼이 "…하는 중"에 고정되는
+// 사일런트 실패를 막는다.
 //
 // 무효화 대상(RECORDS_QUERY_KEY, exact)은 세 화면이 동일해서 훅에 내장한다 — 이 한 줄이
 // 중복의 핵심이다. 다른 캐시가 필요한 화면이 생기면 그때 매개변수화한다(현재 YAGNI).
@@ -42,7 +45,16 @@ export function useSubmitMutation() {
       setSubmitting(true)
       setSubmitError(null)
 
-      const result = await mutationFn()
+      let result: R
+      try {
+        result = await mutationFn()
+      } catch {
+        // 계약상 여기까지 오면 안 되지만(래퍼가 항상 resolve), 계약을 어긴 호출에도 UI가
+        // 잠기지 않도록 방어한다 — 일반 오류 문구를 세우고 다시 시도할 수 있게 풀어준다.
+        setSubmitError('예상치 못한 오류로 처리하지 못했어요. 다시 시도해주세요.')
+        setSubmitting(false)
+        return
+      }
 
       if (!result.ok) {
         setSubmitError(result.message)

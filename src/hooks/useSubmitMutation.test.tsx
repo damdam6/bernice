@@ -58,6 +58,22 @@ describe('useSubmitMutation', () => {
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
 
+  it('mutationFn이 계약을 어기고 throw해도 UI가 잠기지 않는다 (일반 오류 노출 + submitting 복귀)', async () => {
+    const { result, invalidateSpy } = setup()
+    const onSuccess = vi.fn()
+
+    await act(async () => {
+      await result.current.submit(async () => {
+        throw new Error('계약 위반')
+      }, onSuccess)
+    })
+
+    expect(result.current.submitError).toBe('예상치 못한 오류로 처리하지 못했어요. 다시 시도해주세요.')
+    expect(result.current.submitting).toBe(false)
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(invalidateSpy).not.toHaveBeenCalled()
+  })
+
   it('clearError()는 이전 실패 메시지를 지운다', async () => {
     const { result } = setup()
 
