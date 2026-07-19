@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#65 POST /api/admin/create-sheet (회차 탭 생성) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/65">#65</a></span><span class="type-chip">기능 개선 · 신규 API</span>
+    <h1>P5 — POST /api/admin/create-sheet (회차 탭 생성)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/65-api-admin-create-sheet</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>관리자가 오늘(Asia/Seoul) 회차 탭을 <b>"참가자만 · 가나다 · 빈 점수"</b> 포맷으로 만드는
+    <code>POST /api/admin/create-sheet</code> 엔드포인트를 신설한다. 탭 생성과 헤더(종목 참조 수식)·이름 참조
+    수식 기록을 <b>단일 <code>spreadsheets.batchUpdate</code></b>로 원자적으로 처리해 실패 시 반쪽 탭이 남지
+    않게 한다. 오늘 날짜 탭이 이미 있으면 <code>409</code>로 거부하고, 성공 시 <code>/api/records</code> 캐시를
+    무효화한다. 로직 대부분은 순수 함수(<code>create-sheet.ts</code>)로 분리해 <code>fetch</code> 없이 단위
+    테스트한다. 인증(<code>admin</code> 권한)은 이미 있는 <code>_middleware.ts</code>가 담당한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>인증 게이트는 이미 완비.</b> <code>functions/api/_middleware.ts:37</code>이 <code>/api/admin/*</code>를
+      <code>admin</code> role로 강제하고, 함수 파일이 없어도 403 계약이 유효하다 — 이 엔드포인트는 인증을 다시
+      구현할 필요가 없다.</li>
+      <li><b>쓰기 래퍼는 단일 범위 <code>values.update</code>만 지원.</b> <code>functions/lib/sheetsWriteApi.ts:28</code>의
+      <code>updateValues</code>는 429·5xx 재시도가 붙은 <code>PUT values</code> 하나뿐 — 탭을 만드는
+      <code>spreadsheets.batchUpdate</code> 경로가 없다.</li>
+      <li><b>읽기 래퍼의 메타 조회는 <code>title</code>만 가져온다.</b> <code>functions/lib/sheetsApi.ts:45</code>의
+      <code>getSpreadsheetTabTitles</code>는 <code>fields=sheets.properties.title</code>만 요청해 <code>sheetId</code>를
+      모른다 — 새 탭에 부여할 빈 <code>sheetId</code>를 고르려면 기존 <code>sheetId</code> 목록이 필요하다.</li>
+      <li><b>회차 탭 정답 포맷은 "참가자만, 이름 매칭".</b> <code>functions/lib/parse-session.ts:5</code> 주석과
+      <code>docs/prd-record-input.html</code> §03①이 확정했다 — 회차 탭엔 참가자 행만 존재(생성 시 가나다 정렬),
+      명단 연결은 행 위치가 아니라 <b>이름 셀(NFC) 매칭</b>이다.</li>
+      <li><b>정확한 수식 포맷은 시딩 스크립트가 이미 보여준다.</b> <code>scripts/seed-sheet.mjs:138</code>: 헤더 종목은
+      <code>='목표'!A{i+2}</code>, <code>:143</code>: 이름 열은 <code>='버니스명단'!A{row}</code>. 파서는
+      <code>FORMATTED_VALUE</code>로 읽어 수식이 해석된 텍스트(종목명·선수명)를 본다.</li>
+      <li><b>명단 <code>id</code> ↔ 시트 행 관계가 이름 수식의 열쇠.</b> <code>functions/lib/roster.ts:67</code>에서
+      <code>player.id</code> = 데이터 행 위치 = <b>시트 행 − 1</b>이므로, <code>id</code>인 선수의 명단 행은
+      <code>A{id+1}</code>이다(<code>docs/prd-record-input.html</code>의 <code>playerId: 7</code> 예시와 일치).</li>
+      <li><b>캐시 무효화 훅은 상수 하나로 열려 있다.</b> <code>functions/lib/records-cache.ts:7</code>의
+      <code>RECORDS_CACHE_KEY</code>를 <code>caches.default.delete</code>에 넘기면 <code>/api/records</code> 캐시가 비워진다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>핵심 결정 — 단일 원자적 <code>batchUpdate</code>.</b> 시딩 스크립트처럼 <code>addSheet</code> 후 별도
+    <code>values.update</code>를 여러 번 부르면 중간 실패 시 빈 탭이 남는다. 이를 피하려 <b>한 번의
+    <code>spreadsheets.batchUpdate</code></b>에 두 요청을 담는다: ① <code>addSheet</code>(내가 고른 명시적
+    <code>sheetId</code> 부여) → ② 같은 배치의 <code>updateCells</code>가 그 <code>sheetId</code>를 forward-reference해
+    헤더·이름 수식을 기록. Google이 배치를 원자적으로 처리하므로 실패 시 탭 자체가 만들어지지 않는다.</p>
+    <ul>
+      <li><b>명시적 <code>sheetId</code> = <code>max(기존 sheetId들) + 1</code>.</b> 같은 배치에서 새 탭을 참조하려면
+      <code>sheetId</code>를 미리 알아야 한다. 기존 탭 메타를 이미 읽으므로(중복 가드용) 거기서 <code>sheetId</code>도
+      받아 충돌 없는 값을 결정론적으로 고른다 — 랜덤 <code>sheetId</code>의 희박한 충돌 실패를 원천 배제.</li>
+      <li><b>참가자 = 요청 바디의 <code>participantIds</code>(활동 선수 <code>id</code>).</b> 프론트 모달(<code>#67</code>)이
+      "활동만·가나다·기본 해제"로 고른 선수 <code>id</code>를 보낸다. 이름이 아니라 <code>id</code>로 받는 이유는
+      <code>/api/records</code>가 이미 <code>id</code>를 쥐고 있고 이름은 개명될 수 있어서다(§06과 동일 원칙). 서버가
+      명단에서 <b>활동 여부·이름</b>을 다시 확인하는 신뢰 원천이다.</li>
+      <li><b>가나다 정렬은 <code>Intl</code> 없이 NFC 코드포인트 비교.</b> 한글 완성형 음절(U+AC00–U+D7A3)은 유니코드
+      블록 자체가 초성→중성→종성 순, 즉 가나다 순으로 배열돼 있어 NFC 문자열의 코드유닛 비교가 곧 가나다 순이다.
+      Workers 런타임의 불확실한 ICU 로케일에 의존하지 않는다. (동명이인은 <code>id</code>로 안정 정렬)</li>
+      <li><b>헤더·이름 모두 참조 수식(literal 아님).</b> 시딩·기존 회차 탭과 동일하게 종목/이름을 참조 수식으로 써서
+      목표·명단에서 종목명·선수명을 고치면 회차 탭에 자동 반영된다. <code>updateCells</code>의
+      <code>userEnteredValue.formulaValue</code>로 기록한다.</li>
+      <li><b>점수 셀은 안 쓴다(=빈칸).</b> 참가자 행엔 A열(이름 수식) 한 칸만 채우고 B열~ 점수 칸은 생략 →
+      빈 셀로 남아 "빈 점수" 조건 충족.</li>
+      <li><b>순수 함수 분리.</b> 검증·정렬·배치 요청 조립은 <code>create-sheet.ts</code>(순수)로 몰아 <code>fetch</code>
+      스텁 없이 테스트하고, 엔드포인트는 읽기→빌더→쓰기→무효화 오케스트레이션과 에러 매핑만 담당한다.</li>
+    </ul>
+    <p><b>배제한 대안:</b> (a) 시딩식 다중 호출 — 원자성 없어 반쪽 탭 위험, 이슈가 명시적으로 금지. (b) 헤더/이름을
+    literal 문자열로 기록 — 종목·개명 시 desync, 기존 참조 수식 규약과 불일치. (c) 랜덤 <code>sheetId</code> —
+    희박하나 충돌 시 spurious 실패, 메타를 어차피 읽으므로 이득 없음.</p>
+    <p><b>응답 계약(안):</b> 생성 성공 <code>201 {sessionDate, participantCount, participants[]}</code> ·
+    오늘 탭 존재 <code>409 {error:"sheet_already_exists", sessionDate}</code> · 참가자 0명
+    <code>400 {error:"no_participants"}</code> · 명단에 없거나 비활동 <code>id</code>
+    <code>400 {error:"invalid_participants", invalidIds[]}</code> · 잘못된 바디
+    <code>400 {error:"bad_request"}</code> · 명단/목표 탭 없음 <code>500 {error:"missing_roster_tab"|"missing_goals_tab"}</code> ·
+    Sheets API 실패 <code>502 {error:"sheets_api_error"}</code>.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li><strong style="color:var(--ok)">✓ 완료</strong> · KST 날짜 헬퍼 신설 — <code>new Date()</code>를 받아 UTC+9로 밀어 <code>YYYY-MM-DD</code>를 만드는 순수 함수
+      (Workers ICU 타임존에 의존하지 않고 고정 +9h 오프셋). 자정 경계·월말·연말 넘김·zero-pad 테스트 5개.
+        <span class="files"><code>functions/lib/seoul-date.ts</code>, <code>functions/lib/seoul-date.test.ts</code></span>
+      </li>
+      <li><strong style="color:var(--ok)">✓ 완료</strong> · 읽기 래퍼에 <code>getSpreadsheetSheets</code> 추가 — <code>fields=sheets.properties(sheetId,title)</code>로
+      <code>{title, sheetId}[]</code>를 돌려준다(readonly scope). <code>sheetId=0</code> 오판 방지 검증 포함. 기존 <code>getSpreadsheetTabTitles</code>는 그대로 둔다.
+        <span class="files"><code>functions/lib/sheetsApi.ts</code>, <code>functions/lib/sheetsApi.test.ts</code></span>
+      </li>
+      <li><strong style="color:var(--ok)">✓ 완료</strong> · 쓰기 래퍼에 <code>batchUpdate</code> 추가 — <code>POST :batchUpdate</code>(write scope)에 <code>updateValues</code>와
+      동일한 429·5xx 재시도 정책. <em>변경점:</em> 두 함수가 공유하는 <code>fetchWithRetry</code> 헬퍼로 재시도 루프를 추출(중복 제거, 기존 <code>updateValues</code> 에러 메시지·동작 보존).
+        <span class="files"><code>functions/lib/sheetsWriteApi.ts</code>, <code>functions/lib/sheetsWriteApi.test.ts</code></span>
+      </li>
+      <li><strong style="color:var(--ok)">✓ 완료</strong> · 순수 빌더 <code>buildCreateSheetPlan</code> 신설 — (오늘 날짜, 기존 sheetId들, 명단/목표 탭 이름,
+      <code>events</code>, <code>players</code>, <code>participantIds</code>)로 검증(0명·미등록·비활동)·가나다 정렬·명시적
+      <code>sheetId</code> 선정·<code>batchUpdate</code> requests 배열을 만든다. 성공/실패 discriminated union 반환.
+        <span class="files"><code>functions/lib/create-sheet.ts</code>, <code>functions/lib/create-sheet.test.ts</code></span>
+      </li>
+      <li><strong style="color:var(--ok)">✓ 완료</strong> · 엔드포인트 <code>onRequestPost</code> 신설 — 바디 파싱 → KST 날짜 → 메타 읽기 → <b>중복 가드(409)</b> →
+      명단/목표 분류·값 조회 → <code>parseRoster</code>/<code>parseGoals</code> → 빌더 호출 →
+      <code>batchUpdate</code> → 캐시 무효화(<code>waitUntil</code>) → <code>201</code>. 에러 매핑은
+      <code>records.ts</code> 스타일.
+        <span class="files"><code>functions/api/admin/create-sheet.ts</code>, <code>functions/api/admin/create-sheet.test.ts</code></span>
+      </li>
+      <li><strong style="color:var(--ok)">✓ 완료</strong> · 전체 검증 — <code>npm test</code> 399개 · <code>npm run typecheck</code> 모두 green.
+      <em>참고:</em> 환경의 <code>node_modules</code>에 <code>lucide-react</code>가 빠져 프론트 테스트 2건이 실패하던 것을(main에서도 재현) 락파일 기준 비파괴 재설치(<code>--no-save --no-package-lock</code>)로 복구 — 추적 파일 변경 없음.
+        <span class="files"><code>docs/plans/issue-65-api-admin-create-sheet.html</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>중복 가드 조회와 쓰기 사이 레이스(다른 관리자가 동시 생성)</td>
+          <td>드물게 두 번째 요청의 <code>addSheet</code>가 "이미 존재" 4xx</td>
+          <td>원자적 배치라 반쪽 탭은 절대 안 생김. 사전 가드가 정상 경로의 409를 담당하고, 레이스는 안전하게
+          실패(4xx→502) 후 재시도. 주석으로 명시.</td>
+        </tr>
+        <tr>
+          <td>목표 탭 중간에 빈 행이 있으면 헤더 수식 <code>A{i+2}</code>가 어긋남</td>
+          <td>회차 탭 읽을 때 파서가 fail-loud</td>
+          <td>목표는 연속 편집되는 설정 탭(빈 행 없음)이라는 시딩·파서의 기존 전제를 그대로 승계. 시딩 스크립트와
+          동일한 참조 방식이라 회귀 위험 동일. 코드 주석에 전제 기록.</td>
+        </tr>
+        <tr>
+          <td>동명이인이 둘 다 참가자로 선택됨</td>
+          <td>생성은 되지만 이후 회차 탭 읽기에서 파서가 동명이인 fail-loud</td>
+          <td>이는 명단 자체 문제(선수5/선수5B로 구분)로 기존 원칙과 동일. 생성 단계에서 막지 않고 <code>id</code>별
+          이름 수식은 정확한 행을 참조하므로 시트는 올바름.</td>
+        </tr>
+        <tr>
+          <td>Pages 중첩 라우팅(<code>functions/api/admin/create-sheet.ts</code>)</td>
+          <td>라우트 미매칭 시 404</td>
+          <td>파일 기반 라우팅 규약대로 경로가 <code>/api/admin/create-sheet</code>로 잡힘. 미들웨어의
+          <code>/api/admin/*</code> 가드 테스트가 이미 이 경로 계약을 커버.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b><code>seoul-date</code></b>: UTC 15:00(=KST 익일 00:00) 경계에서 날짜가 하루 넘어가는지, 월말/연말 넘김,
+      한 자리 월/일 zero-pad.</li>
+      <li><b><code>getSpreadsheetSheets</code></b>: <code>sheetId+title</code> 매핑, <code>fields</code> 쿼리에
+      <code>sheets.properties(sheetId,title)</code> 포함, 특수문자 <code>sheetId</code> 인코딩, 4xx/5xx →
+      <code>SheetsApiError</code>.</li>
+      <li><b><code>batchUpdate</code></b>: 정상 1회 성공(POST <code>:batchUpdate</code>·write scope·requests 바디),
+      429 1회 후 복구, 4xx 즉시 실패, 재시도 소진 실패.</li>
+      <li><b><code>buildCreateSheetPlan</code></b>(순수, 핵심): 참가자만·가나다 정렬·이름 수식
+      <code>='버니스명단'!A{id+1}</code>·헤더 <code>='목표'!A{i+2}</code>·점수 칸 없음·<code>sheetId=max+1</code>·
+      <code>frozen 1/1</code> / 0명 → <code>no_participants</code> / 미등록·비활동 <code>id</code> →
+      <code>invalid_participants</code> / 중복 <code>id</code> dedupe / 동명이인 안정 정렬.</li>
+      <li><b>엔드포인트</b>: 201 성공(<code>batchUpdate</code> 호출·응답 바디·캐시 <code>delete</code> 호출) /
+      오늘 탭 존재 → 409(쓰기 미호출) / 비활동 <code>id</code> → 400 / 명단·목표 없음 → 500 / 명단 헤더 깨짐 →
+      500 <code>sheet_data_invalid</code> / <code>SheetsApiError</code> → 502 / 잘못된 바디 → 400. (fetch·caches
+      스텁은 <code>records.test.ts</code>/<code>sheetsWriteApi.test.ts</code> 패턴 재사용)</li>
+      <li><b>회귀</b>: <code>npm test</code> 전체 green + <code>npm run typecheck</code> — 기존 읽기/파서 테스트가
+      건드린 <code>sheetsApi.ts</code> 수정으로 깨지지 않는지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>참가자만 · 가나다 정렬 · 빈 점수 · 이름/종목 참조 수식 회차 탭이 단일 원자적 <code>batchUpdate</code>로 생성된다.</li>
+      <li>오늘(KST) 탭이 이미 있으면 생성하지 않고 <code>409 sheet_already_exists</code>로 거부하는 응답 계약이 성립한다.</li>
+      <li>생성 성공 시 <code>/api/records</code> 캐시(<code>RECORDS_CACHE_KEY</code>)가 무효화된다.</li>
+      <li>참가자 0명·미등록·비활동 <code>id</code>·잘못된 바디에 대한 400 계약이 명확하다.</li>
+      <li>vitest 단위·엔드포인트 테스트가 모두 통과하고 <code>typecheck</code>가 green이다.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/65">#65</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>

@@ -4,6 +4,7 @@ import {
   SheetsApiError,
   batchGetValues,
   fetchSheetBundle,
+  getSpreadsheetSheets,
   getSpreadsheetTabTitles,
   quoteSheetName,
 } from './sheetsApi'
@@ -147,6 +148,57 @@ describe('getSpreadsheetTabTitles', () => {
 
     stubSheetsFetch({ metadata: { status: 502, rawBody: '<html>Bad Gateway</html>' } })
     await expect(getSpreadsheetTabTitles(makeEnv(), SHEET_ID)).rejects.toMatchObject({ status: 502 })
+  })
+})
+
+describe('getSpreadsheetSheets', () => {
+  it('탭 이름과 sheetId를 함께 반환하고 fields에 sheetId를 요청한다', async () => {
+    const { calls } = stubSheetsFetch({
+      metadata: {
+        body: {
+          sheets: [
+            { properties: { title: '버니스명단', sheetId: 0 } },
+            { properties: { title: '목표', sheetId: 11 } },
+            { properties: { title: '2025-05-16', sheetId: 22 } },
+          ],
+        },
+      },
+    })
+
+    const sheets = await getSpreadsheetSheets(makeEnv(), SHEET_ID)
+    expect(sheets).toEqual([
+      { title: '버니스명단', sheetId: 0 },
+      { title: '목표', sheetId: 11 },
+      { title: '2025-05-16', sheetId: 22 },
+    ])
+
+    const metaCall = calls.find((url) => url.includes(SHEET_ID) && !url.includes('oauth2'))
+    expect(metaCall).toContain('fields=sheets.properties(sheetId,title)')
+  })
+
+  it('title이나 sheetId가 없는 시트가 섞이면 명확한 에러', async () => {
+    stubSheetsFetch({ metadata: { body: { sheets: [{ properties: { sheetId: 0 } }] } } })
+    await expect(getSpreadsheetSheets(makeEnv(), SHEET_ID)).rejects.toThrow('탭 title이 없습니다')
+
+    stubSheetsFetch({ metadata: { body: { sheets: [{ properties: { title: '목표' } }] } } })
+    await expect(getSpreadsheetSheets(makeEnv(), SHEET_ID)).rejects.toThrow('탭 sheetId가 없습니다')
+  })
+
+  it('sheetId에 특수문자가 있어도 인코딩해 요청 경로를 벗어나지 않는다', async () => {
+    const maliciousSheetId = 'evil/../x?y=1'
+    const { calls } = stubSheetsFetch({ metadata: { body: { sheets: [] } } })
+
+    await getSpreadsheetSheets(makeEnv(), maliciousSheetId)
+
+    const metaCall = calls.find((url) => !url.includes('oauth2'))
+    expect(metaCall).toContain(encodeURIComponent(maliciousSheetId))
+    expect(metaCall).not.toContain(maliciousSheetId)
+  })
+
+  it('4xx/5xx 응답을 SheetsApiError(status 포함)로 전파한다', async () => {
+    stubSheetsFetch({ metadata: { status: 403, body: { error: 'permission denied' } } })
+    await expect(getSpreadsheetSheets(makeEnv(), SHEET_ID)).rejects.toThrow(SheetsApiError)
+    await expect(getSpreadsheetSheets(makeEnv(), SHEET_ID)).rejects.toMatchObject({ status: 403 })
   })
 })
 
