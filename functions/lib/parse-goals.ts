@@ -9,7 +9,7 @@
 // 동일하게, 스킵 여부와 무관하게 각 행의 시트 행 번호는 원본 배열 위치 기준으로 고정한다.
 
 import { RANK_DIRECTIONS, type EventDefinition, type RankDirection } from '../../shared/domain'
-import { normalizeScore } from './normalize-score'
+import { normalizeScore } from '../../shared/normalize-score'
 
 const EXPECTED_HEADER = ['종목', '목표', '만점', '방향']
 const MAX_SCORE_NULL_LITERALS = new Set(['', '-'])

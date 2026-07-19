@@ -14,7 +14,7 @@ export const EVENT_VALUE_KINDS = ['count', 'time'] as const
 export type EventValueKind = (typeof EVENT_VALUE_KINDS)[number]
 
 // ── 개별 점수 상태 — 정상 기록 · 면제 · 미측정 · 이상값 ───────────────────
-// functions/lib/normalize-score.ts(이슈 #6)의 ScoreValue.kind → 이 상태로 매핑:
+// normalize-score.ts(이슈 #6, shared/로 승격 #68)의 ScoreValue.kind → 이 상태로 매핑:
 //   count/seconds → recorded · exempt → exempt · blank → unmeasured · invalid → invalid
 // EventDefinition.valueKind(종목 기준)와 정규화된 kind(셀 기준)가 어긋나면(예: 개수 종목 셀에
 // "1:15" 입력) invalid로 처리 — 상세 규칙은 docs/records-schema.html §03 참고.

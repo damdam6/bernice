@@ -4,7 +4,8 @@
 // "규칙 원천은 하나"(PRD §08)를 지킨다.
 
 import type { EventDefinition, EventScore } from '../../shared/domain'
-import { buildEventScore, mapHeaderToEvents, type EventColumn } from './parse-session'
+import { buildEventScore } from '../../shared/build-event-score'
+import { mapHeaderToEvents, type EventColumn } from './parse-session'
 import { quoteSheetName } from './sheetsApi'
 
 export { mapHeaderToEvents, type EventColumn }

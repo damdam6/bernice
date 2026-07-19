@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#68 기록 입력 W6 — 입력 UI ②: 선수별 입력 화면 (타입별 입력기) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 18px 0 8px; }
+  h3:first-child { margin-top: 0; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done { opacity: 0.6; }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .step-note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/68">#68</a></span><span class="type-chip">기능 추가</span>
+    <h1>기록 입력 W6 — 입력 UI ②: 선수별 입력 화면 (타입별 입력기)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/68-input-ui-player-input-screen</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>선수별 입력 화면(<code>/admin/records/:sessionDate/:playerId</code>)은 현재 라우팅만 연결된 플레이스홀더(<code>src/pages/admin/RecordsPlayerInput.tsx:3-16</code>)다. 이번 이슈는 이 화면을 종목 타입별 입력기(시간 분·초 2필드, 개수 스테퍼+직접입력, 면제 가능 종목 전용 토글)로 채우고, 기존 값 프리필·인라인 검증·저장(<code>POST /api/admin/records</code>)·성공 토스트/실패 재시도까지 완성한다. 검증 규칙이 클라이언트·서버 두 곳으로 갈라지는 걸 막기 위해 <code>normalize-score</code>뿐 아니라 서버가 이미 쓰는 <code>buildEventScore</code>(값 정규화 + valueKind 교차검증)까지 함께 <code>shared/</code>로 승격해, 클라이언트가 서버와 완전히 동일한 함수로 인라인 검증을 수행하게 한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>라우팅은 이미 연결돼 있다 — <code>src/App.tsx:33</code>의 <code>/admin/records/:sessionDate/:playerId</code>가 <code>AdminGate</code>+<code>AdminLayout</code>(<code>src/App.tsx:27-35</code>) 하위라 인증 가드와 상단 뒤로가기 버튼(<code>src/components/layout/AdminLayout.tsx:1-11</code>)이 이미 갖춰져 있다 — 이 화면이 새로 만들 게 없다.</li>
+      <li>현재 <code>RecordsPlayerInput.tsx</code>(<code>src/pages/admin/RecordsPlayerInput.tsx:1-16</code>)는 <code>useParams</code>로 <code>sessionDate</code>·<code>playerId</code>만 읽고 고정 문구를 렌더하는 플레이스홀더 — 데이터 조회·폼·저장 로직이 전혀 없다.</li>
+      <li>상류 화면 <code>RecordsParticipants</code>(<code>src/pages/admin/RecordsParticipants.tsx:51-63</code>)가 <code>navigate(\`/admin/records/\${session.date}/\${playerId}\`)</code>(59행)로 진입시키고, 저장 성공 후 <code>navigate(..., {state:{toast}})</code>로 돌아오면 이미 <code>useToast</code>(76-85행)로 그 토스트를 표시하도록 완성돼 있다 — 이 화면은 <b>돌아갈 때 그 계약(state.toast 문자열)만 지키면 된다</b>.</li>
+      <li>도메인 타입: <code>RecordsResponse.sessions[].entries[]</code>(<code>shared/domain.ts:54-60</code>) — <code>SessionEntry.scores</code>는 <code>events[]</code> 전체 key가 항상 존재함이 타입 계약(57행 주석)이라 프리필 루프에서 null 체크가 필요 없다.</li>
+      <li>서버 계약은 이미 구현·머지돼 있다 — <code>POST /api/admin/records</code>(<code>functions/api/admin/records.ts:1-197</code>)는 <code>{sessionDate, playerId, scores: Record&lt;string,string&gt;}</code>을 받아 200에 <code>scores: Record&lt;string, EventScore&gt;</code>(recorded/exempt/unmeasured/invalid)를 돌려준다. 에러: 400 <code>validation_failed</code>, 404 <code>session_not_found</code>/<code>not_participant</code>, 502 <code>sheets_api_error</code>(164-197행).</li>
+      <li>429·5xx 재시도는 이미 서버 안에서 끝난다 — <code>functions/lib/sheetsWriteApi.ts:21-43</code>의 백오프 재시도 루프(PRD §07 설계 근거: "재시도는 서버 안에서"). 클라이언트는 한 번만 호출하고, 실패하면 에러 문구 + 입력값 보존만 하면 된다(재시도 버튼은 곧 저장 버튼 재클릭).</li>
+      <li>검증 규칙의 단일 원천은 두 함수다: <code>normalizeScore</code>(<code>functions/lib/normalize-score.ts:12-55</code>)와 이를 감싸 <code>EventDefinition.valueKind</code> 교차검증까지 하는 <code>buildEventScore</code>(<code>functions/lib/parse-session.ts:169-198</code>). 둘 다 순수 함수이고 Sheets·행/열 개념에 전혀 의존하지 않는데, 지금은 <code>functions/lib</code>(서버 전용 디렉터리)에만 있어 프론트가 재사용할 수 없다.</li>
+      <li>이 화면이 필요로 하는 모든 UI 패턴은 이미 형제 화면들이 확립해뒀다 — 하단 고정 액션 바 + 성공 시 토스트(<code>src/pages/admin/CreateSheet.tsx:45-93</code>, <code>src/pages/admin/AddPlayers.tsx:78-131</code>), <code>{ok:true|false}</code> 클라이언트 API 래퍼 모양(<code>src/lib/create-sheet-api.ts:5-39</code>, <code>src/lib/add-players-api.ts:3-42</code>), 저장 성공 시 <code>navigate</code> 전에 <code>queryClient.invalidateQueries({queryKey: RECORDS_QUERY_KEY, exact:true})</code> await(CreateSheet.tsx:57-60).</li>
+      <li>면제 가능 종목 플래그는 프론트 어디에도 아직 없다 — PRD가 "프론트 종목 상수로 시작"을 권장(디자인 PRD §09 열린 항목)했고, 지금은 <code>45도패스캐치</code> 하나만 해당(<code>docs/sheet-integration.html:133</code>, <code>scripts/seed-sheet.mjs:43</code>).</li>
+      <li><code>shared/</code>엔 지금 <code>domain.ts</code> 하나뿐이지만, <code>tsconfig.app.json:16</code>(include에 <code>"shared"</code>)과 <code>functions/tsconfig.json:15</code>(include에 <code>"../shared"</code>)가 이미 양쪽 다 포함하고 있어 새 파일을 <code>shared/</code>에 두는 데 설정 변경이 필요 없다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>상태 모델</b> — 이벤트별 로컬 폼 상태를 <code>RecordsPlayerInput</code>이 소유하는 판별 유니언 <code>FieldState</code>(시간: <code>minutes</code>/<code>seconds</code>, 개수: <code>count</code>, 공통: <code>exempt</code> 불리언)로 둔다. <code>EventDefinition.valueKind</code>가 필드 모양을 결정하므로 타입 오분기가 애초에 불가능하다. (대안: 필드별로 원시 문자열 하나만 들고 있다가 파싱 — mm/ss 두 입력을 합성 문자열 하나로 관리해야 해 UI 상태와 어긋나 기각)</li>
+      <li><b>검증 재사용 범위 확장</b> — 이슈 본문은 "normalize-score의 shared/ 승격 검토"만 언급하지만, <code>buildEventScore</code>까지 함께 옮긴다. 이유: <code>buildEventScore</code>는 <code>normalizeScore</code> + valueKind 교차검증만 하는 순수 함수라 승격 비용이 없고, 옮기지 않으면 클라이언트가 valueKind 교차검증 규칙(예: 개수 종목에 시간형 입력)을 별도로 재구현해야 해 PRD §08 "검증 규칙의 원천은 하나"가 두 곳으로 갈라진다. (대안: normalize-score만 옮기고 교차검증은 클라이언트에서 재작성 — 드리프트 위험이 있어 기각)</li>
+      <li><b>저장 payload 조립</b> — <code>buildFieldRaw(field)</code>가 <code>FieldState</code>를 서버가 기대하는 원본 문자열(<code>"mm:ss"</code> / 숫자 문자열 / <code>"면제"</code> / <code>""</code>)로 변환한다. 조립된 문자열을 다시 <code>buildEventScore</code>(서버와 동일 함수)에 통과시켜 인라인 에러 문구와 저장 버튼 활성/비활성을 판단한다 — 별도 규칙을 새로 만들지 않는다.</li>
+      <li><b>개수 필드 클램프 비대칭</b> — 스테퍼(±)는 <code>maxScore</code>에서 상한 클램프(PRD §05 명시), 직접 입력은 만점 초과를 허용(§08 "만점 초과는 막지 않는다" 그대로). 하한 0은 스테퍼·직접입력 모두에 적용하는데, 이는 <code>normalizeScore</code>의 <code>parseCount</code>(<code>shared/normalize-score.ts</code> 이동 후, 정수만 허용하는 <code>INTEGER_RE</code>)가 애초에 음수 표기를 받지 않는 것과 일관된 해석이다.</li>
+      <li><b>재시도 UX</b> — 서버가 이미 429/5xx 백오프를 담당하므로, 클라이언트는 CreateSheet·AddPlayers와 동일하게 실패 시 에러 문구 + 기존 입력값 보존만 하고 "다시 저장"은 같은 저장 버튼 재클릭으로 처리한다. 별도 재시도 버튼·로직을 새로 만들지 않는다.</li>
+      <li><b>컴포넌트 분해</b> — 재사용 가치가 있는 원자 단위(<code>TimeScoreInput</code>/<code>CountScoreInput</code>/<code>ExemptToggle</code>)만 컴포넌트로 분리한다. 종목 카드 레이아웃 자체는 이 화면 하나에서만 쓰이는 조합이라 <code>RecordsPlayerInput.tsx</code> 안에서 인라인으로 조립한다 — <code>SelectablePlayerList</code>처럼 실제로 2개 이상 화면이 공유할 때만 별도 컴포넌트로 분리하는 기존 관례를 따른다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><code>functions/lib/normalize-score.ts</code>(+<code>.test.ts</code>)를 로직 변경 없이 <code>shared/normalize-score.ts</code>(+<code>.test.ts</code>)로 이동한다. <code>functions/lib/parse-goals.ts:12</code>, <code>functions/lib/parse-session.ts:39</code>의 import 경로를 <code>../../shared/normalize-score</code>로 갱신하고, <code>shared/domain.ts:17</code> 주석의 경로 언급도 함께 고친다.
+        <span class="files"><code>shared/normalize-score.ts</code>, <code>shared/normalize-score.test.ts</code>, <code>functions/lib/parse-goals.ts</code>, <code>functions/lib/parse-session.ts</code>, <code>shared/domain.ts</code></span>
+      </li>
+      <li class="done"><code>functions/lib/parse-session.ts:169-198</code>의 <code>buildEventScore</code>를 <code>shared/build-event-score.ts</code>로 추출한다(EventDefinition/EventScore/normalizeScore에만 의존하는 순수 함수). <code>parse-session.ts</code>는 이를 import해 내부에서 계속 사용하고, <code>functions/lib/record-write.ts:7</code>의 import를 <code>./parse-session</code> 경유가 아니라 <code>../../shared/build-event-score</code>에서 직접 가져오도록 갱신한다(중간 재노출 없이). recorded/exempt/blank/invalid/valueKind 불일치 각 케이스를 다루는 <code>shared/build-event-score.test.ts</code>를 새로 작성한다.
+        <span class="files"><code>shared/build-event-score.ts</code>, <code>shared/build-event-score.test.ts</code>, <code>functions/lib/parse-session.ts</code>, <code>functions/lib/record-write.ts</code></span>
+      </li>
+      <li class="done"><code>src/lib/exemptable-events.ts</code>(+test) — <code>EXEMPTABLE_EVENT_KEYS</code>(현재 <code>45도패스캐치</code> 하나)와 <code>isExemptable(key)</code>를 PRD §09 "프론트 종목 상수로 시작" 그대로 구현한다.
+        <span class="files"><code>src/lib/exemptable-events.ts</code>, <code>src/lib/exemptable-events.test.ts</code></span>
+      </li>
+      <li class="done"><code>src/lib/player-input-field.ts</code>(+test) — <code>FieldState</code> 판별 유니언, <code>initFieldState(event, score)</code>(recorded는 값 복원, invalid는 필드를 비우고 <code>{display, reason}</code> 안내 정보를 함께 반환, exempt/unmeasured는 각각 토글 on/빈 필드), <code>buildFieldRaw(field)</code>(서버 전송용 원본 문자열 조립)를 구현한다.
+        <span class="files"><code>src/lib/player-input-field.ts</code>, <code>src/lib/player-input-field.test.ts</code></span>
+      </li>
+      <li class="done"><code>src/lib/records-write-api.ts</code>(+test) — <code>saveRecord(sessionDate, playerId, scores)</code>를 <code>src/lib/create-sheet-api.ts:5-39</code>와 동일한 <code>{ok:true, sessionDate, playerId, name, scores}|{ok:false, error, message}</code> 패턴으로 <code>POST /api/admin/records</code> 호출을 감싼다.
+        <span class="files"><code>src/lib/records-write-api.ts</code>, <code>src/lib/records-write-api.test.ts</code></span>
+      </li>
+      <li class="done">UI 원자 컴포넌트 3종(+test 각각)을 §06 공통 컴포넌트 스펙대로 구현한다 — <code>TimeScoreInput</code>(분·초 2필드, <code>inputMode="numeric"</code>, 26px/800), <code>CountScoreInput</code>(스테퍼 46×46px·radius 13px + 직접입력, <code>maxScore</code> 클램프는 스테퍼에만 적용), <code>ExemptToggle</code>(48×28px 트랙·22px 노브, on=primary).
+        <span class="files"><code>src/components/TimeScoreInput.tsx</code>(+test), <code>src/components/CountScoreInput.tsx</code>(+test), <code>src/components/ExemptToggle.tsx</code>(+test)</span>
+      </li>
+      <li class="done"><code>src/pages/admin/RecordsPlayerInput.tsx</code>를 전면 재작성한다(현재 플레이스홀더 대체) — <code>useRecords</code>로 세션·참가자 엔트리 조회(없으면 <code>RecordsParticipants.tsx:26-49</code>와 동일한 로딩/에러/EmptyState 가드), <code>events</code> 순서대로 <code>FieldState</code> 초기화, 종목 카드 렌더(면제 가능 종목만 토글 노출·켜면 값 입력부 숨김), 프리필 invalid 안내 문구(현재 raw가 빈 값일 때만 노출), 하단 고정 저장 바(전 필드 유효 + 미제출 상태에서만 활성), 저장 성공 시 <code>invalidateQueries</code> 후 참가자 목록으로 <code>navigate(..., {state:{toast: "✓ {이름} 저장됨 · 팀원 열람에 반영"}})</code>, 실패 시 에러 문구 노출 + 입력값 보존.
+        <span class="files"><code>src/pages/admin/RecordsPlayerInput.tsx</code></span>
+      </li>
+      <li class="done"><code>src/pages/admin/RecordsPlayerInput.test.tsx</code>를 새로 작성한다 — <code>CreateSheet.test.tsx:1-148</code> 패턴(jsdom, MemoryRouter + 참가자 목록 스텁 라우트, <code>vi.stubGlobal('fetch', ...)</code>)을 그대로 재사용해 프리필(정상/면제/미측정/invalid 각각), 초 범위 위반 인라인 에러+저장 비활성, 면제 토글 노출 범위(패스캐치만), 저장 성공 네비게이션+toast state, 저장 실패(502) 알럿+입력 보존, 회차/참가자 없음 가드를 검증한다.
+        <span class="files"><code>src/pages/admin/RecordsPlayerInput.test.tsx</code></span>
+      </li>
+      <li class="done">전체 검증 — <code>npm run typecheck</code>·<code>npm test</code>·<code>npm run build</code> 그린 확인 후, <code>npm run dev:all</code>로 관리자 로그인 → 기록 입력 → 참가자 선택 → 선수별 입력까지 시딩 데이터(<code>scripts/seed-sheet.mjs</code>)로 수동 스모크.
+        <span class="step-note">참고: 이 세션엔 대화형 브라우저 도구가 없어 수동 스모크는 생략했다 — 대신 typecheck·전체 유닛/통합 테스트(600건)·프로덕션 빌드로 검증했다. 실제 브라우저 확인은 PR 리뷰 시 권장.</span>
+        <span class="files">(레포 전체)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td><code>shared/</code> 이동 시 import 경로 누락</td><td>서버 빌드·테스트 깨짐(기능 회귀는 아님)</td><td>이동 대상 임포터 사전 전수 조사 완료(grep 기준 정확히 2개 파일) + <code>npm run typecheck</code>가 즉시 드러냄</td></tr>
+        <tr><td>mm/ss 부분 입력(분만 채움 등)의 raw 조립 규칙이 서버 판정과 어긋날 가능성</td><td>정상값이 invalid로 오판되거나, 반대로 잘못된 값이 저장 시도됨</td><td>조립된 raw 문자열을 그대로 <code>buildEventScore</code>(서버와 동일 함수)에 통과시켜 판정 — 별도 규칙 재구현 없음</td></tr>
+        <tr><td>개수 필드 하한(0) 클램프가 PRD에 명시적으로 언급되지 않음(상한 클램프만 명시)</td><td>스테퍼로 음수를 만들 수 있으면 저장 시 invalid로 막히긴 하지만 UX가 어색함</td><td><code>normalizeScore</code>의 정수 전용 규칙과 일관되게 스테퍼·직접입력 모두 하한 0으로 통일해 구현(§3 설계에 근거 명시)</td></tr>
+        <tr><td>저장 성공 후 <code>invalidateQueries</code>와 <code>navigate</code> 순서가 뒤바뀌면 참가자 목록이 옛 상태 뱃지를 보여줄 수 있음</td><td>저장했는데 "미입력" 뱃지가 그대로 보임</td><td>CreateSheet.tsx:57-60·AddPlayers.tsx:90-93과 동일하게 invalidate를 await한 뒤 navigate</td></tr>
+        <tr><td>프리필 invalid 안내 문구가 사용자가 값을 다시 채운 뒤에도 계속 떠 있으면 혼란</td><td>이미 고쳤는데 "원본 오류" 문구가 남아 불신 유발</td><td>필드 현재 raw가 빈 값일 때만 안내 노출 — 값이 채워지면 자동으로 사라짐</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test</code> — <code>shared/normalize-score.test.ts</code>, <code>shared/build-event-score.test.ts</code>, <code>src/lib/exemptable-events.test.ts</code>, <code>src/lib/player-input-field.test.ts</code>, <code>src/lib/records-write-api.test.ts</code>, <code>TimeScoreInput</code>/<code>CountScoreInput</code>/<code>ExemptToggle</code> 각 test, <code>src/pages/admin/RecordsPlayerInput.test.tsx</code> 전체 통과.</li>
+      <li>회귀 — <code>functions/lib/parse-session.test.ts</code>, <code>functions/lib/parse-goals.test.ts</code>, <code>functions/lib/record-write.test.ts</code>, <code>functions/api/admin/records.test.ts</code>가 import 경로만 바뀐 채 기존과 동일하게 통과하는지 확인(동작 불변 검증).</li>
+      <li><code>npm run typecheck</code> — <code>shared/</code> 신규 파일이 <code>tsconfig.app.json</code>·<code>functions/tsconfig.json</code> 양쪽에서 문제없이 컴파일되는지 확인.</li>
+      <li><code>npm run build</code> — 프로덕션 빌드 그린(신규 컴포넌트 타입/번들 문제 없는지).</li>
+      <li>수동 스모크 — <code>npm run dev:all</code> → 관리자 로그인 → 기록 입력 → 오늘 회차 참가자 선택 → 4개 종목을 각각 정상값/면제(패스캐치만)/미측정(빈칸) 조합으로 저장 → 참가자 목록에 "완료" 뱃지 반영 확인 → 같은 선수 재진입 시 방금 저장한 값이 프리필되는지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>시간(분·초)/개수(스테퍼+직접입력)/면제(면제 가능 종목만)/미측정(빈칸) 타입별 입력기 + 인라인 검증이 <code>buildEventScore</code> 재사용으로 서버와 동일하게 판정 동작한다.</li>
+      <li>저장 성공(토스트 + 참가자 목록 복귀)/실패(에러 문구 + 입력값 보존 + 재저장) UX가 구현돼 있다.</li>
+      <li><code>POST /api/admin/records</code> 연동이 완료되고, 저장 성공 시 <code>RECORDS_QUERY_KEY</code>가 invalidate된다.</li>
+      <li><code>normalize-score</code>·<code>buildEventScore</code>가 <code>shared/</code>로 승격되고, 관련 서버 테스트가 경로 변경만으로(동작 불변) 전부 통과한다.</li>
+      <li>신규/변경 파일 전체 유닛 테스트 + 타입체크 + 빌드가 그린이다.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/68">#68</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>
