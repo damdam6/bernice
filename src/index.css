@@ -36,6 +36,10 @@
   --color-neutral-tint: #f0f1f4;
   --color-neutral-strong: #9096a2;
 
+  /* 필터 칩 (§06) — 비활성 상태 전용, 기존 ink-sub/line과 다른 값 */
+  --color-chip-ink: #5a6070;
+  --color-chip-line: #e3e5ec;
+
   /* 차트 */
   --color-chart-grid: #e7e9ee;
   --color-gauge-track: #eef0f4;
@@ -50,4 +54,5 @@
   /* radius */
   --radius-card: 18px;
   --radius-badge: 7px;
+  --radius-chip: 11px;
 }
