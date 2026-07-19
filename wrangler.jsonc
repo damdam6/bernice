@@ -7,7 +7,16 @@
   // 비밀 아님 — 시트 자체가 비공개(서비스계정 공유)라 ID 노출은 무해. seed 스크립트에도 커밋돼 있음.
   "vars": {
     "SHEET_ID": "1Emv2rbm1vakp2aEUfLD2V9GTmghHQ2SdaNqPwMBZNDw"
-  }
+  },
+
+  // 로그인 실패 카운터(#80) — /api/login rate limiting. 미바인딩이면 코드가 fail-open이라
+  // 로그인은 동작하되 방어만 꺼진다. 로컬 dev는 wrangler가 KV를 로컬 시뮬레이션한다.
+  "kv_namespaces": [
+    {
+      "binding": "LOGIN_RATE_LIMIT",
+      "id": "9ddc73ab7790437b9bdd88e9286af43f"
+    }
+  ]
 
   // 시크릿(GOOGLE_SERVICE_ACCOUNT_KEY · TEAM_PASSCODE · SESSION_SECRET · ADMIN_CODE)은 여기 두지 않는다:
   //   로컬 = .dev.vars (gitignore) · 프로덕션 = Pages 대시보드 Secret 또는 `wrangler pages secret put`

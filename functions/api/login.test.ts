@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { makeMockKV } from '../lib/mock-kv'
 import { verifySessionToken } from '../lib/session-cookie'
 import { onRequestPost } from './login'
 
@@ -6,7 +7,12 @@ const TEAM_PASSCODE = 'team-passcode-1234'
 const ADMIN_CODE = 'admin-code-5678'
 const SESSION_SECRET = 'test-session-secret'
 
-type LoginEnv = { TEAM_PASSCODE?: string; ADMIN_CODE?: string; SESSION_SECRET: string }
+type LoginEnv = {
+  TEAM_PASSCODE?: string
+  ADMIN_CODE?: string
+  SESSION_SECRET: string
+  LOGIN_RATE_LIMIT?: ReturnType<typeof makeMockKV>
+}
 
 function makeContext(
   body: unknown,
@@ -14,11 +20,15 @@ function makeContext(
     env = { TEAM_PASSCODE, ADMIN_CODE, SESSION_SECRET },
     url = 'https://bernice.example/api/login',
     raw,
-  }: { env?: LoginEnv; url?: string; raw?: string } = {},
+    ip,
+  }: { env?: LoginEnv; url?: string; raw?: string; ip?: string } = {},
 ) {
   const request = new Request(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(ip !== undefined ? { 'CF-Connecting-IP': ip } : {}),
+    },
     body: raw !== undefined ? raw : JSON.stringify(body),
   })
   // 이 핸들러는 request·env만 쓴다 — 나머지 PagesFunction context 필드는 생략.
@@ -113,5 +123,91 @@ describe('POST /api/login', () => {
 
     expect(cookie).toContain('HttpOnly')
     expect(cookie).not.toContain('Secure')
+  })
+})
+
+// 무차별 대입 방어(#80) — LOGIN_RATE_LIMIT(KV) 바인딩이 있을 때의 실패 카운팅·차단.
+describe('POST /api/login — rate limiting', () => {
+  const IP = '203.0.113.7'
+
+  function rateLimitedEnv(): LoginEnv {
+    return { TEAM_PASSCODE, ADMIN_CODE, SESSION_SECRET, LOGIN_RATE_LIMIT: makeMockKV() }
+  }
+
+  async function fail(env: LoginEnv, ip = IP): Promise<Response> {
+    return onRequestPost(makeContext({ code: 'wrong-code' }, { env, ip }))
+  }
+
+  it('실패 5회 후 6번째 시도는 429 + Retry-After, Set-Cookie 없음', async () => {
+    const env = rateLimitedEnv()
+    for (let i = 0; i < 5; i++) expect((await fail(env)).status).toBe(401)
+
+    const res = await fail(env)
+    expect(res.status).toBe(429)
+    expect(await res.json()).toMatchObject({ error: 'too_many_attempts' })
+    expect(Number(res.headers.get('Retry-After'))).toBeGreaterThan(0)
+    expect(res.headers.get('Set-Cookie')).toBeNull()
+  })
+
+  it('차단 중에는 올바른 코드도 429 — 차단이 검증보다 먼저다', async () => {
+    const env = rateLimitedEnv()
+    for (let i = 0; i < 5; i++) await fail(env)
+
+    const res = await onRequestPost(makeContext({ code: TEAM_PASSCODE }, { env, ip: IP }))
+    expect(res.status).toBe(429)
+    expect(res.headers.get('Set-Cookie')).toBeNull()
+  })
+
+  it('성공 로그인은 카운터를 지운다 — 이후 실패는 1회부터', async () => {
+    const env = rateLimitedEnv()
+    for (let i = 0; i < 4; i++) await fail(env)
+
+    const ok = await onRequestPost(makeContext({ code: TEAM_PASSCODE }, { env, ip: IP }))
+    expect(ok.status).toBe(200)
+    expect(env.LOGIN_RATE_LIMIT!.store.size).toBe(0)
+
+    // 리셋 후 다시 5회를 채워야 차단된다.
+    for (let i = 0; i < 5; i++) expect((await fail(env)).status).toBe(401)
+    expect((await fail(env)).status).toBe(429)
+  })
+
+  it('실패 이력이 없는 성공 로그인은 KV delete를 호출하지 않는다', async () => {
+    const env = rateLimitedEnv()
+    const kv = env.LOGIN_RATE_LIMIT!
+    let deletes = 0
+    const originalDelete = kv.delete.bind(kv)
+    kv.delete = async (key) => {
+      deletes++
+      await originalDelete(key)
+    }
+
+    const res = await onRequestPost(makeContext({ code: TEAM_PASSCODE }, { env, ip: IP }))
+    expect(res.status).toBe(200)
+    expect(deletes).toBe(0)
+  })
+
+  it('IP가 다르면 카운터가 독립이다', async () => {
+    const env = rateLimitedEnv()
+    for (let i = 0; i < 5; i++) await fail(env)
+
+    expect((await fail(env)).status).toBe(429)
+    expect((await fail(env, '198.51.100.9')).status).toBe(401)
+  })
+
+  it('비-JSON 400은 실패로 카운트하지 않는다', async () => {
+    const env = rateLimitedEnv()
+    for (let i = 0; i < 6; i++) {
+      const res = await onRequestPost(makeContext(null, { env, ip: IP, raw: 'not json{' }))
+      expect(res.status).toBe(400)
+    }
+    expect(env.LOGIN_RATE_LIMIT!.store.size).toBe(0)
+  })
+
+  it('LOGIN_RATE_LIMIT 미바인딩이면 fail-open — 반복 실패도 기존 401 그대로', async () => {
+    const env: LoginEnv = { TEAM_PASSCODE, ADMIN_CODE, SESSION_SECRET }
+    for (let i = 0; i < 8; i++) expect((await fail(env)).status).toBe(401)
+
+    const res = await onRequestPost(makeContext({ code: TEAM_PASSCODE }, { env, ip: IP }))
+    expect(res.status).toBe(200)
   })
 })
