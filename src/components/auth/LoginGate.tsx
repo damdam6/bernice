@@ -11,6 +11,7 @@ import { Spinner } from '../common/Spinner'
 import { ErrorPanel } from '../common/ErrorPanel'
 import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
 import { UnauthorizedError } from '../../lib/api-error'
+import { loginWithPasscode } from '../../lib/login-api'
 
 export function LoginGate() {
   const { isPending, error, refetch } = useRecords()
@@ -52,15 +53,9 @@ function PasscodeGate() {
     setError(null)
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      })
-
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { message?: string } | null
-        setError(body?.message ?? '패스코드가 올바르지 않습니다.')
+      const result = await loginWithPasscode(code)
+      if (!result.ok) {
+        setError(result.message ?? '패스코드가 올바르지 않습니다.')
         return
       }
 
