@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#95 관리자 제출 로직 공통 훅 추출 (useSubmitMutation) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  .tag-done {
+    display: inline-block; margin-left: 8px; font-size: 0.72rem; font-weight: 700;
+    color: var(--ok); border: 1px solid var(--ok); border-radius: 999px;
+    padding: 0 8px; vertical-align: 2px;
+  }
+  .done-list li.checked::before { background: var(--ok); }
+  .done-list li.checked::after {
+    content: "✓"; position: absolute; left: 5px; top: 3px;
+    color: #fff; font-size: 11px; font-weight: 700; line-height: 1;
+  }
+  pre.code {
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font-size: 0.82rem; line-height: 1.5;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; margin: 12px 0 0;
+  }
+  pre.code code { background: none; padding: 0; font-size: 1em; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/95">#95</a></span><span class="type-chip">리팩토링</span>
+    <h1>관리자 제출 로직 공통 훅 추출 (useSubmitMutation)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/95-extract-submit-mutation-hook</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      <code>AddPlayers</code>·<code>CreateSheet</code>·<code>RecordsPlayerInput</code> 세 관리자 화면이
+      동일한 제출 흐름 — <code>submitting</code>/<code>submitError</code> 상태 → API 호출 → 실패 시 메시지 노출·화면 유지,
+      성공 시 records 캐시 무효화 → 화면별 성공 처리(navigate·토스트) — 를 그대로 복제하고 있다.
+      세 API가 공유하는 <code>{ ok: true, … } | { ok: false, message }</code> 결과 계약을 활용해,
+      제출 상태·실패 처리·<code>invalidateQueries(RECORDS_QUERY_KEY)</code>까지를 공통 훅
+      <code>useSubmitMutation</code>으로 끌어올리고, 화면마다 다른 부분(호출할 API·성공 콜백)만 주입하도록 바꾼다.
+      PR #91에서 "rule of three(3번째 사례 #68) 나오면 추출"로 보류됐고, #68 머지로 세 사례가 모두 충족됐다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>세 화면의 제출 핸들러는 상태 선언부터 분기까지 사실상 바이트 단위로 같다:</p>
+    <ul>
+      <li>
+        <b>AddPlayers</b> — <code>src/pages/admin/AddPlayers.tsx:28-29</code>에 <code>submitError</code>/<code>submitting</code> 상태,
+        <code>:78-94</code>의 <code>handleConfirm</code>에서 <code>addPlayers(session.date, [...selected])</code> 호출 →
+        실패 시 <code>setSubmitError</code>+<code>setSubmitting(false)</code>+return, 성공 시
+        <code>invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })</code>(<code>:90</code>) 후
+        <code>navigate('/admin/records/{date}', { state: { toast } })</code>. 추가로 <code>selectSession</code>(<code>:72-76</code>)이
+        회차 전환 때 <code>setSubmitError(null)</code>로 에러를 지운다.
+      </li>
+      <li>
+        <b>CreateSheet</b> — <code>src/pages/admin/CreateSheet.tsx:22-23</code> 상태,
+        <code>:45-61</code>의 <code>handleConfirm</code>에서 <code>createSheet([...selected])</code> 호출 →
+        같은 실패 분기, 성공 시 <code>invalidateQueries</code>(<code>:57</code>) 후 navigate+토스트.
+      </li>
+      <li>
+        <b>RecordsPlayerInput</b> — 내부 <code>PlayerInputContent</code>의 <code>src/pages/admin/RecordsPlayerInput.tsx:92-93</code> 상태,
+        <code>:104-119</code>의 <code>handleSave</code>에서 <code>saveRecord(session.date, entry.playerId, raw)</code> 호출 →
+        같은 실패 분기, 성공 시 <code>invalidateQueries</code>(<code>:117</code>) 후 <code>onSaved(toast)</code> 콜백
+        (부모가 navigate로 연결, <code>:70</code>).
+      </li>
+    </ul>
+    <p>
+      세 API 래퍼(<code>src/lib/add-players-api.ts</code>·<code>create-sheet-api.ts</code>·<code>records-write-api.ts</code>)는
+      모두 <code>Promise&lt;{ ok: true, … } | { ok: false, error, message }&gt;</code>로 <b>항상 resolve</b>하도록 설계돼 있어
+      (네트워크 오류도 <code>ok:false</code>로 변환), 호출부가 <code>try/catch</code> 없이 결과만 분기한다 —
+      공통 훅이 기댈 수 있는 안정적 계약이다.
+    </p>
+    <p><b>재시도/입력값 보존</b>은 별도 코드가 아니라 "실패 시 화면에 머문다"의 자연스러운 결과다:
+      실패해도 컴포넌트가 언마운트되지 않아 선택 상태(<code>useMultiSelect</code>)·입력 필드(<code>fields</code>)가 그대로 남고,
+      버튼을 다시 누르면 재호출된다. 훅은 이 성질을 깨지 않기만 하면 된다.</p>
+    <p><b>화면마다 다른 것</b>은 딱 둘: ① 호출할 API 함수(+인자), ② 성공 시 동작(navigate 대상·토스트 문구, 혹은 콜백 위임).
+      나머지는 전부 동일하다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p>
+      <b>채택:</b> <code>src/hooks/useSubmitMutation.ts</code>에 상태·흐름을 소유하고, 화면은 "무엇을 호출할지"와
+      "성공하면 무엇을 할지"만 주입한다. 제출 시점의 최신 상태(<code>selected</code>·<code>fields</code>)를 읽어야 하므로
+      <b>클릭 시점에 thunk를 넘기는 형태</b>(설정형이 아닌 호출형)로 설계해 stale-closure를 원천 차단한다.
+    </p>
+    <pre class="code"><code>// src/hooks/useSubmitMutation.ts
+export interface SubmitMutationSuccess { ok: true }
+export interface SubmitMutationFailure { ok: false; message: string }
+
+export function useSubmitMutation() {
+  const queryClient = useQueryClient()
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState&lt;string | null&gt;(null)
+
+  const clearError = useCallback(() =&gt; setSubmitError(null), [])
+
+  const submit = useCallback(
+    async &lt;R extends SubmitMutationSuccess | SubmitMutationFailure&gt;(
+      mutationFn: () =&gt; Promise&lt;R&gt;,
+      onSuccess: (result: Extract&lt;R, { ok: true }&gt;) =&gt; void | Promise&lt;void&gt;,
+    ) =&gt; {
+      setSubmitting(true)
+      setSubmitError(null)
+      const result = await mutationFn()
+      if (!result.ok) {
+        setSubmitError(result.message)
+        setSubmitting(false)      // 실패 → 화면 유지, 입력·선택 보존, 재시도 가능
+        return
+      }
+      await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
+      await onSuccess(result as Extract&lt;R, { ok: true }&gt;)   // 성공 → 언마운트 전이라 submitting 유지
+    },
+    [queryClient],
+  )
+
+  return { submitting, submitError, submit, clearError }
+}</code></pre>
+    <p><b>설계 근거</b></p>
+    <ul>
+      <li><b>invalidate를 훅에 내장</b> — 세 화면 모두 <code>RECORDS_QUERY_KEY</code>를 <code>exact:true</code>로,
+        성공 콜백 <i>직전에</i> 무효화한다(동일 바이트). 이 한 줄이 중복의 핵심이라 훅이 소유한다. 다른 캐시가 필요한
+        미래 화면이 나오면 그때 매개변수화한다(현재 YAGNI).</li>
+      <li><b>제네릭 <code>R</code> + <code>Extract&lt;R,{ok:true}&gt;</code></b> — <code>() =&gt; addPlayers(...)</code>의
+        반환 타입(<code>AddPlayersResult</code>)에서 <code>R</code>이 깔끔히 추론되고, 성공 콜백은 <code>AddPlayersSuccess</code>를
+        정확히 받는다(<code>result.sessionDate</code>·<code>result.added</code> 접근 가능). 내로잉 보강을 위해 콜백 호출부에서만 캐스팅.</li>
+      <li><b>실패 시 <code>setSubmitting(false)</code>, 성공 시 미변경</b> — 원본과 동일. 성공은 navigate로 언마운트되므로
+        submitting을 되돌릴 필요가 없다.</li>
+      <li><b><code>clearError</code> 노출</b> — AddPlayers의 <code>selectSession</code>이 회차 전환 시 에러를 지우는 동작을 보존하기 위함.</li>
+    </ul>
+    <p><b>범위 경계(제외):</b> <code>AdminLogin.tsx</code>·<code>LoginGate.tsx(PasscodeGate)</code>도 같은
+      <code>invalidateQueries(RECORDS_QUERY_KEY)</code>를 쓰지만, 제출 형태가 다르다 — <code>try/catch</code>로 감싸고
+      (<code>loginWithPasscode</code>는 결과 유니온이 아니라 예외를 던지는 계약), <code>role !== 'admin'</code> 같은 도메인 검증과
+      토스트 없는 navigate/무이동을 포함한다. 이 훅에 끼워 맞추면 훅이 <code>try/catch</code>·옵션 분기로 비대해지므로
+      이번 rule-of-three 추출에서 <b>의도적으로 제외</b>한다(이슈 완료 조건도 세 화면으로 한정).</p>
+    <p><b>기각한 대안:</b> ① TanStack <code>useMutation</code> 전면 도입 — 이득 대비 세 화면 리라이트 폭이 크고 기존
+      결과-유니온 계약과 겹쳐 중복 추상화가 된다. ② 설정형(<code>useSubmitMutation({ mutationFn, onSuccess })</code>) —
+      <code>selected</code>/<code>fields</code>가 렌더마다 바뀌어 stale-closure·불필요한 의존성 배열 관리가 생긴다. 호출형이 더 단순.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>공통 훅 신설 — 위 설계대로 <code>submit</code>/<code>submitting</code>/<code>submitError</code>/<code>clearError</code> 구현.
+        상단 주석에 세 화면 공유·records 캐시 무효화 내장 근거를 기존 훅 톤으로 명시.
+        <span class="tag-done">✓ 완료</span>
+        <span class="files"><code>src/hooks/useSubmitMutation.ts</code></span>
+      </li>
+      <li>AddPlayers 이관 — <code>useState(submitError/submitting)</code>·<code>useQueryClient</code>·<code>RECORDS_QUERY_KEY</code> 임포트 제거,
+        <code>useSubmitMutation()</code> 사용. <code>handleConfirm</code>은 <code>submit(() =&gt; addPlayers(...), (r) =&gt; navigate(...))</code>로,
+        <code>selectSession</code>의 <code>setSubmitError(null)</code>은 <code>clearError()</code>로 교체. JSX(<code>submitError</code>/<code>submitting</code> 참조)는 그대로.
+        <span class="tag-done">✓ 완료</span>
+        <span class="files"><code>src/pages/admin/AddPlayers.tsx</code></span>
+      </li>
+      <li>CreateSheet 이관 — 동일 패턴. 상태·<code>useState</code>·<code>useQueryClient</code>·<code>RECORDS_QUERY_KEY</code> 임포트 정리,
+        <code>handleConfirm</code>을 <code>submit(() =&gt; createSheet([...selected]), (r) =&gt; navigate(...))</code>로.
+        <span class="tag-done">✓ 완료</span>
+        <span class="files"><code>src/pages/admin/CreateSheet.tsx</code></span>
+      </li>
+      <li>RecordsPlayerInput 이관 — 내부 <code>PlayerInputContent</code>에서 훅 사용. <code>handleSave</code>는
+        <code>raw</code> 계산 후 <code>submit(() =&gt; saveRecord(session.date, entry.playerId, raw), () =&gt; onSaved(`✓ ${entry.name} 저장됨 …`))</code>로.
+        <code>fields</code>용 <code>useState</code>는 유지, 제출 상태 <code>useState</code>·<code>useQueryClient</code>·<code>RECORDS_QUERY_KEY</code>만 제거.
+        <span class="tag-done">✓ 완료</span>
+        <span class="files"><code>src/pages/admin/RecordsPlayerInput.tsx</code></span>
+      </li>
+      <li>훅 단위 테스트 추가 — 집안 스타일(<code>renderHook</code>+<code>QueryClientProvider</code> wrapper)로:
+        초기값, 성공 시 <code>invalidateQueries</code> 호출+<code>onSuccess</code> 호출, 실패 시 <code>submitError</code> 세팅+<code>submitting</code> 복귀+<code>onSuccess</code> 미호출,
+        <code>clearError</code> 동작 검증.
+        <span class="tag-done">✓ 완료 · <code>useSubmitMutation.test.tsx</code></span>
+        <span class="files"><code>src/hooks/useSubmitMutation.test.tsx</code></span>
+      </li>
+      <li>검증 — <code>npm run typecheck</code>(제네릭 추론 통과 확인)·<code>npm test</code> 전체 그린. 세 화면의 기존 페이지 테스트가
+        회귀 가드 역할을 하므로 무수정 통과해야 한다.
+        <span class="tag-done">✓ 완료 · typecheck 통과 · 73 파일 609 테스트 그린</span>
+        <span class="files"><code>tsc -b</code>, <code>vitest run</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>제네릭 추론이 <code>R = 전체 유니온</code>이 아닌 성공 타입으로 좁혀지지 않아 <code>onSuccess</code> 인자 타입이 어긋남</td>
+          <td>타입 에러 또는 콜백에서 <code>result.added</code> 등 접근 불가</td>
+          <td><code>R extends 성공|실패</code> 제약 + <code>Extract&lt;R,{ok:true}&gt;</code>로 성공만 추출, 호출부에서 캐스팅. <code>tsc -b</code>로 즉시 확인</td>
+        </tr>
+        <tr>
+          <td>invalidate를 훅에 내장하면서 성공 콜백과 순서가 바뀜</td>
+          <td>navigate가 캐시 무효화보다 먼저 실행돼 목록이 옛 데이터로 잠깐 보임</td>
+          <td>훅이 <code>await invalidateQueries</code> → <code>await onSuccess</code> 순서를 원본과 동일하게 고정</td>
+        </tr>
+        <tr>
+          <td>AddPlayers의 <code>selectSession</code> 에러 클리어 누락</td>
+          <td>회차 전환 후에도 이전 실패 메시지가 남음</td>
+          <td><code>clearError()</code>로 명시 교체, 기존 동작 유지</td>
+        </tr>
+        <tr>
+          <td>실패 후 재시도/입력 보존 회귀</td>
+          <td>실패 시 선택·입력이 초기화되면 UX 손상</td>
+          <td>훅은 상태를 리셋하지 않음(컴포넌트 언마운트 없음). 세 페이지 테스트의 "실패 → 화면 유지" 케이스로 가드</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>신규 훅 테스트</b> — <code>useSubmitMutation.test.ts(x)</code>: 성공 흐름(invalidate+onSuccess 호출 순서),
+        실패 흐름(submitError 채워짐·submitting 복귀·onSuccess 미호출), clearError, 초기값.</li>
+      <li><b>기존 페이지 테스트 무수정 통과(회귀 가드)</b> — <code>AddPlayers.test.tsx</code>(성공 시 이동+토스트, 409 실패 시 alert+화면 유지),
+        <code>CreateSheet.test.tsx</code>(성공/409 동일), <code>RecordsPlayerInput.test.tsx</code>(저장 성공/실패). 리팩터링이 동작을 바꾸지 않았음을 이들이 증명.</li>
+      <li><b>타입 검사</b> — <code>npm run typecheck</code>로 제네릭 추론·<code>Extract</code> 결과가 각 화면의 성공 타입과 맞물리는지 확인.</li>
+      <li><b>전체 스위트</b> — <code>npm test</code>(vitest run) 그린.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="checked">세 화면(AddPlayers·CreateSheet·RecordsPlayerInput)의 제출 패턴을 <code>useSubmitMutation</code>으로 추출 — 성공 콜백 주입형</li>
+      <li class="checked">각 화면 동작(navigate 대상·토스트 문구·records invalidate·입력/선택 보존·재시도) 동일 유지 — 세 페이지 테스트 무수정 통과로 확인</li>
+      <li class="checked">PR #91 미해결 리뷰 스레드(AddPlayers.tsx·CreateSheet.tsx의 중복 제출 로직) 해소</li>
+      <li class="checked">신규 훅 테스트 추가 + 기존 페이지 테스트 무수정 통과, <code>npm run typecheck</code>·<code>npm test</code> 그린</li>
+      <li class="checked">PR 오픈(<code>Closes #95</code>)</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/95">#95</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>
