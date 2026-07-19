@@ -1,10 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import type { RecordsResponse } from '../../shared/domain'
+import { isPlainObject } from '../../shared/is-plain-object'
 import { ApiError, UnauthorizedError } from '../lib/api-error'
-
-interface ErrorBody {
-  message?: string
-}
+import { parseRecordsResponse } from '../lib/parse-records-response'
 
 export async function fetchRecords(signal?: AbortSignal): Promise<RecordsResponse> {
   let res: Response
@@ -25,16 +23,24 @@ export async function fetchRecords(signal?: AbortSignal): Promise<RecordsRespons
   }
 
   if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as ErrorBody | null
-    throw new ApiError(body?.message ?? `records fetch failed (${res.status})`, res.status)
+    const body: unknown = await res.json().catch(() => null)
+    const message = isPlainObject(body) && typeof body.message === 'string' ? body.message : null
+    throw new ApiError(message ?? `records fetch failed (${res.status})`, res.status)
   }
 
+  let body: unknown
   try {
-    return (await res.json()) as RecordsResponse
+    body = await res.json()
   } catch {
     // 서버 계약상 200 본문은 항상 JSON이지만, 깨진 페이로드도 ApiError 타입 계약 안에서 실패시킨다.
     throw new ApiError('records fetch failed (invalid json)', res.status)
   }
+
+  // JSON이지만 계약(shared/domain.ts)을 위반한 바디(#93) — invalid json과 같은 분류로
+  // ApiError에 안착시킨다. status 200은 4xx가 아니라 재시도 규칙도 동일하게 적용된다.
+  const parsed = parseRecordsResponse(body)
+  if (parsed === null) throw new ApiError('records fetch failed (invalid body)', res.status)
+  return parsed
 }
 
 // 4xx(401 로그인 필요 포함)는 요청 자체의 문제라 재시도해도 소용없어 제외한다.
