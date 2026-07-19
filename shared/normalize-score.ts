@@ -1,6 +1,8 @@
 const EXEMPT_LITERAL = '면제'
 const INTEGER_RE = /^\d+$/
 const MAX_MINUTES = 999
+// 시각 표기 토큰 — mm:ss 입력을 시트가 시각(오전 1:15 등)으로 자동 변환하면 나타난다.
+const TIME_OF_DAY_RE = /오전|오후|am|pm/i
 
 // 'seconds'는 셀 표기를 초로 접은 값 — 종목 기준 EventValueKind의 'time'과 대응한다.
 // 이 함수는 종목 정보를 모르므로 둘의 교차검증(매핑)은 build-event-score.ts가 담당.
@@ -24,6 +26,14 @@ export function normalizeScore(raw: string | null | undefined): ScoreValue {
 }
 
 function parseTime(trimmed: string, raw: string): ScoreValue {
+  if (TIME_OF_DAY_RE.test(trimmed)) {
+    return {
+      kind: 'invalid',
+      raw,
+      reason: '시각 표기(오전/오후·AM/PM) 포함 — 시트가 시각으로 자동 변환했을 가능성',
+    }
+  }
+
   const parts = trimmed.split(':')
 
   if (parts.length === 3 && parts.every((part) => INTEGER_RE.test(part))) {

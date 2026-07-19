@@ -54,10 +54,10 @@ export function parseRoster(rows: string[][]): RosterParseResult {
     }
 
     const status = normalizeStatus(rawStatus)
-    if (status.kind === 'unknown') {
+    if (status.kind !== 'known') {
       issues.push({
         rowIndex,
-        reason: rawStatus === '' ? '상태 없음' : `알 수 없는 상태값: "${rawStatus}"`,
+        reason: status.kind === 'blank' ? '상태 없음' : `알 수 없는 상태값: "${rawStatus}"`,
         rawName,
         rawStatus,
       })
