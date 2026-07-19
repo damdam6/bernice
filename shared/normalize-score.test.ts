@@ -75,5 +75,16 @@ describe('normalizeScore', () => {
         expect(result.reason).toMatch(/자동/)
       }
     })
+
+    it.each(['오전 1:15', '오전 1:15:00', '1:15 AM'])(
+      '시각 표기(%s)도 시트 자동 시간 변환 의심 메시지로 invalid 처리',
+      (raw) => {
+        const result = normalizeScore(raw)
+        expect(result.kind).toBe('invalid')
+        if (result.kind === 'invalid') {
+          expect(result.reason).toMatch(/자동/)
+        }
+      },
+    )
   })
 })

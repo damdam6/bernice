@@ -32,17 +32,23 @@ describe('normalizeStatus', () => {
       const result = normalizeStatus(raw)
       expect(result).toEqual({ kind: 'unknown', raw })
     })
+  })
 
-    it('빈 문자열 → unknown', () => {
-      expect(normalizeStatus('')).toEqual({ kind: 'unknown', raw: '' })
+  describe('빈칸(미선택) → blank — 비어 있지 않은 이상값(unknown)과 구분', () => {
+    it('빈 문자열 → blank', () => {
+      expect(normalizeStatus('')).toEqual({ kind: 'blank', raw: '' })
     })
 
-    it('undefined → unknown (raw는 빈 문자열로 정규화)', () => {
-      expect(normalizeStatus(undefined)).toEqual({ kind: 'unknown', raw: '' })
+    it('공백만 → blank (트림 전 원본 raw 보존)', () => {
+      expect(normalizeStatus('  \t ')).toEqual({ kind: 'blank', raw: '  \t ' })
     })
 
-    it('null → unknown (raw는 빈 문자열로 정규화)', () => {
-      expect(normalizeStatus(null)).toEqual({ kind: 'unknown', raw: '' })
+    it('undefined → blank (raw는 빈 문자열로 정규화)', () => {
+      expect(normalizeStatus(undefined)).toEqual({ kind: 'blank', raw: '' })
+    })
+
+    it('null → blank (raw는 빈 문자열로 정규화)', () => {
+      expect(normalizeStatus(null)).toEqual({ kind: 'blank', raw: '' })
     })
   })
 
