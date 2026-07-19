@@ -71,4 +71,14 @@ describe('addPlayers', () => {
       message: '참가자 추가에 실패했어요. 다시 시도해주세요.',
     })
   })
+
+  it('네트워크 오류(fetch reject)면 throw하지 않고 ok:false를 반환한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+
+    await expect(addPlayers('2025-05-16', [7])).resolves.toEqual({
+      ok: false,
+      error: 'network_error',
+      message: '네트워크 오류로 추가하지 못했어요. 연결을 확인하고 다시 시도해주세요.',
+    })
+  })
 })

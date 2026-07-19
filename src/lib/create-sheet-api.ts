@@ -17,11 +17,24 @@ export interface CreateSheetFailure {
 export type CreateSheetResult = CreateSheetSuccess | CreateSheetFailure
 
 export async function createSheet(participantIds: number[]): Promise<CreateSheetResult> {
-  const res = await fetch('/api/admin/create-sheet', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ participantIds }),
-  })
+  // fetch()는 HTTP 오류 상태(4xx/5xx)에는 정상 resolve하지만 네트워크 자체가 끊기면 reject한다
+  // (records-write-api.ts의 saveRecord와 동일한 이유) — 이 함수의 타입 계약(Promise<CreateSheetResult>,
+  // 항상 ok:true|false로 resolve)을 지키려면 여기서 잡아 CreateSheetFailure로 바꿔야 한다.
+  // 호출부(CreateSheet)는 이 계약을 믿고 try/catch 없이 결과만 분기한다.
+  let res: Response
+  try {
+    res = await fetch('/api/admin/create-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantIds }),
+    })
+  } catch {
+    return {
+      ok: false,
+      error: 'network_error',
+      message: '네트워크 오류로 생성하지 못했어요. 연결을 확인하고 다시 시도해주세요.',
+    }
+  }
 
   const body = (await res.json().catch(() => null)) as
     | { sessionDate?: string; participantCount?: number; error?: string; message?: string }
