@@ -67,6 +67,9 @@ export function useSubmitMutation() {
       // 성공 콜백 직전에 무효화한다(원본 순서 유지) — navigate로 넘어간 화면이 최신 데이터를 본다.
       await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
       // 성공은 navigate로 언마운트되므로 submitting을 되돌리지 않는다(원본과 동일).
+      // 바로 위 !result.ok 가드로 여기선 result.ok가 확정 true다. TS가 제네릭 R을 그 판별식으로
+      // Extract<R,{ok:true}>까지 좁혀주진 못해(제네릭 내로잉 한계) 단언을 쓰지만, 가드가 보장하는
+      // 건전한 단언이다 — 한 줄로 격리해 둔다.
       await onSuccess(result as Extract<R, { ok: true }>)
     },
     [queryClient],
