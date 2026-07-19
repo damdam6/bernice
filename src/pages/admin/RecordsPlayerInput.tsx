@@ -171,7 +171,7 @@ function PlayerInputContent({
 
               {notice && !field.exempt && isBlank && (
                 <p className="mt-2 text-xs text-ink-sub">
-                  기존 값 오류: "{notice.display}" — {notice.reason}
+                  기존 값 안내: "{notice.display}" — {notice.reason}
                 </p>
               )}
             </div>
