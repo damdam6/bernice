@@ -30,39 +30,44 @@ const SUPPLEMENTAL_RANK_SLOT: Record<SupplementalStatus, string> = {
 }
 
 // 랭킹 카드 행 — §05: 순위(1위 강조) · 이름 · 뱃지 · 성능 미니바 · 원값("/ 만점" 병기).
+// 카드 셸(순위 자리 + 이름/뱃지 행)은 상태 4종이 공유하고, 뱃지·상세 영역만 상태별로 갈린다.
 export function RankingRow({ row, event, scale, tiedRanks }: RankingRowProps) {
-  if (row.status === 'recorded') {
-    const isTop = row.rank === 1
-    const rankLabel = tiedRanks.has(row.rank) ? `공동 ${row.rank}위` : `${row.rank}위`
-    const valueDisplay =
-      event.valueKind === 'count' && event.maxScore != null ? `${row.display} / ${event.maxScore}` : row.display
+  const rankText =
+    row.status === 'recorded'
+      ? tiedRanks.has(row.rank)
+        ? `공동 ${row.rank}위`
+        : `${row.rank}위`
+      : SUPPLEMENTAL_RANK_SLOT[row.status]
+  const rankColor = row.status !== 'recorded' ? 'text-ink-muted' : row.rank === 1 ? 'text-primary' : 'text-ink-sub'
 
-    return (
-      <div className="flex items-center gap-3 rounded-card border border-line bg-white p-4">
-        <span className={`w-14 shrink-0 text-sm font-bold ${isTop ? 'text-primary' : 'text-ink-sub'}`}>{rankLabel}</span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-semibold text-ink">{row.name}</span>
-            <AchievementBadge achieved={row.achieved} />
-          </div>
-          <div className="mt-2 flex items-center gap-3">
-            <PerformanceBar value={scale.normalize(event.key, row.value)} achieved={row.achieved} />
-            <span className="shrink-0 text-sm tabular-nums text-ink-sub">{valueDisplay}</span>
-          </div>
-        </div>
-      </div>
+  const badge =
+    row.status === 'recorded' ? (
+      <AchievementBadge achieved={row.achieved} />
+    ) : (
+      <Pill colorClassName="bg-neutral-tint text-neutral-strong">{SUPPLEMENTAL_BADGE_LABEL[row.status]}</Pill>
     )
-  }
+
+  const detail =
+    row.status === 'recorded' ? (
+      <div className="mt-2 flex items-center gap-3">
+        <PerformanceBar value={scale.normalize(event.key, row.value)} achieved={row.achieved} />
+        <span className="shrink-0 text-sm tabular-nums text-ink-sub">
+          {event.valueKind === 'count' && event.maxScore != null ? `${row.display} / ${event.maxScore}` : row.display}
+        </span>
+      </div>
+    ) : (
+      <p className="mt-2 text-sm text-ink-sub">{row.status === 'invalid' ? row.display : '–'}</p>
+    )
 
   return (
     <div className="flex items-center gap-3 rounded-card border border-line bg-white p-4">
-      <span className="w-14 shrink-0 text-sm font-bold text-ink-muted">{SUPPLEMENTAL_RANK_SLOT[row.status]}</span>
+      <span className={`w-14 shrink-0 text-sm font-bold ${rankColor}`}>{rankText}</span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-semibold text-ink">{row.name}</span>
-          <Pill colorClassName="bg-neutral-tint text-neutral-strong">{SUPPLEMENTAL_BADGE_LABEL[row.status]}</Pill>
+          {badge}
         </div>
-        <p className="mt-2 text-sm text-ink-sub">{row.status === 'invalid' ? row.display : '–'}</p>
+        {detail}
       </div>
     </div>
   )
