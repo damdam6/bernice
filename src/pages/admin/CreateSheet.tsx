@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -11,10 +11,6 @@ import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
 import { createSheet } from '../../lib/create-sheet-api'
 import { compareKorean } from '../../lib/korean-sort'
 import { formatSeoulDate } from '../../lib/seoul-date'
-
-function CenteredPanel({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center px-6">{children}</div>
-}
 
 export default function CreateSheet() {
   const navigate = useNavigate()

@@ -4,9 +4,10 @@
 // 이 화면은 기록지 만들기·참가자 추가 성공 시의 공통 착지점이기도 하다 — 두 화면이
 // navigate(..., {state:{toast}})로 넘긴 메시지를 여기서 한 번 보여준다. 저장(#68)의
 // "참가자 목록 복귀 + 토스트" 계약과 같은 메커니즘을 미리 갖춰두는 것이다.
-import { useEffect, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { RecordsResponse, Session } from '../../../shared/domain'
+import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -16,10 +17,6 @@ import { useToast } from '../../hooks/useToast'
 import { useRecords } from '../../hooks/useRecords'
 import { deriveEntryStatus } from '../../lib/entry-status'
 import { compareKorean } from '../../lib/korean-sort'
-
-function CenteredPanel({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center px-6">{children}</div>
-}
 
 export default function RecordsParticipants() {
   const { sessionDate } = useParams<{ sessionDate: string }>()

@@ -1,18 +1,14 @@
 // 기록 입력 · 날짜 선택(#67) — docs/prd-design.html §05 · docs/prd-record-input.html §05:
 // 회차 카드 리스트(최신부터) — 날짜 + n차 라벨 + 완료 n/N. n차 라벨 파생 규칙(§09):
 // sessions 날짜 오름차순 인덱스+1, 표기 "1차 · 2025-05-16".
-import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { RecordsResponse, Session } from '../../../shared/domain'
+import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
 import { useRecords } from '../../hooks/useRecords'
 import { countCompleted } from '../../lib/entry-status'
-
-function CenteredPanel({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center px-6">{children}</div>
-}
 
 export default function RecordsDateSelect() {
   const navigate = useNavigate()

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
 import type { RecordsResponse } from '../../shared/domain'
+import { CenteredPanel } from '../components/common/CenteredPanel'
 import { EmptyState } from '../components/common/EmptyState'
 import { ErrorPanel } from '../components/common/ErrorPanel'
 import { Spinner } from '../components/common/Spinner'
@@ -9,10 +9,6 @@ import { RankingRow } from '../components/RankingRow'
 import { useRecords } from '../hooks/useRecords'
 import { buildPerformanceScale } from '../lib/performance-scale'
 import { buildEventGuidance, buildRankingRows, findTiedRanks } from '../lib/ranking-view'
-
-function CenteredPanel({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center px-6">{children}</div>
-}
 
 export default function Rankings() {
   const { data, isError, error, refetch } = useRecords()

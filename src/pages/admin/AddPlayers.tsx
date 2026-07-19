@@ -2,9 +2,10 @@
 // 하단 고정 확인 바 "N명 추가하기". 참가자 목록에서 진입 시 router state로 현재 회차를 넘겨받아
 // 미리 선택해둔다(location.state?.sessionDate) — 없으면(시트 관리 홈에서 바로 진입) 최신 회차가
 // 기본값이다.
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
+import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -12,10 +13,6 @@ import { FilterChip } from '../../components/FilterChip'
 import { addPlayers } from '../../lib/add-players-api'
 import { compareKorean } from '../../lib/korean-sort'
 import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
-
-function CenteredPanel({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center px-6">{children}</div>
-}
 
 export default function AddPlayers() {
   const navigate = useNavigate()
