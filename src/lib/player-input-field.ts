@@ -27,7 +27,10 @@ export function initFieldState(event: EventDefinition, score: EventScore): Field
 
   if (event.valueKind === 'time') {
     if (recordedDisplay === '') return { valueKind: 'time', minutes: '', seconds: '', exempt }
-    const [minutes, seconds] = recordedDisplay.split(':')
+    // recorded+time은 buildEventScore가 normalizeScore의 콜론 1개짜리 mm:ss만 통과시켜 만들므로
+    // split은 항상 2칸이지만, 그 보장을 이 파일 밖(normalize-score.ts)까지 눈으로 좇지 않아도
+    // 되도록 기본값으로 한 번 더 방어한다.
+    const [minutes = '', seconds = ''] = recordedDisplay.split(':', 2)
     return { valueKind: 'time', minutes, seconds, exempt }
   }
 
