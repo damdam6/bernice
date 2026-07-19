@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#94 · #96 정규화 정리 — shared 단일 출처 + 파서 엣지케이스 보강 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px; margin-right: 6px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 4px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 18px 0 8px; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .tag { font-size: 0.75rem; font-weight: 700; border-radius: 5px; padding: 1px 7px; margin-right: 6px; }
+  .tag-94 { color: var(--accent); background: var(--accent-soft); }
+  .tag-96 { color: var(--warn); background: var(--code-bg); }
+  .done-badge { color: var(--ok); font-weight: 700; font-size: 0.8rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.checked::before { background: var(--ok); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/94">#94</a></span><span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/96">#96</a></span><span class="type-chip">리팩토링 · 견고성 개선</span>
+    <h1>정규화 정리 — shared 단일 출처 + 파서 엣지케이스 보강</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/94-normalization-dedupe-edge-cases</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement (양쪽)</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>두 이슈 모두 <code>normalize-status</code>·<code>normalize-score</code>를 만지므로 이 워크트리에서 순차 처리해 한 PR로 낸다(본문에 Closes #94 · Closes #96).
+    <b>#94</b>는 <code>functions/lib/normalize-status.ts</code>에 중복 정의된 <code>PLAYER_STATUSES</code>/<code>PlayerStatus</code>를 제거하고 <code>shared/domain.ts</code>를 단일 출처로 통일 — seed 스크립트의 하드코딩 드롭다운 값도 domain import로 바꾸고, <code>seconds</code>↔<code>time</code> 용어 대응은 매핑 지점 주석으로 명시한다.
+    <b>#96</b>은 조사 결과 5개 항목 중 3개(NFKC · 분 상한 999 · blank raw 보존)가 이미 PR #22(<code>07442d6</code>)에서 반영·테스트 고정되어 있어, 남은 2개 — 상태 빈칸(<code>blank</code>) vs 이상값(<code>unknown</code>) 구분, 시각 표기(오전/오후·AM/PM) reason 구분 — 만 구현한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <h3>#94 — 중복 정의 현황</h3>
+    <ul>
+      <li><code>shared/domain.ts:5-6</code> — <code>PLAYER_STATUSES</code>·<code>PlayerStatus</code>의 정본. 주석(<code>:4</code>)이 "scripts/seed-sheet.mjs와 동일해야 함"이라고 <b>수동 동기화</b>를 요구 중.</li>
+      <li><code>functions/lib/normalize-status.ts:1-3</code> — 동일 상수·타입을 그대로 재정의(중복). 이 모듈에서 상수·타입을 import하는 외부 소비자는 없음(<code>roster.ts:2</code>가 <code>normalizeStatus</code> 함수만, 테스트가 <code>StatusValue</code>만 사용) → 재정의 제거 시 파급 없음.</li>
+      <li><code>scripts/seed-sheet.mjs:176</code>(상태 4종) · <code>:181</code>(방향 2종) — 드롭다운 규칙에 값 하드코딩. Node 24(로컬 v24.11.0)의 TS type-stripping으로 <code>import('./shared/domain.ts')</code>가 동작함을 실증 완료 → 실제 import로 통일 가능. 단 이 스크립트는 <b>재실행 금지</b>(전 탭 리셋, 헤더 경고)라 실행 검증은 하지 않는다.</li>
+      <li>런타임 시트 생성 경로(<code>functions/lib/create-sheet.ts</code>)와 <code>scripts/protect-sheet.mjs</code>에는 상태·방향 값 정의가 없음(확인) — 정의처는 위 3곳이 전부.</li>
+      <li>용어 불일치: <code>shared/normalize-score.ts:7</code>의 <code>kind:'seconds'</code>(셀 정규화 결과, 초 단위) vs <code>shared/domain.ts:13-14</code>의 <code>EventValueKind 'time'</code>(종목 기준). 매핑 지점은 이미 존재 — <code>shared/build-event-score.ts:19-21</code>이 <code>seconds↔time</code>·<code>count↔count</code> 교차검증을 수행하고, <code>domain.ts:17-20</code> 주석이 kind→status 대응을 문서화. <b>normalize-score 쪽에는 이 대응을 알려주는 주석이 없다</b>(이슈가 지적한 "매핑 지점 부재"의 잔여분).</li>
+    </ul>
+    <h3>#96 — 항목별 현재 상태 (PR #22 <code>07442d6</code>에서 상당 부분 기반영)</h3>
+    <ul>
+      <li><span class="done-badge">기반영 ✓</span> <b>NFKC</b> — <code>shared/normalize-score.ts:17</code>, <code>functions/lib/normalize-status.ts:10</code>. 테스트 고정: 전각 콜론·전각 숫자(<code>normalize-score.test.ts:23-32</code>), NFD 자모(<code>:18-22</code>, <code>normalize-status.test.ts:12-16</code>).</li>
+      <li><span class="done-badge">기반영 ✓</span> <b>분 상한</b> — <code>MAX_MINUTES=999</code>(<code>normalize-score.ts:3,39-41</code>). 경계 테스트: <code>999:00</code> 유효(<code>:11</code>), <code>1000:00</code> invalid(<code>:55</code>).</li>
+      <li><span class="done-badge">기반영 ✓</span> <b>blank raw 보존</b> — <code>normalize-score.ts:18</code>이 원본 raw 보존(<code>'   '</code> 테스트 <code>:34</code>). null/undefined는 <code>raw:''</code>(<code>:13</code>).</li>
+      <li><span class="done-badge">부분반영</span> <b>시간 자동변환</b> — 3파트 <code>h:mm:ss</code>는 전용 reason("시트가 시각으로 자동 변환했을 가능성", <code>normalize-score.ts:27-33</code>) + 테스트(<code>:71-77</code>). <b>잔여</b>: <code>오전 1:15</code>·<code>1:15 AM</code> 같은 시각 표기는 파트가 정수가 아니어서 일반 reason("mm:ss 형식이어야 함")으로 빠짐 — 진단 구분 없음.</li>
+      <li><b>미반영</b> — <b>상태 빈칸 vs 이상값</b>: <code>normalizeStatus</code>는 빈칸(미선택)과 이상값(<code>정지</code>)을 모두 <code>unknown</code>으로 접음(<code>normalize-status.ts:15</code>). 소비자 <code>roster.ts:56-64</code>는 <code>rawStatus === ''</code>를 <b>다시 검사</b>해 '상태 없음'/'알 수 없는 상태값'을 구분 — 구분 로직이 정규화기 밖에서 재유도되고 있어 타입이 운영 구분을 표현하지 못함.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>[#94] 상수 단일화 방향</b> — <code>normalize-status.ts</code>가 <code>shared/domain</code>을 import(값 <code>PLAYER_STATUSES</code> + 타입 <code>PlayerStatus</code>). 재export는 하지 않음(외부 소비자 없음 확인, 새 소비자는 domain에서 직접 가져가는 게 규칙). <code>functions/tsconfig.json</code>이 <code>../shared</code>를 include하므로 typecheck·번들 모두 문제 없음(이미 <code>roster.ts</code> 등이 같은 경로로 import 중).</li>
+      <li><b>[#94] seed 스크립트</b> — 하드코딩 값 2곳을 <code>PLAYER_STATUSES.map(v => ({ userEnteredValue: v }))</code>·<code>RANK_DIRECTIONS.map(…)</code>으로 교체하고 <code>../shared/domain.ts</code>를 import. 헤더의 "의존성 없음 — Node 18+" 주석을 "Node 23.6+(TS type-stripping)"로 갱신. <code>domain.ts:4</code> 주석은 "동일해야 함"(수동 동기화)에서 "seed 스크립트도 이걸 import"로 수정. <i>기각한 대안</i>: 주석만 상호 참조(드리프트 위험 존치), JSON 별도 파일(출처가 하나 늘어남).</li>
+      <li><b>[#94] seconds↔time</b> — 런타임 매핑 함수 추가는 <b>불필요</b>: <code>build-event-score.ts</code>가 이미 그 매핑 함수다(#92에서 도입). 남은 것은 표기 명시 — <code>ScoreValue</code>의 <code>'seconds'</code>에 "종목 기준 <code>EventValueKind 'time'</code>과 대응, 교차검증은 build-event-score" 주석, <code>domain.ts</code> <code>EVENT_VALUE_KINDS</code> 주석에 역방향 포인터 추가. 용어 자체는 의도적 유지(셀 정규화 결과의 단위(초) vs 종목 표기 형식으로 의미가 다름).</li>
+      <li><b>[#96] 상태 blank 구분</b> — <code>StatusValue</code>에 <code>{ kind: 'blank'; raw: string }</code> 추가(트림·NFKC 후 빈 문자열; null/undefined 포함, raw는 원본 보존 — unknown·normalize-score의 blank와 대칭). <code>roster.ts</code>는 <code>rawStatus === ''</code> 재유도 대신 <code>kind === 'blank'</code>로 분기하되 <b>reason 문자열('상태 없음' 등)은 그대로 유지</b> → <code>RosterRowIssue</code> 계약·기존 roster 테스트 무변경. <i>기각한 대안</i>: 현행 유지+테스트 고정(소비자가 정규화기 판단을 재유도하는 비대칭이 남음).</li>
+      <li><b>[#96] 시각 표기 구분</b> — <code>parseTime</code> 진입 직후 <code>오전/오후/AM/PM</code> 토큰 감지(NFKC 후라 전각 ＡＭ도 접힘) → invalid + "시트가 시각으로 자동 변환했을 가능성" 계열 reason. 유효한 <code>mm:ss</code>는 숫자만이라 오탐 불가. <i>기각한 대안</i>: <code>h:mm:ss</code>·시각 표기를 시간으로 <b>허용</b> — 입력 의도(mm:ss)와 시트 자동 변환 결과(시각)를 구별할 수 없어 조용히 틀린 값을 만들 수 있음. 진단(reason) 구분이 안전.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li id="step-1" class="done"><span class="tag tag-94">#94</span><code>normalize-status.ts</code>의 로컬 <code>PLAYER_STATUSES</code>·<code>PlayerStatus</code> 정의 제거, <code>shared/domain</code> import로 교체(<code>StatusValue</code>·<code>normalizeStatus</code>는 유지)
+        <span class="files"><code>functions/lib/normalize-status.ts</code></span>
+      </li>
+      <li id="step-2" class="done"><span class="tag tag-94">#94</span>seed 스크립트 드롭다운 값을 <code>domain.ts</code> import로 통일(상태 <code>:176</code>·방향 <code>:181</code>), 헤더 주석 Node 요구 갱신, <code>domain.ts:4</code> 동기화 주석 수정. 스크립트 <b>실행 금지</b> — <code>node --check</code> 구문 검증만
+        <span class="files"><code>scripts/seed-sheet.mjs</code>, <code>shared/domain.ts</code></span>
+      </li>
+      <li id="step-3" class="done"><span class="tag tag-94">#94</span><code>seconds</code>↔<code>time</code> 대응 주석 명시: <code>ScoreValue.'seconds'</code>에 매핑 지점(<code>build-event-score.ts</code>) 포인터, <code>domain.ts</code> <code>EVENT_VALUE_KINDS</code>에 역방향 포인터
+        <span class="files"><code>shared/normalize-score.ts</code>, <code>shared/domain.ts</code></span>
+      </li>
+      <li id="step-4" class="done"><span class="tag tag-96">#96</span><code>StatusValue</code>에 <code>{ kind: 'blank'; raw: string }</code> 추가 — 트림·NFKC 후 빈 문자열(null/undefined 포함) → <code>blank</code>(원본 raw 보존), <code>unknown</code>은 "비어 있지 않은 미지 값"으로 좁힘
+        <span class="files"><code>functions/lib/normalize-status.ts</code></span>
+      </li>
+      <li id="step-5" class="done"><span class="tag tag-96">#96</span><code>roster.ts</code>가 <code>rawStatus === ''</code> 재유도 대신 <code>kind === 'blank'</code> 분기 사용 — issue reason 문자열('상태 없음'/'알 수 없는 상태값: …')은 유지해 계약·기존 테스트 보존
+        <span class="files"><code>functions/lib/roster.ts</code></span>
+      </li>
+      <li id="step-6" class="done"><span class="tag tag-96">#96</span><code>normalize-status.test.ts</code> 개편: 빈 문자열·공백만·null·undefined → <code>blank</code>(raw 보존 단언), <code>unknown</code> 그룹에서 빈 문자열 제거, 트림 전 원본 보존 테스트 유지
+        <span class="files"><code>functions/lib/normalize-status.test.ts</code></span>
+      </li>
+      <li id="step-7" class="done"><span class="tag tag-96">#96</span><code>parseTime</code>에 시각 표기 감지 추가(<code>오전/오후/AM/PM</code>, 3파트 체크보다 앞) → "시트가 시각으로 자동 변환했을 가능성" reason으로 invalid
+        <span class="files"><code>shared/normalize-score.ts</code></span>
+      </li>
+      <li id="step-8" class="done"><span class="tag tag-96">#96</span>테스트 추가: <code>오전 1:15</code> · <code>오전 1:15:00</code> · <code>1:15 AM</code> → invalid + <code>/자동/</code> reason. 기반영 3항목(NFKC·상한·blank raw)의 기존 테스트가 그대로 통과함을 함께 확인
+        <span class="files"><code>shared/normalize-score.test.ts</code></span>
+      </li>
+      <li id="step-9" class="done">전체 검증(<code>npm run typecheck</code> · <code>npm run test</code>) → 이슈별 커밋(#94 → #96) + 플랜 최종본 커밋 → push → PR 오픈(본문에 <b>Closes #94</b> · <b>Closes #96</b>)
+        <span class="files">git · gh</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td><code>seed-sheet.mjs</code>를 검증 중 실수로 실행</td><td>운영 시트 전 탭 리셋(수동 데이터 소실)</td><td>실행 절대 금지 — <code>node --check</code>(구문)와 <code>domain.ts</code> 단독 import 실증(이미 완료)으로만 검증. import는 top-level <code>main()</code>을 실행시키므로 <code>import()</code> 검증도 금지</td></tr>
+        <tr><td>seed 스크립트의 Node 요구 상승(18+ → 23.6+)</td><td>구버전 Node에서 스크립트 실행 불가</td><td>일회성 스크립트(이미 시딩 완료·재실행 금지)라 실질 영향 없음. 헤더 주석에 요구 버전 명시. 로컬 v24.11.0 실증 완료</td></tr>
+        <tr><td><code>StatusValue</code> 유니온 확장이 소비자를 깨뜨림</td><td>unknown만 처리하던 코드가 blank를 놓침</td><td>소비자는 <code>roster.ts</code> 하나뿐(전수 확인). blank 분기를 명시 추가하고 reason 문자열은 유지해 <code>RosterRowIssue</code> 계약·하류(<code>add-players</code>의 이슈 행 회피 등) 무변경</td></tr>
+        <tr><td>새 invalid reason 문자열이 문서·프론트와 어긋남</td><td>표시 문자열 불일치</td><td><code>reason</code>은 자유 문자열 계약(<code>docs/records-schema.html:126</code> — "사유 문자열", 예시만 존재). 기존 3파트 reason과 같은 관용구("자동 변환 의심")를 재사용</td></tr>
+        <tr><td>기존 테스트의 암묵 가정 파손</td><td>test 실패</td><td><code>1:5:30</code> 등 기존 invalid 케이스는 <code>reason: expect.any(String)</code> 단언이라 reason 변화에 둔감. 빈 문자열 → unknown 가정은 <code>normalize-status.test.ts</code>에만 있어 스텝 6에서 의도적으로 개편</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run test</code> — vitest 전체. 신규: 상태 blank 4케이스(''·공백만·null·undefined, raw 보존), 시각 표기 3케이스(<code>오전 1:15</code>·<code>오전 1:15:00</code>·<code>1:15 AM</code> → <code>/자동/</code> reason). 기존: roster 테스트('상태 없음'/'알 수 없는 상태값' reason 불변으로 그대로 통과해야 함), normalize-score 기반영 항목 테스트(전각·999 경계·blank raw) 회귀 확인.</li>
+      <li><code>npm run typecheck</code> — <code>tsc -b</code>(app·node·functions 3프로젝트). 특히 functions에서 <code>shared/domain</code> import 해석과 <code>StatusValue</code> 유니온 확장 후 <code>roster.ts</code> 분기 완전성.</li>
+      <li><code>node --check scripts/seed-sheet.mjs</code> — 구문 검증(실행 아님). <code>domain.ts</code>의 Node import 가능성은 별도 단독 import로 이미 실증.</li>
+      <li>수동 확인 불필요 — API 응답 형태(<code>RecordsResponse</code>)·프론트 계약 변화 없음(reason 문자열은 자유 계약, <code>RosterRowIssue</code> 불변).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li id="done-94-1" class="checked"><b>#94</b> <code>normalize-status.ts</code>가 <code>shared/domain</code>의 상수·타입을 import(중복 정의 제거)</li>
+      <li id="done-94-2" class="checked"><b>#94</b> seed 스크립트 정의처 점검·통일(드롭다운 값 domain import, 실행 없이 검증) — 다른 정의처 없음 확인 포함</li>
+      <li id="done-94-3" class="checked"><b>#94</b> <code>seconds</code>↔<code>time</code> 매핑을 양쪽 주석으로 명시(매핑 지점 = <code>build-event-score.ts</code>)</li>
+      <li id="done-96-1" class="checked"><b>#96</b> NFKC — 기반영(PR #22) 확인, 기존 테스트로 고정 유지</li>
+      <li id="done-96-2" class="checked"><b>#96</b> 시간 자동변환 — 3파트(기반영) + 시각 표기(오전/오후·AM/PM) reason 구분 반영</li>
+      <li id="done-96-3" class="checked"><b>#96</b> 분 상한 999 — 기반영 확인, 경계 테스트 유지</li>
+      <li id="done-96-4" class="checked"><b>#96</b> blank raw 보존 대칭성 — 기반영 확인(normalize-score) + 상태 blank에도 동일 원칙 적용</li>
+      <li id="done-96-5" class="checked"><b>#96</b> 상태 빈칸/이상값 구분 — <code>blank</code>/<code>unknown</code> kind 분리, roster 분기 이전</li>
+      <li id="done-96-6" class="checked"><b>#96</b> 각 결정에 대한 테스트 추가·통과</li>
+      <li id="done-all" class="checked"><b>공통</b> typecheck·test 전체 통과, PR 본문에 Closes #94 · Closes #96</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/94">#94</a> · <a href="https://github.com/damdam6/bernice/issues/96">#96</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>
