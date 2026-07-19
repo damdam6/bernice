@@ -9,6 +9,16 @@ import { quoteSheetName } from './sheetsApi'
 
 export { mapHeaderToEvents, type EventColumn }
 
+// 시트 구조·데이터가 유효하지 않아 안전하게 진행할 수 없는 경우(예: 회차 탭 이름 열 동명 중복,
+// 종목 열 없음). 엔드포인트는 이 타입만 sheet_data_invalid(500)로 매핑하고, 그 외 예기치 못한
+// Error는 internal_error로 분리한다 — 무결성 오류와 코드 버그를 같은 코드로 뭉뚱그리지 않기 위해서다.
+export class SheetIntegrityError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'SheetIntegrityError'
+  }
+}
+
 // 1-based 열 번호 → A1 열 문자 (1→A, 2→B, 26→Z, 27→AA). 점수 열은 실제로 B(2)부터 몇 칸이지만,
 // 열 순서를 가정하지 않고 mapHeaderToEvents가 돌려준 columnIndex로부터 계산한다.
 export function columnLetter(columnNumber: number): string {
@@ -42,7 +52,7 @@ export function locateParticipantRow(rows: string[][], targetNameNFC: string): P
 
   if (matchedRows.length === 0) return { kind: 'not_participant' }
   if (matchedRows.length > 1) {
-    throw new Error(
+    throw new SheetIntegrityError(
       `회차 탭 이름 열에 "${targetNameNFC}"가 ${matchedRows.length}개 행(${matchedRows.join(', ')}행)에 중복으로 있어 대상 행을 특정할 수 없습니다`,
     )
   }
@@ -111,7 +121,7 @@ export function buildWritePlan(
   scores: Record<string, string>,
 ): WritePlan {
   if (eventColumns.length === 0) {
-    throw new Error('종목 열이 없어 쓰기 범위를 만들 수 없습니다.')
+    throw new SheetIntegrityError('종목 열이 없어 쓰기 범위를 만들 수 없습니다.')
   }
   const requestByNfc = new Map(Object.keys(scores).map((key) => [key.normalize('NFC'), scores[key]]))
   const firstColumnIndex = eventColumns[0].columnIndex

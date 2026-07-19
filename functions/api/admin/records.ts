@@ -19,6 +19,7 @@ import { parseRoster } from '../../lib/roster'
 import { isValidRoundTabName } from '../../lib/sheetTabs'
 import { RECORDS_CACHE_KEY } from '../../lib/records-cache'
 import {
+  SheetIntegrityError,
   buildWritePlan,
   evaluateScores,
   locateParticipantRow,
@@ -58,11 +59,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     // 3. 읽기 — GET 경로와 동일한 fetchSheetBundle 재사용(명단·목표·회차 탭).
     const bundle = await fetchSheetBundle(env, env.SHEET_ID)
-    if (bundle.roster === null) return sheetDataInvalid('버니스명단 탭을 찾을 수 없습니다.')
-    if (bundle.goals === null) return sheetDataInvalid('목표 탭을 찾을 수 없습니다.')
+    const rosterTable = bundle.roster
+    const goalsTable = bundle.goals
+    if (rosterTable === null) return sheetDataInvalid('버니스명단 탭을 찾을 수 없습니다.')
+    if (goalsTable === null) return sheetDataInvalid('목표 탭을 찾을 수 없습니다.')
 
-    const { players } = parseRoster(bundle.roster.values)
-    const events = parseGoals(bundle.goals.values)
+    // 파싱 중 나는 Error는 시트 무결성 문제다 — integrity()로 표식해 sheet_data_invalid로,
+    // 그 외 예기치 못한 오류는 internal_error로 구분한다.
+    const { players } = integrity(() => parseRoster(rosterTable.values))
+    const events = integrity(() => parseGoals(goalsTable.values))
 
     // 4. playerId → 명단 선수(이름) 해석. id는 명단 행 위치라 결번 가능 — 값으로 조회.
     const player = players.find((candidate) => candidate.id === playerId)
@@ -90,7 +95,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // 7. 헤더 매핑(열 순서 가정 없음) + 대상 행 찾기. 헤더 이상·동명 중복은 throw → 500.
-    const eventColumns = mapHeaderToEvents(round.values[0], events)
+    const eventColumns = integrity(() => mapHeaderToEvents(round.values[0], events))
     const location = locateParticipantRow(round.values, player.name)
     if (location.kind === 'not_participant') {
       return Response.json(
@@ -110,7 +115,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     await updateValues(env, env.SHEET_ID, plan.range, plan.values)
 
     // 10. 캐시 무효화 — 응답 전 await (waitUntil이면 저장 직후 refetch가 옛 캐시를 받을 수 있다, PRD §09).
-    await caches.default.delete(new Request(RECORDS_CACHE_KEY))
+    // Cache.delete는 URL 문자열을 직접 받는다 — GET 경로가 put한 같은 키(RECORDS_CACHE_KEY)에 매칭된다.
+    await caches.default.delete(RECORDS_CACHE_KEY)
 
     return Response.json({ sessionDate, playerId, name: player.name, scores: scoreMap })
   } catch (err) {
@@ -120,11 +126,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
 type ParsedBody = { ok: true; value: RecordsRequest } | { ok: false; message: string }
 
+// 타입 가드 — 검증 후 `as` 단언 없이 Record<string, unknown>로 좁힌다(배열·null은 객체에서 제외).
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 function parseBody(raw: unknown): ParsedBody {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+  if (!isPlainObject(raw)) {
     return { ok: false, message: '요청 바디가 객체가 아닙니다.' }
   }
-  const body = raw as Record<string, unknown>
+  const body = raw
 
   if (typeof body.sessionDate !== 'string' || body.sessionDate === '') {
     return { ok: false, message: 'sessionDate(문자열)가 필요합니다.' }
@@ -132,7 +143,7 @@ function parseBody(raw: unknown): ParsedBody {
   if (typeof body.playerId !== 'number' || !Number.isInteger(body.playerId) || body.playerId < 1) {
     return { ok: false, message: 'playerId(1 이상의 정수)가 필요합니다.' }
   }
-  if (typeof body.scores !== 'object' || body.scores === null || Array.isArray(body.scores)) {
+  if (!isPlainObject(body.scores)) {
     return { ok: false, message: 'scores(객체)가 필요합니다.' }
   }
 
@@ -159,6 +170,18 @@ function sheetDataInvalid(message: string): Response {
   return Response.json({ error: 'sheet_data_invalid', message }, { status: 500 })
 }
 
+// 알려진 무결성 지점(파싱·헤더 매핑)의 Error만 SheetIntegrityError로 승격한다 — 그 밖의 예기치
+// 못한 Error(코드 버그·런타임 예외)는 그대로 흘려보내 errorResponse가 internal_error로 분리한다.
+function integrity<T>(run: () => T): T {
+  try {
+    return run()
+  } catch (err) {
+    if (err instanceof SheetsApiError || err instanceof SheetIntegrityError) throw err
+    if (err instanceof Error) throw new SheetIntegrityError(err.message)
+    throw err
+  }
+}
+
 function errorResponse(err: unknown): Response {
   if (err instanceof SheetsApiError) {
     return Response.json(
@@ -166,6 +189,8 @@ function errorResponse(err: unknown): Response {
       { status: 502 },
     )
   }
-  if (err instanceof Error) return sheetDataInvalid(err.message)
-  return Response.json({ error: 'internal_error', message: '알 수 없는 오류' }, { status: 500 })
+  // 명확한 무결성 오류만 sheet_data_invalid로, 그 외 예기치 못한 오류는 internal_error로 분리한다.
+  if (err instanceof SheetIntegrityError) return sheetDataInvalid(err.message)
+  const message = err instanceof Error ? err.message : '알 수 없는 오류'
+  return Response.json({ error: 'internal_error', message }, { status: 500 })
 }
