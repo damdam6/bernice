@@ -140,6 +140,7 @@ function PlayerInputContent({
                 <h2 className="text-sm font-bold text-ink">{event.key}</h2>
                 {isExemptable(event.key) && (
                   <ExemptToggle
+                    label={event.key}
                     checked={field.exempt}
                     onChange={(exempt) => updateField(event.key, { ...field, exempt })}
                   />
@@ -150,6 +151,7 @@ function PlayerInputContent({
                 <div className="mt-3">
                   {field.valueKind === 'time' ? (
                     <TimeScoreInput
+                      label={event.key}
                       minutes={field.minutes}
                       seconds={field.seconds}
                       onChange={({ minutes, seconds }) => updateField(event.key, { ...field, minutes, seconds })}
@@ -157,6 +159,7 @@ function PlayerInputContent({
                     />
                   ) : (
                     <CountScoreInput
+                      label={event.key}
                       value={field.count}
                       maxScore={event.maxScore}
                       onChange={(count) => updateField(event.key, { ...field, count })}

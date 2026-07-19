@@ -4,13 +4,16 @@
 const DIGITS_ONLY = /\D/g
 
 interface TimeScoreInputProps {
+  /** 접근성 라벨 접두어 — 종목 카드 하나에 여러 인스턴스가 동시에 렌더되므로 "분"/"초"만으로는
+   *  스크린리더가 어느 종목인지 구분할 수 없다. 호출자가 event.key를 넘긴다. */
+  label: string
   minutes: string
   seconds: string
   onChange: (next: { minutes: string; seconds: string }) => void
   error?: string | null
 }
 
-export function TimeScoreInput({ minutes, seconds, onChange, error }: TimeScoreInputProps) {
+export function TimeScoreInput({ label, minutes, seconds, onChange, error }: TimeScoreInputProps) {
   return (
     <div>
       <div className="flex items-center gap-2">
@@ -18,7 +21,7 @@ export function TimeScoreInput({ minutes, seconds, onChange, error }: TimeScoreI
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          aria-label="분"
+          aria-label={`${label} 분`}
           value={minutes}
           onChange={(e) => onChange({ minutes: e.target.value.replace(DIGITS_ONLY, ''), seconds })}
           className="w-16 rounded-[13px] border border-input-line bg-input-bg px-2 py-2 text-center text-[26px] font-extrabold text-ink"
@@ -28,7 +31,7 @@ export function TimeScoreInput({ minutes, seconds, onChange, error }: TimeScoreI
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          aria-label="초"
+          aria-label={`${label} 초`}
           value={seconds}
           onChange={(e) => onChange({ minutes, seconds: e.target.value.replace(DIGITS_ONLY, '') })}
           className="w-16 rounded-[13px] border border-input-line bg-input-bg px-2 py-2 text-center text-[26px] font-extrabold text-ink"

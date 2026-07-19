@@ -4,13 +4,16 @@
 const DIGITS_ONLY = /\D/g
 
 interface CountScoreInputProps {
+  /** 접근성 라벨 접두어 — 종목 카드 하나에 여러 인스턴스가 동시에 렌더되므로 "개수"만으로는
+   *  스크린리더가 어느 종목인지 구분할 수 없다. 호출자가 event.key를 넘긴다. */
+  label: string
   value: string
   maxScore: number | null
   onChange: (next: string) => void
   error?: string | null
 }
 
-export function CountScoreInput({ value, maxScore, onChange, error }: CountScoreInputProps) {
+export function CountScoreInput({ label, value, maxScore, onChange, error }: CountScoreInputProps) {
   function step(delta: number) {
     const current = value === '' ? 0 : Number(value)
     const next = clamp(current + delta, 0, maxScore)
@@ -22,7 +25,7 @@ export function CountScoreInput({ value, maxScore, onChange, error }: CountScore
       <div className="flex items-center gap-3">
         <button
           type="button"
-          aria-label="감소"
+          aria-label={`${label} 감소`}
           onClick={() => step(-1)}
           className="flex size-[46px] shrink-0 items-center justify-center rounded-[13px] border border-input-line bg-white text-lg font-bold text-ink transition-colors hover:bg-canvas"
         >
@@ -32,14 +35,14 @@ export function CountScoreInput({ value, maxScore, onChange, error }: CountScore
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          aria-label="개수"
+          aria-label={`${label} 개수`}
           value={value}
           onChange={(e) => onChange(e.target.value.replace(DIGITS_ONLY, ''))}
           className="w-16 rounded-[13px] border border-input-line bg-input-bg px-2 py-2 text-center text-[26px] font-extrabold text-ink"
         />
         <button
           type="button"
-          aria-label="증가"
+          aria-label={`${label} 증가`}
           onClick={() => step(1)}
           className="flex size-[46px] shrink-0 items-center justify-center rounded-[13px] border border-input-line bg-white text-lg font-bold text-ink transition-colors hover:bg-canvas"
         >
