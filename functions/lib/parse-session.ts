@@ -36,7 +36,7 @@
 // 미리 걸러내면 그 정보를 복원할 수 없다.
 
 import type { EventDefinition, EventScore, Session, SessionEntry, Player } from '../../shared/domain'
-import { normalizeScore } from './normalize-score'
+import { normalizeScore } from '../../shared/normalize-score'
 
 const NAME_HEADER = '이름'.normalize('NFC')
 
