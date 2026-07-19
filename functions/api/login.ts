@@ -23,9 +23,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   // 차단 검사는 바디 파싱보다 먼저 — 차단 중에는 패스코드 검증 경로가 아예 돌지 않는다.
   const kv = env.LOGIN_RATE_LIMIT
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown'
+  let hasFailures = false
   if (kv) {
-    const { blocked, retryAfterSeconds } = await checkLoginBlock(kv, ip)
-    if (blocked) return tooManyAttempts(retryAfterSeconds)
+    const status = await checkLoginBlock(kv, ip)
+    if (status.blocked) return tooManyAttempts(status.retryAfterSeconds)
+    hasFailures = status.hasFailures
   }
 
   let code: unknown
@@ -43,7 +45,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (!role) return failed(kv, ip)
 
   // 성공은 실패 흔적을 지운다 — 공유 IP에서 정상 이용자의 오입력이 누적돼 남지 않도록.
-  if (kv) await clearLoginFailures(kv, ip)
+  // 기록이 있을 때만 delete: 실패 이력 없는 로그인에서 불필요한 KV 쓰기를 아낀다.
+  if (kv && hasFailures) await clearLoginFailures(kv, ip)
 
   const token = await issueSessionToken(env.SESSION_SECRET, role)
   // 프로덕션(https)에서만 Secure — wrangler pages dev의 http://localhost에선 브라우저가 저장 못 함.

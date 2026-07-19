@@ -131,7 +131,7 @@
       <li>상수: <code>MAX_FAILURES = 5</code>, <code>WINDOW_SECONDS = 600</code>(10분). KV 키 <code>login-fail:{ip}</code>, 값 <code>{ count, resetAt }</code> JSON.</li>
       <li><b>차단 판정</b>: 핸들러 진입 시 <code>count ≥ MAX_FAILURES</code>이고 <code>now &lt; resetAt</code>이면 429 + <code>Retry-After: resetAt−now</code> + <code>{ error: 'too_many_attempts' }</code>. 차단 중에는 카운터를 갱신하지 않는다(차단 연장 없음 → 마지막 실패로부터 10분 뒤 자동 해제).</li>
       <li><b>실패 기록</b>: 401(패스코드 불일치)마다 <code>count+1</code>, <code>resetAt = now + WINDOW</code>, <code>expirationTtl = WINDOW</code>로 put — 슬라이딩 윈도우(연속 실패가 이어지면 창이 밀린다). TTL이 항상 600초라 KV 최소 TTL(60초) 제약과 충돌 없음.</li>
-      <li><b>성공/무관 요청</b>: 200 성공 시 키 delete(정상 이용자 오입력 흔적 초기화). 400(비-JSON)은 패스코드 추측이 아니므로 카운트하지 않음.</li>
+      <li><b>성공/무관 요청</b>: 200 성공 시 키 delete(정상 이용자 오입력 흔적 초기화). 400(비-JSON)은 패스코드 추측이 아니므로 카운트하지 않음. <b>리뷰 반영(PR #81)</b>: 차단 검사가 돌려주는 <code>hasFailures</code>로 실패 기록이 있을 때만 delete — 이력 없는 로그인의 불필요한 KV 쓰기 제거.</li>
       <li><b>키 식별자</b>: <code>CF-Connecting-IP</code>, 없으면 <code>'unknown'</code>(로컬 개발 공용 버킷 — 무해).</li>
       <li><b>fail-open</b>: <code>env.LOGIN_RATE_LIMIT</code>(KVNamespace)이 미바인딩이면 제한 로직 전체를 건너뛴다. 바인딩 생성 전에도 배포가 깨지지 않고, 로컬 dev는 wrangler가 KV를 로컬 시뮬레이션해준다.</li>
       <li>테스트 주입을 위해 시간은 <code>now</code> 인자(기본 <code>Date.now()</code>)로 받는다.</li>

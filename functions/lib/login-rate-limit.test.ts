@@ -19,6 +19,17 @@ describe('login-rate-limit', () => {
     expect(await checkLoginBlock(kv, IP, T0 + MAX_FAILURES)).toEqual({
       blocked: false,
       retryAfterSeconds: 0,
+      hasFailures: true,
+    })
+  })
+
+  it('실패 기록이 없으면 hasFailures=false', async () => {
+    const kv = makeMockKV()
+
+    expect(await checkLoginBlock(kv, IP, T0)).toEqual({
+      blocked: false,
+      retryAfterSeconds: 0,
+      hasFailures: false,
     })
   })
 
@@ -48,7 +59,9 @@ describe('login-rate-limit', () => {
     for (let i = 0; i < MAX_FAILURES; i++) await recordLoginFailure(kv, IP, T0)
 
     const afterWindow = T0 + WINDOW_SECONDS * 1000
-    expect((await checkLoginBlock(kv, IP, afterWindow)).blocked).toBe(false)
+    const status = await checkLoginBlock(kv, IP, afterWindow)
+    expect(status.blocked).toBe(false)
+    expect(status.hasFailures).toBe(false) // 논리 만료된 기록은 없는 것으로 본다
 
     // 만료 후 첫 실패는 1회째 — 임계까지 다시 MAX_FAILURES번 필요하다.
     await recordLoginFailure(kv, IP, afterWindow)

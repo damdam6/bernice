@@ -24,6 +24,7 @@ interface FailureRecord {
 export interface BlockStatus {
   blocked: boolean
   retryAfterSeconds: number // blocked=false면 0
+  hasFailures: boolean // 유효한(미만료) 실패 기록 존재 여부 — 성공 시 clear 호출을 아끼는 데 쓴다
 }
 
 function keyFor(ip: string): string {
@@ -46,8 +47,9 @@ async function readRecord(kv: RateLimitKV, ip: string, now: number): Promise<Fai
 
 export async function checkLoginBlock(kv: RateLimitKV, ip: string, now = Date.now()): Promise<BlockStatus> {
   const record = await readRecord(kv, ip, now)
-  if (!record || record.count < MAX_FAILURES) return { blocked: false, retryAfterSeconds: 0 }
-  return { blocked: true, retryAfterSeconds: Math.ceil((record.resetAt - now) / 1000) }
+  if (!record || record.count < MAX_FAILURES)
+    return { blocked: false, retryAfterSeconds: 0, hasFailures: record !== null }
+  return { blocked: true, retryAfterSeconds: Math.ceil((record.resetAt - now) / 1000), hasFailures: true }
 }
 
 export async function recordLoginFailure(kv: RateLimitKV, ip: string, now = Date.now()): Promise<void> {

@@ -171,6 +171,21 @@ describe('POST /api/login — rate limiting', () => {
     expect((await fail(env)).status).toBe(429)
   })
 
+  it('실패 이력이 없는 성공 로그인은 KV delete를 호출하지 않는다', async () => {
+    const env = rateLimitedEnv()
+    const kv = env.LOGIN_RATE_LIMIT!
+    let deletes = 0
+    const originalDelete = kv.delete.bind(kv)
+    kv.delete = async (key) => {
+      deletes++
+      await originalDelete(key)
+    }
+
+    const res = await onRequestPost(makeContext({ code: TEAM_PASSCODE }, { env, ip: IP }))
+    expect(res.status).toBe(200)
+    expect(deletes).toBe(0)
+  })
+
   it('IP가 다르면 카운터가 독립이다', async () => {
     const env = rateLimitedEnv()
     for (let i = 0; i < 5; i++) await fail(env)
