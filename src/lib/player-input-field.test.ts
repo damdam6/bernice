@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { EventDefinition, EventScore, RankDirection } from '../../shared/domain'
-import { buildFieldRaw, initFieldState, initialInvalidNotice } from './player-input-field'
+import { buildFieldRaw, initFieldState, initialFieldNotice } from './player-input-field'
 
-function ev(valueKind: 'count' | 'time', direction: RankDirection = '높을수록'): EventDefinition {
-  return { key: '종목', valueKind, target: '0', targetValue: 0, maxScore: 10, direction }
+function ev(
+  valueKind: 'count' | 'time',
+  key = '종목',
+  direction: RankDirection = '높을수록',
+): EventDefinition {
+  return { key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction }
 }
 
 const RECORDED_TIME: EventScore = { status: 'recorded', value: 72, display: '1:12' }
@@ -41,7 +45,7 @@ describe('initFieldState', () => {
     })
   })
 
-  it('시간 종목 invalid → 빈 필드(원본은 initialInvalidNotice가 별도 안내)', () => {
+  it('시간 종목 invalid → 빈 필드(원본은 initialFieldNotice가 별도 안내)', () => {
     expect(initFieldState(ev('time'), INVALID)).toEqual({
       valueKind: 'time',
       minutes: '',
@@ -50,12 +54,25 @@ describe('initFieldState', () => {
     })
   })
 
-  it('시간 종목 exempt → 빈 필드 + exempt true', () => {
-    expect(initFieldState(ev('time'), EXEMPT)).toEqual({
+  it('면제 가능 종목(45도패스캐치) exempt → 빈 필드 + exempt true', () => {
+    expect(initFieldState(ev('count', '45도패스캐치'), EXEMPT)).toEqual({
+      valueKind: 'count',
+      count: '',
+      exempt: true,
+    })
+  })
+
+  it('면제 불가 종목이 exempt여도(시트 직접 편집 유래) exempt는 항상 false — 토글 없이 숨겨지는 걸 막는다', () => {
+    expect(initFieldState(ev('time', '드리블셔틀런'), EXEMPT)).toEqual({
       valueKind: 'time',
       minutes: '',
       seconds: '',
-      exempt: true,
+      exempt: false,
+    })
+    expect(initFieldState(ev('count', '골밑슛'), EXEMPT)).toEqual({
+      valueKind: 'count',
+      count: '',
+      exempt: false,
     })
   })
 
@@ -67,29 +84,30 @@ describe('initFieldState', () => {
     })
   })
 
-  it('개수 종목 exempt → 빈 count + exempt true', () => {
-    expect(initFieldState(ev('count'), EXEMPT)).toEqual({
-      valueKind: 'count',
-      count: '',
-      exempt: true,
-    })
-  })
-
   it('개수 종목 unmeasured/invalid → 빈 count', () => {
     expect(initFieldState(ev('count'), UNMEASURED)).toEqual({ valueKind: 'count', count: '', exempt: false })
     expect(initFieldState(ev('count'), INVALID)).toEqual({ valueKind: 'count', count: '', exempt: false })
   })
 })
 
-describe('initialInvalidNotice', () => {
-  it('invalid가 아니면 null', () => {
-    expect(initialInvalidNotice(RECORDED_TIME)).toBeNull()
-    expect(initialInvalidNotice(EXEMPT)).toBeNull()
-    expect(initialInvalidNotice(UNMEASURED)).toBeNull()
+describe('initialFieldNotice', () => {
+  it('invalid도 아니고 면제 불가 종목의 exempt도 아니면 null', () => {
+    expect(initialFieldNotice(ev('time'), RECORDED_TIME)).toBeNull()
+    expect(initialFieldNotice(ev('time'), UNMEASURED)).toBeNull()
+    expect(initialFieldNotice(ev('count', '45도패스캐치'), EXEMPT)).toBeNull()
   })
 
   it('invalid면 원본·사유를 보존', () => {
-    expect(initialInvalidNotice(INVALID)).toEqual({ display: '1:75', reason: '초 값이 범위를 벗어남 (0-59)' })
+    expect(initialFieldNotice(ev('time'), INVALID)).toEqual({
+      display: '1:75',
+      reason: '초 값이 범위를 벗어남 (0-59)',
+    })
+  })
+
+  it('면제 불가 종목이 exempt면 원본 "면제"와 사유를 안내', () => {
+    const notice = initialFieldNotice(ev('count', '골밑슛'), EXEMPT)
+    expect(notice?.display).toBe('면제')
+    expect(notice?.reason).toEqual(expect.any(String))
   })
 })
 

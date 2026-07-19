@@ -16,7 +16,7 @@ import { ExemptToggle } from '../../components/ExemptToggle'
 import { TimeScoreInput } from '../../components/TimeScoreInput'
 import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
 import { isExemptable } from '../../lib/exemptable-events'
-import { buildFieldRaw, initFieldState, initialInvalidNotice, type FieldState } from '../../lib/player-input-field'
+import { buildFieldRaw, initFieldState, initialFieldNotice, type FieldState } from '../../lib/player-input-field'
 import { saveRecord } from '../../lib/records-write-api'
 
 export default function RecordsPlayerInput() {
@@ -131,7 +131,7 @@ function PlayerInputContent({
         {events.map((event) => {
           const field = fields[event.key]
           const score = scores[event.key]
-          const notice = initialInvalidNotice(entry.scores[event.key])
+          const notice = initialFieldNotice(event, entry.scores[event.key])
           const isBlank = buildFieldRaw(field) === ''
 
           return (
