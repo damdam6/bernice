@@ -16,6 +16,10 @@ cp .dev.vars.example .dev.vars   # 실값 채우기 (아래 시크릿 참고)
 npm run dev:all   # 빌드 후 vite(5173) + wrangler pages dev(8788) 동시 실행
 ```
 
+> `package-lock.json`은 Linux 배포에 필요한 optional native package를 포함해야 한다.
+> 락파일을 다시 만들 때는 기존 `node_modules`와 락파일을 제거한 깨끗한 상태에서
+> `npm install`을 실행하고, 단일 플랫폼용으로 축소된 락파일은 커밋하지 않는다.
+
 - 개발 중 UI는 http://localhost:5173 (HMR), `/api/*`는 vite 프록시로 8788의 Pages Functions에 위임.
 - 따로 띄우려면: `npm run build`(최초 1회, dist 필요) → `npm run dev:api` + `npm run dev`.
 - 배포 산출물 확인: `npm run build` 후 `npx wrangler pages dev --port 8788` → http://localhost:8788
