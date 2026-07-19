@@ -106,6 +106,23 @@ describe('updateValues', () => {
     expect(payload.scope).toBe('https://www.googleapis.com/auth/spreadsheets')
   })
 
+  it('valueInputOption=USER_ENTERED를 넘기면 URL에 그대로 반영한다 (참조 수식 쓰기용)', async () => {
+    const { putCalls } = stubWriteFetch([{ status: 200, body: {} }])
+    const formulaRange = "'2025-08-16'!A3:A4"
+    const formulaValues = [["='버니스명단'!A3"], ["='버니스명단'!A4"]]
+
+    await updateValues(makeEnv(), SHEET_ID, formulaRange, formulaValues, 'USER_ENTERED')
+
+    const [{ url, init }] = putCalls
+    expect(url).toContain('valueInputOption=USER_ENTERED')
+    expect(url).not.toContain('valueInputOption=RAW')
+    expect(JSON.parse(String(init.body))).toEqual({
+      range: formulaRange,
+      majorDimension: 'ROWS',
+      values: formulaValues,
+    })
+  })
+
   it('429 1회 후 성공하면 재시도로 복구된다', async () => {
     vi.useFakeTimers()
     const { putCalls } = stubWriteFetch([
