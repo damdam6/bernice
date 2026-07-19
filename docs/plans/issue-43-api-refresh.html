@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#43 P2 — POST /api/refresh (records 캐시 무효화) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/43">#43</a></span><span class="type-chip">기능 개선</span>
+    <h1>P2 — POST /api/refresh (records 캐시 무효화)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/43-api-refresh</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>팀원이 회차 입력 직후 최신 랭킹을 보고 싶을 때 수동으로 캐시를 비울 수 있는 <code>POST /api/refresh</code>를 새로 만든다. 기존 쓰기 API(W3 <code>POST /api/admin/records</code> 등)와 같은 <code>RECORDS_CACHE_KEY</code>를 <code>functions/lib/records-cache.ts</code>에서 그대로 import해 <code>caches.default.delete</code>로 지우고, 삭제 여부를 JSON으로 응답한다. 인증은 <code>/api/*</code> 전체를 감싸는 <code>_middleware.ts</code>(#42)에 전부 위임하며, <code>/api/admin/*</code>이 아니므로 관리자뿐 아니라 로그인한 모든 세션(team·admin)이 호출할 수 있다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>/api/records</code>(<code>functions/api/records.ts:16-30</code>)는 <code>caches.default</code>를 <code>RECORDS_CACHE_KEY</code>(<code>functions/lib/records-cache.ts:7</code>, <code>'https://bernice-cache.internal/records/v1'</code>) 고정 URL로 조회하고, 미스 시 6시간 TTL로 <code>cache.put</code>한다. 무효화는 현재 쓰기 API 3곳에만 있다:</p>
+    <ul>
+      <li><code>functions/api/admin/records.ts:119</code> — <code>await caches.default.delete(RECORDS_CACHE_KEY)</code> (문자열 그대로, 응답 전 await)</li>
+      <li><code>functions/api/admin/add-players.ts:86</code> — <code>await caches.default.delete(new Request(RECORDS_CACHE_KEY))</code></li>
+      <li><code>functions/api/admin/create-sheet.ts:89</code> — <code>context.waitUntil(caches.default.delete(new Request(RECORDS_CACHE_KEY)))</code></li>
+    </ul>
+    <p>세 곳 모두 "쓰기 성공 후 무효화"라는 부수 효과이지 무효화 자체가 API 표면은 아니다. 이 이슈가 요구하는 것은 무효화만을 목적으로 하는 독립 엔드포인트다. PRD(<code>docs/prd-record-input.html:104</code>)도 "수동 새로고침 <code>/api/refresh</code>는 P2 예정"이라고 이 엔드포인트를 명시적으로 예고해 두었다.</p>
+    <p>인증 미들웨어(<code>functions/api/_middleware.ts:23,37-42</code>)는 <code>/api/login</code>·<code>/api/health</code>만 예외로 통과시키고 나머지 <code>/api/*</code>는 세션 검증(401), <code>/api/admin/*</code>만 추가로 role 검증(403)한다. <code>/api/refresh</code>는 admin 하위 경로가 아니므로 401 게이트만 적용되고, 이슈 본문 그대로 "자체 검증 없음"이 성립한다.</p>
+    <p>가장 단순한 기존 엔드포인트는 <code>functions/api/health.ts:1-2</code> — <code>Env</code> 타입도 선언하지 않고 <code>PagesFunction</code> 하나로 끝나는 한 줄짜리 핸들러다. <code>/api/refresh</code>도 Sheets 접근이나 <code>Env</code>가 필요 없으므로 같은 최소 형태가 맞는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>파일 위치</b>: <code>functions/api/refresh.ts</code> (이슈 지정 경로 그대로, admin 하위 아님).</li>
+      <li><b>메서드</b>: <code>onRequestPost</code>만 — 이슈 제목이 <code>POST /api/refresh</code>로 명시.</li>
+      <li><b>구현</b>: <code>RECORDS_CACHE_KEY</code>를 import해 <code>await caches.default.delete(RECORDS_CACHE_KEY)</code> 한 줄. 문자열 키 그대로 넘기는 형태를 택한다 — 가장 최근에 작성된 <code>admin/records.ts:119</code>(W3, 세 패턴 중 최신 커밋)가 이 형태이고, <code>Cache.delete()</code>는 <code>RequestInfo | URL</code>을 받으므로 <code>new Request(...)</code> 래핑은 불필요한 군더더기다.</li>
+      <li><b>응답</b>: 이슈 완료 조건 "삭제 여부 JSON 응답"에 맞춰 <code>{ deleted: boolean }</code>. <code>Cache.delete()</code>가 그 자체로 "지울 게 있었는지"를 boolean으로 돌려주므로 별도 존재 확인 없이 반환값을 그대로 얹는다.</li>
+      <li><b>waitUntil로 응답을 안 막을지 여부</b>: 막는다(await). <code>create-sheet.ts</code>는 무효화가 부수 효과라 <code>waitUntil</code>로 응답을 안 막지만, <code>/api/refresh</code>는 무효화 자체가 요청의 목적이자 응답 페이로드(<code>deleted</code>)의 근거이므로 완료를 기다려야 정확한 값을 응답할 수 있다. PRD §09의 "응답 전에 await" 원칙과도 일치.</li>
+      <li><b>인증 자체 검증 안 함</b>: 이슈 본문이 명시한 요구사항. 미들웨어가 이미 <code>/api/refresh</code>를 401 게이트에 포함하므로 핸들러 안에서 세션/역할을 다시 확인하지 않는다 — <code>health.ts</code>처럼 <code>Env</code> 타입도 선언하지 않는다.</li>
+      <li><b>기각한 대안</b>: 요청 바디 검증이나 rate limit 추가 — 이슈 범위(S) 밖이고 기존 3개 무효화 호출부에도 없는 패턴이라 이 엔드포인트만 새 관례를 만들 이유가 없다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ 새 핸들러 작성 — <code>RECORDS_CACHE_KEY</code> import, <code>onRequestPost</code>가 <code>caches.default.delete(RECORDS_CACHE_KEY)</code> 결과를 <code>{ deleted }</code>로 응답. <code>health.ts</code>처럼 <code>Env</code> 선언 없이 최소 형태 유지. 계획대로 구현됨.
+        <span class="files"><code>functions/api/refresh.ts</code></span>
+      </li>
+      <li>✅ 단위 테스트 작성 — <code>records.test.ts</code>(캐시 전역 스텁)와 <code>add-players.test.ts</code>(delete 호출 인자 검증) 패턴을 재사용: <code>vi.stubGlobal('caches', { default: { delete: vi.fn(...) } })</code>로 <code>true</code>/<code>false</code> 두 경우 각각 <code>{ deleted: true }</code>/<code>{ deleted: false }</code> 200 응답과 <code>RECORDS_CACHE_KEY</code>가 정확한 인자로 호출됐는지 검증. 계획대로 구현됨.
+        <span class="files"><code>functions/api/refresh.test.ts</code></span>
+      </li>
+      <li>✅ <code>npm run typecheck</code>·<code>npm test</code>·<code>npm run build</code>로 전체 회귀 확인. 실행 노트: 워크트리에 <code>node_modules</code>가 불완전(<code>lucide-react</code> 누락)해 최초 <code>typecheck</code>가 이 이슈와 무관한 이유로 실패 — <code>npm install</code> 후 재실행해 통과 확인. typecheck·463 vitest 테스트(신규 2건 포함)·build 전부 그린.
+        <span class="files"><code>package.json</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>Cache API는 콜로(데이터센터) 로컬</td><td>다른 콜로에 남은 캐시는 <code>/api/refresh</code> 호출로도 안 지워지고 TTL(6시간)까지 생존 — PRD §09에 이미 문서화된 기존 한계</td><td>이 이슈에서 새로 해결하지 않음(PRD 명시). 필요 시 별도 이슈로 분리</td></tr>
+        <tr><td>인증 자체 검증 없음</td><td>team 세션도 캐시를 임의로 비울 수 있음(관리자 전용 아님)</td><td>이슈 요구사항 그대로 — 캐시 삭제는 부작용이 크지 않은(재조립만 유발) 안전한 연산이라 team 허용이 의도된 설계</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li>vitest: 캐시에 항목이 있어 <code>delete</code>가 <code>true</code>를 돌려줄 때 200 + <code>{ deleted: true }</code> 확인.</li>
+      <li>vitest: 캐시가 비어 <code>delete</code>가 <code>false</code>를 돌려줄 때 200 + <code>{ deleted: false }</code> 확인 (에러가 아님을 확인 — 무효화할 게 없어도 실패가 아니다).</li>
+      <li>vitest: <code>caches.default.delete</code>가 <code>RECORDS_CACHE_KEY</code>(<code>'https://bernice-cache.internal/records/v1'</code>) 값으로 정확히 호출됐는지 인자 검증 — 다른 쓰기 API와 같은 키를 지우는지가 이 이슈의 핵심 계약.</li>
+      <li><code>npm run typecheck</code> — <code>Env</code> 미선언 최소 핸들러가 <code>PagesFunction</code> 타입과 충돌 없는지.</li>
+      <li>회귀: 기존 캐시 관련 테스트(<code>records.test.ts</code>, <code>admin/records.test.ts</code>, <code>admin/add-players.test.ts</code>, <code>admin/create-sheet.test.ts</code>) 전부 그린 유지.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>✅ 호출 시 <code>RECORDS_CACHE_KEY</code> 캐시를 삭제하고 삭제 여부(<code>{ deleted: boolean }</code>)를 JSON으로 응답한다.</li>
+      <li>✅ vitest 테스트로 삭제 성공/실패(캐시 없음) 두 경우와 호출 인자를 검증한다.</li>
+      <li>✅ 인증은 <code>_middleware.ts</code>(#42)에 전적으로 위임하며 핸들러 자체 검증이 없다 — <code>/api/admin/*</code>이 아니므로 team 세션도 401 없이 통과한다.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/43">#43</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>
