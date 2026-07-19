@@ -44,9 +44,13 @@ export function shouldRetryRecordsQuery(failureCount: number, error: unknown): b
   return failureCount < 2
 }
 
+// 소비 측(예: LoginGate의 로그인 성공 후 invalidateQueries)이 문자열을 중복 기재하지
+// 않고 이 키를 그대로 재사용하도록 export한다 — 키가 바뀌어도 한 곳만 고치면 된다.
+export const RECORDS_QUERY_KEY = ['records'] as const
+
 export function useRecords() {
   return useQuery<RecordsResponse, ApiError>({
-    queryKey: ['records'],
+    queryKey: RECORDS_QUERY_KEY,
     queryFn: ({ signal }) => fetchRecords(signal),
     staleTime: 5 * 60 * 1000,
     retry: shouldRetryRecordsQuery,

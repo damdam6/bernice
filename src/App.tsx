@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminLayout } from './components/layout/AdminLayout'
-import { MainLayout } from './components/layout/MainLayout'
+import { LoginGate } from './components/auth/LoginGate'
 import Home from './pages/Home.tsx'
 import Rankings from './pages/Rankings.tsx'
 import Players from './pages/Players.tsx'
@@ -16,7 +16,7 @@ import AddPlayers from './pages/admin/AddPlayers.tsx'
 export default function App() {
   return (
     <Routes>
-      <Route element={<MainLayout />}>
+      <Route element={<LoginGate />}>
         <Route path="/" element={<Home />} />
         <Route path="/rankings" element={<Rankings />} />
         <Route path="/players" element={<Players />} />

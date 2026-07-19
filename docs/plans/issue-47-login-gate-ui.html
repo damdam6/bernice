@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#47 P2 — 로그인 게이트 UI — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.ok::before { background: var(--ok); }
+  .done-list li.ok::after {
+    content: "✓"; position: absolute; left: 4px; top: 4px;
+    color: #fff; font-size: 11px; font-weight: 700; line-height: 1;
+  }
+  .status-banner {
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 14px 20px; margin-top: 18px; font-size: 0.92rem;
+  }
+  .status-banner b { color: var(--accent); }
+  .step-note { display: block; margin-top: 4px; font-size: 0.83rem; color: var(--ok); }
+  .step-note.warn { color: var(--warn); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/47">#47</a></span><span class="type-chip">기능 개선</span>
+    <h1>P2 — 로그인 게이트 UI</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/47-login-gate-ui</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-18</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>로그인 게이트 UI는 팀 전용 열람 화면(홈·랭킹·개인) 진입 시 인증 여부를 확인해, 미인증 상태면 데이터 화면 대신 팀 패스코드 입력 화면을 전면 노출하고, 인증 상태면 기존 3탭 레이아웃(MainLayout)을 그대로 보여주는 게이트 컴포넌트를 추가하는 작업이다. 인증 판정은 새 엔드포인트 없이 기존 <code>useRecords</code> 훅(#46)이 던지는 <code>UnauthorizedError</code>를 그대로 활용하고, 로그인 성공 시 <code>POST /api/login</code>(#41)이 발급한 세션 쿠키를 반영해 <code>records</code> 쿼리를 무효화·재조회함으로써 게이트가 자동으로 해제되고 원래 화면으로 복귀하도록 한다. 관리자 로그인 화면(#67)은 이 작업 범위가 아니다.</p>
+  </section>
+
+  <div class="status-banner">
+    <b>✅ 구현·테스트·검증 완료 (2026-07-19).</b> vitest 전체 <b>325개 통과</b>(신설
+    <code>LoginGate.test.tsx</code> 6개 포함), <code>tsc -b</code> typecheck 무오류,
+    <code>vite build</code> 정상. <code>vite</code> 개발 서버 + 브라우저로 게이트 화면(아이콘·카피·입력·오답
+    에러 메시지)을 직접 렌더해 눈으로 확인 — <code>#42</code> 미머지로 실제 401 왕복까지는 못
+    보고, 그 부분은 fetch 스텁 단위 테스트로 대체 검증(리스크 §5 참고).
+  </div>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>라우팅 구조 — <code>src/App.tsx:19-23</code>에서 <code>/</code>·<code>/rankings</code>·<code>/players</code> 3개 라우트가 <code>&lt;Route element={&lt;MainLayout /&gt;}&gt;</code>로 감싸여 있고, 관리자 스택은 <code>src/App.tsx:26-34</code>의 별도 <code>&lt;Route element={&lt;AdminLayout /&gt;}&gt;</code>로 완전히 분리돼 있다 — 이 이슈는 전자에만 손을 댄다.</li>
+      <li>401 감지는 이미 확정 — <code>src/hooks/useRecords.ts:21-25</code>의 <code>fetchRecords</code>가 401을 <code>UnauthorizedError</code>(<code>src/lib/api-error.ts:14-19</code>)로 던지고, <code>shouldRetryRecordsQuery</code>(<code>src/hooks/useRecords.ts:42-45</code>)가 4xx 재시도를 막아 즉시 에러 상태로 정착한다(#46 완료).</li>
+      <li><code>POST /api/login</code>은 이미 구현돼 있다(#41 완료, <code>functions/api/login.ts:16-40</code>) — <code>{code}</code> JSON을 받아 성공 시 <code>{ok:true, role}</code> + <code>Set-Cookie</code>(HttpOnly·SameSite=Lax), 실패 시 401 <code>{error:'invalid_passcode', message}</code>를 돌려준다.</li>
+      <li><code>functions/api/records.ts:1-3</code> 주석대로 <code>/api/records</code>는 아직 인증 검사를 하지 않는다 — 인증 미들웨어는 별도 이슈(#42, OPEN)이고 #47의 의존성 목록엔 없다. 즉 이 작업은 "401이 오면"이라는 이미 확정된 계약에만 반응하도록 짜고, 실제로 401이 발생하는 시점(#42 머지 여부)과 독립적으로 완결돼야 한다.</li>
+      <li><code>src/pages/Home.tsx</code>·<code>Rankings.tsx</code>·<code>Players.tsx</code>는 전부 P0/P3 스텁이라 아직 <code>useRecords</code>를 호출하지 않는다 — 따라서 게이트가 인증 신호로 쓸 수 있는 유일한 실제 쿼리는 <code>useRecords</code>뿐이다.</li>
+      <li><code>src/index.css:11-49</code> <code>@theme</code> 토큰엔 카드 보더(<code>#edeef2</code>)는 있지만 입력 필드 전용 배경(<code>#f6f7f9</code>)·보더(<code>#e3e5ec</code>) 토큰(<code>docs/prd-design.html:134</code>)이 없다 — 이 화면이 앱 최초의 텍스트 입력 UI라 토큰 추가가 필요하다.</li>
+      <li><code>src/components/common/Spinner.tsx</code>·<code>ErrorPanel.tsx</code>·<code>EmptyState.tsx</code>(#49)는 이미 인디고 테마로 확정돼 재사용 가능. <code>Spinner</code>는 현재 어디서도 실사용되지 않고 정의만 존재한다 — 게이트의 초기 로딩 상태가 첫 소비처가 된다.</li>
+      <li><code>docs/prd-design.html</code> §09(라인 289)에 "팀 패스코드 게이트 화면 — 관리자 로그인 화면과 같은 레이아웃 문법(아이콘 블록+입력+버튼)으로 1화면 추가 설계"가 열린 항목으로 명시돼 있어, 이번 구현이 그 설계를 확정짓는다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>채택안</b> — <code>LoginGate</code>라는 새 컴포넌트를 만들어 <code>App.tsx</code>의 3탭 라우트 그룹 element로 <code>MainLayout</code> 대신 배치한다. <code>LoginGate</code>는 내부에서 <code>useRecords()</code>를 호출해:</p>
+    <ul>
+      <li><code>isPending</code> → 전면 로딩(<code>Spinner</code>)</li>
+      <li><code>error instanceof UnauthorizedError</code> → 전면 패스코드 입력 화면</li>
+      <li>그 외(성공 또는 401이 아닌 다른 실패) → <code>&lt;MainLayout /&gt;</code> 렌더(그 안의 <code>&lt;Outlet/&gt;</code>이 원래 매치된 라우트를 그대로 보여줌)</li>
+    </ul>
+    <p>라우트 자체는 바뀌지 않으므로(주소창 URL 유지) 로그인 성공 후 "원래 화면 복귀"가 리다이렉트 없이 자연스럽게 이뤄진다 — 제출 성공 시 <code>queryClient.invalidateQueries({'{'}queryKey:['records']{'}'})</code>가 같은 <code>useRecords</code> 관찰자를 재조회시키고, 성공하면 <code>LoginGate</code>가 자동으로 <code>MainLayout</code> 분기로 다시 렌더된다.</p>
+    <p><b>거부한 대안</b></p>
+    <ul>
+      <li>별도 <code>/api/whoami</code> 세션 확인 엔드포인트 신설 — 이슈 의존성(#41·#46)에 없고, #46이 이미 확정한 401 계약을 <code>useRecords</code>가 그대로 노출하므로 새 API 표면을 만들 필요가 없다.</li>
+      <li><code>&lt;Navigate&gt;</code> 리다이렉트로 <code>/login</code> 전용 라우트 분리 — 인증 상태가 바뀔 때마다 URL을 오가야 해서 "원래 화면 복귀"가 라우터 히스토리에 의존하게 되고, 목업 부재 화면(§09)의 취지("데이터 화면 자리에 게이트만 노출")와도 어긋난다. 레이아웃 스위치가 더 단순하고 URL 불변이라 안전하다.</li>
+      <li>인증 상태를 별도 Context/전역 상태로 관리 — TanStack Query가 이미 <code>records</code> 쿼리의 캐시·재시도·무효화를 담당하므로, 별도 상태를 두면 두 소스가 어긋날 위험(예: 쿠키는 만료됐는데 로컬 상태는 "인증됨")이 생긴다. 쿼리 상태를 단일 진실 공급원으로 둔다.</li>
+    </ul>
+    <p>패스코드 화면 자체는 확정 목업이 없어(§09) 관리자 로그인과 같은 레이아웃 문법(아이콘 블록 + 안내 카피 + password 입력 + 에러 문구 + 버튼)으로 새로 설계한다: 자물쇠 아이콘(<code>lucide-react</code> <code>Lock</code>) + "팀 패스코드를 입력하면 기록을 볼 수 있어요" 안내 + 자간 넓은 password/numeric 입력 + 빨간 에러 문구(<code>role="alert"</code>) + "입장하기" 버튼(빈 값·제출 중 비활성).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>입력 필드 전용 디자인 토큰 추가 — <code>@theme</code>에 <code>--color-input-bg: #f6f7f9</code>, <code>--color-input-line: #e3e5ec</code>(<code>docs/prd-design.html</code> §03 근거)
+        <span class="files"><code>src/index.css</code></span>
+        <span class="step-note">✔ 완료 — 계획대로 두 토큰 추가.</span>
+      </li>
+      <li><code>LoginGate</code> 컴포넌트 신설 — <code>useRecords</code> 상태(pending/401/그외)에 따라 Spinner·패스코드 화면·<code>MainLayout</code> 3분기 렌더
+        <span class="files"><code>src/components/auth/LoginGate.tsx</code></span>
+        <span class="step-note">✔ 완료 — 계획대로 3분기 구현.</span>
+      </li>
+      <li>패스코드 제출 폼 구현 — <code>fetch('/api/login', {'{'}method:'POST', body: JSON.stringify({'{'}code{'}'}){'}'})</code>, 실패(<code>!res.ok</code>) 시 응답 <code>message</code>로 에러 노출·재입력 허용, 성공 시 <code>queryClient.invalidateQueries({'{'}queryKey:['records']{'}'})</code>로 게이트 자동 해제
+        <span class="files"><code>src/components/auth/LoginGate.tsx</code></span>
+        <span class="step-note">✔ 완료 — 자물쇠 아이콘 블록 + password/numeric 입력(자간 넓게) + role="alert" 에러 문구 + 빈 값/제출 중 비활성 버튼까지 포함.</span>
+      </li>
+      <li><code>App.tsx</code>의 3탭 라우트 그룹 element를 <code>&lt;MainLayout /&gt;</code>에서 <code>&lt;LoginGate /&gt;</code>로 교체(관리자 스택 라우트는 그대로 둠)
+        <span class="files"><code>src/App.tsx</code></span>
+        <span class="step-note">✔ 완료 — 관리자 라우트(<code>AdminLayout</code>)는 변경 없음.</span>
+      </li>
+      <li>단위 테스트 작성 — 로딩/401/200 각 상태별 렌더 분기, 정답 제출 후 게이트 해제, 오답 제출 후 에러 메시지 유지·재제출 가능, 네트워크 실패 시 일반 에러 메시지(<code>useRecords.test.tsx</code>의 fetch 스텁 패턴 재사용, URL별 분기 필요: <code>/api/records</code> vs <code>/api/login</code>)
+        <span class="files"><code>src/components/auth/LoginGate.test.tsx</code></span>
+        <span class="step-note">✔ 완료 — 계획한 6개 케이스 모두 작성, 전부 통과.</span>
+      </li>
+      <li><code>npm run typecheck</code> · <code>npm test</code> 실행해 회귀 확인
+        <span class="files">전체</span>
+        <span class="step-note">✔ 완료 — typecheck 무오류, vitest 325개 통과(31개 파일), <code>vite build</code>도 정상 확인.</span>
+        <span class="step-note warn">추가: <code>npm run dev</code>로 실제 브라우저 렌더도 확인 — 잠시 <code>LoginGate</code>가 항상 패스코드 화면을 반환하도록 임시 수정해 아이콘·입력·오답 에러 메시지 스타일을 눈으로 검증한 뒤 원복(커밋에는 포함 안 됨).</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>#42(인증 미들웨어)가 아직 머지되지 않아 로컬 <code>wrangler pages dev</code>·실제 배포 환경에서 <code>/api/records</code>가 아직 401을 내지 않음</td><td>브라우저로 전체 흐름(미인증→게이트→인증→데이터)을 실사용 환경에서 눈으로 확인하기 어려움</td><td>#42 이슈 노트가 이미 이 순서 무관성을 인지하고 있음(프로덕션 배포 전이라 영향 없음) — 컴포넌트 테스트로 fetch를 스텁해 401/200 분기를 검증하고, #42 머지 후 별도로 수동 확인</td></tr>
+        <tr><td>패스코드 화면 카피·문구가 확정 목업 없이 새로 설계됨</td><td>실제 팀 사용자 경험과 다를 수 있음</td><td>§09 열린 항목에 이미 "구현 이슈에서 확정"으로 위임돼 있음 — 필요시 후속 PR에서 카피만 조정</td></tr>
+        <tr><td>이후 Home/Rankings/Players가 각자 <code>useRecords</code>를 호출하기 시작하면 <code>LoginGate</code>와 같은 쿼리를 공유(TanStack Query는 queryKey로 옵저버 병합)</td><td>낮음 — 정상적인 캐시 공유 동작이라 충돌 없음</td><td>후속 이슈에서 <code>useRecords</code> 옵션을 바꿀 경우 <code>LoginGate</code>의 분기 조건(<code>isPending</code>/<code>UnauthorizedError</code>)에 영향 없는지 확인</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 타입 회귀 없음 확인</li>
+      <li><code>npm test</code>(vitest) — 신설 <code>LoginGate.test.tsx</code> 전부 통과 + 기존 스위트(<code>useRecords</code>·<code>api-error</code> 등) 회귀 없음 확인</li>
+      <li>로딩 중엔 Spinner만 노출 — 게이트 화면·<code>MainLayout</code> 콘텐츠 모두 미노출</li>
+      <li>401 응답이면 게이트 화면만 노출 — <code>MainLayout</code>/원래 라우트 콘텐츠는 미노출</li>
+      <li>200 응답이면 <code>MainLayout</code>(원래 라우트 콘텐츠) 노출 — 게이트 미노출</li>
+      <li>정답 코드 제출 → <code>/api/login</code> 200 → <code>invalidateQueries</code> → <code>/api/records</code> 재조회 200 → 게이트 사라지고 원래 라우트 콘텐츠 노출</li>
+      <li>오답 코드 제출 → <code>/api/login</code> 401 → 에러 메시지 노출, 게이트 유지, 입력값으로 재시도 가능</li>
+      <li>네트워크 실패(fetch reject) 시 일반 에러 메시지 노출, 게이트 유지</li>
+      <li>(수동, #42 머지 후) <code>wrangler pages dev</code>로 실제 쿠키 발급까지 눈으로 1회 확인 — 이 이슈의 완료 조건은 아니지만 회귀 방지용 메모로 남김</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="ok">미인증(401) 상태에서 팀 패스코드 게이트만 노출되고 홈/랭킹/개인 데이터 화면은 노출되지 않는다</li>
+      <li class="ok">올바른 패스코드 입력 → 제출 성공 → 게이트 해제 & (기존 라우트의) 데이터 로드 재개</li>
+      <li class="ok">틀린 패스코드 입력 → 에러 메시지 노출, 게이트 유지</li>
+      <li class="ok">관리자 로그인 화면(#67)·관리자 라우트는 이 변경의 영향을 받지 않는다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/47">#47</a> · 2026-07-18</footer>
+</main>
+</body>
+</html>
