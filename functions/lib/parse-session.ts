@@ -36,7 +36,7 @@
 // 미리 걸러내면 그 정보를 복원할 수 없다.
 
 import type { EventDefinition, EventScore, Session, SessionEntry, Player } from '../../shared/domain'
-import { normalizeScore } from '../../shared/normalize-score'
+import { buildEventScore } from '../../shared/build-event-score'
 
 const NAME_HEADER = '이름'.normalize('NFC')
 
@@ -164,34 +164,6 @@ export function mapHeaderToEvents(header: string[], events: EventDefinition[]): 
   return columns
 }
 
-// export: 쓰기 경로(#64)가 저장 전 값 검증 + 200 응답의 EventScore를 이 함수로 만든다 —
-// normalize-score + valueKind 교차검증 규칙의 단일 원천을 공유한다(PRD §08).
-export function buildEventScore(cell: string | undefined, event: EventDefinition): EventScore {
-  const normalized = normalizeScore(cell ?? null)
-
-  switch (normalized.kind) {
-    case 'exempt':
-      return { status: 'exempt', value: null, display: null }
-    case 'blank':
-      return { status: 'unmeasured', value: null, display: null }
-    case 'invalid':
-      return { status: 'invalid', value: null, display: normalized.raw.trim(), reason: normalized.reason }
-    case 'count':
-    case 'seconds': {
-      const matchesValueKind =
-        (normalized.kind === 'count' && event.valueKind === 'count') ||
-        (normalized.kind === 'seconds' && event.valueKind === 'time')
-
-      if (!matchesValueKind) {
-        return {
-          status: 'invalid',
-          value: null,
-          display: normalized.raw.trim(),
-          reason: `종목 형식(${event.valueKind})과 입력 형식(${normalized.kind})이 다릅니다`,
-        }
-      }
-
-      return { status: 'recorded', value: normalized.value, display: normalized.raw.trim() }
-    }
-  }
-}
+// buildEventScore(쓰기 경로 #64가 저장 전 값 검증 + 200 응답의 EventScore를 만드는 데도 재사용)는
+// Sheets 구조에 의존하지 않는 순수 함수라 shared/build-event-score.ts로 승격했다(#68 — 프론트 입력
+// 화면이 같은 함수로 인라인 검증). 여기서는 import해 그대로 재사용한다.
