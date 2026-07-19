@@ -6,6 +6,7 @@
 // LOGIN_RATE_LIMIT(KV) 미바인딩이면 fail-open으로 건너뛰어 바인딩 생성 전 배포도 안전하다.
 // role 검사(읽기=세션, /api/admin/*=admin)는 후속 #42 미들웨어 몫 — 여기선 발급만 한다.
 
+import { isPlainObject } from '../../shared/is-plain-object'
 import { constantTimeEqual } from '../lib/constant-time-equal'
 import { checkLoginBlock, clearLoginFailures, recordLoginFailure } from '../lib/login-rate-limit'
 import { buildSessionSetCookie, issueSessionToken, type SessionRole } from '../lib/session-cookie'
@@ -30,13 +31,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     hasFailures = status.hasFailures
   }
 
-  let code: unknown
+  // 바디 파싱은 admin/records.ts와 같은 관용구(#93) — as 단언 없이 unknown에서 좁힌다.
+  let raw: unknown
   try {
-    const body = (await request.json()) as { code?: unknown } | null
-    code = body?.code
+    raw = await request.json()
   } catch {
     return Response.json({ error: 'bad_request', message: 'JSON 바디가 필요합니다.' }, { status: 400 })
   }
+  const code = isPlainObject(raw) ? raw.code : undefined
 
   // 빈 code는 빈 설정값과의 우연한 매치를 피하려 검증 전에 거른다(아래 resolveRole도 이중 방어).
   if (typeof code !== 'string' || code === '') return failed(kv, ip)
