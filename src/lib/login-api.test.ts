@@ -10,16 +10,22 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 describe('loginWithPasscode', () => {
-  it('200이면 ok:true를 반환한다', async () => {
+  it('200이면 ok:true와 서버가 준 role을 반환한다', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { ok: true, role: 'team' }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(loginWithPasscode('team-passcode-1234')).resolves.toEqual({ ok: true })
+    await expect(loginWithPasscode('team-passcode-1234')).resolves.toEqual({ ok: true, role: 'team' })
     expect(fetchMock).toHaveBeenCalledWith('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: 'team-passcode-1234' }),
     })
+  })
+
+  it('200 + role:admin이면 ok:true와 role:admin을 반환한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, { ok: true, role: 'admin' })))
+
+    await expect(loginWithPasscode('admin-code-5678')).resolves.toEqual({ ok: true, role: 'admin' })
   })
 
   it('실패 응답이면 ok:false와 서버 message를 반환한다', async () => {
