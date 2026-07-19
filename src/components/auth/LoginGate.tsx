@@ -53,7 +53,7 @@ function PasscodeGate() {
         return
       }
 
-      await queryClient.invalidateQueries({ queryKey: ['records'] })
+      await queryClient.invalidateQueries({ queryKey: ['records'], exact: true })
     } catch {
       setError('네트워크 오류로 로그인에 실패했어요. 다시 시도해주세요.')
     } finally {
