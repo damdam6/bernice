@@ -73,4 +73,13 @@ describe('CountScoreInput', () => {
 
     expect(onChange).toHaveBeenCalledWith('3')
   })
+
+  it('value가 숫자로 파싱되지 않는 값이어도(방어적 케이스) NaN 대신 0에서 시작한다', () => {
+    const onChange = vi.fn()
+    render(<CountScoreInput label="골밑슛" value="abc" maxScore={10} onChange={onChange} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '골밑슛 증가' }))
+
+    expect(onChange).toHaveBeenCalledWith('1')
+  })
 })

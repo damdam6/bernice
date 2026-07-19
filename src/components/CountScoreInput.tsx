@@ -15,7 +15,10 @@ interface CountScoreInputProps {
 
 export function CountScoreInput({ label, value, maxScore, onChange, error }: CountScoreInputProps) {
   function step(delta: number) {
-    const current = value === '' ? 0 : Number(value)
+    const parsed = value === '' ? 0 : Number(value)
+    // value는 onChange의 DIGITS_ONLY 정제 + step 자신의 String(next) 출력만 거치므로 항상
+    // 숫자 문자열이지만, 이 값이 앞으로 다른 경로로도 주입될 수 있으니 NaN을 0으로 방어해둔다.
+    const current = Number.isNaN(parsed) ? 0 : parsed
     const next = clamp(current + delta, 0, maxScore)
     onChange(String(next))
   }
