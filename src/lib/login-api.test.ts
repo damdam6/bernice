@@ -42,6 +42,27 @@ describe('loginWithPasscode', () => {
     })
   })
 
+  it('200이라도 role이 team/admin 화이트리스트 밖이면 role 없이 ok:true를 반환한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, { ok: true, role: 'root' })))
+
+    await expect(loginWithPasscode('x')).resolves.toEqual({ ok: true, role: undefined })
+  })
+
+  it('200 + 객체가 아닌 바디(배열)면 role 없이 ok:true를 반환한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, ['ok'])))
+
+    await expect(loginWithPasscode('x')).resolves.toEqual({ ok: true, role: undefined })
+  })
+
+  it('실패 바디의 message가 문자열이 아니면 message 없이 ok:false를 반환한다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse(401, { error: 'invalid_passcode', message: 401 })),
+    )
+
+    await expect(loginWithPasscode('x')).resolves.toEqual({ ok: false, message: undefined })
+  })
+
   it('에러 바디를 JSON으로 파싱할 수 없으면 message 없이 ok:false를 반환한다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('not json', { status: 500 })))
 
