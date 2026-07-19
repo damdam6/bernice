@@ -30,8 +30,7 @@ describe('useSubmitMutation', () => {
 
   it('성공 → records 캐시를 무효화한 뒤 onSuccess에 성공 결과를 넘긴다', async () => {
     const { result, invalidateSpy } = setup()
-    // 순서를 프레임워크 내부값(invocationCallOrder)에 기대지 않고, onSuccess가 불리는 그 순간
-    // 무효화가 이미 끝나 있었는지를 콜백 시점의 호출 여부로 직접 확인한다 — 검증하려는 인과 그대로다.
+    // onSuccess 시점에 무효화가 이미 끝나 있었는지로 순서를 검증한다(invocationCallOrder 미사용).
     let invalidatedBeforeSuccess = false
     const onSuccess = vi.fn(() => {
       invalidatedBeforeSuccess = invalidateSpy.mock.calls.length > 0
@@ -47,6 +46,8 @@ describe('useSubmitMutation', () => {
     // 무효화가 성공 콜백보다 먼저 실행돼야 넘어간 화면이 최신 데이터를 본다.
     expect(invalidatedBeforeSuccess).toBe(true)
     expect(result.current.submitError).toBeNull()
+    // navigate 없이 머무는 onSuccess에서도 버튼이 잠기지 않도록 성공 후 submitting은 풀린다.
+    expect(result.current.submitting).toBe(false)
   })
 
   it('실패 → submitError를 채우고 submitting을 되돌리며, 무효화·onSuccess는 하지 않는다', async () => {
