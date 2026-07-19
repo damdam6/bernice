@@ -8,11 +8,12 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Lock } from 'lucide-react'
 import { MainLayout } from '../layout/MainLayout'
 import { Spinner } from '../common/Spinner'
-import { useRecords } from '../../hooks/useRecords'
+import { ErrorPanel } from '../common/ErrorPanel'
+import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
 import { UnauthorizedError } from '../../lib/api-error'
 
 export function LoginGate() {
-  const { isPending, error } = useRecords()
+  const { isPending, error, refetch } = useRecords()
 
   if (isPending) {
     return (
@@ -24,6 +25,16 @@ export function LoginGate() {
 
   if (error instanceof UnauthorizedError) {
     return <PasscodeGate />
+  }
+
+  // 401이 아닌 다른 실패(네트워크·5xx 등)는 records가 홈/랭킹/개인 3탭이 공유하는
+  // 단일 데이터 소스라 개별 페이지가 각자 처리할 수 없다 — 여기서 공통 에러 화면을 보여준다.
+  if (error) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6">
+        <ErrorPanel message={error.message} onRetry={() => refetch()} />
+      </div>
+    )
   }
 
   return <MainLayout />
@@ -53,7 +64,7 @@ function PasscodeGate() {
         return
       }
 
-      await queryClient.invalidateQueries({ queryKey: ['records'], exact: true })
+      await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
     } catch {
       setError('네트워크 오류로 로그인에 실패했어요. 다시 시도해주세요.')
     } finally {
