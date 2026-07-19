@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminLayout } from './components/layout/AdminLayout'
 import { LoginGate } from './components/auth/LoginGate'
+import { AdminGate } from './components/auth/AdminGate'
 import Home from './pages/Home.tsx'
 import Rankings from './pages/Rankings.tsx'
 import Players from './pages/Players.tsx'
@@ -25,12 +26,14 @@ export default function App() {
 
       <Route element={<AdminLayout />}>
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<SheetManagementHome />} />
-        <Route path="/admin/records" element={<RecordsDateSelect />} />
-        <Route path="/admin/records/:sessionDate" element={<RecordsParticipants />} />
-        <Route path="/admin/records/:sessionDate/:playerId" element={<RecordsPlayerInput />} />
-        <Route path="/admin/create-sheet" element={<CreateSheet />} />
-        <Route path="/admin/add-players" element={<AddPlayers />} />
+        <Route element={<AdminGate />}>
+          <Route path="/admin" element={<SheetManagementHome />} />
+          <Route path="/admin/records" element={<RecordsDateSelect />} />
+          <Route path="/admin/records/:sessionDate" element={<RecordsParticipants />} />
+          <Route path="/admin/records/:sessionDate/:playerId" element={<RecordsPlayerInput />} />
+          <Route path="/admin/create-sheet" element={<CreateSheet />} />
+          <Route path="/admin/add-players" element={<AddPlayers />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<NotFound />} />

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#67 기록 입력 W5 — 입력 UI ① — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  h3 { font-size: 0.95rem; margin: 20px 0 8px; }
+  h3:first-child { margin-top: 0; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/67">#67</a></span><span class="type-chip">기능 개선</span>
+    <h1>기록 입력 W5 — 입력 UI ①: 관리자 로그인 · 시트 관리 홈 · 날짜 선택 · 참가자 목록</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/67-admin-login-sheet-home-input-ui</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-19</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>관리자 로그인부터 참가자 목록까지, 기록 입력 플로우의 앞부분 4화면을 채운다. 화면 라우트와 도메인 타입(<code>RecordsResponse</code>)은 이미 있고, 백엔드 API(<code>#64</code> <code>#65</code> <code>#66</code>)도 이미 구현·배포돼 있다 — 이번 이슈는 순수 프론트엔드 UI 작업이다. 6개 페이지 컴포넌트(현재 전부 "#67에서 채워집니다" placeholder)를 디자인 PRD §05 스펙대로 구현하고, 관리자 스택을 보호하는 게이트와 로그아웃 기능(신규 <code>POST /api/logout</code>)을 추가한다. <code>GET /api/records</code> 응답 하나로 날짜 선택·참가자 목록·기록지 만들기·참가자 추가 4화면의 데이터를 전부 충당할 수 있어 신규 조회 API는 없다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <h3>라우팅 · 현재 placeholder</h3>
+    <p><code>src/App.tsx:26-34</code>에 관리자 스택 라우트 7개가 이미 등록돼 있다 — <code>/admin/login</code>·<code>/admin</code>·<code>/admin/records</code>·<code>/admin/records/:sessionDate</code>·<code>/admin/records/:sessionDate/:playerId</code>·<code>/admin/create-sheet</code>·<code>/admin/add-players</code>. 이 중 <code>/admin/records/:sessionDate/:playerId</code>(<code>RecordsPlayerInput.tsx</code>)는 <b>#68 몫</b> — 본문에 "#68에서 채워집니다"라고 명시돼 있어 이번 이슈 범위에서 제외한다. 나머지 6개 페이지(<code>AdminLogin</code>·<code>SheetManagementHome</code>·<code>RecordsDateSelect</code>·<code>RecordsParticipants</code>·<code>CreateSheet</code>·<code>AddPlayers</code>, 전부 <code>src/pages/admin/*.tsx</code>)는 10~16줄짜리 카드 placeholder뿐이다.</p>
+    <p><code>src/components/layout/AdminLayout.tsx:4-15</code>는 관리자 스택 공통 레이아웃(뒤로가기 헤더 + Outlet)이며, 인증 검사가 전혀 없다 — 로그아웃 상태에서 URL을 직접 쳐도 그대로 렌더된다. 열람 게이트(<code>src/components/auth/LoginGate.tsx</code>, #47)가 메인 3탭을 <code>useRecords()</code>의 401로 게이팅하는 것과 대칭되는 장치가 관리자 스택엔 없다.</p>
+
+    <h3>백엔드 — 이미 구현된 부분</h3>
+    <p><code>functions/api/login.ts</code>(#41)는 <code>ADMIN_CODE</code>·<code>TEAM_PASSCODE</code> 양쪽을 검사해 <code>{ok:true, role:'admin'|'team'}</code> + <code>Set-Cookie</code>(HttpOnly)를 내려준다. 관리자 코드가 우선이라 두 코드가 같아도 admin이 이긴다(<code>functions/api/login.ts:60-69</code>). <code>functions/api/_middleware.ts</code>(#42)는 <code>/api/admin/*</code>에 admin role을 강제(403)하고, 그 외 <code>/api/*</code>는 유효한 세션만 요구(401) — <b><code>GET /api/records</code>는 team 세션으로도 통과</b>한다(<code>isAdminPath</code>가 <code>/api/admin</code> 접두만 좁혀 판정, <code>_middleware.ts:48-50</code>).</p>
+    <p>쓰기 API 3종은 이미 완성·병합돼 있다: <code>POST /api/admin/records</code>(#64, 선수 단위 점수 upsert — #68에서 소비), <code>POST /api/admin/create-sheet</code>(#65, <code>{participantIds:number[]}</code> → 201 + 회차 탭 생성, 오늘 이미 있으면 409), <code>POST /api/admin/add-players</code>(#66, <code>{sessionDate, playerIds:number[]}</code> → 200, 이미 참가자면 409). 세 endpoint 모두 성공 시 <code>RECORDS_CACHE_KEY</code>(Cache API)를 무효화하므로, 프론트는 성공 후 <b>TanStack Query 캐시</b>(<code>RECORDS_QUERY_KEY</code>, 별개 캐시)만 직접 무효화하면 된다.</p>
+    <p><b>로그아웃 API는 없다.</b> <code>functions/lib/session-cookie.ts:145-149</code>의 <code>SessionCookieOptions.maxAgeSeconds</code> 주석이 "0이면 즉시 만료 — 세션 삭제(로그아웃)용"이라고 이미 이 용도를 예견해뒀지만, 이를 쓰는 <code>POST /api/logout</code> 핸들러 자체는 아직 없다(<code>functions/api/</code>에 <code>login.ts</code>만 있고 <code>logout.ts</code> 없음, <code>_middleware.ts:23</code>의 <code>PUBLIC_PATHS</code>에도 없음). PRD(<code>docs/prd-design.html:164,214</code>)는 시트 관리 홈에 "로그아웃 텍스트 버튼"을 명시하므로 이 화면이 동작하려면 신규 endpoint가 필요하다.</p>
+
+    <h3>도메인 타입 — 신규 화면이 필요로 하는 필드는 이미 계약에 있다</h3>
+    <p><code>shared/domain.ts</code>의 <code>RecordsResponse</code>(140-147행)가 4화면의 데이터를 전부 충당한다: <code>sessions[]</code>(52-67행, 날짜 오름차순 · <code>entries[].scores</code>로 입력 상태 파생) + <code>players[]</code>(활동/비대상/휴식만, 탈퇴 제외)로 날짜 선택·참가자 목록·기록지 만들기·참가자 추가 4화면 모두를 <b>신규 조회 API 없이</b> 만들 수 있다. "n차" 라벨은 계약 필드가 아니라 프론트 파생값 — <code>docs/prd-design.html:292</code>가 규칙을 명시: "sessions 날짜 오름차순 인덱스+1".</p>
+    <p>가나다 정렬 비교자는 새로 만들 필요 없이 기존 백엔드 구현을 그대로 옮겨 쓴다: <code>functions/lib/create-sheet.ts:72</code> — <code>(a,b) =&gt; (a.name &lt; b.name ? -1 : a.name &gt; b.name ? 1 : a.id - b.id)</code>. 다만 <code>functions/lib</code>는 <code>tsconfig.app.json</code>의 <code>include</code>(<code>src</code>, <code>shared</code>)에 없어 프론트에서 직접 import할 수 없다(<code>functions/tsconfig.json</code>이 별도 프로젝트) — 로직만 프론트 유틸로 복제한다.</p>
+    <p>같은 경계 문제가 <code>functions/lib/seoul-date.ts</code>(오늘 KST 날짜 계산, UTC+9 고정 오프셋 방식)에도 적용된다 — 기록지 만들기 화면의 "오늘 · YYYY-MM-DD" 헤더 표시용으로 프론트에 동일 로직을 복제해야 한다.</p>
+
+    <h3>재사용 가능한 기존 컴포넌트 · 패턴</h3>
+    <ul>
+      <li><code>src/components/auth/LoginGate.tsx</code>의 <code>PasscodeGate</code>(44-110행) — 잠금 아이콘 블록 + 코드 입력 + 에러 문구 UI 패턴을 관리자 로그인 화면이 그대로 따라간다(카피만 교체).</li>
+      <li><code>src/lib/login-api.ts</code>의 <code>loginWithPasscode</code> — <code>role</code>을 응답에서 버리고 <code>{ok:true}</code>만 반환(20행) — 관리자 로그인은 admin/team role 구분이 필요해 확장이 필요하다.</li>
+      <li><code>src/pages/Rankings.tsx</code> — <code>useRecords()</code> 결과를 <code>isError</code> → <code>!data</code>(로딩) → 빈 상태 → 콘텐츠 순으로 분기하는 정석 패턴. 4개 신규 데이터 화면이 동일 패턴을 따른다.</li>
+      <li><code>src/components/FilterChip.tsx</code> — 회차 칩(날짜 선택 필터, 참가자 추가의 회차 선택)에 그대로 재사용.</li>
+      <li><code>src/components/PlayerStatusPill.tsx</code> / <code>Pill.tsx</code> — 입력 상태 뱃지(미입력/일부/완료)는 같은 <code>Pill</code> 프리미티브 + 새 색상 매핑으로 구현.</li>
+      <li><code>src/index.css:29-39</code> 시맨틱 토큰(<code>good-tint</code>/<code>warn-tint</code>/<code>neutral-tint</code> 등)이 뱃지 3색(완료=green, 일부=warn, 미입력=neutral)에 이미 대응한다.</li>
+      <li><code>src/components/common/{EmptyState,ErrorPanel,Spinner}.tsx</code> — 빈 회차/에러/로딩 상태 전부 이 3개로 커버.</li>
+    </ul>
+    <p>토스트(<code>docs/prd-design.html:244</code>, 하단 중앙 다크 필 · 1.9초 자동 소멸)는 어떤 화면에도 아직 구현이 없다 — 신규 컴포넌트가 필요하고, 참가자 추가·기록지 만들기 두 화면이 공유하며 향후 #68(선수별 입력 저장)도 같은 패턴을 쓸 것이므로 작은 공용 훅으로 뽑는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <h3>관리자 스택 라우트 구조 — 로그인 화면과 데이터 화면을 분리 게이팅</h3>
+    <p>선택: <code>App.tsx</code>의 관리자 라우트를 <code>/admin/login</code>(게이트 없음)과 나머지 5개(신규 <code>AdminGate</code>로 감쌈)로 나눈다. <code>AdminGate</code>는 <code>LoginGate</code>와 동일하게 <code>useRecords()</code>의 401을 신호로 써서 <code>&lt;Navigate to="/admin/login" replace /&gt;</code>로 돌려보낸다.</p>
+    <p>기각안: 각 데이터 페이지가 개별적으로 401을 처리. → 5곳에 동일 리다이렉트 로직이 중복되고, 화면 진입 시 "잠깐 빈 화면 → 리다이렉트"가 페이지마다 따로 깜빡여 UX가 나빠진다. <code>AdminGate</code> 한 곳에서 처리하면 <code>LoginGate</code>와 대칭적인 구조가 되고 <code>App.tsx</code> diff도 한 줄짜리 중첩 라우트 추가로 끝난다.</p>
+    <p>알려진 한계(비스코프로 남김): team 세션으로 <code>/admin</code> URL에 직접 진입하면 <code>GET /api/records</code>가 200을 반환하므로(팀 세션도 통과) <code>AdminGate</code>를 그대로 통과해 시트 관리 화면이 보인다 — 실제 쓰기 시도는 <code>/api/admin/*</code> 미들웨어가 403으로 막는다. 프론트가 role을 알 방법이 없다(<code>GET /api/records</code> 응답엔 role 필드가 없음, #67 의존성에 "whoami" 성격 엔드포인트가 없음). 관리자 로그인 성공 응답의 <code>role</code>은 로그인 그 순간에만 알 수 있으므로 로그인 화면 자체의 오분기 방지에만 쓴다(아래).</p>
+
+    <h3>관리자 로그인 — role 불일치 처리</h3>
+    <p><code>POST /api/login</code>은 admin/team 코드를 구분 없이 같은 200으로 받아들이고 <code>role</code>만 다르게 준다(오라클 방지가 목적, <code>functions/api/login.ts:1-7</code> 주석). 관리자 로그인 화면에서 팀 패스코드를 넣으면 서버는 200 + <code>role:'team'</code>을 준다 — 이 경우도 화면은 "관리자 코드가 올바르지 않습니다"로 실패 취급하고 시트 관리로 넘어가지 않는다(코드 자체는 유효해도 관리자 권한은 아니므로). <code>src/lib/login-api.ts</code>의 <code>LoginResult</code>에 <code>role</code>을 추가해 호출부가 분기할 수 있게 한다 — 기존 소비자(<code>LoginGate</code>)는 <code>role</code>을 안 보므로 하위 호환.</p>
+
+    <h3>로그아웃 — 신규 <code>POST /api/logout</code></h3>
+    <p>세션 쿠키가 HttpOnly라 프론트 JS로 지울 수 없다 — 서버가 <code>Max-Age=0</code> Set-Cookie를 내려줘야 한다. <code>buildSessionSetCookie(token, {maxAgeSeconds:0})</code>가 이미 이 용도로 준비돼 있으므로(<code>session-cookie.ts:145-149</code>), 토큰 값은 무엇이든(빈 문자열도) 상관없다 — 브라우저는 Max-Age=0을 받으면 즉시 쿠키를 삭제한다. 인증 여부와 무관하게 항상 200을 반환하는 멱등 엔드포인트로 만든다(로그아웃은 실패할 이유가 없다 — 이미 로그아웃 상태에서 다시 호출해도 200). <code>_middleware.ts</code>의 <code>PUBLIC_PATHS</code>에 <code>/api/logout</code>을 추가할 필요는 없다 — 로그아웃은 세션이 있는 상태에서만 의미 있는 동작이므로 기존 인증 게이트(401)를 그대로 통과 조건으로 둔다. <code>/api/admin/logout</code>이 아니라 <code>/api/logout</code>인 이유: team 세션도 언젠가 로그아웃이 필요할 수 있고(현재 UI엔 없지만), admin 전용으로 좁힐 이유가 없다.</p>
+
+    <h3>입력 상태 파생 규칙 (참가자 목록 뱃지 · 날짜 선택 완료 n/N)</h3>
+    <p><code>docs/prd-design.html:225</code> · <code>docs/prd-record-input.html:230,237</code> 계약을 그대로 코드화: <code>entry</code> 하나의 <code>unmeasuredCount</code> = <code>events</code> 중 <code>entry.scores[event.key].status === 'unmeasured'</code>인 개수. <code>unmeasuredCount === events.length</code> → 미입력, <code>=== 0</code> → 완료, 그 외 → 일부. 날짜 선택의 "완료 n/N"은 그 회차 <code>entries</code> 중 완료(unmeasuredCount===0)인 개수 / <code>entries.length</code>. <code>SessionEntry.scores</code>는 "events[] 전체 key가 항상 존재(누락 없음)"가 타입 계약(<code>shared/domain.ts:57</code>)이므로 null 체크 없이 순회 가능.</p>
+
+    <h3>참가자 추가 진입점 — 회차 사전 선택</h3>
+    <p>참가자 목록(<code>/admin/records/:sessionDate</code>)의 [참가자 추가] 버튼은 <code>navigate('/admin/add-players', {state:{sessionDate}})</code>로 현재 회차를 넘긴다. <code>AddPlayers</code>는 <code>location.state?.sessionDate</code>가 있으면 그 회차 칩을 초기 선택, 없으면(시트 관리 홈에서 바로 진입) 최신 회차를 기본값으로 쓴다 — router state는 새로고침 시 사라지므로 실패해도 "최신 회차 기본 선택"으로 자연히 폴백된다(별도 에러 처리 불필요).</p>
+
+    <h3>토스트 — 공용 훅</h3>
+    <p><code>src/hooks/useToast.ts</code> 신규: <code>{message, show(text)}</code>를 반환하는 작은 훅. 내부에서 <code>setTimeout</code> 1.9초로 자동 소멸, <code>show()</code> 재호출 시 타이머 리셋. <code>src/components/common/Toast.tsx</code>는 프레젠테이션만 — <code>message</code>가 있을 때만 하단 중앙 다크 필 렌더. 기록지 만들기·참가자 추가 두 화면이 공유한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li><strong>[완료]</strong> 백엔드: <code>POST /api/logout</code> 신규 — <code>buildSessionSetCookie('', {maxAgeSeconds:0, secure})</code>로 세션 쿠키 즉시 만료, 인증 여부와 무관하게 200. 로그인(<code>login.ts</code>)과 동일한 https 판정(<code>new URL(request.url).protocol</code>)으로 secure 플래그 결정.
+        <span class="files"><code>functions/api/logout.ts</code>, <code>functions/api/logout.test.ts</code></span>
+      </li>
+      <li><strong>[완료]</strong> 프론트 공용 유틸 3종 준비: (a) <code>src/lib/login-api.ts</code>의 <code>LoginResult</code>에 <code>role?: 'team' | 'admin'</code> 추가 + 응답 바디에서 role도 읽도록 수정 (b) <code>src/lib/seoul-date.ts</code> 신규 — <code>functions/lib/seoul-date.ts</code>의 UTC+9 고정 오프셋 로직을 프론트용으로 복제 (c) <code>src/lib/korean-sort.ts</code> 신규 — <code>functions/lib/create-sheet.ts:72</code>의 이름 비교자를 <code>{id,name}</code> 최소 인터페이스로 복제.
+        <span class="files"><code>src/lib/login-api.ts</code>, <code>src/lib/login-api.test.ts</code>, <code>src/lib/seoul-date.ts</code>, <code>src/lib/seoul-date.test.ts</code>, <code>src/lib/korean-sort.ts</code>, <code>src/lib/korean-sort.test.ts</code></span>
+      </li>
+      <li><strong>[완료]</strong> 입력 상태 파생 유틸 — <code>src/lib/entry-status.ts</code> 신규: <code>deriveEntryStatus(entry, events): '미입력'|'일부'|'완료'</code> + <code>countCompleted(entries, events): number</code>. 참가자 목록 뱃지와 날짜 선택 완료 n/N이 같은 함수를 공유해 규칙이 한 곳에만 존재하게 한다.
+        <span class="files"><code>src/lib/entry-status.ts</code>, <code>src/lib/entry-status.test.ts</code></span>
+      </li>
+      <li><strong>[완료]</strong> 토스트 공용 컴포넌트 — <code>useToast</code> 훅 + <code>Toast</code> 프레젠테이션 컴포넌트(하단 중앙 다크 필, 1.9초 자동 소멸). <em>비고: 계획 당시엔 CreateSheet·AddPlayers 두 화면만 염두에 뒀지만, 구현하면서 성공 토스트를 "착지 화면"에서 보여주는 편이 UX상 더 자연스러워 <code>RecordsParticipants</code>가 <code>navigate(..., {state:{toast}})</code>로 넘어온 메시지를 표시하는 공통 착지점 역할도 겸하게 했다(10번째 단계에 반영).</em>
+        <span class="files"><code>src/hooks/useToast.ts</code>, <code>src/hooks/useToast.test.ts</code>, <code>src/components/common/Toast.tsx</code></span>
+      </li>
+      <li><strong>[완료]</strong> 새 뱃지 색상 매핑 — <code>src/components/EntryStatusPill.tsx</code> 신규(<code>PlayerStatusPill</code>과 같은 구조, <code>Pill</code> 재사용): 미입력=neutral-tint, 일부=warn-tint, 완료=good-tint.
+        <span class="files"><code>src/components/EntryStatusPill.tsx</code>, <code>src/components/EntryStatusPill.test.tsx</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>AdminGate</code> 신규 — <code>LoginGate</code>와 동일 구조(<code>useRecords()</code> → pending/401/error/ok 분기), 401이면 <code>/admin/login</code>으로 리다이렉트. <code>App.tsx</code>의 관리자 라우트를 <code>/admin/login</code>(게이트 밖) + 나머지 5개(<code>AdminGate</code>로 중첩)로 재구성.
+        <span class="files"><code>src/components/auth/AdminGate.tsx</code>, <code>src/components/auth/AdminGate.test.tsx</code>, <code>src/App.tsx</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>AdminLogin.tsx</code> 구현 — <code>PasscodeGate</code>와 동일한 시각 패턴(잠금 아이콘 블록 + 코드 입력 + 에러) + 카피 교체("관리자 로그인"/"측정일 운영진 전용"). 제출 시 <code>loginWithPasscode</code> 호출 → <code>role !== 'admin'</code>이면 실패로 취급, 성공이면 <code>RECORDS_QUERY_KEY</code> invalidate 후 <code>navigate('/admin', {replace:true})</code>.
+        <span class="files"><code>src/pages/admin/AdminLogin.tsx</code>, <code>src/pages/admin/AdminLogin.test.tsx</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>SheetManagementHome.tsx</code> 구현 — 버튼 3개(기록 입력 강조/참가자 추가/기록지 만들기) + 로그아웃(신규 <code>POST /api/logout</code> 호출 → <code>RECORDS_QUERY_KEY</code> invalidate → <code>navigate('/', {replace:true})</code>) + 안내 박스.
+        <span class="files"><code>src/pages/admin/SheetManagementHome.tsx</code>, <code>src/pages/admin/SheetManagementHome.test.tsx</code>, <code>src/lib/logout-api.ts</code>, <code>src/lib/logout-api.test.ts</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>RecordsDateSelect.tsx</code> 구현 — <code>useRecords()</code>로 <code>sessions[]</code> 취득, 최신부터(역순) 카드 리스트, "n차 · 날짜 · 완료 n/N"(엔트리 스텝의 <code>countCompleted</code> 재사용). 빈 상태(세션 0개)는 [기록지 만들기] CTA를 포함한 <code>EmptyState</code>.
+        <span class="files"><code>src/pages/admin/RecordsDateSelect.tsx</code>, <code>src/pages/admin/RecordsDateSelect.test.tsx</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>RecordsParticipants.tsx</code> 구현 — <code>useParams().sessionDate</code>로 <code>session</code> 조회(못 찾으면 <code>EmptyState</code>), <code>entries</code>를 가나다 정렬(<code>korean-sort.ts</code>) 후 이름 + <code>EntryStatusPill</code> 행 리스트, 행 탭 시 <code>/admin/records/:sessionDate/:playerId</code>(#68 스텁)로 이동, [참가자 추가] 버튼은 <code>sessionDate</code>를 router state로 넘기며 <code>/admin/add-players</code>로 이동. <em>비고: 계획에 없던 추가 — 기록지 만들기·참가자 추가 성공 시 넘어오는 <code>location.state.toast</code>를 진입 시 한 번 표시하도록 <code>useToast</code>/<code>Toast</code>를 통합했다(4번째 단계 비고 참고).</em>
+        <span class="files"><code>src/pages/admin/RecordsParticipants.tsx</code>, <code>src/pages/admin/RecordsParticipants.test.tsx</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>CreateSheet.tsx</code> 구현 — 헤더에 "오늘 · YYYY-MM-DD"(<code>seoul-date.ts</code>), <code>players[]</code>를 활동 상태만 필터 + 가나다 정렬한 선택 리스트(기본 전부 해제) + 하단 고정 확인 바("N명으로 기록지 만들기", 0명이면 비활성). 확인 시 <code>POST /api/admin/create-sheet</code> 호출 → 성공(201): <code>RECORDS_QUERY_KEY</code> invalidate + 토스트 + 새로 만든 회차의 참가자 목록으로 이동. 실패: 409(오늘 이미 존재)·400(참가자 미선택/유효하지 않음)·5xx/502 각각 메시지 표시.
+        <span class="files"><code>src/pages/admin/CreateSheet.tsx</code>, <code>src/pages/admin/CreateSheet.test.tsx</code>, <code>src/lib/create-sheet-api.ts</code>, <code>src/lib/create-sheet-api.test.ts</code></span>
+      </li>
+      <li><strong>[완료]</strong> <code>AddPlayers.tsx</code> 구현 — 회차 칩(오름차순 "n차", 초기 선택은 <code>location.state?.sessionDate</code> 또는 최신) + 선택 회차에 없는 활동 선수 멀티선택(가나다 정렬) + 하단 고정 확인 바("N명 추가하기"). 확인 시 <code>POST /api/admin/add-players</code> 호출 → 성공: invalidate + 토스트 + 참가자 목록으로 복귀. 실패: 404(회차 없음)·409(이미 참가자)·400·502 메시지 표시.
+        <span class="files"><code>src/pages/admin/AddPlayers.tsx</code>, <code>src/pages/admin/AddPlayers.test.tsx</code>, <code>src/lib/add-players-api.ts</code>, <code>src/lib/add-players-api.test.ts</code></span>
+      </li>
+      <li><strong>[완료 — 일부 제한]</strong> 전체 점검 — <code>npm run typecheck</code>(프론트+functions 양쪽) · <code>npm test</code> 60개 파일 534개 테스트 전체 그린. <code>npm run build</code>(vite build) 성공. <code>wrangler pages dev</code>를 실제로 띄워 <code>/api/login</code>(팀/관리자/오답)·<code>/api/logout</code>(Max-Age=0)·인증 미들웨어(401/세션 통과)·6개 관리자 라우트의 SPA 200 서빙을 실 HTTP로 확인. <em>비고: 이 워크트리엔 <code>GOOGLE_SERVICE_ACCOUNT_KEY</code> 같은 실제 Sheets 자격증명이 없어(.dev.vars 미존재, gitignore) <code>GET /api/records</code>·<code>create-sheet</code>가 실제 시트에 붙는 골든 패스까지는 브라우저로 끝까지 클릭해볼 수 없었다 — 인증·라우팅·에러 코드 매핑까지는 실 서버로 검증했고, Sheets 자격증명이 필요한 지점부터는 fake PKCS8 키로 인한 예상된 500(<code>Invalid PKCS8 input</code>)까지만 확인했다. 화면별 실제 렌더링·상태 파생·상호작용은 534개 컴포넌트 테스트(jsdom + Testing Library, 각 화면의 성공/실패/빈 상태 분기 포함)로 커버했다.</em>
+        <span class="files">—</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>team 세션으로 <code>/admin</code> 직접 진입 시 <code>AdminGate</code>를 통과(§3 설계에서 확인한 알려진 한계)</td><td>낮음 — 팀 멤버가 시트 관리 화면을 "볼" 수는 있으나 실제 쓰기(create-sheet/add-players/records)는 서버 미들웨어가 403으로 차단</td><td>비스코프로 명시 처리. 화면 하단에서 403 응답 시 일반 에러 메시지로 표시(별도 처리 불필요) — 서버가 최종 방어선(시트가 SoT 철학과 일치)</td></tr>
+        <tr><td>신규 <code>POST /api/logout</code>이 #67 의존성 목록(#64/#65/#66/#61/#62)에 없던 범위 추가</td><td>중간 — PRD가 로그아웃 버튼을 명시하지만 이를 동작시킬 API가 없어 새로 만들어야 함</td><td>기존 <code>session-cookie.ts</code>의 <code>maxAgeSeconds:0</code>이 이미 이 용도로 설계돼 있어 구현이 5줄 내외로 작음 · <code>login.ts</code> 테스트 패턴을 그대로 재사용해 리스크 낮춤</td></tr>
+        <tr><td>토스트·가나다 정렬·완료 상태 파생 로직을 여러 화면이 공유 — 유틸 경계를 잘못 나누면 화면마다 규칙이 미묘하게 어긋날 수 있음</td><td>중간 — 특히 "완료 n/N"과 참가자 뱃지가 같은 원본 규칙에서 나와야 함</td><td><code>entry-status.ts</code> 단일 모듈에서 두 파생값을 함께 export해 소스가 하나임을 강제(작업 단계 3)</td></tr>
+        <tr><td>기록지 만들기·참가자 추가 성공 후 TanStack Query 캐시(<code>RECORDS_QUERY_KEY</code>)를 무효화하지 않으면, 참가자 목록으로 복귀해도 옛 데이터가 보임</td><td>중간 — 서버 Cache API는 각 endpoint가 이미 지우지만, 프론트 쿼리 캐시는 별개</td><td>두 화면 모두 성공 후 <code>queryClient.invalidateQueries</code>(<code>RECORDS_QUERY_KEY</code>, exact) 호출을 작업 단계에 명시(11·12단계)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 전체 그린 (프론트 <code>tsconfig.app.json</code> + <code>functions/tsconfig.json</code> 양쪽).</li>
+      <li><code>npm test</code> — 신규 유닛 테스트(로그아웃 API, 3개 프론트 유틸, entry-status, useToast, 6개 페이지) + 기존 스위트 전부 회귀 없이 그린.</li>
+      <li><code>functions/api/logout.test.ts</code>: 인증 없이 호출해도 200 · Set-Cookie에 <code>Max-Age=0</code> 포함 · https에서만 Secure.</li>
+      <li><code>AdminGate.test.tsx</code>: 로딩 중 스피너만, 401이면 <code>/admin/login</code>으로 리다이렉트, 200이면 Outlet 렌더 — <code>LoginGate.test.tsx</code>와 동일 구조로 작성.</li>
+      <li><code>AdminLogin.test.tsx</code>: 관리자 코드 성공 → <code>/admin</code> 이동, 오답 → 에러 문구, <b>팀 패스코드(200+role:'team') 입력 → 관리자 코드 아님 에러로 처리</b>(이 케이스가 핵심 회귀 포인트).</li>
+      <li><code>RecordsDateSelect.test.tsx</code> / <code>RecordsParticipants.test.tsx</code>: <code>RecordsResponse</code> 픽스처(여러 회차, 각기 다른 <code>scores</code> 조합)로 완료 n/N과 미입력/일부/완료 뱃지가 정확히 파생되는지 검증(unmeasured 전부/일부/0개 3가지 경우).</li>
+      <li><code>CreateSheet.test.tsx</code> / <code>AddPlayers.test.tsx</code>: 성공(201/200) 시 토스트 노출 + 캐시 invalidate + 네비게이션, 실패(409/400/404/502) 시 에러 메시지, 확인 바가 0명 선택 시 비활성인지.</li>
+      <li>브라우저 골든 패스 수동 스모크(<code>npm run dev:all</code>): 관리자 로그인(오답 1회 → 정답) → 시트 관리 → 기록지 만들기(참가자 선택 → 생성 → 토스트 확인) → 날짜 선택에서 방금 만든 회차 카드 확인 → 참가자 목록에서 전원 미입력 뱃지 확인 → 참가자 추가로 이동해 취소 없이 뒤로가기 → 로그아웃 → <code>/admin</code> 재진입 시 로그인 화면으로 리다이렉트되는지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>관리자 로그인·시트 관리 홈·날짜 선택·참가자 목록·기록지 만들기·참가자 추가 6화면이 디자인 PRD §05 구성대로 렌더·전환된다(<code>docs/prd-design.html</code> §04~§06).</li>
+      <li>상태 뱃지(미입력/일부/완료)와 완료 n/N이 <code>sessions[].entries</code>에서 파생되며, 단일 유틸(<code>entry-status.ts</code>)을 두 화면이 공유한다.</li>
+      <li><code>POST /api/admin/create-sheet</code>·<code>POST /api/admin/add-players</code> 호출이 성공 시 토스트를 띄우고 TanStack Query 캐시를 invalidate한다.</li>
+      <li>신규 <code>POST /api/logout</code>이 세션 쿠키를 즉시 만료시키고, 시트 관리 홈의 로그아웃 버튼이 이를 호출해 홈으로 돌아간다.</li>
+      <li>관리자 스택(<code>/admin/login</code> 제외)이 미인증 접근 시 <code>/admin/login</code>으로 리다이렉트된다.</li>
+      <li><code>npm run typecheck</code> · <code>npm test</code> 전체 그린.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/67">#67</a> · 2026-07-19</footer>
+</main>
+</body>
+</html>
