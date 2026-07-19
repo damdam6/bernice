@@ -54,6 +54,39 @@ export async function getSpreadsheetTabTitles(env: Env, sheetId: string): Promis
   })
 }
 
+export interface SheetMeta {
+  title: string
+  /** 안정 식별자 — 탭 이름과 별개. 회차 탭 생성(P5)이 새 탭에 부여할 빈 sheetId 선정에 쓴다. */
+  sheetId: number
+}
+
+interface SpreadsheetMetadataWithIds {
+  sheets?: { properties?: { title?: string; sheetId?: number } }[]
+}
+
+// getSpreadsheetTabTitles와 달리 sheetId까지 함께 가져온다 — create-sheet가 addSheet에 명시적
+// sheetId(기존과 겹치지 않는 값)를 부여해 같은 batchUpdate 배치에서 forward-reference하기 위함.
+// 첫 탭의 sheetId는 보통 0이라 typeof === 'number'로 검사(0을 누락으로 오판하지 않음).
+export async function getSpreadsheetSheets(env: Env, sheetId: string): Promise<SheetMeta[]> {
+  const metadata = (await callSheetsApi(
+    env,
+    sheetId,
+    '?fields=sheets.properties(sheetId,title)',
+  )) as SpreadsheetMetadataWithIds
+
+  return (metadata.sheets ?? []).map((sheet) => {
+    const title = sheet.properties?.title
+    const id = sheet.properties?.sheetId
+    if (typeof title !== 'string') {
+      throw new Error('Sheets API 메타 응답에 탭 title이 없습니다.')
+    }
+    if (typeof id !== 'number') {
+      throw new Error('Sheets API 메타 응답에 탭 sheetId가 없습니다.')
+    }
+    return { title, sheetId: id }
+  })
+}
+
 export interface ValueRange {
   range: string
   values: string[][]

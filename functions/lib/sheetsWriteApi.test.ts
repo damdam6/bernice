@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { Env } from './googleAuth'
 import { SheetsApiError } from './sheetsApi'
-import { updateValues } from './sheetsWriteApi'
+import { batchUpdate, updateValues } from './sheetsWriteApi'
 
 let pem: string
 
@@ -172,5 +172,62 @@ describe('updateValues', () => {
     expect(url).toContain(encodeURIComponent(maliciousSheetId))
     expect(url).toContain(encodeURIComponent(maliciousRange))
     expect(url).not.toContain(maliciousSheetId)
+  })
+})
+
+const REQUESTS = [
+  { addSheet: { properties: { sheetId: 23, title: '2025-08-16' } } },
+  { updateCells: { start: { sheetId: 23, rowIndex: 0, columnIndex: 0 }, rows: [], fields: 'userEnteredValue' } },
+]
+
+describe('batchUpdate', () => {
+  it('정상 응답이면 POST :batchUpdate 1회로 성공하고 requests 바디를 담아 파싱 결과를 반환한다', async () => {
+    const { putCalls } = stubWriteFetch([{ status: 200, body: { replies: [{ addSheet: {} }] } }])
+
+    const result = await batchUpdate(makeEnv(), SHEET_ID, REQUESTS)
+
+    expect(putCalls).toHaveLength(1)
+    const [{ url, init }] = putCalls
+    expect(init.method).toBe('POST')
+    expect(url).toContain(`${encodeURIComponent(SHEET_ID)}:batchUpdate`)
+    expect(JSON.parse(String(init.body))).toEqual({ requests: REQUESTS })
+    expect(result).toEqual({ replies: [{ addSheet: {} }] })
+  })
+
+  it('429 1회 후 성공하면 재시도로 복구된다', async () => {
+    vi.useFakeTimers()
+    const { putCalls } = stubWriteFetch([
+      { status: 429, body: { error: 'rate_limited' } },
+      { status: 200, body: {} },
+    ])
+
+    const promise = batchUpdate(makeEnv(), SHEET_ID, REQUESTS)
+    await vi.runAllTimersAsync()
+
+    await expect(promise).resolves.toEqual({})
+    expect(putCalls).toHaveLength(2)
+  })
+
+  it('4xx(예: 이미 존재하는 탭)는 재시도 없이 즉시 SheetsApiError로 실패한다', async () => {
+    const { putCalls } = stubWriteFetch([{ status: 400, body: { error: 'already exists' } }])
+
+    await expect(batchUpdate(makeEnv(), SHEET_ID, REQUESTS)).rejects.toMatchObject({ status: 400 })
+    expect(putCalls).toHaveLength(1)
+  })
+
+  it('5xx가 재시도 소진(3회 연속)되면 SheetsApiError로 실패한다', async () => {
+    vi.useFakeTimers()
+    const { putCalls } = stubWriteFetch([
+      { status: 500, body: { error: 'internal' } },
+      { status: 500, body: { error: 'internal' } },
+      { status: 500, body: { error: 'internal' } },
+    ])
+
+    const promise = batchUpdate(makeEnv(), SHEET_ID, REQUESTS)
+    const assertion = expect(promise).rejects.toMatchObject({ status: 500 })
+    await vi.runAllTimersAsync()
+
+    await assertion
+    expect(putCalls).toHaveLength(3)
   })
 })
