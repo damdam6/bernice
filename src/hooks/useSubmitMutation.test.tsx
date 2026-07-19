@@ -30,7 +30,12 @@ describe('useSubmitMutation', () => {
 
   it('성공 → records 캐시를 무효화한 뒤 onSuccess에 성공 결과를 넘긴다', async () => {
     const { result, invalidateSpy } = setup()
-    const onSuccess = vi.fn()
+    // 순서를 프레임워크 내부값(invocationCallOrder)에 기대지 않고, onSuccess가 불리는 그 순간
+    // 무효화가 이미 끝나 있었는지를 콜백 시점의 호출 여부로 직접 확인한다 — 검증하려는 인과 그대로다.
+    let invalidatedBeforeSuccess = false
+    const onSuccess = vi.fn(() => {
+      invalidatedBeforeSuccess = invalidateSpy.mock.calls.length > 0
+    })
     const success = { ok: true as const, sessionDate: '2026-07-19', added: [{ playerId: 1, name: '가은' }] }
 
     await act(async () => {
@@ -40,7 +45,7 @@ describe('useSubmitMutation', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: RECORDS_QUERY_KEY, exact: true })
     expect(onSuccess).toHaveBeenCalledWith(success)
     // 무효화가 성공 콜백보다 먼저 실행돼야 넘어간 화면이 최신 데이터를 본다.
-    expect(invalidateSpy.mock.invocationCallOrder[0]).toBeLessThan(onSuccess.mock.invocationCallOrder[0])
+    expect(invalidatedBeforeSuccess).toBe(true)
     expect(result.current.submitError).toBeNull()
   })
 
