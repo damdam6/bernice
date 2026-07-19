@@ -57,7 +57,7 @@ export default function AdminLogin() {
             id="admin-code"
             type="password"
             inputMode="numeric"
-            autoComplete="off"
+            autoComplete="new-password"
             autoFocus
             value={code}
             onChange={(event) => setCode(event.target.value)}
