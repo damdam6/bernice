@@ -48,8 +48,8 @@
   h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
   .sub { color: var(--muted); font-size: 15px; margin: 0; }
   .status {
-    margin-top: 18px; font-size: 13px; color: var(--warn);
-    background: rgba(245,184,0,.08); border: 1px solid rgba(245,184,0,.25);
+    margin-top: 18px; font-size: 13px; color: var(--good);
+    background: rgba(53,192,122,.08); border: 1px solid rgba(53,192,122,.25);
     border-radius: 8px; padding: 10px 14px; display: inline-block;
   }
   h2 {
@@ -138,7 +138,7 @@
     <span class="badge">설계 문서 · DRAFT</span>
     <h1>🏀 버니스 실력 기록 사이트</h1>
     <p class="sub">체육 기록 관리 사이트 — 팀 랭킹 · 개인 성장 추이 시각화</p>
-    <div class="status">⚠️ 이 문서는 <strong>검토용 계획안</strong>입니다. 아직 구현(스캐폴딩)은 시작하지 않았습니다.</div>
+    <div class="status">✅ React 앱 스캐폴딩·백엔드·인증·기록 입력 기능까지 구현되어 있다 — 이 문서는 최초 설계 초안이며, 단계별 구현 현황은 <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a>을 참고한다.</div>
   </header>
 
   <nav class="toc">
@@ -304,7 +304,7 @@
       </tbody>
     </table>
 
-    <h3>③ 기록 입력 — 점수 입력·수정 <span class="muted" style="font-size:13px;font-weight:400">(PRD 확정 · <a href="prd-record-input.html" style="color:var(--accent-2);">상세 문서</a>)</span></h3>
+    <h3>③ 기록 입력 — 점수 입력·수정 <span class="muted" style="font-size:13px;font-weight:400">(구현 완료 · <a href="prd-record-input.html" style="color:var(--accent-2);">상세 문서</a>)</span></h3>
     <table>
       <thead><tr><th>항목</th><th>동작</th></tr></thead>
       <tbody>
@@ -331,15 +331,15 @@
         <tr><td>호스팅</td><td class="good">확정</td><td>Cloudflare Pages (+ Pages Functions). Netlify 미사용</td></tr>
         <tr><td>시트 연동·시딩</td><td class="good">완료</td><td>서비스 계정 연동 + 21명 명단·1차 기록 시딩 + 보호범위 완료</td></tr>
         <tr><td>공용 패스코드 / 관리자 코드</td><td class="good">확정</td><td>사용자가 <code class="inline">.dev.vars</code>·Cloudflare Secret에 직접 설정 (값은 코드베이스 밖)</td></tr>
-        <tr><td>기록 입력 (사이트에서 점수 입력)</td><td class="good">확정</td><td>PRD 확정 (2026-07-17 인터뷰 + 디자인) — 관리자 전용 · 날짜 선택 → 참가자 목록 → 선수별 타입별 기입 · 선수 단위 저장 · 마지막 저장 승리. 선행: 회차 파서 이름-매칭 정합화, P2 로그인. <a href="prd-record-input.html" style="color:var(--accent-2);">PRD · 사이트에서 기록 입력</a></td></tr>
+        <tr><td>기록 입력 (사이트에서 점수 입력)</td><td class="good">완료</td><td>PRD 확정(2026-07-17 인터뷰 + 디자인) 그대로 구현 — 관리자 전용 · 날짜 선택 → 참가자 목록 → 선수별 타입별 기입 · 선수 단위 저장 · 마지막 저장 승리. 측정일 시나리오 E2E 스모크로 검증(이슈 #71). <a href="prd-record-input.html" style="color:var(--accent-2);">PRD · 사이트에서 기록 입력</a></td></tr>
         <tr><td>모바일 디자인</td><td class="good">확정</td><td>2026-07-17 디자인 개편 반입 — 하단 네비 3탭(전체 추이 페이지 삭제·개인 탭 통합), 인디고(#3F51B5)+Pretendard 테마(기존 오렌지 폐기), 랭킹에 미측정·면제 하단 노출, 열람 팀 패스코드 유지. <a href="prd-design.html" style="color:var(--accent-2);">PRD · 모바일 디자인 개편</a></td></tr>
-        <tr><td>사이트 구축</td><td style="color:var(--warn)">대기</td><td>React 앱·Pages Functions·관리자 페이지 (사용자 요청 시 착수)</td></tr>
+        <tr><td>사이트 구축</td><td style="color:var(--warn)">진행 중</td><td>핵심 기능(기록 조회 · 인증 · 관리자 기록 입력) 구현·테스트 완료 — 개인 프로필 화면, 프로덕션 배포 등 일부 남음</td></tr>
       </tbody>
     </table>
   </section>
 
   <div class="footer">
-    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-17 (기록 입력 PRD + 모바일 디자인 개편 반영) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> · <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a>
+    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-19 (기록 입력 기능 구현·E2E 마감 반영, 이슈 #71) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> · <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a>
   </div>
 
 </div>
