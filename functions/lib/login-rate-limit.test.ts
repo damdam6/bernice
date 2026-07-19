@@ -5,33 +5,15 @@ import {
   checkLoginBlock,
   clearLoginFailures,
   recordLoginFailure,
-  type RateLimitKV,
 } from './login-rate-limit'
-
-// KV의 expirationTtl은 흉내 내지 않는다 — 논리 만료는 resetAt으로 판정되므로
-// 만료 시나리오는 now 주입으로 검증한다.
-function makeKV(): RateLimitKV & { store: Map<string, string> } {
-  const store = new Map<string, string>()
-  return {
-    store,
-    async get(key) {
-      return store.get(key) ?? null
-    },
-    async put(key, value) {
-      store.set(key, value)
-    },
-    async delete(key) {
-      store.delete(key)
-    },
-  }
-}
+import { makeMockKV } from './mock-kv'
 
 const IP = '203.0.113.7'
 const T0 = 1_800_000_000_000 // 고정 기준 시각(epoch ms)
 
 describe('login-rate-limit', () => {
   it('실패가 임계 미만이면 차단하지 않는다', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     for (let i = 0; i < MAX_FAILURES - 1; i++) await recordLoginFailure(kv, IP, T0 + i)
 
     expect(await checkLoginBlock(kv, IP, T0 + MAX_FAILURES)).toEqual({
@@ -41,7 +23,7 @@ describe('login-rate-limit', () => {
   })
 
   it('실패 임계 도달 시 차단하고 Retry-After를 마지막 실패 기준으로 계산한다', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     for (let i = 0; i < MAX_FAILURES; i++) await recordLoginFailure(kv, IP, T0)
 
     const halfWindowMs = (WINDOW_SECONDS / 2) * 1000
@@ -51,7 +33,7 @@ describe('login-rate-limit', () => {
   })
 
   it('연속 실패는 창을 다시 민다(슬라이딩) — 마지막 실패로부터 WINDOW가 기준', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     const stepMs = 60 * 1000
     for (let i = 0; i < MAX_FAILURES; i++) await recordLoginFailure(kv, IP, T0 + i * stepMs)
 
@@ -62,7 +44,7 @@ describe('login-rate-limit', () => {
   })
 
   it('창이 지나면 차단이 풀리고 카운트도 0부터 다시 센다', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     for (let i = 0; i < MAX_FAILURES; i++) await recordLoginFailure(kv, IP, T0)
 
     const afterWindow = T0 + WINDOW_SECONDS * 1000
@@ -74,7 +56,7 @@ describe('login-rate-limit', () => {
   })
 
   it('clearLoginFailures는 카운터를 지워 다음 실패가 1회부터 시작된다', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     for (let i = 0; i < MAX_FAILURES; i++) await recordLoginFailure(kv, IP, T0)
     await clearLoginFailures(kv, IP)
 
@@ -83,7 +65,7 @@ describe('login-rate-limit', () => {
   })
 
   it('IP가 다르면 카운터가 독립이다', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     for (let i = 0; i < MAX_FAILURES; i++) await recordLoginFailure(kv, IP, T0)
 
     expect((await checkLoginBlock(kv, IP, T0 + 1)).blocked).toBe(true)
@@ -91,7 +73,7 @@ describe('login-rate-limit', () => {
   })
 
   it('손상된 KV 값은 없는 것으로 취급한다', async () => {
-    const kv = makeKV()
+    const kv = makeMockKV()
     kv.store.set(`login-fail:${IP}`, 'not-json{')
 
     expect((await checkLoginBlock(kv, IP, T0)).blocked).toBe(false)

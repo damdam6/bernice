@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { makeMockKV } from '../lib/mock-kv'
 import { verifySessionToken } from '../lib/session-cookie'
 import { onRequestPost } from './login'
 
@@ -6,28 +7,11 @@ const TEAM_PASSCODE = 'team-passcode-1234'
 const ADMIN_CODE = 'admin-code-5678'
 const SESSION_SECRET = 'test-session-secret'
 
-// KVNamespace 중 rate limiting이 쓰는 get/put/delete만 흉내 낸 in-memory 모의(#80).
-function makeKV() {
-  const store = new Map<string, string>()
-  return {
-    store,
-    async get(key: string) {
-      return store.get(key) ?? null
-    },
-    async put(key: string, value: string) {
-      store.set(key, value)
-    },
-    async delete(key: string) {
-      store.delete(key)
-    },
-  }
-}
-
 type LoginEnv = {
   TEAM_PASSCODE?: string
   ADMIN_CODE?: string
   SESSION_SECRET: string
-  LOGIN_RATE_LIMIT?: ReturnType<typeof makeKV>
+  LOGIN_RATE_LIMIT?: ReturnType<typeof makeMockKV>
 }
 
 function makeContext(
@@ -147,7 +131,7 @@ describe('POST /api/login — rate limiting', () => {
   const IP = '203.0.113.7'
 
   function rateLimitedEnv(): LoginEnv {
-    return { TEAM_PASSCODE, ADMIN_CODE, SESSION_SECRET, LOGIN_RATE_LIMIT: makeKV() }
+    return { TEAM_PASSCODE, ADMIN_CODE, SESSION_SECRET, LOGIN_RATE_LIMIT: makeMockKV() }
   }
 
   async function fail(env: LoginEnv, ip = IP): Promise<Response> {
