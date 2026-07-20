@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#104 개인 프로필 화면 조립 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 3px; font-size: 0.82rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.done::before { background: var(--ok); }
+  .done-list li.done::after {
+    content: "✓"; position: absolute; left: 4px; top: 4px;
+    color: #fff; font-size: 11px; font-weight: 800; line-height: 1;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/104">#104</a></span><span class="type-chip">기능 개선</span>
+    <h1>개인 프로필 화면 조립 — 선수 선택 · 레이더 · 종목별 성장 · 추이 (스텁 → 실데이터)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/104-personal-profile-screen</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-21</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      <code>src/pages/Players.tsx</code>는 10줄짜리 "P4에서 채워집니다" 스텁이다. 개인 화면이 쓸
+      데이터(<code>RecordsResponse.players[]</code> — <code>trends</code>·<code>personalBests</code> 파싱 완료),
+      차트 컴포넌트(<code>RadarChart</code>·<code>TrendChart</code>·<code>PerformanceBar</code>),
+      정규화 함수(<code>buildPerformanceScale</code>)가 전부 구현·테스트됐지만 사용처가 0이다.
+      이 작업은 <b>이미 만들어진 부품을 조립</b>하는 일이다 — 차트/정규화 로직은 손대지 않고,
+      <code>Rankings.tsx</code>가 이미 확립한 패턴(<code>useRecords()</code> → 로딩/에러/빈 상태 →
+      <code>FilterChip</code> + 공유 <code>scale</code>)을 그대로 따른다.
+      파생 로직은 <code>Rankings</code>가 <code>ranking-view.ts</code>를 두는 것처럼
+      순수 함수 모듈 <code>profile-view.ts</code>로 분리해 단위 테스트하고, 화면은 배선만 담당한다.
+      정본은 <code>docs/prd-design.html §05 👤 개인</code> 매핑 표 + DesignSync 목업 PROFILE 섹션이다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>스텁</b>: <code>src/pages/Players.tsx</code>는 정적 placeholder 카드만 렌더. 라우트는
+        <code>src/App.tsx:23</code>(<code>/players</code>, <code>LoginGate</code> 하위) + <code>src/App.tsx:25</code>
+        (<code>/trends</code> → <code>/players</code> 리다이렉트). 라우팅 변경 불필요.</li>
+      <li><b>데이터 진입점</b>: <code>useRecords()</code>(<code>src/hooks/useRecords.ts</code>)가
+        <code>/api/records</code>를 페치·검증해 <code>RecordsResponse</code>를 반환.
+        <code>LoginGate</code>가 이미 페치하므로 이 화면은 캐시 히트(<code>staleTime 5분</code>).</li>
+      <li><b>기준 레퍼런스</b>: <code>src/pages/Rankings.tsx</code>가 로딩/에러/빈 상태 3분기,
+        <code>events.length===0 || sessions.length===0</code> → <code>EmptyState</code>, 회차 칩
+        <code>{i+1}차</code>, <code>const scale = useMemo(() =&gt; buildPerformanceScale(events, sessions), …)</code>를
+        이미 확립. 이 화면은 동일 골격을 재사용한다.</li>
+      <li><b>부품 (구현·테스트 완료, 그대로 사용)</b>:
+        <ul>
+          <li><code>src/components/charts/radar-chart.tsx</code> — <code>axes: {label, value(0~1)}[]</code>. 정규화는 호출자 책임.</li>
+          <li><code>src/components/charts/trend-chart.tsx</code> — <code>sessionLabels</code>, <code>highlight</code>,
+            <code>background[][]</code>, <code>goal(0~1)</code>. 배경→목표선→본인 순서로 그림.</li>
+          <li><code>src/lib/performance-scale.ts</code> — <code>buildPerformanceScale(events, sessions).normalize(key, rawValue)</code>.
+            랭킹·레이더·추이가 공유하는 단일 정규화(§07). 목표선도 같은 함수로 정규화.</li>
+          <li><code>FilterChip</code>, <code>Card</code>, 공통 <code>EmptyState</code>/<code>Spinner</code>/<code>ErrorPanel</code>/<code>CenteredPanel</code>.</li>
+        </ul>
+      </li>
+      <li><b>도메인 계약</b>(<code>shared/domain.ts</code>): <code>PlayerSummary</code>는 탈퇴 제외가 타입 수준 강제
+        (<code>status: Exclude&lt;PlayerStatus,'탈퇴'&gt;</code>) — 드롭다운 필터링 불필요.
+        <code>trends[]</code>는 events 전원 존재(기록 없으면 <code>points:[]</code>),
+        <code>personalBests[]</code>는 스파스(유효 기록 있는 종목만).
+        <code>TrendPoint.deltaFromPrevious</code>/<code>improved</code>는 <b>직전 유효 기록 대비</b>(직전 회차가 아님).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>구조:</b> 순수 파생 모듈(<code>profile-view.ts</code>) + 재사용 컴포넌트 2개
+      (<code>PlayerSelect</code>, <code>GrowthStatCard</code>) + 조립 화면(<code>Players.tsx</code>).
+      <code>Rankings</code>/<code>ranking-view</code> 분리 방식을 그대로 미러링한다.</p>
+
+    <p><b>상태</b>(화면): <code>selectedPlayerId</code>(기본 <code>players[0].id</code>),
+      <code>selectedSessionDate</code>(기본 최신 = <code>sessions[last].date</code>, <code>Rankings</code>와 동일),
+      <code>selectedEventKey</code>(기본 <code>events[0].key</code> — 첫 성장 카드 확장, 목업 기본 동작과 일치).
+      카드 탭은 단일 개방 아코디언 + 열린 카드 재탭 시 닫힘(<code>prev === key ? null : key</code>).</p>
+
+    <p><b>데이터 매핑</b>(전부 <code>profile-view.ts</code> 순수 함수, 정규화는 공유 <code>scale</code> 주입):</p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>요소</th><th>소스</th><th>규칙</th></tr></thead>
+      <tbody>
+        <tr><td>선수 드롭다운</td><td><code>players[]</code></td><td>탈퇴는 타입상 이미 제외. 선택 항목 체크(✓), 바깥 탭 닫힘(오버레이 방식).</td></tr>
+        <tr><td>회차 칩</td><td><code>sessions[]</code></td><td><code>FilterChip</code>, 라벨 <code>n차</code>(index+1, 날짜 오름차순).</td></tr>
+        <tr><td>레이더 축값</td><td>선택 회차 <code>entries[].scores[key]</code></td><td>recorded면 <code>scale.normalize(key, value)</code>, 아니면 <code>0</code>(목업 <code>perfs.map(p=&gt;p==null?0:p)</code>과 동일). 라벨 = <code>event.key</code>.</td></tr>
+        <tr><td>성장 카드 PB</td><td><code>personalBests[]</code></td><td><code>find(e=&gt;e.event===key)?.display ?? '—'</code>(스파스).</td></tr>
+        <tr><td>성장 카드 현재값</td><td>선택 회차 <code>scores[key]</code></td><td>recorded → <code>display</code>, exempt → <code>면제</code>, 그 외 → <code>—</code>.</td></tr>
+        <tr><td>성장 카드 델타</td><td><code>trends[].points[]</code></td><td>선택 회차 <code>sessionDate</code>의 point에서 <code>deltaFromPrevious</code>/<code>improved</code> 읽기. null(첫 기록/미기록) → <code>—</code> 회색, 0 → <code>─ 0</code> 회색, 그 외 → <code>▲/▼ |Δ|{시간이면 초}</code> + green/red.</td></tr>
+        <tr><td>추이 본인</td><td>본인 <code>trends[].points[]</code></td><td><code>{sessionIndex: 날짜인덱스, value: scale.normalize(key, point.value)}</code>. 스파스 유지.</td></tr>
+        <tr><td>추이 배경</td><td>본인 제외 <code>players[].trends[]</code></td><td>선수별 동일 매핑, 빈 시리즈 제외. <code>TrendChart.background</code>로.</td></tr>
+        <tr><td>추이 목표선</td><td><code>events[].targetValue</code></td><td><code>scale.normalize(key, targetValue)</code> → <code>goal</code>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>델타 색상 토큰</b>(§06/§07): 개선 <code>text-good</code>(#3f9e6b) · 악화 <code>text-bad</code>(#c25151) ·
+      동률/무비교 <code>text-ink-muted</code>. 카드 선택 보더 <code>border-primary</code> 1.5px(§06 "카드 선택 = primary 1.5px").</p>
+
+    <p><b>고려했으나 배제:</b> 차트/정규화 컴포넌트 수정(이미 계약대로 완성 — 조립만 필요) ·
+      델타를 화면에서 직접 재계산(<code>trends[]</code> 계약값이 "직전 유효 기록 대비"로 이미 정확, §01 콜아웃) ·
+      바깥 탭 닫힘을 document 리스너로(목업의 <code>position:fixed;inset:0</code> 오버레이가 테스트하기 쉽고 목업과 동일).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">순수 파생 모듈 작성 — 세션 라벨/레이더 축/성장 카드/추이 시리즈 빌더. <code>scale</code> 주입, DOM 무관.
+        <span class="files"><code>src/lib/profile-view.ts</code></span>
+        <span class="note">✓ 완료 — <code>buildSessionLabels</code>·<code>buildRadarAxes</code>·<code>buildGrowthCards</code>·<code>buildTrendSeries</code></span>
+      </li>
+      <li class="done">파생 모듈 단위 테스트 — recorded/exempt/미기록, 첫 기록·동률·개선·악화 델타, 스파스 PB, 배경 본인 제외, 목표선 정규화.
+        <span class="files"><code>src/lib/profile-view.test.ts</code></span>
+        <span class="note">✓ 완료 — 13 테스트 그린</span>
+      </li>
+      <li class="done">선수 선택 드롭다운 컴포넌트 — 트리거(현재 이름+chevron) + 메뉴(체크 표시) + 바깥 탭 오버레이 닫힘.
+        <span class="files"><code>src/components/PlayerSelect.tsx</code></span>
+        <span class="note">✓ 완료 — lucide <code>User</code>/<code>ChevronDown</code>/<code>Check</code> + role=listbox/option</span>
+      </li>
+      <li class="done">드롭다운 테스트 — 열기/닫기, 선택 콜백, 바깥 탭 닫힘, 현재 항목 체크.
+        <span class="files"><code>src/components/PlayerSelect.test.tsx</code></span>
+        <span class="note">✓ 완료 — 4 테스트 그린</span>
+      </li>
+      <li class="done">종목별 성장 카드 컴포넌트 — 라벨/PB/현재값/델타 행 + 선택 시 primary 보더 + 확장 <code>TrendChart</code> 슬롯.
+        <span class="files"><code>src/components/GrowthStatCard.tsx</code></span>
+        <span class="note">✓ 완료 — 델타 톤 → <code>text-good</code>/<code>text-bad</code>/<code>text-ink-muted</code></span>
+      </li>
+      <li class="done">성장 카드 테스트 — 델타 색/기호, 선택 보더, 확장 시 차트 표시 여부, 탭 콜백.
+        <span class="files"><code>src/components/GrowthStatCard.test.tsx</code></span>
+        <span class="note">✓ 완료 — 5 테스트 그린</span>
+      </li>
+      <li class="done">화면 조립 — 스텁 제거, <code>useRecords()</code> 3분기(로딩/에러/빈), 선수·회차·이벤트 상태, 헤더+드롭다운+칩+레이더 카드+성장 카드 목록 배선.
+        <span class="files"><code>src/pages/Players.tsx</code></span>
+        <span class="note">✓ 완료 — 빈 상태에 <code>players.length===0</code> 분기 추가. 레이더는 <code>Card</code>를 그대로 재사용(하드코딩 <code>p-6</code> 유지, 패딩 충돌 회피).</span>
+      </li>
+      <li class="done">화면 테스트 — 로딩/에러/빈 상태, 기본 렌더(첫 선수·최신 회차·첫 카드 확장), 선수/회차 전환, 카드 탭 → 추이 확장.
+        <span class="files"><code>src/pages/Players.test.tsx</code></span>
+        <span class="note">✓ 완료 — 7 테스트 그린(Rankings.test 골격 재사용)</span>
+      </li>
+      <li class="done">전체 그린 확인 — <code>npm run typecheck</code> + <code>npm run test</code>(vitest) + <code>npm run build</code>.
+        <span class="files"><code>package.json</code> 스크립트</span>
+        <span class="note">✓ 완료 — typecheck·build 통과, vitest 79 파일 666 테스트 그린. (레포 PM은 npm)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>델타 의미론 혼동(직전 회차 vs 직전 유효 기록)</td><td>미기록 회차 낀 선수의 델타 오표기</td><td>화면 재계산 금지 — <code>trends[].points[].deltaFromPrevious/improved</code> 계약값만 사용(§01). 테스트에 미기록 회차 낀 케이스 포함.</td></tr>
+        <tr><td>미기록 종목의 레이더 축값</td><td>축이 비어 폴리곤 깨짐</td><td>recorded 아니면 <code>0</code>으로 매핑(목업과 동일). <code>RadarChart</code>는 <code>clamp01</code>로 방어.</td></tr>
+        <tr><td>추이 point의 <code>sessionDate</code> ↔ 회차 인덱스 매핑</td><td>x축 위치 어긋남</td><td><code>sessions[]</code>(날짜 오름차순)로 <code>Map&lt;date,index&gt;</code> 1회 구성, 미존재 날짜 point는 방어적으로 제외.</td></tr>
+        <tr><td>선수/회차 0건, 기록 전무 선수</td><td>런타임 오류·빈 화면</td><td><code>Rankings</code> 3분기 + <code>players.length===0</code> 빈 상태 추가. 기록 없는 선수는 레이더 0·카드 <code>—</code>로 자연 처리.</td></tr>
+        <tr><td>정규화 불일치(랭킹과 다른 값)</td><td>§07 위반</td><td>랭킹과 동일한 <code>buildPerformanceScale(events, sessions)</code> 인스턴스 로직 공유(별도 구현 금지).</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>profile-view.test.ts</code> — 세션 라벨(<code>n차</code>), 레이더 축(recorded→정규화 / 미기록→0),
+        성장 카드 델타 4종(첫 기록 <code>—</code> · 동률 <code>─ 0</code> · 개선 <code>▲</code>green · 악화 <code>▼</code>red),
+        시간 종목 <code>초</code> 단위, PB 스파스(<code>—</code>), 추이 배경 본인 제외 + 목표선 정규화. (jsdom 불필요, 순수)</li>
+      <li><code>PlayerSelect.test.tsx</code> — 닫힘 기본, 트리거 클릭 열림, 항목 선택 시 <code>onChange</code> + 닫힘,
+        바깥(오버레이) 탭 닫힘, 현재 선수 체크 표시.</li>
+      <li><code>GrowthStatCard.test.tsx</code> — 델타 색/기호 매핑, 선택 시 <code>border-primary</code>,
+        <code>expanded</code>일 때만 <code>TrendChart</code> 렌더, 헤더 탭 <code>onToggle</code> 호출.</li>
+      <li><code>Players.test.tsx</code>(<code>Rankings.test.tsx</code> 골격 재사용) — 로딩 스피너, 에러 <code>ErrorPanel</code>+재시도,
+        빈 상태(<code>EmptyState</code>), 기본 렌더(첫 선수·최신 회차·첫 카드 확장·레이더 aria),
+        선수 전환·회차 전환 시 값 갱신, 다른 카드 탭 → 추이 차트 전환.</li>
+      <li>회귀 — <code>pnpm test</code> 전체 그린(기존 차트/정규화/랭킹 테스트 불변), <code>pnpm typecheck</code> 통과.
+        스텁 문구 <code>"P4에서 채워집니다"</code>가 코드베이스에서 사라졌는지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="done"><code>Players.tsx</code> 스텁·"P4에서 채워집니다" 제거, <code>useRecords()</code> 실데이터 렌더</li>
+      <li class="done">선수 선택 드롭다운(탈퇴 제외, 바깥 탭 닫힘, 선택 체크)</li>
+      <li class="done">회차 칩(<code>FilterChip</code>, "n차")</li>
+      <li class="done"><code>RadarChart</code> — 선택 회차 4종목 정규화 성능</li>
+      <li class="done">종목별 성장 카드(PB·현재값·델타·방향색), 탭 시 <code>TrendChart</code> 확장(배경+본인+목표선)</li>
+      <li class="done">정규화 <code>buildPerformanceScale</code> 공유(랭킹과 동일 함수)</li>
+      <li class="done">빈/로딩/에러 상태 처리(<code>Rankings</code> 패턴)</li>
+      <li class="done">테스트 추가, <code>typecheck</code>·<code>vitest</code> 그린(666 테스트)</li>
+      <li class="done">디자인 <code>§05 👤 개인</code> 표 + 목업 PROFILE 섹션과 일치</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/104">#104</a> · 2026-07-21</footer>
+</main>
+</body>
+</html>
