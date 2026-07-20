@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#103 홈 화면 조립 — 최신 회차 요약 + 종목별 달성률 게이지 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.checked::before { background: var(--ok); }
+  .done-list li.checked::after {
+    content: "✓"; position: absolute; left: 5px; top: 5px;
+    color: #fff; font-size: 11px; font-weight: 800; line-height: 1;
+  }
+  .steps li.done::after {
+    content: "✓ 완료"; position: absolute; right: 0; top: 12px;
+    color: var(--ok); font-size: 0.75rem; font-weight: 700;
+  }
+  .steps li.skip::after {
+    content: "— 생략"; position: absolute; right: 0; top: 12px;
+    color: var(--muted); font-size: 0.75rem; font-weight: 700;
+  }
+  .note-ok { display: block; margin-top: 4px; font-size: 0.82rem; color: var(--ok); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/103">#103</a></span><span class="type-chip">기능 개선</span>
+    <h1>홈 화면 조립 — 최신 회차 요약 + 종목별 달성률 게이지 (스텁 → 실데이터)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/103-home-summary-gauges</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-21</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      <code>src/pages/Home.tsx</code>는 아직 P0 스캐폴딩 스텁이다 — <code>/api/health</code>만 핑하고 정적 placeholder 카드를 그린다.
+      홈이 그릴 데이터(<code>RecordsResponse.home</code>)와 게이지 컴포넌트(<code>AchievementGauge</code>)는 이미 구현·테스트가 끝났으나 사용처가 0이다.
+      이번 작업은 스텁을 걷어내고, LoginGate가 이미 캐시에 채워둔 <code>useRecords()</code> 데이터로
+      <b>헤더(BERNICE + 잠금) · 인디고 최신회차 카드 · 종목별 달성률 게이지 목록 · 바로가기 2카드</b>를
+      <code>docs/prd-design.html §05~§07</code>와 DesignSync 목업 HOME 섹션 그대로 조립한다.
+      파생값(n차 라벨·평균 달성%)과 게이지 매핑은 순수 함수로 분리해 단위 테스트하고, 화면 렌더는 컴포넌트 테스트로 못박는다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li>
+        <b>현재 홈은 P0 스텁.</b> <code>src/pages/Home.tsx:20-31</code>이 <code>/api/health</code>를 핑해
+        API 상태 pill만 그리고, <code>src/pages/Home.tsx:46</code>에 "P0 스캐폴딩 · 화면은 P3~P4에서 채워집니다" 문구가 박혀 있다.
+        실제 회차/달성률은 전혀 없다.
+      </li>
+      <li>
+        <b>데이터는 이미 준비돼 있다.</b> <code>src/components/auth/LoginGate.tsx:17</code>가 <code>useRecords()</code>로
+        <code>/api/records</code>를 페치하고, 성공(비-401·비-에러) 시에만 <code>MainLayout</code>(→ <code>Outlet</code> → Home)을 렌더한다
+        (<code>LoginGate.tsx:19-41</code>). 따라서 홈이 <code>useRecords()</code>를 다시 부르면
+        <code>staleTime: 5분</code>(<code>src/hooks/useRecords.ts:61</code>) 캐시 히트로 즉시 데이터를 얻는다 — 재요청 없음.
+      </li>
+      <li>
+        <b>홈 요약 계약.</b> <code>HomeSummary</code>(<code>shared/domain.ts:133-139</code>)는
+        <code>latestSession: { date, participantCount } | null</code>과
+        <code>achievementRates: EventAchievementRate[]</code>(<code>event/achievedCount/eligibleCount/rate</code>, <code>domain.ts:126-131</code>)를 준다.
+        <code>events[]</code>·<code>sessions[]</code>(날짜 오름차순)도 같은 응답에 있다(<code>domain.ts:142-149</code>).
+      </li>
+      <li>
+        <b>게이지 컴포넌트는 완성품.</b> <code>src/components/charts/achievement-gauge.tsx:10-26</code>는
+        <code>value</code>(0~1)만 받아 §07 스펙(8px <code>bg-gauge-track</code> 트랙, 전원 달성 <code>bg-primary</code> / 미만 <code>bg-primary-soft</code>,
+        <code>transition-[width] duration-500</code>)대로 그린다. 종목명·"n/m명 달성" 텍스트는 화면 책임(주석에 명시).
+        배럴 <code>src/components/charts/index.ts:1</code>로 <code>{ AchievementGauge }</code> export.
+      </li>
+      <li>
+        <b>참고할 형제 화면.</b> <code>src/pages/Rankings.tsx:13-43</code>가 로딩/에러/빈 상태 3분기 패턴
+        (<code>isError</code>→<code>ErrorPanel</code>, <code>!data</code>→<code>Spinner</code>, 데이터 0건→<code>EmptyState</code>)과
+        n차 라벨 규칙(<code>Rankings.tsx:76</code> — <code>sessions.map((s,i)=&gt; …{i+1}차)</code>)을 이미 쓴다. 홈도 같은 규칙을 따른다.
+      </li>
+      <li>
+        <b>토큰·라우팅 확인.</b> 색은 전부 <code>src/index.css</code> <code>@theme</code> 토큰
+        (<code>--color-primary #3f51b5</code>:12, <code>--color-primary-soft #c5cae9</code>:15, <code>--color-gauge-track #eef0f4</code>:47,
+        <code>--color-ink-sub</code>:26, <code>--color-neutral-strong #9096a2</code>:39)으로 존재한다.
+        라우트는 <code>/admin/login</code>·<code>/rankings</code>·<code>/players</code>가 <code>src/App.tsx</code>에 모두 있다(잠금·바로가기 목적지).
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p>
+      정본은 <code>docs/prd-design.html §05 🏠 홈</code> 표(요소→필드) + §06(공통 컴포넌트) + §07(게이지),
+      시각 배치는 DesignSync 목업 <code>버니스 기록.dc.html</code> HOME 섹션이다. 아래 매핑·색·수치는 목업에서 직접 읽어 확정했다.
+    </p>
+
+    <h3 style="font-size:0.95rem;margin:14px 0 6px;">파생 로직 → 순수 함수로 분리 (<code>src/lib/home-summary.ts</code>)</h3>
+    <ul>
+      <li><b>n차 라벨</b>: <code>sessions</code>(날짜 오름차순)에서 <code>latestSession.date</code>의 index+1 → <code>"3차"</code>.
+        Rankings의 <code>{i+1}차</code>와 동일 규칙. <code>latestSessionOrdinal(sessions, date)</code>.</li>
+      <li><b>평균 목표 달성%</b>: <code>achievementRates[].rate</code> 단순 평균 ×100 반올림.
+        목업 계산(<code>Math.round(mean(count/total)*100)</code>)과 동치 — <code>rate</code>가 곧 <code>achievedCount/eligibleCount</code>(0 가드 포함).
+        빈 배열이면 0. <code>averageAchievementPct(rates)</code>.</li>
+      <li><b>게이지 목록</b>: <code>achievementRates[]</code>를 순회하며 라벨은 <code>events[]</code>에서 <code>event</code> key로 조회(누락 시 key fallback).
+        <code>{ label, achievedCount, eligibleCount, rate }[]</code>. <code>buildHomeGauges(rates, events)</code>.</li>
+    </ul>
+
+    <h3 style="font-size:0.95rem;margin:14px 0 6px;">화면 구조 (<code>src/pages/Home.tsx</code>)</h3>
+    <ul>
+      <li><b>3분기 게이트</b>: Rankings와 동일하게 <code>useRecords()</code>로 <code>isError</code>→<code>CenteredPanel</code>+<code>ErrorPanel</code>,
+        <code>!data</code>→<code>CenteredPanel</code>+<code>Spinner</code>. (LoginGate가 이미 걸러 사실상 방어 코드지만 형제 화면과 일관.)</li>
+      <li><b>헤더</b>(항상): 좌 <code>BERNICE</code> 워드마크(30px/800, uppercase, <code>text-primary</code>, letter-spacing .03em) +
+        우 잠금 버튼(40×40, radius 12, <code>border-input-line</code>, hover <code>border-primary</code>) → <code>&lt;Link to="/admin/login"&gt;</code> + lucide <code>Lock</code>, <code>aria-label="관리자 로그인"</code>.</li>
+      <li><b>빈 상태</b>: <code>latestSession === null</code>이면 헤더 아래 <code>EmptyState title="아직 기록된 회차가 없습니다"</code>
+        (Rankings 카피 재사용). 헤더는 남겨 관리자 로그인 진입을 유지.</li>
+      <li><b>인디고 최신회차 카드</b>(<code>bg-primary rounded-[20px] px-[22px] py-5 text-white</code>):
+        상단 좌 <code>"최신 회차 · {n차}"</code>(<code>text-primary-soft</code> 13px/600) / 우 <code>{date}</code>(20px/800, 흰색, YYYY-MM-DD 원본);
+        하단 우측 2스탯 — <code>{participantCount}</code>명 "참여 인원" / <code>{avg%}</code>% "평균 목표 달성"
+        (값 22px/800 흰색, 단위 <code>text-primary-soft</code>, 라벨 11px). 카드 radius는 목업의 20px 준수(공용 <code>Card</code>의 18px·<code>p-6</code>·shadow와 불일치해 인라인).</li>
+      <li><b>게이지 목록</b>: "종목별 팀 목표 달성률" 헤딩(14px/700 <code>text-ink</code>) 아래
+        각 행(흰 배경, <code>border-line</code>, radius 16, padding 14/16) = <code>{종목 라벨}</code>(14px/600 <code>text-ink</code>) +
+        <code>"{achievedCount}/{eligibleCount}명 달성"</code>(12px <code>text-ink-sub</code>) + <code>&lt;AchievementGauge value={rate} /&gt;</code>.
+        <code>achievementRates.length &gt; 0</code>일 때만 섹션 렌더.</li>
+      <li><b>바로가기 2카드</b>: "바로가기" 헤딩 아래 2열 그리드 —
+        <code>&lt;Link to="/rankings"&gt;</code> lucide <code>Trophy</code> + "랭킹" / "누가 제일 잘해?",
+        <code>&lt;Link to="/players"&gt;</code> lucide <code>TrendingUp</code> + "개인 추이" / "종목별 성장 그래프"
+        (아이콘 <code>text-primary</code>, 제목 14px/700, 부제 11px <code>text-neutral-strong</code>, hover <code>border-primary</code>).</li>
+    </ul>
+
+    <h3 style="font-size:0.95rem;margin:14px 0 6px;">색 토큰 판단</h3>
+    <ul>
+      <li>목업 <code>#C5CAE9</code>(단위·"최신 회차·n차") = 기존 <code>primary-soft</code> 토큰 그대로 사용.</li>
+      <li>인디고 카드 위 소형 스탯 라벨 색 <code>#9FA8DA</code>는 토큰 미존재 → 목업 충실도를 위해 인라인 임의값
+        <code>text-[#9fa8da]</code> 1회 사용(대체안: <code>primary-soft</code>로 통일 시 명도 위계 상실). 구현 시 최종 확정.</li>
+      <li>게이지/바로가기 제목 <code>#232733</code>은 본문 텍스트 의미 → 기존 <code>ink</code>(#141821) 토큰으로 매핑(1~2 명도 차 무시, 유지보수 우선).</li>
+      <li>바로가기 부제 <code>#9096a2</code> = <code>neutral-strong</code>, 달성 카운트 <code>#8b909c</code> = <code>ink-sub</code> — 정확히 토큰 일치.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">파생 로직 순수 함수 추가 — <code>latestSessionOrdinal</code>·<code>averageAchievementPct</code>·<code>buildHomeGauges</code>. 도메인 타입만 import, 렌더 무관.
+        <span class="files"><code>src/lib/home-summary.ts</code> (신규)</span>
+      </li>
+      <li class="done">파생 로직 단위 테스트 — n차 index+1, 평균 반올림(빈 배열 0·0 가드), 게이지 라벨 <code>events[]</code> 조회·fallback·순서.
+        <span class="files"><code>src/lib/home-summary.test.ts</code> (신규)</span>
+      </li>
+      <li class="done">Home 스텁 제거 후 실데이터 조립 — <code>/api/health</code>·"P0 스캐폴딩" 문구 완전 삭제, <code>useRecords()</code> 3분기 게이트
+        + 헤더 + 인디고 카드 + 게이지 목록 + 바로가기 + <code>latestSession===null</code> 빈 상태. §05~§07·목업 준수.
+        <span class="files"><code>src/pages/Home.tsx</code></span>
+        <span class="note-ok">공용 <code>Card</code>는 홈 카드 스펙(radius 16/20·no-shadow·tight padding)과 어긋나 홈 전용 인라인 스타일 div로 목업 충실 재현(필수 재사용 <code>AchievementGauge</code>만). 소형 스탯 라벨 <code>#9fa8da</code>는 인라인 임의값 1회로 국한.</span>
+      </li>
+      <li class="skip">(색 판단) 인디고 스탯 라벨 <code>#9fa8da</code>는 토큰 추가 대신 인라인 임의값 <code>text-[#9fa8da]</code> 1회로 처리 → <code>index.css</code> 변경 없음.
+        <span class="files"><code>src/index.css</code> (미변경)</span>
+      </li>
+      <li class="done">Home 컴포넌트 테스트 — 로딩/빈/정상 + 스텁 제거 회귀. 정상 케이스에서 n차·날짜·참여인원·평균%,
+        게이지 행 "n/m명 달성"과 <code>role="img"</code> aria-label, 잠금·바로가기 링크 <code>href</code> 검증.
+        <code>MemoryRouter</code> + <code>QueryClientProvider</code> + <code>fetch</code> stub(Rankings.test 패턴).
+        <span class="files"><code>src/pages/Home.test.tsx</code> (신규)</span>
+      </li>
+      <li class="done">검증 — <code>typecheck</code>(tsc -b) + <code>vitest</code> 전체 그린 + <code>vite build</code> 성공(CI = npm test + build).
+        <span class="files"><code>package.json</code> 스크립트</span>
+        <span class="note-ok">typecheck 통과 · 테스트 77파일 647건 그린(신규 3파일 포함) · 프로덕션 빌드 성공.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>#9FA8DA</code> 등 목업 색이 토큰에 없음</td>
+          <td>임의 색을 인라인하면 토큰 규율(코드베이스 전 색 토큰화)과 어긋남</td>
+          <td>정확 일치 토큰은 재사용, 미존재 1건만 인라인 임의값 또는 토큰 1개 추가로 국한 — §3 색 판단대로 최소화</td>
+        </tr>
+        <tr>
+          <td>공용 <code>Card</code>가 홈 카드 스펙(radius 16/20·padding·no-shadow)과 불일치</td>
+          <td>강제 재사용 시 Tailwind <code>p-6</code>/<code>shadow-sm</code> 충돌로 스타일 예측 불가</td>
+          <td>홈 전용 인라인 스타일 div로 목업 충실 재현(이슈의 Card 재사용은 권장이며 강제 아님). 필수 재사용은 <code>AchievementGauge</code></td>
+        </tr>
+        <tr>
+          <td><code>latestSession</code>은 있는데 <code>achievementRates</code>가 빈 경계</td>
+          <td>게이지 헤딩만 남거나 평균% 계산이 NaN</td>
+          <td><code>averageAchievementPct</code> 빈 배열 0 가드 + 게이지 섹션은 <code>length &gt; 0</code>일 때만 렌더</td>
+        </tr>
+        <tr>
+          <td>Home이 <code>Link</code>·<code>useRecords</code> 사용 → 테스트 provider 필요</td>
+          <td>라우터/쿼리 provider 없으면 렌더 throw</td>
+          <td><code>MemoryRouter</code> + <code>QueryClientProvider</code> 래퍼(Rankings.test 패턴 그대로)</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>src/lib/home-summary.test.ts</code> — <code>latestSessionOrdinal</code>: 3회차 중 최신이 3차, 미존재 방어값.</li>
+      <li>동 파일 — <code>averageAchievementPct</code>: 예 <code>[0.5, 1, 0]</code> → 50, 빈 배열 → 0, 반올림 경계.</li>
+      <li>동 파일 — <code>buildHomeGauges</code>: 라벨을 <code>events[]</code>에서 조회, 매칭 없으면 event key fallback, 개수/분모/rate 보존.</li>
+      <li><code>src/pages/Home.test.tsx</code> — 로딩: <code>fetch</code> pending → <code>role="status"</code> 스피너.</li>
+      <li>동 파일 — 빈 상태: <code>latestSession:null</code> 본문 → "아직 기록된 회차가 없습니다" + 헤더 잠금 링크 존재.</li>
+      <li>동 파일 — 정상: n차 라벨·날짜·<code>{participantCount}</code>명·평균%가 화면에 있고,
+        각 게이지 행 "n/m명 달성" + <code>getAllByRole('img')</code> aria-label(달성률 %) 렌더,
+        잠금 <code>href="/admin/login"</code>·바로가기 <code>href="/rankings"</code>·<code>"/players"</code> 확인.</li>
+      <li><code>AchievementGauge</code> 기존 테스트(<code>achievement-gauge.test.tsx</code>)는 변경 없음 — 회귀 없음 확인.</li>
+      <li>전체 <code>typecheck</code> + <code>vitest</code> 그린.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="checked"><code>/api/health</code> 스텁·"P0 스캐폴딩" 문구 완전 제거, <code>useRecords()</code> 실데이터로 렌더</li>
+      <li class="checked">헤더(BERNICE 워드마크 + 잠금 → <code>/admin/login</code>)</li>
+      <li class="checked">인디고 최신회차 카드(n차·날짜·참여인원·평균%) + n차/평균 파생 로직(순수 함수 분리)</li>
+      <li class="checked">종목별 <code>AchievementGauge</code> 목록(라벨 + "n/m명 달성" + 달성 색 분기)</li>
+      <li class="checked">바로가기 2카드(랭킹 → <code>/rankings</code> · 개인 추이 → <code>/players</code>)</li>
+      <li class="checked"><code>latestSession=null</code> 빈 상태 · 로딩 상태 처리</li>
+      <li class="checked">테스트 추가(요약 파생값 단위 + 게이지/화면 렌더), <code>typecheck</code>·<code>vitest</code> 그린</li>
+      <li class="checked">디자인 <code>§05 🏠 홈</code> 표 · §06/§07 · 목업 HOME 섹션과 일치</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/103">#103</a> · 2026-07-21</footer>
+</main>
+</body>
+</html>
