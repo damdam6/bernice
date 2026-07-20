@@ -80,6 +80,24 @@ describe('useSubmitMutation', () => {
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
 
+  it('성공 후 onSuccess가 throw해도 submitting은 풀린다 (버튼 잠금 방지)', async () => {
+    const { result } = setup()
+
+    await act(async () => {
+      // 예외는 호출부 버그로 전파되지만(finally가 삼키지 않음) 여기선 받아 테스트를 이어간다.
+      await result.current
+        .submit(
+          async () => ({ ok: true as const }),
+          () => {
+            throw new Error('navigate 실패')
+          },
+        )
+        .catch(() => {})
+    })
+
+    expect(result.current.submitting).toBe(false)
+  })
+
   it('clearError()는 이전 실패 메시지를 지운다', async () => {
     const { result } = setup()
 

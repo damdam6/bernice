@@ -67,16 +67,21 @@ export function useSubmitMutation() {
         return
       }
 
-      // 성공 콜백 직전에 무효화한다(원본 순서 유지) — navigate로 넘어간 화면이 최신 데이터를 본다.
-      await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
-      // 바로 위 !result.ok 가드로 여기선 result.ok가 확정 true다. TS가 제네릭 R을 그 판별식으로
-      // Extract<R,{ok:true}>까지 좁혀주진 못해(제네릭 내로잉 한계) 단언을 쓰지만, 가드가 보장하는
-      // 건전한 단언이다 — 한 줄로 격리해 둔다.
-      await onSuccess(result as Extract<R, { ok: true }>)
-      // 성공 후 submitting을 되돌린다. 현 세 화면은 onSuccess에서 navigate해 언마운트되므로
-      // 리셋은 no-op(React 18+는 언마운트 후 setState를 무시)이지만, navigate 없이 머무는
-      // onSuccess에도 버튼이 "…하는 중"에 잠기지 않도록 재사용 훅으로서 명시적으로 푼다.
-      setSubmitting(false)
+      // 성공 후 submitting을 되돌리는 걸 finally에 둔다. 현 세 화면은 onSuccess에서 navigate해
+      // 언마운트되므로 리셋이 no-op(React 18+는 언마운트 후 setState 무시)이지만, ① navigate 없이
+      // 머무는 onSuccess ② invalidate/onSuccess가 던지는 경우 모두에서 버튼이 "…하는 중"에
+      // 고정되지 않도록 보장한다. 여기선 catch가 아니라 finally다 — 쓰기는 이미 성공했으므로 실패
+      // 문구를 띄우면 오히려 거짓 보고이고, 콜백이 던진 예외는 호출부 버그이니 그대로 전파시킨다.
+      try {
+        // 성공 콜백 직전에 무효화한다(원본 순서 유지) — navigate로 넘어간 화면이 최신 데이터를 본다.
+        await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
+        // 바로 위 !result.ok 가드로 여기선 result.ok가 확정 true다. TS가 제네릭 R을 그 판별식으로
+        // Extract<R,{ok:true}>까지 좁혀주진 못해(제네릭 내로잉 한계) 단언을 쓰지만, 가드가 보장하는
+        // 건전한 단언이다 — 한 줄로 격리해 둔다.
+        await onSuccess(result as Extract<R, { ok: true }>)
+      } finally {
+        setSubmitting(false)
+      }
     },
     [queryClient],
   )
