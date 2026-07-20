@@ -7,6 +7,7 @@
 // 이름이 아니라 id로 받는 이유는 프론트가 이미 /api/records에서 id를 쥐고 있고 이름은 개명될 수 있어서다
 // (docs/prd-record-input.html §06과 동일 원칙) — 서버가 명단에서 활동 여부·이름을 다시 확인한다.
 
+import { isPlainObject } from '../../../shared/is-plain-object'
 import {
   type Env as SheetsEnv,
   SheetsApiError,
@@ -29,10 +30,11 @@ interface Env extends SheetsEnv {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context
 
+  // 바디 파싱은 admin/records.ts와 같은 관용구(#93) — as 단언 없이 unknown에서 좁힌다.
   let participantIds: number[]
   try {
-    const body = (await request.json()) as { participantIds?: unknown } | null
-    participantIds = parseParticipantIds(body?.participantIds)
+    const raw: unknown = await request.json()
+    participantIds = parseParticipantIds(isPlainObject(raw) ? raw.participantIds : undefined)
   } catch {
     return Response.json(
       { error: 'bad_request', message: '참가자 목록(participantIds: number[])이 담긴 JSON 바디가 필요합니다.' },

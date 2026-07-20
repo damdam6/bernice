@@ -12,6 +12,7 @@
 // 판정 순서 = 요청 형식(400) → 자원 존재(404) → 값 유효성(400) → 쓰기(502). 검증·헤더 매핑·
 // 이름 매칭 규칙은 새로 만들지 않고 기존 순수 함수를 재사용한다(PRD §08).
 
+import { isPlainObject } from '../../../shared/is-plain-object'
 import { SheetsApiError, fetchSheetBundle, type Env as SheetsEnv } from '../../lib/sheetsApi'
 import { updateValues } from '../../lib/sheetsWriteApi'
 import { parseGoals } from '../../lib/parse-goals'
@@ -125,11 +126,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 }
 
 type ParsedBody = { ok: true; value: RecordsRequest } | { ok: false; message: string }
-
-// 타입 가드 — 검증 후 `as` 단언 없이 Record<string, unknown>로 좁힌다(배열·null은 객체에서 제외).
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
 
 function parseBody(raw: unknown): ParsedBody {
   if (!isPlainObject(raw)) {

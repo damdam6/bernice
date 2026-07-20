@@ -62,6 +62,22 @@ describe('addPlayers', () => {
     })
   })
 
+  it('200이라도 계약 위반 필드는 기본값으로 폴백한다 (쓰기는 이미 성공 — 실패로 바꾸지 않는다)', async () => {
+    // sessionDate 타입 위반 + added 원소 하나가 계약 위반 → 요청 값·빈 배열로 폴백.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(200, { sessionDate: 20250516, added: [{ playerId: '7', name: '선수7' }] }),
+      ),
+    )
+
+    await expect(addPlayers('2025-05-16', [7])).resolves.toEqual({
+      ok: true,
+      sessionDate: '2025-05-16',
+      added: [],
+    })
+  })
+
   it('에러 바디를 파싱할 수 없으면 기본 메시지를 반환한다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('not json', { status: 502 })))
 

@@ -28,6 +28,19 @@ describe('createSheet', () => {
     })
   })
 
+  it('201이라도 계약 위반 필드는 기본값으로 폴백한다 (생성은 이미 성공 — 실패로 바꾸지 않는다)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse(201, { sessionDate: null, participantCount: '3' })),
+    )
+
+    await expect(createSheet([1, 2, 3])).resolves.toEqual({
+      ok: true,
+      sessionDate: '',
+      participantCount: 0,
+    })
+  })
+
   it('409(오늘 이미 생성됨)이면 ok:false와 서버 메시지를 반환한다', async () => {
     vi.stubGlobal(
       'fetch',

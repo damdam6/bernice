@@ -41,6 +41,29 @@ describe('saveRecord', () => {
     })
   })
 
+  it('200이라도 scores가 계약을 위반하면 {}로 폴백한다 (저장은 이미 성공 — 실패로 바꾸지 않는다)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(200, {
+          sessionDate: '2025-08-16',
+          playerId: 7,
+          name: '선수7',
+          // EventScore 계약 위반: recorded인데 value가 문자열 — 원소 하나라도 어긋나면 전체 폴백.
+          scores: { 드리블셔틀런: { status: 'recorded', value: '72', display: '1:12' } },
+        }),
+      ),
+    )
+
+    await expect(saveRecord('2025-08-16', 7, { 드리블셔틀런: '1:12' })).resolves.toEqual({
+      ok: true,
+      sessionDate: '2025-08-16',
+      playerId: 7,
+      name: '선수7',
+      scores: {},
+    })
+  })
+
   it('400(validation_failed)이면 ok:false와 서버 메시지를 반환한다', async () => {
     vi.stubGlobal(
       'fetch',
