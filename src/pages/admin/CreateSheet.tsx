@@ -1,26 +1,23 @@
 // 기록지 만들기(#67) — docs/prd-design.html §05: "오늘 · YYYY-MM-DD" + 참가자 선택 리스트
 // (활동·가나다·기본 해제) + 하단 고정 확인 바 "N명으로 기록지 만들기"(0명이면 비활성).
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
 import { SelectablePlayerList } from '../../components/SelectablePlayerList'
-import { RECORDS_QUERY_KEY, useRecords } from '../../hooks/useRecords'
+import { useRecords } from '../../hooks/useRecords'
 import { useMultiSelect } from '../../hooks/useMultiSelect'
+import { useSubmitMutation } from '../../hooks/useSubmitMutation'
 import { createSheet } from '../../lib/create-sheet-api'
 import { compareKorean } from '../../lib/korean-sort'
 import { formatSeoulDate } from '../../lib/seoul-date'
 
 export default function CreateSheet() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { data, isError, error, refetch } = useRecords()
   const { selected, toggle } = useMultiSelect()
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { submitting, submitError, submit } = useSubmitMutation()
 
   if (isError) {
     return (
@@ -43,21 +40,14 @@ export default function CreateSheet() {
     .sort(compareKorean)
 
   async function handleConfirm() {
-    setSubmitting(true)
-    setSubmitError(null)
-
-    const result = await createSheet([...selected])
-
-    if (!result.ok) {
-      setSubmitError(result.message)
-      setSubmitting(false)
-      return
-    }
-
-    await queryClient.invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })
-    navigate(`/admin/records/${result.sessionDate}`, {
-      state: { toast: `✓ ${result.sessionDate} 기록지 생성됨 · 팀원 열람에 반영` },
-    })
+    await submit(
+      () => createSheet([...selected]),
+      (result) => {
+        navigate(`/admin/records/${result.sessionDate}`, {
+          state: { toast: `✓ ${result.sessionDate} 기록지 생성됨 · 팀원 열람에 반영` },
+        })
+      },
+    )
   }
 
   return (
