@@ -57,4 +57,9 @@
   --radius-card: 18px;
   --radius-badge: 7px;
   --radius-chip: 11px;
+
+  /* 모바일 프레임 폭 (#107) — 넓은 화면은 중앙정렬 폭 제한으로만 대응(§01/§09).
+     28rem=448px는 기존 max-w-md와 동일값 → ≤448px에서 시각 무변화.
+     v4 --container-* 네임스페이스가 max-w-frame 유틸을 생성한다(폭의 단일 출처). */
+  --container-frame: 28rem;
 }
