@@ -12,7 +12,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon = '🗂️', title, description, titleAs: Title = 'h2', children }: EmptyStateProps) {
   return (
-    <div className="w-full max-w-md rounded-card border border-line bg-white p-8 text-center shadow-sm">
+    <div className="w-full max-w-frame rounded-card border border-line bg-white p-8 text-center shadow-sm">
       <p className="text-4xl">{icon}</p>
       <Title className="mt-3 text-lg font-bold text-ink">{title}</Title>
       {description && <p className="mt-2 text-sm text-ink-sub">{description}</p>}

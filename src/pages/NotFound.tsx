@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 export default function NotFound() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6">
-      <main className="w-full max-w-md rounded-card border border-line bg-white p-10 text-center shadow-sm">
+      <main className="w-full max-w-frame rounded-card border border-line bg-white p-10 text-center shadow-sm">
         <p className="text-5xl">🏀</p>
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink">
           페이지를 찾을 수 없습니다
