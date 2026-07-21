@@ -1,49 +1,167 @@
-import { useEffect, useState } from 'react'
+import { Lock, TrendingUp, Trophy } from 'lucide-react'
+import type { ComponentType } from 'react'
+import { Link } from 'react-router-dom'
+import type { RecordsResponse } from '../../shared/domain'
+import { AchievementGauge } from '../components/charts'
+import { CenteredPanel } from '../components/common/CenteredPanel'
+import { EmptyState } from '../components/common/EmptyState'
+import { ErrorPanel } from '../components/common/ErrorPanel'
+import { Spinner } from '../components/common/Spinner'
+import { useRecords } from '../hooks/useRecords'
+import { averageAchievementPct, buildHomeGauges, latestSessionOrdinal, type HomeGauge } from '../lib/home-summary'
 
-type ApiStatus = 'loading' | 'ok' | 'down'
-
-const STATUS_LABEL: Record<ApiStatus, string> = {
-  loading: 'API 확인 중…',
-  ok: 'API 정상',
-  down: 'API 응답 없음',
-}
-
-const STATUS_DOT: Record<ApiStatus, string> = {
-  loading: 'bg-warn-strong',
-  ok: 'bg-good',
-  down: 'bg-bad',
-}
-
+// 홈(#103) — LoginGate가 이미 캐시에 채운 useRecords() 실데이터로 요약을 조립한다.
+// 로딩/에러 분기는 Rankings와 동일 패턴(사실상 LoginGate가 먼저 걸러 방어 코드).
+// 레이아웃·색·수치 정본: docs/prd-design.html §05~§07 + DesignSync 목업 HOME 섹션.
 export default function Home() {
-  const [status, setStatus] = useState<ApiStatus>('loading')
+  const { data, isError, error, refetch } = useRecords()
 
-  useEffect(() => {
-    const controller = new AbortController()
+  if (isError) {
+    return (
+      <CenteredPanel>
+        <ErrorPanel message={error?.message ?? '알 수 없는 오류가 발생했습니다'} onRetry={() => refetch()} />
+      </CenteredPanel>
+    )
+  }
 
-    fetch('/api/health', { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`${res.status}`))))
-      .then((data: { ok: boolean }) => setStatus(data.ok ? 'ok' : 'down'))
-      .catch(() => {
-        if (!controller.signal.aborted) setStatus('down')
-      })
+  // isError가 아니고 data가 아직 없으면 로딩 중 — Rankings와 같이 data 자체로 좁힌다.
+  if (!data) {
+    return (
+      <CenteredPanel>
+        <Spinner label="홈 불러오는 중…" />
+      </CenteredPanel>
+    )
+  }
 
-    return () => controller.abort()
-  }, [])
+  return <HomeContent data={data} />
+}
+
+function HomeContent({ data }: { data: RecordsResponse }) {
+  const { home, sessions, events } = data
+  const { latestSession, achievementRates } = home
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6">
-      <main className="w-full max-w-md rounded-card border border-line bg-white p-10 text-center shadow-sm">
-        <p className="text-5xl">🏀</p>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink">
-          버니스 실력 기록
-        </h1>
-        <p className="mt-2 text-sm text-ink-sub">팀 랭킹 · 개인 성장 추이</p>
-        <p className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary-tint px-4 py-1.5 text-xs font-semibold text-primary-strong">
-          <span className={`size-2 rounded-full ${STATUS_DOT[status]}`} />
-          {STATUS_LABEL[status]}
-        </p>
-      </main>
-      <p className="mt-6 text-xs text-ink-muted">P0 스캐폴딩 · 화면은 P3~P4에서 채워집니다</p>
+    <div className="flex flex-1 flex-col px-5 pb-8 pt-4">
+      <Header />
+
+      {latestSession === null ? (
+        <div className="flex flex-1 items-center justify-center">
+          <EmptyState title="아직 기록된 회차가 없습니다" />
+        </div>
+      ) : (
+        <>
+          <LatestSessionCard
+            ordinal={latestSessionOrdinal(sessions, latestSession.date)}
+            date={latestSession.date}
+            participantCount={latestSession.participantCount}
+            averagePct={averageAchievementPct(achievementRates)}
+          />
+
+          {achievementRates.length > 0 && <GaugeList gauges={buildHomeGauges(achievementRates, events)} />}
+
+          <Shortcuts />
+        </>
+      )}
     </div>
+  )
+}
+
+function Header() {
+  return (
+    <header className="mb-6 flex items-center justify-between">
+      <span className="text-[30px] font-extrabold uppercase leading-none tracking-[0.03em] text-primary">BERNICE</span>
+      <Link
+        to="/admin/login"
+        aria-label="관리자 로그인"
+        className="flex size-10 items-center justify-center rounded-xl border border-input-line bg-white text-chip-ink transition-colors hover:border-primary hover:text-primary"
+      >
+        <Lock className="size-5" />
+      </Link>
+    </header>
+  )
+}
+
+interface LatestSessionCardProps {
+  ordinal: number
+  date: string
+  participantCount: number
+  averagePct: number
+}
+
+function LatestSessionCard({ ordinal, date, participantCount, averagePct }: LatestSessionCardProps) {
+  return (
+    <div className="overflow-hidden rounded-[20px] bg-primary px-[22px] py-5 text-white">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-semibold tracking-[0.02em] text-primary-soft">최신 회차 · {ordinal}차</span>
+        <span className="text-xl font-extrabold tracking-[-0.01em]">{date}</span>
+      </div>
+      <div className="mt-5 flex justify-end gap-7 text-right">
+        <Stat value={participantCount} unit="명" label="참여 인원" />
+        <Stat value={averagePct} unit="%" label="평균 목표 달성" />
+      </div>
+    </div>
+  )
+}
+
+function Stat({ value, unit, label }: { value: number; unit: string; label: string }) {
+  return (
+    <div>
+      <div className="text-[22px] font-extrabold">
+        {value}
+        <span className="text-[13px] font-semibold text-primary-soft">{unit}</span>
+      </div>
+      {/* 인디고 카드 위 소형 라벨 — #9fa8da는 토큰 미존재(primary-soft보다 한 단계 흐림)라 인라인 임의값 */}
+      <div className="mt-px text-[11px] text-[#9fa8da]">{label}</div>
+    </div>
+  )
+}
+
+function GaugeList({ gauges }: { gauges: HomeGauge[] }) {
+  return (
+    <section className="mt-6">
+      <h2 className="mb-3 px-0.5 text-sm font-bold text-ink">종목별 팀 목표 달성률</h2>
+      <div className="flex flex-col gap-2.5">
+        {gauges.map((gauge) => (
+          <div key={gauge.event} className="rounded-2xl border border-line bg-white px-4 py-3.5">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-semibold text-ink">{gauge.label}</span>
+              <span className="text-xs text-ink-sub">
+                {gauge.achievedCount}/{gauge.eligibleCount}명 달성
+              </span>
+            </div>
+            <AchievementGauge value={gauge.rate} />
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function Shortcuts() {
+  return (
+    <section className="mt-6">
+      <h2 className="mb-3 px-0.5 text-sm font-bold text-ink">바로가기</h2>
+      <div className="grid grid-cols-2 gap-2.5">
+        <ShortcutCard to="/rankings" Icon={Trophy} title="랭킹" subtitle="누가 제일 잘해?" />
+        <ShortcutCard to="/players" Icon={TrendingUp} title="개인 추이" subtitle="종목별 성장 그래프" />
+      </div>
+    </section>
+  )
+}
+
+interface ShortcutCardProps {
+  to: string
+  Icon: ComponentType<{ className?: string }>
+  title: string
+  subtitle: string
+}
+
+function ShortcutCard({ to, Icon, title, subtitle }: ShortcutCardProps) {
+  return (
+    <Link to={to} className="rounded-2xl border border-line bg-white p-4 transition-colors hover:border-primary">
+      <Icon className="size-6 text-primary" />
+      <div className="mt-2 text-sm font-bold text-ink">{title}</div>
+      <div className="mt-px text-[11px] text-neutral-strong">{subtitle}</div>
+    </Link>
   )
 }
