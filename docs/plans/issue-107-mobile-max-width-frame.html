@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#107 화면 최대 넓이(모바일 프레임) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .step-note { display: block; margin-top: 5px; font-size: 0.83rem; color: var(--warn); }
+  .status-banner {
+    background: color-mix(in srgb, var(--ok) 12%, transparent);
+    border: 1px solid var(--ok); color: var(--ok);
+    border-radius: 10px; padding: 10px 16px; margin-top: 18px;
+    font-size: 0.9rem; font-weight: 600;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/107">#107</a></span><span class="type-chip">기능 개선</span>
+    <h1>화면 최대 넓이(모바일 프레임) — 레이아웃 전역 중앙정렬 max-width 컨테이너</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/107-mobile-max-width-frame</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-21</span>
+    </div>
+  </header>
+
+  <div class="status-banner">✓ 구현 완료 — 10개 단계 전부 완료 · typecheck·vitest(681) 그린 · max-w-frame 실측(데스크톱 1440px → 448px 중앙정렬) 확인</div>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      레이아웃 셸(<code>MainLayout</code>·<code>AdminLayout</code>)에 max-width가 없어 넓은 화면에서 콘텐츠가 뷰포트 전폭으로 퍼지고,
+      각 화면·공통 컴포넌트가 <code>max-w-md</code>를 제각각 붙여 폭 규칙이 파편화돼 있다. Tailwind v4 <code>@theme</code>에
+      폭 토큰 <code>--container-frame</code>(28rem = 448px, 현행 <code>max-w-md</code>와 동일값)을 두고, 이를 쓰는 공통
+      <code>MobileFrame</code> 컨테이너를 도입해 <b>두 레이아웃 · 레이아웃 밖 최상위 화면(LoginGate·NotFound) · BottomNav</b>를
+      하나의 중앙정렬 프레임 폭으로 수렴한다. 폭 값이 현행과 같아 모바일(≤448px)에서는 시각 변화가 없고, 데스크톱에서만 중앙 고정폭으로 바뀐다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>MainLayout</b>: <code>flex min-h-dvh flex-col bg-canvas</code> 아래 콘텐츠 컬럼 <code>flex flex-1 flex-col pb-16</code>뿐 — max-width 없음(<code>src/components/layout/MainLayout.tsx:6</code>).</li>
+      <li><b>AdminLayout</b>: 동일한 <code>min-h-dvh flex-col bg-canvas</code> + 헤더(BackButton) 구조, max-width 없음(<code>src/components/layout/AdminLayout.tsx:6</code>).</li>
+      <li><b>BottomNav</b>: <code>fixed inset-x-0 bottom-0</code>라 뷰포트 전폭 — border-t·bg-white가 전폭으로 늘어남(<code>src/components/layout/BottomNav.tsx:20</code>).</li>
+      <li><b>페이지들은 자체 max-width가 없다</b>: Home·Rankings·Players·admin 기록 화면은 <code>px-4/5 py-6</code>만 두고 폭을 부모(레이아웃)에 위임 — 지금 부모가 전폭이라 데스크톱에서 실제로 전폭으로 렌더된다(<code>Home.tsx:44</code>, <code>Rankings.tsx:62</code>, <code>Players.tsx:76</code>, <code>RecordsDateSelect.tsx:75</code> 등).</li>
+      <li><b>카드형 화면만 각자 <code>w-full max-w-md</code></b>: PasscodeGate(<code>LoginGate.tsx:72</code>), NotFound(<code>NotFound.tsx:6</code>), AdminLogin(<code>AdminLogin.tsx:45</code>), SheetManagementHome 내부 컬럼(<code>SheetManagementHome.tsx:29</code>).</li>
+      <li><b>공통 카드 컴포넌트도 각자 <code>max-w-md</code></b>: ErrorPanel(<code>ErrorPanel.tsx:14</code>), EmptyState(<code>EmptyState.tsx:15</code>).</li>
+      <li><b>라우팅</b>: 3탭은 <code>LoginGate</code>(내부에서 <code>MainLayout</code> 렌더) 안, 관리자 스택은 <code>AdminLayout</code>, <code>NotFound</code>는 <code>path="*"</code>로 어느 레이아웃에도 속하지 않는다(<code>src/App.tsx</code>). → 폭 규칙을 한 곳(레이아웃)에만 걸면 NotFound·게이트 상태는 누락되므로 공통 컨테이너가 필요.</li>
+      <li><b>폭 토큰 부재</b>: <code>src/index.css</code>의 <code>@theme</code>에 색·radius 토큰만 있고 컨테이너 폭 토큰이 없다. Tailwind v4에서 <code>max-w-md</code>는 기본 <code>--container-md</code>(28rem)를 참조한다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>채택안 — 폭 토큰 + 공통 컨테이너 컴포넌트 조합(이슈의 "컨테이너 컴포넌트 또는 토큰으로 일원화"를 둘 다 충족).</b></p>
+    <ul>
+      <li><b>① 폭 토큰</b>: <code>@theme</code>에 <code>--container-frame: 28rem;</code> 추가 → v4의 <code>--container-*</code> 네임스페이스가 <code>max-w-frame</code> 유틸을 생성한다. <b>폭의 유일 출처</b>가 되며, 값이 현행 <code>max-w-md</code>와 같아 ≤448px에서는 픽셀 무변화.</li>
+      <li><b>② 공통 컨테이너</b>: <code>MobileFrame</code> 컴포넌트(<code>mx-auto w-full max-w-frame</code> + <code>className</code> passthrough) — 중앙정렬 컬럼의 단일 구현. 화면별 레이아웃 의도(<code>flex-1 flex-col</code>, <code>pb-16</code> 등)는 <code>className</code>으로 주입.</li>
+      <li><b>③ 바깥 배경은 전폭 유지</b>: <code>bg-canvas min-h-dvh</code>는 그대로 뷰포트 전폭 → 데스크톱에서 프레임 밖은 canvas 회색. 별도 레터박스 색을 정할 필요가 없어 §09 "넓은 화면은 <b>중앙 정렬 폭 제한</b>으로만 대응"에 정확히 부합.</li>
+      <li><b>④ BottomNav</b>: <code>fixed inset-x-0 bottom-0</code>는 위치용 투명 셸로 두고, 그 안에 <code>MobileFrame</code>로 감싼 실제 바(border-t·bg-white·safe-area pad·탭 flex)를 중앙정렬 → 프레임 폭과 정확히 일치(전폭 아님).</li>
+    </ul>
+    <p><b>기각안</b></p>
+    <ul>
+      <li>페이지마다 <code>max-w</code> 추가 → 파편화 지속, 이슈의 dedup 목표에 정면 위배.</li>
+      <li>컨테이너 쿼리/미디어쿼리 기반 태블릿·데스크톱 반응형 레이아웃 → §09 <b>비스코프</b>(전용 레이아웃 안 함)와 충돌, 과설계.</li>
+      <li>토큰 없이 <code>max-w-md</code> 문자열만 표준화 → 폭 값이 코드 곳곳에 흩어져 "일원화" 미달. 토큰이 정본 한 곳을 만든다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">폭 토큰 추가 — <code>@theme</code>에 <code>--container-frame: 28rem;</code>(주석: 448px, 모바일 프레임 폭 · §01/§09).
+        <span class="files"><code>src/index.css</code></span>
+        <span class="step-note">↳ 검증: dist CSS에서 <code>.max-w-frame{max-width:var(--container-frame)}</code> + <code>--container-frame:28rem</code> 컴파일 확인.</span>
+      </li>
+      <li class="done">공통 컨테이너 컴포넌트 생성 — <code>MobileFrame</code>: <code>mx-auto w-full max-w-frame</code> + 선택적 <code>className</code> 병합. 짧은 주석으로 "프레임 폭의 단일 사용처"임을 명시.
+        <span class="files"><code>src/components/layout/MobileFrame.tsx</code></span>
+      </li>
+      <li class="done">MainLayout에 프레임 적용 — 콘텐츠 컬럼을 <code>&lt;MobileFrame className="flex flex-1 flex-col pb-16"&gt;</code>로 교체. 바깥 <code>bg-canvas min-h-dvh</code> 전폭 유지.
+        <span class="files"><code>src/components/layout/MainLayout.tsx</code></span>
+      </li>
+      <li class="done">AdminLayout에 프레임 적용 — 헤더(BackButton)+Outlet을 <code>&lt;MobileFrame className="flex flex-1 flex-col"&gt;</code>로 감싸 헤더까지 같은 폭.
+        <span class="files"><code>src/components/layout/AdminLayout.tsx</code></span>
+      </li>
+      <li class="done">BottomNav 중앙정렬 — <code>fixed</code> 셸은 투명 위치용으로 두고 내부 <code>MobileFrame</code> 바에 border-t·bg-white·safe-area·탭 flex 이동(전폭 → 중앙 고정폭).
+        <span class="files"><code>src/components/layout/BottomNav.tsx</code></span>
+      </li>
+      <li class="done">레이아웃 밖 최상위 화면 수렴 — LoginGate(PasscodeGate)와 NotFound에서 자체 <code>max-w-md</code> → <code>max-w-frame</code> 토큰으로 교체, 동일 폭 규칙 공유. LoginGate error 분기는 <code>ErrorPanel</code>(8단계에서 <code>max-w-frame</code>화)이 이미 폭을 담당해 추가 변경 불필요.
+        <span class="files"><code>src/components/auth/LoginGate.tsx</code>, <code>src/pages/NotFound.tsx</code></span>
+        <span class="step-note">↳ 계획 조정: 단일 카드 화면은 <code>MobileFrame</code>로 감싸는 대신 카드에 <code>max-w-frame</code> 토큰을 직접 부여. 폭 정본은 토큰 하나로 동일하게 수렴하면서 불필요한 래퍼 노드를 줄임. <code>MobileFrame</code> 컴포넌트는 동적 컬럼(레이아웃 셸·BottomNav) 전용으로 유지.</span>
+      </li>
+      <li class="done">관리자 카드 화면 dedup — AdminLogin의 <code>&lt;main&gt;</code>·SheetManagementHome 내부 컬럼의 <code>max-w-md</code> → <code>max-w-frame</code>으로 통일.
+        <span class="files"><code>src/pages/admin/AdminLogin.tsx</code>, <code>src/pages/admin/SheetManagementHome.tsx</code></span>
+      </li>
+      <li class="done">공통 카드 토큰 통일 — ErrorPanel·EmptyState의 <code>max-w-md</code> → <code>max-w-frame</code>(자체 폭 캡은 유지하되 정본 토큰 하나로 수렴).
+        <span class="files"><code>src/components/common/ErrorPanel.tsx</code>, <code>src/components/common/EmptyState.tsx</code></span>
+      </li>
+      <li class="done">테스트 — <code>MobileFrame.test</code>(children 렌더·<code>max-w-frame</code>/<code>mx-auto</code> 클래스·className 병합) 신규, <code>BottomNav.test</code>에 중앙정렬 바(전폭 아님) 검증 추가, <code>MainLayout.test</code>(프레임 안 Outlet + BottomNav 공존) 신규.
+        <span class="files"><code>src/components/layout/MobileFrame.test.tsx</code>, <code>src/components/layout/BottomNav.test.tsx</code>, <code>src/components/layout/MainLayout.test.tsx</code></span>
+      </li>
+      <li class="done">검증 — <code>npm run typecheck</code> · <code>npm run test</code>(83파일·681테스트) 그린. 데스크톱 폭 확인은 실측으로 대체: 실제 컴파일된 <code>.max-w-frame</code>을 1440px 부모 안에서 측정 → 폭 448px·좌우 여백 496px 동일(중앙정렬). 임베디드 브라우저 뷰포트가 448px를 못 넘겨 스크린샷 대신 실측 채택.
+        <span class="files">전체</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>v4 <code>--container-frame</code>이 <code>max-w-frame</code> 유틸을 생성하지 않을 가능성</td>
+          <td>프레임 폭이 안 걸려 전폭 유지</td>
+          <td>2단계 직후 <code>build</code>/<code>typecheck</code>로 즉시 확인. 실패 시 폴백: <code>@utility</code> 정의 또는 <code>MobileFrame</code> 내부에서 <code>max-w-[28rem]</code> — 어느 쪽이든 정본은 한 곳 유지.</td>
+        </tr>
+        <tr>
+          <td>ErrorPanel/EmptyState를 프레임 밖에서 단독 렌더 시 전폭</td>
+          <td>잠재 footgun</td>
+          <td>현재 모든 사용처가 프레임 안(Main·게이트)이며 <code>max-w-frame</code>로 자체 캡을 유지하므로 전폭이 되지 않음 → 실질 무영향.</td>
+        </tr>
+        <tr>
+          <td>병렬 진행 중인 #103(Home)·#104(Players)와의 시각 중복</td>
+          <td>머지 시 페이지 내부 <code>max-w</code> 잔존 시 이중 제한</td>
+          <td>두 페이지 모두 자체 <code>max-w</code>가 없음(확인 완료) → git·시각 충돌 없음. 머지 후 육안 재확인.</td>
+        </tr>
+        <tr>
+          <td>데스크톱에서 ErrorPanel 카드가 448→400px로 소폭 축소(CenteredPanel <code>px-6</code> 안쪽)</td>
+          <td>경미한 시각 변화</td>
+          <td>프레임 일관성상 의도된 결과. 모바일(≤448px)에서는 무변화.</td>
+        </tr>
+        <tr>
+          <td><code>pb-16</code>(64px) BottomNav 오프셋</td>
+          <td>프레임 적용 후 콘텐츠가 nav에 가리면 안 됨</td>
+          <td>오프셋을 프레임 컬럼에 그대로 유지, 데스크톱·모바일 육안 확인.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run test</code>(vitest) 전체 그린 — 기존 AdminLayout·BottomNav·LoginGate·AdminLogin 등 텍스트·role 기반 테스트는 폭 클래스에 의존하지 않으므로 무영향임을 확인.</li>
+      <li>신규 <code>MobileFrame.test</code> — children 렌더, <code>max-w-frame</code>·<code>mx-auto</code> 클래스 부착, 전달한 <code>className</code> 병합.</li>
+      <li><code>BottomNav.test</code> 확장 — <code>nav</code> 내부에 중앙정렬 바(<code>max-w-frame</code>)가 존재하고 전폭이 아님을 클래스로 검증. 기존 탭 활성화(<code>aria-current</code>) 테스트는 그대로 유지.</li>
+      <li>신규 <code>MainLayout.test</code> — Outlet 콘텐츠가 프레임 안에 렌더되고 BottomNav가 함께 노출됨을 확인.</li>
+      <li><code>npm run typecheck</code>(<code>tsc -b</code>) 그린.</li>
+      <li>육안 — 데스크톱 넓은 폭에서 홈·랭킹·개인·관리자·로그인·404 각 화면이 중앙 고정폭으로 정렬되고 BottomNav가 중앙정렬되며, 모바일 폭에서는 픽셀 변화가 없음을 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>MainLayout</code>에 중앙정렬 max-width 컨테이너(토큰 기반 모바일 프레임)</li>
+      <li><code>AdminLayout</code> 동일 적용</li>
+      <li><code>LoginGate</code>·<code>NotFound</code> 등 레이아웃 밖 최상위 화면도 동일 폭 규칙 공유</li>
+      <li><code>BottomNav</code>가 컨테이너 폭에 중앙정렬(전폭 아님)</li>
+      <li>데스크톱 넓은 화면에서 중앙 고정폭 육안 확인</li>
+      <li>기존 개별 <code>max-w-md</code> 중복 정리 — <code>MobileFrame</code>/<code>max-w-frame</code> 토큰으로 공통화</li>
+      <li><code>typecheck</code>·<code>vitest</code> 그린, 관련 테스트 갱신/추가</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/107">#107</a> · 2026-07-21</footer>
+</main>
+</body>
+</html>
