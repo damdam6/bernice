@@ -26,7 +26,7 @@ export default function SheetManagementHome() {
 
   return (
     <div className="flex flex-1 flex-col items-center px-6 py-10">
-      <div className="flex w-full max-w-md flex-col gap-6">
+      <div className="flex w-full max-w-frame flex-col gap-6">
         <h1 className="text-center text-2xl font-bold tracking-tight text-ink">시트 관리</h1>
 
         <div className="flex flex-col gap-3">

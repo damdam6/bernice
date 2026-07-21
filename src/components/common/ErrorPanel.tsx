@@ -11,7 +11,7 @@ export function ErrorPanel({ title = '문제가 발생했어요', message, title
   return (
     <div
       role="alert"
-      className="w-full max-w-md rounded-card border border-line bg-white p-8 text-center shadow-sm"
+      className="w-full max-w-frame rounded-card border border-line bg-white p-8 text-center shadow-sm"
     >
       <p className="text-4xl">⚠️</p>
       <Title className="mt-3 text-lg font-bold text-ink">{title}</Title>

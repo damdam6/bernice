@@ -69,7 +69,7 @@ function PasscodeGate() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6">
-      <main className="w-full max-w-md rounded-card border border-line bg-white p-10 text-center shadow-sm">
+      <main className="w-full max-w-frame rounded-card border border-line bg-white p-10 text-center shadow-sm">
         <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary-tint">
           <Lock className="size-7 text-primary" />
         </div>
