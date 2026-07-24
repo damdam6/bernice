@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD · 종목 생애주기 (추가·종료)</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --accent: #ff7a45;
+    --accent-2: #4a90ff;
+    --good: #35c07a;
+    --warn: #f5b800;
+    --bad: #ff5c5c;
+    --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 40px; }
+  .badge { display: inline-block; font-size: 12px; letter-spacing: .04em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 12px; margin-bottom: 16px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0; }
+  .status { margin-top: 18px; font-size: 13px; color: var(--good); background: rgba(53,192,122,.08); border: 1px solid rgba(53,192,122,.25); border-radius: 8px; padding: 10px 14px; display: inline-block; }
+  .crumb { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .crumb a { color: var(--accent-2); text-decoration: none; }
+  h2 { font-size: 21px; margin: 48px 0 16px; padding-top: 8px; letter-spacing: -.01em; }
+  h2 .num { color: var(--accent); font-family: var(--mono); font-size: 16px; margin-right: 8px; }
+  h3 { font-size: 16px; margin: 28px 0 10px; }
+  p { color: var(--text); }
+  .muted { color: var(--muted); }
+  section { scroll-margin-top: 24px; }
+  nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 8px; }
+  nav.toc ol { margin: 0; padding-left: 20px; }
+  nav.toc li { margin: 4px 0; }
+  nav.toc a { color: var(--accent-2); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.mono, th.mono { font-family: var(--mono); }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--bad); }
+  .num-cell { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  code.inline { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+  pre.code { font-family: var(--mono); font-size: 12.5px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; overflow-x: auto; white-space: pre; margin: 10px 0; line-height: 1.6; }
+  .tabname { display: inline-block; font-family: var(--mono); font-size: 12px; background: rgba(74,144,255,.12); border: 1px solid rgba(74,144,255,.35); color: var(--accent-2); border-radius: 6px; padding: 2px 9px; margin-right: 6px; }
+  .callout { border-left: 3px solid var(--warn); background: rgba(245,184,0,.06); border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; }
+  .callout.info { border-left-color: var(--accent-2); background: rgba(74,144,255,.06); }
+  .callout.good { border-left-color: var(--good); background: rgba(53,192,122,.06); }
+  .callout.bad { border-left-color: var(--bad); background: rgba(255,92,92,.06); }
+  .flow { font-family: var(--mono); font-size: 13px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; overflow-x: auto; white-space: pre; color: var(--text); margin: 10px 0; }
+  .flow .k { color: var(--accent); }
+  .flow .note { color: var(--muted); }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="build-plan.html">작업 계획</a> · <a href="prd-design.html">디자인 PRD</a> · <a href="prd-record-input.html">기록 입력 PRD</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
+    <span class="badge">PRD 확장 · 시트 변동성 대응</span>
+    <h1>🔄 PRD — 종목 생애주기 (추가·종료)</h1>
+    <p class="sub">측정 종목은 회차 사이에 <b>추가</b>되거나 <b>종료</b>될 수 있다. 이 사실을 시트 스키마(목표 탭 <b>종료 회차</b> 열)와 파서·계산·화면 전체가 1급 개념으로 다루게 하는 확장 PRD.</p>
+    <div class="status">✅ 사용자 확정 요구 3건(2026-07-24) 반영한 확정안 — 이 문서만 읽고 후속 이슈 분할·구현 착수 가능 (열린 항목 1건: §09 면제 토글 종목)</div>
+  </header>
+
+  <nav class="toc">
+    <strong style="font-size:14px;">목차</strong>
+    <ol>
+      <li><a href="#background">배경 &amp; 문제 정의</a></li>
+      <li><a href="#requirements">요구사항 — 사용자 확정 3건</a></li>
+      <li><a href="#decisions">확정 결정 요약</a></li>
+      <li><a href="#schema">시트 스키마 개정 — 목표 탭 '종료 회차' 열</a></li>
+      <li><a href="#lifecycle">종목 생애주기 규칙 (판정·검증)</a></li>
+      <li><a href="#contract">도메인 타입·API 계약 변경</a></li>
+      <li><a href="#backend">파서·계산 동작 변경</a></li>
+      <li><a href="#screens">화면 동작 변경</a></li>
+      <li><a href="#write">쓰기 경로 변경 (회차 생성·기록 입력)</a></li>
+      <li><a href="#migration">현행 시트 정합화 (마이그레이션)</a></li>
+      <li><a href="#ops">운영 규칙 개정</a></li>
+      <li><a href="#nonscope">비스코프 (명시적으로 안 하는 것)</a></li>
+      <li><a href="#issues">단계별 이슈 분할 제안</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="background">
+    <h2><span class="num">01</span>배경 &amp; 문제 정의</h2>
+    <p>2026-07 팀이 측정 종목을 실제로 개편했다 — 기존 4종목에서 <b>45도패스캐치를 종료</b>하고 <b>패스 3종(체스트·바운드·원핸드)과 볼 캐치를 추가</b>해 7종목이 됐다. 그런데 현재 사이트 구조는 종목 변동을 지원하지 않는다:</p>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>문제</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">1</td><td>파서(<code class="inline">mapHeaderToEvents</code>)가 <b>목표 탭 전체 종목 ↔ 모든 회차 탭 헤더의 완전일치</b>를 강제한다 — 목표에 종목을 추가하는 순간, 그 컬럼이 없는 과거 회차 탭 전부가 "종목 컬럼 없음" 에러</td><td><code class="inline">/api/records</code>가 500으로 실패해 홈·랭킹·프로필 <b>사이트 전면 에러</b>. 실시트가 이미 개편된 지금, 실제로 이 상태다</td></tr>
+        <tr><td class="num-cell">2</td><td>종목을 없앨 합법적 방법이 없다 — 목표 탭 행 삭제는 금지(회차 헤더가 행 위치 참조)이고, 소프트 종료 개념도 없다</td><td>운영자가 기존 행을 <b>제자리에서 다른 종목으로 교체</b>(45도패스캐치 → 패스 - 체스트)했고, 참조 수식 탓에 과거 회차의 45도패스캐치 기록이 <b>패스 - 체스트라는 다른 종목 이름·다른 목표 기준으로 노출</b>되는 의미 왜곡 발생</td></tr>
+        <tr><td class="num-cell">3</td><td>회차 탭 생성(<code class="inline">create-sheet</code>)이 목표 탭 <b>전체</b> 종목으로 헤더를 만든다</td><td>종료 개념이 생겨도 신규 회차에 종료 종목이 계속 포함된다 — 제외 규칙 필요</td></tr>
+      </tbody>
+    </table>
+    <p><b>목표:</b> 종목의 추가·종료를 시트 스키마와 사이트가 정식으로 지원한다. 과거 회차 데이터는 <b>그 당시 측정한 종목 그대로</b> 보존·표시되고, 종목이 바뀌어도 과거 회차 탭은 손댈 필요가 없으며, 사이트는 깨지지 않는다.</p>
+    <div class="callout info"><b>포지셔닝:</b> 이 문서는 <a href="sheet-integration.html">시트 연동 확정안</a>의 목표 탭 스키마와 <a href="records-schema.html">도메인 타입·API 계약</a>을 개정하는 <b>확장 PRD</b>다. 명단의 <code class="inline">탈퇴</code>가 "행 삭제 대신 상태 변경"인 것과 동형으로, 종목의 종료도 "행 삭제 대신 <b>종료 회차 기입</b>"으로 다룬다.</div>
+  </section>
+
+  <!-- 2 -->
+  <section id="requirements">
+    <h2><span class="num">02</span>요구사항 — 사용자 확정 3건 (2026-07-24)</h2>
+    <table>
+      <thead><tr><th style="width:44px;">#</th><th>요구</th><th>이 문서의 해석·구체화</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="num-cell">R1</td>
+          <td>종목은 중간에 사라질 수 있다. 따라서 <b>종목 시트에 종료 회차를 넣는다</b></td>
+          <td>목표 탭에 <b>종료 회차</b> 열(E열)을 신설한다. 값은 회차 탭 이름과 같은 <code class="inline">YYYY-MM-DD</code>. 빈칸이면 현역 종목이다 (§04)</td>
+        </tr>
+        <tr>
+          <td class="num-cell">R2</td>
+          <td>종료 회차가 기입되어 있으면 <b>해당 회차까지만 데이터가 존재</b>함. 그 다음부터는 없다</td>
+          <td>경계 포함 — 종료 회차로 지정된 회차 <b>까지</b>는 그 종목의 기록이 존재할 수 있고, 그 <b>이후</b> 회차에는 존재하지 않는다. 이후 회차 탭에 그 종목 컬럼이 나타나면 데이터 모순으로 보고 fail-loud 에러로 알린다 (§05 V4)</td>
+        </tr>
+        <tr>
+          <td class="num-cell">R3</td>
+          <td>종목은 <b>추가</b>될 수 있다</td>
+          <td>목표 탭 맨 아래 행 추가만으로 종목을 추가한다. 추가 이후 생성되는 회차부터 자동 포함되고, <b>과거 회차 탭은 수정하지 않는다</b> — 컬럼이 없는 회차는 "그 회차 미측정"으로 처리한다 (§05 V3, 완전일치 강제의 완화)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section id="decisions">
+    <h2><span class="num">03</span>확정 결정 요약</h2>
+    <table>
+      <thead><tr><th style="width:44px;">#</th><th>항목</th><th>결정</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">D1</td><td>종료 회차 표기</td><td>회차 탭 이름과 동일한 <code class="inline">YYYY-MM-DD</code> 날짜. <b>경계 포함</b>(그 회차까지 측정). 빈칸(또는 <code class="inline">-</code>) = 현역 — 만점 열의 null 표기와 동일 관례</td></tr>
+        <tr><td class="num-cell">D2</td><td>시작 회차 열은 두지 않음</td><td>어느 회차에서 어떤 종목을 측정했는지의 <b>정본은 각 회차 탭 헤더</b>다(컬럼이 있으면 측정). 종료 회차는 ① 이후 등장 금지의 상한 마커 ② 신규 탭 생성 제외 기준 ③ UI '종료' 표기, 세 용도만 담당한다. 중간에 건너뛴 회차(측정 생략)도 자연스럽게 허용된다</td></tr>
+        <tr><td class="num-cell">D3</td><td>회차별 종목 스냅샷</td><td><code class="inline">SessionEntry.scores</code>의 "전 종목 key 항상 존재" 완전성 계약을 "<b>그 회차 측정 종목 key만 존재</b>"로 개정하고, 회차별 측정 종목 목록 <code class="inline">Session.eventKeys</code>를 계약에 신설한다 (§06)</td></tr>
+        <tr><td class="num-cell">D4</td><td>fail-loud 유지</td><td>완화는 "목표에 있는데 회차 헤더에 없음" 한 가지뿐. 목표에 없는 헤더·중복 헤더·빈 헤더 셀·<b>종료 회차 이후 등장 컬럼</b>·실존하지 않는 종료 회차 날짜는 전부 즉시 에러 (§05)</td></tr>
+        <tr><td class="num-cell">D5</td><td>목표 탭 행 규칙 유지</td><td>여전히 <b>추가만</b>(삭제·재배치 금지 — 회차 헤더가 행 위치를 참조). 종목 종료 = 행 삭제가 아니라 종료 회차 기입. 명단의 소프트 탈퇴와 동형</td></tr>
+        <tr><td class="num-cell">D6</td><td>집계·화면 기준</td><td>랭킹·홈 달성률·기록 입력은 <b>그 회차의 측정 종목</b> 기준. 개인 프로필의 추이·PB는 <b>전체 종목(종료 포함)</b>의 이력을 보존·표시 (§07·§08)</td></tr>
+        <tr><td class="num-cell">D7</td><td>목표치는 단일 현재값 유지</td><td>목표·만점·방향의 시점별 이력은 만들지 않는다. 종목의 <b>의미(기준)가 바뀌는 개편</b>은 이름 바꿔치기가 아니라 "기존 종목 종료 + 새 종목 추가"로 처리한다 — 45도패스캐치 → 패스 3종이 정확히 이 절차의 사례</td></tr>
+        <tr><td class="num-cell">D8</td><td>종목 재개</td><td>종료했던 종목을 다시 측정하려면 <b>같은 행의 종료 회차를 비운다</b>(현역 복귀 — 추이가 이어짐). 공백기 회차는 D2에 따라 자연스럽게 "미측정"으로 남는다. 명단의 탈퇴 → 활동 복귀와 동형</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4 -->
+  <section id="schema">
+    <h2><span class="num">04</span>시트 스키마 개정 — 목표 탭 '종료 회차' 열</h2>
+    <p><span class="tabname">목표</span> 탭 헤더를 4열에서 5열로 개정한다. E열이 신설되는 것 외에 기존 열의 의미·순서는 그대로다.</p>
+    <pre class="code">종목          | 목표  | 만점 | 방향     | 종료 회차
+드리블셔틀런  | 1:17 |  -   | 낮을수록 |            ← 빈칸 = 현역
+골밑슛        |  5   |  10  | 높을수록 |
+자유투        |  2   |  5   | 높을수록 |
+패스 - 체스트 |  3   |  5   | 높을수록 |
+패스 - 바운드 |  3   |  5   | 높을수록 |
+패스 - 원핸드 |  3   |  5   | 높을수록 |
+볼 캐치       |  7   |  10  | 높을수록 |
+45도패스캐치  |  5   |  7   | 높을수록 | 2025-05-16  ← 종료 종목 (마이그레이션 §10으로 복원)</pre>
+    <table>
+      <thead><tr><th>항목</th><th>규칙</th></tr></thead>
+      <tbody>
+        <tr><td>헤더(1행)</td><td><code class="inline">종목 | 목표 | 만점 | 방향 | 종료 회차</code> 5열 <b>엄격 일치</b>. 4열 구 헤더는 신규 코드에서 에러 — 마이그레이션(§10)에서 시트를 먼저 고치므로 과도기 허용 규칙은 두지 않는다</td></tr>
+        <tr><td>종료 회차 값 형식</td><td>빈칸 또는 <code class="inline">-</code> = 현역. 그 외에는 <code class="inline">YYYY-MM-DD</code> + 캘린더 유효 날짜여야 하며(회차 탭 이름 규칙 <code class="inline">isValidRoundTabName</code> 재사용), 형식이 어긋나면 목표 탭 파싱 에러(행 번호·종목명 포함)</td></tr>
+        <tr><td>실존 회차 검증</td><td>종료 회차 날짜는 <b>실존하는 회차 탭 이름과 일치</b>해야 한다. 대조는 회차 탭 목록을 아는 조립 단계(<code class="inline">build-records-response</code>)가 수행 — 없는 날짜면 에러. 오타로 조용히 "영원히 현역"이 되거나 "전 회차 데이터 모순"이 되는 것을 막는다</td></tr>
+        <tr><td>측정 이력 없는 종목의 종료</td><td>추가만 해두고 한 번도 측정하지 않은 종목을 접을 때도 행 삭제는 금지 — 종료 회차에 <b>아무 과거 회차 날짜</b>(예: 직전 회차)를 기입한다. "그 회차까지 데이터 존재 가능"이지 "존재 필수"가 아니므로 모순이 없다</td></tr>
+        <tr><td>기존 참조 안전성</td><td>회차 탭 헤더 수식은 <code class="inline">='목표'!A행</code>으로 <b>A열만</b> 참조하므로 E열 신설은 기존 회차 탭에 영향 없음. <a href="sheet-rules.html">편집 규칙</a>의 행 순서 고정·추가만 규칙은 그대로 유효</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5 -->
+  <section id="lifecycle">
+    <h2><span class="num">05</span>종목 생애주기 규칙 (판정·검증)</h2>
+
+    <h3>정의</h3>
+    <ul>
+      <li><b>현역 종목</b> — 종료 회차가 빈칸. 신규 회차 탭 생성 시 헤더에 포함된다.</li>
+      <li><b>종료 종목</b> — 종료 회차 기입. 그 날짜 회차 <b>까지</b>(경계 포함) 측정 데이터가 존재할 수 있고, 이후 회차에는 존재하지 않는다. 신규 회차 탭 생성에서 제외된다.</li>
+      <li><b>회차 s에서 종목 e를 측정했다</b> ⇔ s 회차 탭 헤더에 e 컬럼이 존재한다 (D2 — 헤더가 정본).</li>
+    </ul>
+
+    <h3>생애주기 흐름</h3>
+    <div class="flow"><span class="k">[추가]</span> 목표 탭 맨 아래 행 추가 (종료 회차 빈칸)
+   │     <span class="note">과거 회차 탭 무수정 — 컬럼 없는 회차는 자동으로 "미측정"</span>
+   ▼
+<span class="k">[현역]</span> 이후 생성되는 회차 탭 헤더에 자동 포함 · 랭킹/게이지/입력 대상
+   │     <span class="note">특정 회차에서 측정을 생략해도 됨(그 회차 탭에만 컬럼 없음)</span>
+   ▼
+<span class="k">[종료]</span> 마지막 측정 회차의 날짜를 종료 회차에 기입
+   │     <span class="note">이후 신규 탭에서 제외 · 과거 기록·추이·PB는 그대로 보존</span>
+   ▼
+<span class="k">[재개]</span> (선택) 종료 회차를 비우면 현역 복귀 — 같은 행 유지, 추이가 이어짐</div>
+
+    <h3>검증 매트릭스 — 파서·조립이 던지는 에러</h3>
+    <p class="muted" style="font-size:14px;">기존 fail-loud 철학(잘못 매칭된 점수가 섞이는 것보다 시끄러운 에러가 안전)을 유지한다. 완화되는 것은 V3 한 줄뿐이다.</p>
+    <table>
+      <thead><tr><th style="width:44px;">#</th><th>상황</th><th>판정</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">V1</td><td>회차 탭 헤더에 목표 탭에 없는 종목이 있음</td><td class="bad">에러 (기존 유지)</td><td>오타·참조 수식 파손 감지</td></tr>
+        <tr><td class="num-cell">V2</td><td>회차 탭 헤더에 중복 종목 · 빈 헤더 셀</td><td class="bad">에러 (기존 유지)</td><td></td></tr>
+        <tr><td class="num-cell">V3</td><td>목표 탭 종목이 회차 탭 헤더에 없음</td><td class="good">정상 — "그 회차 미측정" (기존 에러에서 완화)</td><td><b>이 문서의 핵심 변경.</b> 종목 추가 시 과거 회차, 종료 종목의 이후 회차, 측정 생략 회차가 전부 이 규칙 하나로 수용된다</td></tr>
+        <tr><td class="num-cell">V4</td><td>종료 회차 &lt; 회차 날짜인데 그 회차 헤더에 종료 종목 컬럼이 존재</td><td class="bad">에러 (신규)</td><td>R2의 "그 다음부터는 없다" 위반 = 데이터 모순. 해결: 종료 회차를 그 회차 날짜로 올리거나, 잘못 만들어진 컬럼을 제거</td></tr>
+        <tr><td class="num-cell">V5</td><td>종료 회차 값이 날짜 형식이 아니거나 캘린더에 없는 날짜</td><td class="bad">에러 (신규 · 목표 탭 파싱)</td><td>행 번호·종목명 포함 메시지</td></tr>
+        <tr><td class="num-cell">V6</td><td>종료 회차 날짜가 실존 회차 탭에 없음</td><td class="bad">에러 (신규 · 조립 단계)</td><td>오타 방지 — §04 참고</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>경계 케이스 — 종료 회차 = 그 컬럼이 있는 마지막 회차:</b> V4는 "종료 회차 <b>초과</b> 회차에 컬럼 존재"만 잡는다. 종료 회차로 지정된 회차 자체에 컬럼이 있는 것(정상 — 마지막 측정), 컬럼이 없는 것(측정 생략 후 종료) 모두 허용된다.</div>
+    <p><code class="inline">participated</code>(회차 참여 여부) 파생은 공식 그대로 — "전 종목 <code class="inline">unmeasured</code>면 미참여"에서 '전 종목'의 분모가 <b>그 회차 측정 종목</b>으로 좁혀질 뿐이다.</p>
+  </section>
+
+  <!-- 6 -->
+  <section id="contract">
+    <h2><span class="num">06</span>도메인 타입·API 계약 변경</h2>
+    <p><code class="inline">shared/domain.ts</code> + <a href="records-schema.html">도메인 타입·API 계약</a> + 프론트 런타임 검증(<code class="inline">src/lib/parse-records-response.ts</code>)을 함께 개정한다. FE·BE가 한 레포·한 배포로 나가므로 하위 호환 계약은 두지 않는다(빅뱅 교체).</p>
+    <table>
+      <thead><tr><th>타입</th><th>변경</th><th>의미</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">EventDefinition</td>
+          <td><code class="inline">endSessionDate: string | null</code> 신설</td>
+          <td>종료 회차(<code class="inline">YYYY-MM-DD</code>) — null이면 현역. <code class="inline">events[]</code>는 <b>종료 종목을 포함한 전체</b>를 목표 탭 행 순서대로 담는다(과거 회차 랭킹·추이가 종료 종목 정의를 필요로 함). '종료 여부'는 프론트가 <code class="inline">endSessionDate !== null</code>로 파생</td>
+        </tr>
+        <tr>
+          <td class="mono">Session</td>
+          <td><code class="inline">eventKeys: string[]</code> 신설</td>
+          <td>그 회차 탭 헤더의 측정 종목 key 목록(헤더 순서). 참가자가 0명인 회차에서도 측정 종목을 알 수 있도록 entries에서 유추하지 않고 명시한다</td>
+        </tr>
+        <tr>
+          <td class="mono">SessionEntry.scores</td>
+          <td>완전성 계약 개정</td>
+          <td>기존 "<code class="inline">events[]</code> 전체 key가 항상 존재" → "<b>그 회차 <code class="inline">eventKeys</code> 전체가 항상 존재, 그 외 key 없음</b>". 소비자는 <code class="inline">scores[key]</code> 인덱싱 전에 그 회차 측정 여부를 전제해야 한다</td>
+        </tr>
+        <tr>
+          <td class="mono">SessionRankings.events</td>
+          <td>구성 규칙 개정</td>
+          <td>기존 "<code class="inline">events[]</code> 전체와 개수 일치(빈 종목도 <code class="inline">entries: []</code> 유지)" → "<b>그 회차 <code class="inline">eventKeys</code>에 해당하는 종목만</b>, 헤더 순서". 미측정 종목×회차 조합은 항목 자체가 없다</td>
+        </tr>
+        <tr>
+          <td class="mono">PlayerSummary.trends</td>
+          <td>의미 유지 (주석 보강)</td>
+          <td>여전히 <code class="inline">events[]</code> 전체에 대해 하나씩(기록 없으면 <code class="inline">points: []</code>) — 이제 <code class="inline">events[]</code>에 종료 종목이 포함된다는 점만 새롭다. <code class="inline">personalBests</code> 스파스 규칙 유지</td>
+        </tr>
+        <tr>
+          <td class="mono">HomeSummary.achievementRates</td>
+          <td>파생 결과 변화</td>
+          <td>최신 회차 <code class="inline">SessionRankings</code> 집계라는 규칙은 그대로 — 입력이 회차별 측정 종목으로 좁혀지므로 자동으로 <b>최신 회차 측정 종목만</b> 담긴다</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout info"><b>왜 <code class="inline">Session.eventKeys</code>인가:</b> "그 회차에 무엇을 측정했나"는 회차의 속성이지 엔트리의 속성이 아니다. 랭킹 종목 칩·입력 필드·완료 판정 분모가 모두 이 목록 하나를 근거로 삼아, 화면마다 <code class="inline">scores</code> 키를 뒤져 유추하는 우회(참가자 0명이면 실패)를 없앤다.</div>
+  </section>
+
+  <!-- 7 -->
+  <section id="backend">
+    <h2><span class="num">07</span>파서·계산 동작 변경</h2>
+    <table>
+      <thead><tr><th>모듈</th><th>변경</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">parse-goals.ts</td>
+          <td>5열 헤더 엄격 검증. E열 파싱: 빈칸/<code class="inline">-</code> → <code class="inline">null</code>, 그 외 날짜 형식·캘린더 검증(V5) 후 <code class="inline">endSessionDate</code>. 종목명 중복 검사 기존 유지. <b>내부 확장:</b> 각 종목의 목표 탭 실제 행 번호를 결과에 동반(§09 create-sheet가 사용 — 계약(<code class="inline">RecordsResponse</code>)에는 비노출)</td>
+        </tr>
+        <tr>
+          <td class="mono">parse-session.ts<br>(mapHeaderToEvents)</td>
+          <td>"목표 종목 전체가 헤더에 있어야 함" 검사 <b>제거</b>(V3 완화). V1·V2 유지. <b>신설:</b> 헤더의 각 종목에 대해 <code class="inline">endSessionDate</code>가 있고 회차 날짜가 그보다 뒤면 에러(V4). 세션 결과에 <code class="inline">eventKeys</code>(헤더 순서) 포함. 쓰기 경로(<code class="inline">POST /api/admin/records</code>)가 같은 함수를 재사용하므로 완화·검증이 읽기/쓰기에 동일 적용된다</td>
+        </tr>
+        <tr>
+          <td class="mono">build-records-response.ts</td>
+          <td>종료 회차 ↔ 실존 회차 탭 대조(V6)를 이 단계에 배치(회차 목록을 아는 유일한 지점). 나머지 조립 흐름 불변</td>
+        </tr>
+        <tr>
+          <td class="mono">compute-rankings.ts</td>
+          <td><code class="inline">computeSessionRankings</code>가 <code class="inline">events[]</code> 전체 대신 <b>그 회차 측정 종목만</b> 순회(§06 계약 개정 반영). 종목 1개 랭킹(<code class="inline">computeEventRanking</code>) 로직 불변</td>
+        </tr>
+        <tr>
+          <td class="mono">player-summary.ts</td>
+          <td><code class="inline">collectValidScores</code>에 <b>미측정 회차 스킵 가드</b> — <code class="inline">entry.scores[event.key]</code>가 없으면 건너뛴다(현행 코드는 여기서 TypeError). "entries가 없는 세션(미가입)은 조용히 스킵"하는 기존 규칙과 동형. 추이·PB·델타 공식 불변 — 종료 종목도 과거 기록으로 동일 계산</td>
+        </tr>
+        <tr>
+          <td class="mono">compute-home-summary.ts</td>
+          <td>변경 없음 — 입력(<code class="inline">SessionRankings</code>)이 이미 회차별 측정 종목으로 좁혀져 자동 반영. <code class="inline">participantCount</code> 규칙 불변</td>
+        </tr>
+        <tr>
+          <td class="mono">performance-scale.ts</td>
+          <td>변경 없음 — recorded 관측값 기반 min~max 스케일이라 종목별 관측 범위로 그대로 동작. 관측값 없는 신규 종목은 기존 규칙대로 0.5 중립</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 8 -->
+  <section id="screens">
+    <h2><span class="num">08</span>화면 동작 변경</h2>
+
+    <h3>🏆 랭킹</h3>
+    <ul>
+      <li><b>종목 칩 = 선택 회차의 측정 종목만</b>(<code class="inline">eventKeys</code> 순서). 회차를 전환해 선택 중인 종목이 새 회차에 없으면 <b>첫 종목으로 폴백</b>한다. 미측정 종목×회차 조합의 막다른 빈 화면을 만들지 않는 것이 목적</li>
+      <li>보충 행(미측정·면제·이상값 하단 배치, <code class="inline">buildRankingRows</code>)은 그 회차 측정 종목에 대해서만 존재 — <code class="inline">scores[eventKey]</code> 인덱싱이 §06 계약상 항상 유효해 별도 가드 불필요. 단 구현 시 undefined 방어는 유지</li>
+      <li>7종목 칩은 기존 가로 스크롤 UI로 수용(디자인 변경 없음)</li>
+    </ul>
+
+    <h3>🏠 홈</h3>
+    <ul>
+      <li>종목별 달성률 게이지 = <b>최신 회차 측정 종목만</b> (§06 <code class="inline">achievementRates</code> 자동 반영). 종료 종목은 최신 회차에 나타나지 않으므로 게이지에서 자연 소멸</li>
+      <li>신규 빈 회차의 "참여 0명 · 0%" 노출 방식은 이 PRD의 비스코프(§12) — 기존 동작 유지</li>
+    </ul>
+
+    <h3>👤 개인 프로필</h3>
+    <ul>
+      <li><b>레이더 축 = 선택 회차의 측정 종목</b> — 회차에 따라 4각형↔7각형으로 가변. <code class="inline">radar-math</code>는 이미 N축 일반이므로 7축 시각 검증만 필요</li>
+      <li><b>성장 카드:</b> 현역 종목은 전부 노출(기존과 동일). <b>종료 종목은 그 선수의 유효 기록이 1건 이상일 때만</b> 노출하고 카드에 <code class="inline">종료</code> 뱃지를 단다 — 기록이 있는 선수에겐 이력이 보존되고, 없는 선수의 화면에 죽은 카드가 쌓이지 않는다</li>
+      <li>추이 차트는 기존 희소 구조 그대로 — X축은 전체 회차, 점은 측정·기록 회차만. 종료 종목의 차트는 종료 회차 이후 구간에 점이 없을 뿐 별도 처리 없음</li>
+      <li>PB는 스파스 규칙 유지 — 종료 종목의 PB도 기록이 있으면 그대로 표시</li>
+    </ul>
+
+    <h3>🔒 관리자 — 기록 입력 플로우</h3>
+    <ul>
+      <li><b>선수별 입력 필드 = 그 회차 <code class="inline">eventKeys</code>만 렌더</b> (현행은 전역 <code class="inline">events[]</code> 전체를 렌더 — 과거 회차에서 없는 종목 필드가 노출되는 버그가 됨)</li>
+      <li><b>미입력/일부/완료 뱃지와 "완료 n/N" 판정 분모 = 그 회차 <code class="inline">eventKeys</code></b> (<code class="inline">deriveEntryStatus</code>·<code class="inline">countCompleted</code> 개정). 전역 종목 수를 분모로 두면 종목이 추가될 때마다 과거 회차의 '완료'가 '일부'로 롤백되는 오류가 생긴다</li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section id="write">
+    <h2><span class="num">09</span>쓰기 경로 변경 (회차 생성·기록 입력)</h2>
+    <table>
+      <thead><tr><th>경로</th><th>변경</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">POST /api/admin/create-sheet</td>
+          <td><b>헤더 = 현역 종목만</b>(<code class="inline">endSessionDate === null</code>). 헤더 참조 수식은 현행 "연속 배열 인덱스(<code class="inline">=목표!A{i+2}</code>)" 가정을 폐기하고 <b>각 종목의 실제 목표 탭 행 번호</b>를 쓴다(종료 종목 행을 건너뛰므로 연속이 깨짐 — §07 parse-goals의 행 번호 동반이 근거). 나머지(참가자만·가나다·빈 점수·원자적 batchUpdate·중복 가드·캐시 무효화) 불변</td>
+        </tr>
+        <tr>
+          <td class="mono">POST /api/admin/add-players</td>
+          <td>변경 없음 — A열 이름 수식만 추가하는 경로라 종목과 무관</td>
+        </tr>
+        <tr>
+          <td class="mono">POST /api/admin/records</td>
+          <td>사실상 변경 없음 — 저장 대상 종목·값 검증이 그 회차 탭 헤더 매핑(<code class="inline">mapHeaderToEvents</code> 재사용) 기준이라 §07의 완화·검증을 자동 상속한다. 요청 <code class="inline">scores</code>에 그 회차 비측정 종목 key가 오면 기존 규칙대로 4xx인지 테스트로 못박는다</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>열린 항목 (구현 전 확인 1건) — 면제 토글 노출 종목:</b> 입력 화면의 면제 토글은 프론트 상수 <code class="inline">exemptable-events.ts</code>로 제한하는데, 현재 목록이 <code class="inline">45도패스캐치</code> 하나뿐이다(= 종료 종목). 신규 7종목 중 어떤 종목에 면제 토글을 노출할지 운영 확인이 필요하다. <b>기본값 제안:</b> 45도패스캐치의 후속인 패스 3종(체스트·바운드·원핸드)에 노출. 서버·파서는 지금처럼 모든 종목의 <code class="inline">면제</code> 리터럴을 수용하므로(시트 직접 편집 escape hatch) 이 결정은 UI 노출에만 영향을 준다.</div>
+  </section>
+
+  <!-- 10 -->
+  <section id="migration">
+    <h2><span class="num">10</span>현행 시트 정합화 (마이그레이션)</h2>
+    <p>실시트는 이미 개편이 "행 교체" 방식으로 반영돼 있어, 이 PRD의 모델로 되돌리는 일회성 정합화가 필요하다.</p>
+
+    <h3>현재 상태 진단 (2026-07-24 기준)</h3>
+    <table>
+      <thead><tr><th>탭</th><th>상태</th><th>문제</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tabname">목표</span></td><td>7종목 — 45도패스캐치 행이 <b>제자리에서 패스 - 체스트로 교체</b>됨(목표 5→3, 만점 7→5)</td><td>45도패스캐치의 정의가 시트에서 소실</td></tr>
+        <tr><td><span class="tabname">2025-05-16</span></td><td>점수 4열 — 4번째 열은 원래 45도패스캐치 기록(값 6·7, 면제 1건)</td><td>헤더가 참조 수식이라 <b>"패스 - 체스트"로 표시</b> — 다른 종목명·다른 기준(만점 5인데 값 7)으로 노출되는 의미 왜곡</td></tr>
+        <tr><td><span class="tabname">2026-07-23</span></td><td>신규 7종목 헤더 + 참가자 행, 점수 전부 빈칸</td><td>정상 (신규 회차) — 단 현행 배포 코드는 아래 이유로 이 탭도 못 읽는다</td></tr>
+        <tr><td colspan="2"><b>사이트</b> — 현행 배포 코드는 2025-05-16 탭에서 "패스 - 바운드·패스 - 원핸드·볼 캐치 컬럼 없음" 에러</td><td class="bad"><code class="inline">/api/records</code> 500 — 전면 에러 상태. 마이그레이션·시트만으로는 복구 불가, <b>신규 코드 배포로만 복구</b>된다</td></tr>
+      </tbody>
+    </table>
+
+    <h3>정합화 절차 — 시트 편집 3단계 + 배포 1단계</h3>
+    <p class="muted" style="font-size:14px;">행 추가·수식 1개 교체뿐이라 수동으로 충분하다(스크립트 불요). 기존 행을 옮기지 않으므로 기존 참조가 전부 안전하고, 순서도 자유롭다(구 코드는 어차피 지금도 500) — 권장 순서는 시트 먼저.</p>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>작업</th><th>효과</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">1</td><td><span class="tabname">목표</span> E1에 헤더 <code class="inline">종료 회차</code> 추가</td><td>5열 스키마 성립 (§04)</td></tr>
+        <tr><td class="num-cell">2</td><td><span class="tabname">목표</span> 9행(맨 아래)에 <code class="inline">45도패스캐치 | 5 | 7 | 높을수록 | 2025-05-16</code> 추가</td><td>소실된 종목 정의를 <b>원래 기준(목표 5·만점 7)으로 복원</b> + 종료 마킹. 행 추가만이라 기존 참조 무영향. <code class="inline">events[]</code> 순서상 종료 종목이 맨 뒤로 가는 것도 자연스러움</td></tr>
+        <tr><td class="num-cell">3</td><td><span class="tabname">2025-05-16</span> E1 헤더 수식을 <code class="inline">='목표'!A9</code>로 교체</td><td>과거 기록이 45도패스캐치로 <b>올바르게 재귀속</b> — 달성 판정도 원래 목표(5) 기준으로 복원. 패스 - 체스트(A5)는 이제 이 탭과 무관해지고 2026-07-23부터의 종목으로만 존재</td></tr>
+        <tr><td class="num-cell">4</td><td>신규 코드 배포</td><td><code class="inline">/api/records</code> 정상화. 검증: 2025-05-16 <code class="inline">eventKeys</code> = [드리블셔틀런, 골밑슛, 자유투, 45도패스캐치] / 2026-07-23 <code class="inline">eventKeys</code> = 신규 7종목 / V4 위반 없음(45도패스캐치 종료 2025-05-16 &lt; 2026-07-23이고 그 탭에 컬럼 없음)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good"><b>마이그레이션 후 기대 화면:</b> 랭킹 1차(2025-05-16)는 45도패스캐치 포함 4종목 칩, 최신 회차는 신규 7종목 칩. 홈 게이지는 최신 회차 7종목. 프로필에서 1차 참가자 6명은 45도패스캐치 성장 카드를 <code class="inline">종료</code> 뱃지와 함께 보고, 그 외 선수에겐 카드 자체가 없다.</div>
+    <p class="muted" style="font-size:14px;">시딩 스크립트 <code class="inline">scripts/seed-sheet.mjs</code>는 일회성이지만 5열 스키마·신규 종목으로 갱신해 문서 정합을 유지한다(§13 이슈 11).</p>
+  </section>
+
+  <!-- 11 -->
+  <section id="ops">
+    <h2><span class="num">11</span>운영 규칙 개정 — <a href="sheet-rules.html">편집 규칙</a> 반영 예고</h2>
+    <table>
+      <thead><tr><th>작업</th><th>절차 (운영자 시점)</th></tr></thead>
+      <tbody>
+        <tr><td><b>종목 추가</b></td><td><span class="tabname">목표</span> 맨 아래 행 추가(종료 회차 빈칸). <b>과거 회차 탭은 손대지 않는다</b> — 사이트가 자동으로 "그 회차 미측정"으로 처리. 다음 기록지 만들기부터 자동 포함</td></tr>
+        <tr><td><b>종목 종료</b></td><td>행 삭제 금지(절대 규칙 유지) — <b>종료 회차 칸에 마지막으로 측정한 회차 날짜</b>(<code class="inline">YYYY-MM-DD</code>)를 기입. <span class="warn">주의:</span> 오늘 측정까지 하고 접는 경우, <b>오늘 기록지를 만든 뒤</b>에 기입한다(먼저 기입하면 오늘 탭 생성에서 제외됨)</td></tr>
+        <tr><td><b>종목 재개</b></td><td>종료 회차 칸을 비운다(같은 행 유지 — 추이가 이어짐)</td></tr>
+        <tr><td><b>종목 기준 개편</b></td><td>이름·목표를 제자리에서 바꿔치기하지 않는다(이번 45도패스캐치 사고의 원인) — <b>기존 종목 종료 + 새 종목 추가</b>로 처리</td></tr>
+        <tr><td><b>기존 규칙 문구 개정</b></td><td>"열 추가/삭제/이동 금지 (열을 추가하려면 사이트 코드도 같이 고쳐야 함)" → 회차 탭 열은 여전히 직접 만들지·지우지 않는다(신규 탭이 목표 탭을 자동 반영). 목표 탭은 <b>E열 종료 회차만 운영 입력 대상</b>으로 명시</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 12 -->
+  <section id="nonscope">
+    <h2><span class="num">12</span>비스코프 (명시적으로 안 하는 것)</h2>
+    <table>
+      <thead><tr><th>항목</th><th>이유</th></tr></thead>
+      <tbody>
+        <tr><td>신규 빈 회차의 홈 노출 개선 ("참여 0명 · 0%" → 측정 진행 중 표시 등)</td><td>종목 생애주기와 독립된 주제 — 별도 논의·별도 PRD로 분리</td></tr>
+        <tr><td>목표치·만점·방향의 시점별 이력</td><td>D7 — 단일 현재값 유지. 기준이 바뀌는 개편은 종료+추가로 표현</td></tr>
+        <tr><td>시작 회차 열</td><td>D2 — 회차 탭 헤더 존재가 측정 여부의 정본이라 불필요</td></tr>
+        <tr><td>종목 정렬·그룹핑 UI, 종목 카테고리</td><td>현행 목표 탭 행 순서 표시를 유지</td></tr>
+        <tr><td>회차 탭 스키마 변경</td><td>없음 — "참가자만·이름 매칭·헤더 참조 수식" 포맷 그대로</td></tr>
+        <tr><td>면제 정책 재설계</td><td>§09 열린 항목(토글 노출 종목 지정)만 확인하고, 면제 의미론은 불변</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 13 -->
+  <section id="issues">
+    <h2><span class="num">13</span>단계별 이슈 분할 제안</h2>
+    <p class="muted" style="font-size:14px;">기존 이슈 관례(<code class="inline">P{n} — 제목</code> · 범위/완료 조건/의존성/규모)대로 등록한다. 단계명은 <b>P7 — 종목 생애주기</b>. 계약(1) → 파서(2) → 계산(3) → 조립(4) 백엔드 축과, 계약(1) → FE 파생(6) → 화면(7·8·9) 축은 병렬 진행 가능.</p>
+    <table>
+      <thead><tr><th style="width:36px;">#</th><th>이슈</th><th>핵심 범위</th><th style="width:110px;">의존</th><th style="width:52px;">규모</th></tr></thead>
+      <tbody>
+        <tr><td class="num-cell">1</td><td>계약 — 도메인 타입·API 계약 개정</td><td><code class="inline">EventDefinition.endSessionDate</code> · <code class="inline">Session.eventKeys</code> · <code class="inline">scores</code> 완전성 계약 개정 · <code class="inline">records-schema.html</code> · <code class="inline">parse-records-response</code> 런타임 검증 (§06)</td><td>—</td><td>M</td></tr>
+        <tr><td class="num-cell">2</td><td>파서 — 목표 5열 + 회차 매핑 완화</td><td><code class="inline">parse-goals</code> E열·V5 · <code class="inline">mapHeaderToEvents</code> V3 완화·V4 신설 · <code class="inline">eventKeys</code> 산출 (§05·§07)</td><td>1</td><td>M</td></tr>
+        <tr><td class="num-cell">3</td><td>계산 — 랭킹·추이·홈 회차별 대응</td><td><code class="inline">computeSessionRankings</code> 회차별 순회 · <code class="inline">player-summary</code> 미측정 가드 · 홈 회귀 테스트 (§07)</td><td>1, 2</td><td>S</td></tr>
+        <tr><td class="num-cell">4</td><td>조립·E2E — V6 검증 + 혼재 픽스처 계약</td><td><code class="inline">build-records-response</code> 종료 회차 실존 대조 · "4종목 과거 + 7종목 신규(빈 점수)" 혼재 번들 E2E (§05·§10 시나리오)</td><td>2, 3</td><td>S</td></tr>
+        <tr><td class="num-cell">5</td><td>쓰기 — create-sheet 현역 필터·실제 행 참조</td><td>현역 종목만 헤더 · 목표 탭 실제 행 번호 참조 수식 · records 쓰기 경로 비측정 종목 4xx 테스트 (§09)</td><td>2</td><td>M</td></tr>
+        <tr><td class="num-cell">6</td><td>FE 파생 — 회차 기준 파생 로직</td><td><code class="inline">ranking-view</code>·<code class="inline">entry-status</code>(분모 = <code class="inline">eventKeys</code>)·<code class="inline">profile-view</code> 가드 (§08)</td><td>1</td><td>M</td></tr>
+        <tr><td class="num-cell">7</td><td>랭킹·홈 화면 — 회차별 종목 칩·게이지</td><td>선택 회차 측정 종목 칩 + 폴백 · 최신 회차 게이지 (§08)</td><td>6</td><td>S~M</td></tr>
+        <tr><td class="num-cell">8</td><td>프로필 화면 — 가변 레이더·종료 뱃지 카드</td><td>회차별 축 레이더(7축 시각 검증) · 종료 종목 조건부 카드 + <code class="inline">종료</code> 뱃지 (§08)</td><td>6</td><td>M</td></tr>
+        <tr><td class="num-cell">9</td><td>입력 화면 — 회차별 필드·면제 상수</td><td><code class="inline">eventKeys</code> 기준 입력 필드 · 완료 n/N · <code class="inline">exemptable-events</code> 갱신(열린 항목 확정 후) (§08·§09)</td><td>6</td><td>S</td></tr>
+        <tr><td class="num-cell">10</td><td>마이그레이션 실행 — 실시트 정합화</td><td>§10 절차 1~4 실행·검증 체크리스트 (시트 편집 + 배포 조율 — 코드 이슈 1~9 머지 후)</td><td>1~9</td><td>S</td></tr>
+        <tr><td class="num-cell">11</td><td>문서·시딩 개정</td><td><code class="inline">sheet-rules</code>(§11) · <code class="inline">sheet-integration</code> 스키마 · <code class="inline">build-plan</code> P7 추가 · <code class="inline">seed-sheet.mjs</code> 5열 갱신</td><td>4</td><td>S</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="footer">
+    PRD — 종목 생애주기 (추가·종료) · 작성 2026-07-24 (사용자 확정 요구 3건 반영: 종료 회차 도입 · 종료 이후 데이터 없음 · 종목 추가 가능) · 관련: <a href="index.html">설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a> · <a href="prd-record-input.html">기록 입력 PRD</a> · <a href="prd-design.html">디자인 PRD</a>
+  </div>
+
+</div>
+</body>
+</html>

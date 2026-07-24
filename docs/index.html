@@ -333,13 +333,14 @@
         <tr><td>공용 패스코드 / 관리자 코드</td><td class="good">확정</td><td>사용자가 <code class="inline">.dev.vars</code>·Cloudflare Secret에 직접 설정 (값은 코드베이스 밖)</td></tr>
         <tr><td>기록 입력 (사이트에서 점수 입력)</td><td class="good">완료</td><td>PRD 확정(2026-07-17 인터뷰 + 디자인) 그대로 구현 — 관리자 전용 · 날짜 선택 → 참가자 목록 → 선수별 타입별 기입 · 선수 단위 저장 · 마지막 저장 승리. 측정일 시나리오 E2E 스모크로 검증(이슈 #71). <a href="prd-record-input.html" style="color:var(--accent-2);">PRD · 사이트에서 기록 입력</a></td></tr>
         <tr><td>모바일 디자인</td><td class="good">확정</td><td>2026-07-17 디자인 개편 반입 — 하단 네비 3탭(전체 추이 페이지 삭제·개인 탭 통합), 인디고(#3F51B5)+Pretendard 테마(기존 오렌지 폐기), 랭킹에 미측정·면제 하단 노출, 열람 팀 패스코드 유지. <a href="prd-design.html" style="color:var(--accent-2);">PRD · 모바일 디자인 개편</a></td></tr>
+        <tr><td>종목 생애주기 (추가·종료)</td><td class="good">확정</td><td>2026-07-24 확장 PRD — 목표 탭에 <code class="inline">종료 회차</code> 열 신설(빈칸=현역·경계 포함), 측정 여부의 정본은 회차 탭 헤더(과거 회차 무수정), 종료 이후 회차엔 데이터 없음(모순은 에러). 45도패스캐치 → 패스 3종·볼 캐치 개편의 실시트 정합화 절차 포함. <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a></td></tr>
         <tr><td>사이트 구축</td><td style="color:var(--warn)">진행 중</td><td>핵심 기능(기록 조회 · 인증 · 관리자 기록 입력) 구현·테스트 완료 — 개인 프로필 화면, 프로덕션 배포 등 일부 남음</td></tr>
       </tbody>
     </table>
   </section>
 
   <div class="footer">
-    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-19 (기록 입력 기능 구현·E2E 마감 반영, 이슈 #71) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> · <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a>
+    버니스 실력 기록 사이트 · 설계 문서 · 최종 업데이트 2026-07-24 (종목 생애주기 확장 PRD 추가) · 관련: <a href="build-plan.html" style="color:var(--accent-2);">작업 계획</a> · <a href="sheet-integration.html" style="color:var(--accent-2);">연동 확정안</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙</a> · <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-record-input.html" style="color:var(--accent-2);">기록 입력 PRD</a> · <a href="prd-design.html" style="color:var(--accent-2);">디자인 PRD</a> · <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">종목 생애주기 PRD</a>
   </div>
 
 </div>
