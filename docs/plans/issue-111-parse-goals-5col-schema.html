@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#111 P7 — parse-goals 5열 스키마: 종료 회차 파싱·V5 검증·행 번호 동반 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  .steps .done-note { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--ok); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  pre {
+    background: var(--code-bg); border-radius: 8px; padding: 12px 14px;
+    overflow-x: auto; font-size: 0.82rem; line-height: 1.5;
+  }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/111">#111</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — parse-goals 5열 스키마: 종료 회차 파싱·V5 검증·행 번호 동반</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/111-parse-goals-5col-schema</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>목표 탭 파서(<code>functions/lib/parse-goals.ts</code>)가 아직 4열(종목·목표·만점·방향)만 읽고, E열(<b>종료 회차</b>)은 <code>#110</code>에서 도메인 타입에만 추가된 채 하드코딩 <code>null</code>로 방치돼 있다. 이 이슈는 헤더를 5열로 엄격화하고, E열 값을 빈칸/<code>-</code> → <code>null</code>(현역), 그 외에는 <code>YYYY-MM-DD</code> + 캘린더 유효(<code>isValidRoundTabName</code> 재사용, V5)로 파싱해 <code>endSessionDate</code>에 채운다. 형식 오류는 기존 <code>fail()</code> 관례(행 번호·종목명)로 즉시 throw한다. 동시에 각 종목의 목표 탭 실제 행 번호를 파서 반환값에 내부적으로 동반시켜(<code>#121</code> create-sheet가 나중에 쓸 참조 수식용) — <code>RecordsResponse</code> 공개 계약에는 노출하지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>functions/lib/parse-goals.ts:14</code>의 <code>EXPECTED_HEADER = ['종목', '목표', '만점', '방향']</code>는 4열만 검증한다. <code>validateHeader</code>(<code>:43-49</code>)는 <code>EXPECTED_HEADER.every((expected, i) =&gt; cells[i] === expected)</code> — 자기 배열 길이만큼만 위치 비교한다.</p>
+    <p><code>parseGoalRow</code>(<code>:51-72</code>)는 <code>row[0]</code>(종목명)·<code>row[1]</code>(목표치)·<code>row[2]</code>(만점, <code>parseMaxScore</code>)·<code>row[3]</code>(방향, <code>parseDirection</code>)만 읽고, <code>:70</code>에서 <code>endSessionDate: null, // 5열(종료 회차) 파싱은 별도 이슈 — 이 파서는 아직 4열만 읽는다</code>로 하드코딩돼 있다. <code>row[4]</code>는 전혀 참조되지 않는다.</p>
+    <p><code>parseMaxScore</code>(<code>:74-79</code>)는 <code>MAX_SCORE_NULL_LITERALS = new Set(['', '-'])</code>(<code>:15</code>)로 "빈칸 또는 <code>-</code> = null" 관례를 이미 구현해 뒀다 — PRD D1이 종료 회차에도 그대로 재사용하라고 명시한 그 관례다.</p>
+    <p>회차 탭 이름 형식·캘린더 검증은 <code>functions/lib/sheetTabs.ts:56-58</code>의 <code>isValidRoundTabName(name)</code>이 이미 구현해 뒀다 — 정규식 <code>/^(\d{4})-(\d{2})-(\d{2})$/</code> 매치 후 <code>Date.UTC</code> 왕복 검증으로 <code>2025-02-30</code> 같은 캘린더 무효 날짜를 걸러낸다. <code>functions/api/admin/records.ts:56</code>에서 이미 같은 방식으로 재사용 중이다.</p>
+    <p>fail-loud 에러 헬퍼는 이미 <code>fail(sheetRow, name, reason)</code>(<code>parse-goals.ts:88-90</code>) 하나로 통일돼 있다 — <code>목표 탭 파싱 실패 ({sheetRow}행 "{name}"): {reason}</code>. <code>parseMaxScore</code>·<code>parseDirection</code>이 이 헬퍼를 그대로 호출하는 것과 동일한 패턴을 새 E열 검증에도 쓰면 된다.</p>
+    <p>중복 검사(<code>:31-35</code>)는 이미 <code>firstSeenRowByKey = new Map&lt;string, number&gt;()</code>(<code>:23</code>)로 "종목 key → 첫 등장 시트 행 번호"를 추적하고 있다 — 이 이슈가 요구하는 "행 번호 동반"과 정확히 같은 모양의 데이터라, 새로 만들 필요 없이 이 맵을 반환값으로 승격하면 된다.</p>
+    <p><code>parseGoals</code>의 반환값(현재 <code>EventDefinition[]</code>)은 3곳에서 그대로 소비된다: <code>functions/lib/build-records-response.ts:49</code>(→ <code>RecordsResponse.events</code>로 직결, <code>shared/domain.ts:150</code>), <code>functions/api/admin/create-sheet.ts:71</code>, <code>functions/api/admin/records.ts:71</code>(<code>integrity()</code>로 감싼 호출). 셋 다 반환값을 <code>EventDefinition[]</code> 그대로 하류에 넘기므로, 반환 타입이 바뀌면 세 곳 모두 한 줄씩 구조분해가 필요하다.</p>
+    <p><code>EventDefinition.endSessionDate: string | null</code>은 <code>#110</code>(커밋 <code>ecb4084</code>)에서 이미 <code>shared/domain.ts:38-48</code>에 추가됐고, 프론트 런타임 검증(<code>src/lib/parse-records-response.ts:64,72</code>)도 이미 이 필드를 검증·조립한다 — 즉 공개 계약 배선은 끝나 있고, 이 이슈는 오직 <code>parseGoals</code>가 실제 값을 채우게 만드는 것만 남았다.</p>
+    <p>테스트 픽스처 4곳이 4열 목표 탭 배열을 하드코딩하고 있어, 헤더를 5열 엄격 검증으로 바꾸면 그대로 깨진다: <code>functions/api/records.test.ts:26-27</code>, <code>functions/lib/build-records-response.test.ts:13-14</code>, <code>functions/api/admin/create-sheet.test.ts:33-35</code>, <code>functions/api/admin/records.test.ts:34-38</code>. (<code>functions/lib/sheetsApi.test.ts:288,300</code>도 같은 모양이지만 <code>fetchSheetBundle</code>은 <code>parseGoals</code>를 호출하지 않으므로 영향 없음 — 안 건드림.)</p>
+    <p><b>스코프 확정:</b> <code>gh issue list</code>로 확인한 결과 이 PRD(<code>docs/prd-event-lifecycle.html</code>)의 "이슈 2"(§13, parse-goals+parse-session 묶음)는 실제로는 두 이슈로 쪼개져 있다 — <code>#111</code>(이 이슈, parse-goals E열·V5·행 번호만)과 <code>#112</code>(parse-session의 <code>mapHeaderToEvents</code> V3 완화·V4 신설·<code>eventKeys</code>). V6(종료 회차 ↔ 실존 회차 탭 대조, §04·§05)는 <code>build-records-response.ts</code>가 담당하는 <code>#120</code> 소관이고, 실제 행 번호를 참조 수식에 쓰는 것은 <code>#121</code> 소관이다. 이 계획은 GitHub 이슈 본문을 기준으로 <b>parse-goals 파일 하나</b>(+ 그 호출부 시그니처 정합)로 범위를 좁힌다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>헤더 검증:</b> <code>EXPECTED_HEADER</code>에 <code>'종료 회차'</code>를 5번째로 추가하기만 하면 된다 — <code>validateHeader</code>의 기존 위치별 비교 로직은 그대로 두면 4열짜리 구 헤더가 자동으로 <code>cells[4] === undefined !== '종료 회차'</code>로 걸려 에러가 난다(요구사항 "4열 구 헤더는 에러" 자동 충족). 길이 자체를 별도로 체크하는 로직은 추가하지 않는다 — 기존 파일의 "위치별 비교" 스타일과 일관되고, PRD 검증 매트릭스(V1~V6)에 "6번째 이상 컬럼" 케이스가 없어 과잉 방어가 된다.</li>
+      <li><b>널 리터럴 상수 공유:</b> <code>MAX_SCORE_NULL_LITERALS</code>를 <code>NULL_LITERALS</code>로 이름을 일반화해 <code>parseMaxScore</code>와 신설 <code>parseEndSessionDate</code>가 함께 쓴다 — 만점 열과 종료 회차 열이 "빈칸 또는 <code>-</code> = null"이라는 같은 관례를 쓴다는 <code>shared/domain.ts:45-47</code>의 주석(D1)과 일치시키는 이름이다.</li>
+      <li><b>E열 파싱 함수:</b> <code>parseMaxScore</code>/<code>parseDirection</code>과 같은 시그니처 모양으로 <code>parseEndSessionDate(raw, sheetRow, name): string | null</code>을 추가한다 — <code>trim().normalize('NFKC')</code> 후 <code>NULL_LITERALS</code>면 <code>null</code>, 아니면 <code>isValidRoundTabName()</code>으로 형식+캘린더 검증하고 실패 시 <code>fail()</code>로 행 번호·종목명 포함 에러. <code>isValidRoundTabName</code> 내부가 다시 <code>NFC</code> 정규화를 하므로 이중 정규화 걱정은 없다(NFKC 출력은 이미 NFC 상태).</li>
+      <li><b>실존 회차 대조(V6) 미포함:</b> 종료 회차 날짜가 실제 회차 탭 목록에 있는지 대조하는 것은 의도적으로 이 파서에 넣지 않는다 — <code>parseGoals</code>는 회차 탭 목록을 모르고(PRD §04 "대조는 조립 단계가 수행"), 그 책임은 <code>#120</code>의 <code>build-records-response.ts</code>다.</li>
+      <li><b>행 번호 동반 방식:</b> 새 병렬 구조체를 만들지 않고, 기존 <code>firstSeenRowByKey</code> 맵을 <code>sheetRowByKey</code>로 이름만 바꿔 반환값에 그대로 승격한다 — 이미 "종목 key → 그 종목이 처음(=유일하게, 중복이면 에러니까) 등장한 시트 행"을 정확히 담고 있는 자료구조라 중복 로직이 필요 없다. 반환 타입은 <code>{ events: EventDefinition[]; sheetRowByKey: Map&lt;string, number&gt; }</code> — 코드베이스의 기존 "byKey" 관례(<code>parse-session.ts</code>의 <code>eventByKey</code>, <code>buildPlayersByName</code>)와 동일하게 <code>Map</code>을 쓴다. 대안으로 고려한 "튜플 배열(<code>{event, sheetRow}[]</code>)"은 소비자가 다시 key로 찾아야 해서 <code>#121</code>이 쓰기 불편해 기각.</li>
+      <li><b>호출부 정합:</b> 3개 호출부는 로직 변경 없이 <code>const events = parseGoals(...)</code> → <code>const { events } = parseGoals(...)</code>로만 바꾼다 — <code>sheetRowByKey</code>는 지금 아무도 쓰지 않으므로(그 소비자는 <code>#121</code>) 구조분해에서 그냥 무시한다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">목표 탭 파일 docblock(<code>:1-9</code>)과 <code>EXPECTED_HEADER</code>(<code>:14</code>)를 5열(<code>['종목', '목표', '만점', '방향', '종료 회차']</code>)로 갱신 — 열 순서 주석도 함께 고친다.
+        <span class="files"><code>functions/lib/parse-goals.ts</code></span>
+      </li>
+      <li class="done"><code>MAX_SCORE_NULL_LITERALS</code>를 <code>NULL_LITERALS</code>로 리네임(만점·종료 회차 공용 상수라는 주석 추가)하고, <code>parseMaxScore</code>의 참조를 갱신한다.
+        <span class="files"><code>functions/lib/parse-goals.ts</code></span>
+      </li>
+      <li class="done"><code>isValidRoundTabName</code>을 <code>./sheetTabs</code>에서 import하고, <code>parseDirection</code> 바로 아래에 <code>parseEndSessionDate(raw, sheetRow, name): string | null</code>을 추가한다 — <code>NULL_LITERALS</code> 체크 → <code>isValidRoundTabName</code> 형식+캘린더 검증 → 실패 시 <code>fail(sheetRow, name, "종료 회차 형식이 올바르지 않음 (...)：\"${raw}\"")</code>.
+        <span class="files"><code>functions/lib/parse-goals.ts</code></span>
+      </li>
+      <li class="done"><code>parseGoalRow</code>의 반환 객체에서 <code>endSessionDate: null, // 5열...</code> 줄을 <code>endSessionDate: parseEndSessionDate(row[4] ?? '', sheetRow, name)</code>로 교체한다.
+        <span class="files"><code>functions/lib/parse-goals.ts</code></span>
+      </li>
+      <li class="done"><code>parseGoals</code> 본체를 개정한다: 로컬 변수 <code>firstSeenRowByKey</code>를 <code>sheetRowByKey</code>로 이름 바꾸고, 함수 반환 타입을 새 <code>export interface ParseGoalsResult { events: EventDefinition[]; sheetRowByKey: Map&lt;string, number&gt; }</code>로 바꿔 <code>{ events, sheetRowByKey }</code>를 반환한다(빈 배열 조기 리턴 <code>:19</code> 포함, <code>{ events: [], sheetRowByKey: new Map() }</code>).
+        <span class="files"><code>functions/lib/parse-goals.ts</code></span>
+      </li>
+      <li class="done">3개 호출부를 구조분해로 갱신한다 — 로직 변경 없음, 반환 타입 변경에 맞춘 한 줄 수정.
+        <span class="files"><code>functions/lib/build-records-response.ts:49</code>, <code>functions/api/admin/create-sheet.ts:71</code>, <code>functions/api/admin/records.ts:71</code></span>
+      </li>
+      <li class="done">4개 테스트 픽스처 파일의 목표 탭 헤더에 5번째 열(<code>'종료 회차'</code>)을 추가해 5열 헤더 검증을 통과하도록 맞춘다.
+        <span class="files"><code>functions/api/records.test.ts:26-27</code>, <code>functions/lib/build-records-response.test.ts:13-14</code>, <code>functions/api/admin/create-sheet.test.ts:33-35</code>, <code>functions/api/admin/records.test.ts:34-38</code></span>
+        <span class="done-note">계획과 한 가지 다름: 데이터 행에는 5번째 셀을 굳이 추가하지 않고 헤더만 5열로 맞췄다 — <code>row[4] ?? ''</code>가 이미 "생략된 trailing 셀 = 빈칸"을 처리하므로 결과는 동일하고, 실제 Sheets API가 각 행 끝의 빈 셀을 잘라 돌려주는 동작을 그대로 재현한다.</span>
+      </li>
+      <li class="done"><code>parse-goals.test.ts</code>의 <code>HEADER</code>·<code>SAMPLE_ROWS</code>를 5열로 갱신하고, 반환값 구조분해(<code>const { events } = parseGoals(...)</code>)에 맞춰 기존 <code>toEqual</code> 어서션을 조정한다.
+        <span class="files"><code>functions/lib/parse-goals.test.ts</code></span>
+      </li>
+      <li class="done">새 테스트를 추가한다: (a) E열 빈칸/<code>-</code>/trailing 셀 생략 → <code>null</code>, (b) 정상 <code>YYYY-MM-DD</code> → 그대로 <code>endSessionDate</code>, (c) 형식 오류(날짜 아님) → <code>/{row}행 "{종목}"/</code> 매치 에러, (d) 캘린더 무효 날짜(<code>2025-02-30</code>) → 에러, (e) 4열 구 헤더 → "헤더가 예상과 다릅니다" 에러, (f) <code>sheetRowByKey</code>가 각 종목 key → 실제 시트 행을 정확히 담는지, 중간 공백 행이 있어도 이후 행 번호가 밀리지 않는지.
+        <span class="files"><code>functions/lib/parse-goals.test.ts</code></span>
+      </li>
+      <li class="done"><code>npm run typecheck</code> · <code>npm test</code> 전체 그린 확인.
+        <span class="files"></span>
+        <span class="done-note">완료 — typecheck 0 에러, vitest 83 test files / 690 tests 전부 통과.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>반환 타입 변경으로 3개 호출부를 빠짐없이 고쳐야 함</td><td>누락 시 타입에러로 즉시 드러남(<code>events: EventDefinition[]</code>를 기대하는 하류 함수에 <code>ParseGoalsResult</code>를 통째로 넘기면 컴파일 실패)</td><td><code>npm run typecheck</code>가 빌드 게이트 — 누락되면 바로 잡힘. 탐색으로 이미 3곳이 전부임을 확인(다른 호출부 없음)</td></tr>
+        <tr><td>테스트 픽스처 4곳을 놓치면 무관한 테스트가 "헤더가 예상과 다릅니다"로 대량 실패</td><td>디버깅 시간 낭비(원인은 명확하지만 실패 개수가 많아 보임)</td><td>탐색 단계에서 <code>parseGoals</code>를 호출하는 모든 테스트 픽스처를 전수 조사해 4곳으로 확정(<code>fetchSheetBundle</code> 전용 픽스처는 영향 없음도 확인)</td></tr>
+        <tr><td><code>isValidRoundTabName</code> 재사용이 의도한 대로 캘린더 무효 날짜(예: 2025-02-30)를 걸러내는지</td><td>잘못 구현 시 존재하지 않는 종료 회차 날짜가 조용히 통과</td><td><code>sheetTabs.test.ts</code>에 이미 같은 케이스 커버리지가 있어 함수 자체는 검증됨 — parse-goals 쪽 새 테스트는 "이 함수가 실제로 호출되는지"만 확인하면 충분</td></tr>
+        <tr><td>seed 스크립트·문서(<code>scripts/seed-sheet.mjs</code>, <code>sheet-integration.html</code> 등)가 여전히 4열 스키마를 기술</td><td>실제 시트 마이그레이션(PRD §10)·문서 갱신(§13 별도 이슈)과 시점이 어긋나 보일 수 있음</td><td>이슈 111 범위 밖(§13에서 별도 "문서·시딩 개정" 이슈로 분리돼 있음) — 이번 PR은 건드리지 않는다</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test</code> (vitest) 전체 실행 — 기존 스위트 그린 유지, 특히 <code>parse-goals.test.ts</code>·<code>build-records-response.test.ts</code>·<code>functions/api/records.test.ts</code>·<code>functions/api/admin/create-sheet.test.ts</code>·<code>functions/api/admin/records.test.ts</code>.</li>
+      <li><b>5열 헤더 검증:</b> 정상 5열 헤더 통과, 4열 구 헤더(<code>['종목','목표','만점','방향']</code>) → 에러.</li>
+      <li><b>E열 값 파싱:</b> 빈칸 → <code>null</code>, <code>-</code> → <code>null</code>, <code>2025-05-16</code> → 그대로 <code>endSessionDate</code>, 형식 오류(<code>2025/05/16</code> 등) → 행 번호·종목명 포함 에러, 캘린더 무효(<code>2025-02-30</code>) → 에러.</li>
+      <li><b>행 번호 동반 정확성:</b> 여러 종목의 <code>sheetRowByKey</code> 값이 실제 시트 행과 일치, 중간에 완전 공백 행이 끼어도 이후 종목의 행 번호가 밀리지 않음(기존 회귀 테스트 픽스처 재사용).</li>
+      <li><b>기존 동작 불변:</b> 종목명 중복 검사, 목표치/만점/방향 파싱, NFC 정규화, trim 등 기존 <code>parse-goals.test.ts</code> 케이스가 5열 픽스처로도 동일하게 통과.</li>
+      <li><code>npm run typecheck</code> — <code>ParseGoalsResult</code> 반환 타입 변경이 3개 호출부에서 타입 에러 없이 컴파일됨을 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>5열 헤더·E열 값 파싱 테스트(빈칸·<code>-</code>·정상 날짜·형식 오류·캘린더 무효) 전부 그린</li>
+      <li>행 번호 동반 정확성 테스트(중간 빈 행 스킵 케이스 포함) 그린</li>
+      <li><code>npm run typecheck</code>·<code>npm test</code> 전체 그린</li>
+      <li>기존 3개 호출부(<code>build-records-response.ts</code>·<code>create-sheet.ts</code>·<code>records.ts</code>)와 4개 테스트 픽스처가 새 반환 타입·5열 헤더에 맞춰 정합</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/111">#111</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
