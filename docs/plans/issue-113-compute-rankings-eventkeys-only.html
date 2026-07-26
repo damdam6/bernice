@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#113 P7 — compute-rankings: 회차별 측정 종목만 순회 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  pre {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.82em;
+    background: var(--code-bg); border-radius: 8px; padding: 12px 14px;
+    overflow-x: auto; line-height: 1.5;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps li.done { color: var(--muted); }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/113">#113</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — compute-rankings: 회차별 측정 종목만 순회</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/113-compute-rankings-eventkeys-only</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>computeSessionRankings</code>는 지금 <code>events[]</code>(목표 탭 전체 종목)를 그대로 순회해, 그 회차에 측정하지 않은 종목도 <code>entries: []</code>로 채워 반환한다. #110에서 <code>Session.eventKeys</code>와 <code>SessionRankings.events</code>의 계약(그 회차 측정 종목만, 미측정 종목×회차 조합은 항목 자체가 없음)이 이미 확정됐지만, 구현은 아직 옛 규칙 그대로다. 이번 이슈는 <code>compute-rankings.ts</code> 한 파일만 그 계약을 따라잡는다 — <code>computeEventRanking</code>(종목 1개 랭킹 로직)은 손대지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>functions/lib/compute-rankings.ts:67-74</code> 현재 구현:</p>
+    <pre>/** 회차 1개에 대한 종목별 랭킹 묶음. 엔트리가 0건인 종목도 entries: []로 유지해
+ *  events[] 전체와 개수를 맞춘다(프론트 종목 탭이 회차마다 사라지지 않도록). */
+export function computeSessionRankings(session: Session, events: EventDefinition[], players: Player[]): SessionRankings {
+  return {
+    sessionDate: session.date,
+    events: events.map((event) =&gt; computeEventRanking(event, session.entries, players)),
+  }
+}</pre>
+    <p>주석(67-68행)부터가 지금 <code>shared/domain.ts:95-96</code>의 <code>SessionRankings.events</code> 계약 주석과 정면으로 모순된다: 도메인 타입은 "그 회차 <code>Session.eventKeys</code>에 해당하는 종목만... 빈 종목도 entries: []로 개수 맞추던 규칙은 폐기"라고 이미 개정됐다(<code>ecb4084</code>, #130). 즉 계약은 바뀌었고 구현만 남았다.</p>
+    <p>유일한 프로덕션 호출부는 <code>functions/lib/build-records-response.ts:61</code>: <code>sessions.map((session) =&gt; computeSessionRankings(session, events, players))</code> — 여기서 <code>events</code>는 <code>parseGoals</code>가 만든 종료 종목 포함 전체 목록이다. 이 호출부는 그대로 두면 된다: <code>computeSessionRankings</code>가 내부에서 <code>session.eventKeys</code> 기준으로 좁히는 게 이번 수정의 핵심이라, 호출부는 계속 전체 <code>events</code>를 넘기고 함수가 알아서 걸러야 한다.</p>
+    <p>다운스트림 소비자 <code>computeHomeSummary</code>(같은 호출부, <code>functions/lib/compute-home-summary.ts:23</code> <code>latestRankings.events.map(...)</code>)는 <code>SessionRankings.events</code>가 좁혀지면 자동으로 좁혀진 입력을 받는다 — PRD §07이 명시한 대로 이 파일은 무변경. 그 회귀 테스트 보강은 별도 이슈(#115) 몫이다.</p>
+    <p><code>computeEventRanking</code>(21-65행)은 이미 <code>entry.scores[event.key]</code>를 optional chaining으로 접근한다(39-40행) — <code>eventKeys</code> 밖의 종목이 넘어와도 <code>score?.status !== 'recorded'</code>로 안전하게 걸러지므로, 이 함수 자체는 무변경으로 둬도 된다. (참고: <code>player-summary.ts:40</code>의 동일 패턴은 optional chaining 없이 직접 접근해 TypeError 위험이 있는데, 이는 이슈 #114의 스코프다 — 이번 이슈에서 건드리지 않는다.)</p>
+    <p>기존 테스트 <code>functions/lib/compute-rankings.test.ts:266-280</code>("여러 종목이 있으면 각 종목이 events 배열 순서·개수 그대로 독립적으로 계산된다")는 사실 옛 규칙을 검증하는 테스트다: <code>eventKeys: ['A', 'B']</code>인 세션에서 종목 B가 전원 미측정이어도 <code>entries: []</code>로 <b>포함</b>되길 기대한다(279행). 이 케이스는 "측정은 했는데 아무도 기록 안 함"이라 <code>eventKeys</code> 안에 있으므로 새 규칙에서도 여전히 유효하다 — 하지만 "애초에 그 회차 <code>eventKeys</code>에 없는 종목"은 지금 테스트 스위트에 전혀 없다. 이슈의 완료 조건이 요구하는 케이스(4종목 회차 + 7종목 회차 혼재)는 새로 추가해야 한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>채택:</b> <code>events: EventDefinition[]</code>에서 <code>key</code> → <code>EventDefinition</code> 맵을 만들고, <code>session.eventKeys</code>(헤더 순서)를 순회하며 각 key로 맵을 조회해 <code>computeEventRanking</code>을 호출한다. 결과 배열은 <code>eventKeys</code> 순서·길이와 정확히 대응한다.</p>
+    <pre>export function computeSessionRankings(session: Session, events: EventDefinition[], players: Player[]): SessionRankings {
+  const eventsByKey = new Map(events.map((event) =&gt; [event.key, event]))
+  return {
+    sessionDate: session.date,
+    events: session.eventKeys
+      .map((key) =&gt; eventsByKey.get(key))
+      .filter((event) =&gt; event !== undefined)
+      .map((event) =&gt; computeEventRanking(event, session.entries, players)),
+  }
+}</pre>
+    <p><b>eventKeys에 있는데 events에 없는 key를 어떻게 할까:</b> 조용히 건너뛴다(<code>filter</code>로 제거). 계약상 파서(#111/#112)가 이 불변식을 보장하지만, #113은 "Session 픽스처로 병렬 개발"(이슈 명시)하므로 파서 완성을 기다리지 않는다 — 존재하지 않는 종목 정의를 참조하는 방어적 처리가 필요하다. throw로 실패시키는 대안은 기각: 계산 함수가 파서의 불변식 위반을 새로 검증하는 책임을 지면 관심사가 섞이고, 이슈 범위(§07 표)에도 없다.</p>
+    <p><b>기각한 대안 — Map 없이 <code>events.filter(e =&gt; session.eventKeys.includes(e.key))</code>:</b> 순서가 <code>events</code>(목표 탭 행 순서)를 따르게 되어 <code>eventKeys</code>(그 회차 헤더 순서) 요구사항을 어긴다. §06 계약이 "헤더 순서"를 명시하므로 <code>eventKeys.map</code>이 맞다.</p>
+    <p>67-68행의 주석도 새 계약을 설명하도록 다시 쓴다(옛 "개수를 맞춘다" 표현 제거).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">
+        <code>computeSessionRankings</code>(<code>functions/lib/compute-rankings.ts:67-74</code>)를 <code>session.eventKeys</code> 기준 순회로 다시 쓰고, 67-68행 주석을 새 계약(§06)에 맞게 갱신한다.
+        <span class="files"><code>functions/lib/compute-rankings.ts</code></span>
+      </li>
+      <li class="done">
+        기존 <code>describe('computeSessionRankings', ...)</code> 스위트(<code>compute-rankings.test.ts:208-281</code>)에 새 픽스처를 추가: (a) 4종목 <code>eventKeys</code> 세션과 7종목 <code>eventKeys</code> 세션을 같은 <code>events</code>(그 둘의 합집합, 예: 8~9종목 슈퍼셋) 배열로 각각 <code>computeSessionRankings</code> 호출 → 각 결과의 <code>events</code> 길이·<code>event</code> key 목록이 그 세션의 <code>eventKeys</code>와 정확히 일치하고 순서도 <code>eventKeys</code> 순서를 따르는지 검증. (b) <code>eventKeys</code>에 없는 종목이 <code>events</code>에 있을 때 결과에서 완전히 빠지는지(entries: [] 조차 아니라 항목 자체 부재) 단언.
+        <span class="files"><code>functions/lib/compute-rankings.test.ts</code></span>
+        <span class="note">실제로는 세 개의 신규 <code>it</code>로 나눠 추가: (a) 4/7종목 혼재 순회, (b) eventKeys 밖 종목의 완전 부재, (c) 계획에 없던 추가 방어 테스트 — eventKeys에는 있지만 목표 탭(events)에는 정의가 없는 key도 조용히 제외되는지.</span>
+      </li>
+      <li class="done">
+        기존 두 테스트(209행 §06 예시 응답, 266행 "여러 종목") 그대로 둔다 — 둘 다 <code>eventKeys</code>가 이미 새 필드로 채워져 있고 새 구현에서도 그대로 통과해야 한다. 실행해서 실제로 그린인지 확인.
+        <span class="files"><code>functions/lib/compute-rankings.test.ts</code></span>
+      </li>
+      <li class="done">
+        <code>computeEventRanking</code> 테스트(31-206행, 15개 <code>it</code>)는 무수정 상태로 전부 그린이어야 한다 — 별도 변경 없음, 실행 결과만 확인.
+        <span class="files"><code>functions/lib/compute-rankings.test.ts</code></span>
+      </li>
+      <li class="done">
+        전체 테스트·타입체크 실행(<code>npm test</code>, <code>npm run typecheck</code>)해 <code>compute-home-summary.test.ts</code> 등 <code>computeSessionRankings</code>를 픽스처 헬퍼로 쓰는 다른 스위트가 깨지지 않는지 확인. 깨지면 그 스위트가 옛 "빈 종목 유지" 동작에 의존했다는 뜻이므로 그 픽스처만 새 계약에 맞게 고친다(스코프 벗어난 로직 변경은 하지 않는다).
+        <span class="files"><code>functions/lib/compute-home-summary.test.ts</code></span>
+        <span class="note">실제로는 픽스처 조정 불필요 — 전체 83개 테스트 파일·684개 테스트가 무수정 상태로 그린이었다.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>compute-home-summary.test.ts</code>가 옛 "빈 종목도 포함" 동작을 픽스처로 가정했을 가능성</td>
+          <td>무관한 스위트가 레드로 돌아 완료 조건("computeEventRanking 기존 테스트 무수정 그린")과 헷갈릴 수 있음</td>
+          <td>전체 테스트 실행 후 실패를 <code>compute-rankings.ts</code> 변경 탓인지 개별 확인 — <code>computeEventRanking</code> 자체 테스트만 무수정 그린이면 되고, 다른 파일의 픽스처 조정은 허용 범위</td>
+        </tr>
+        <tr>
+          <td><code>eventKeys</code>에 있는데 <code>events</code>에 없는 key(파서 불변식 위반)</td>
+          <td>#111/#112 완성 전 개발이라 이론상 발생 가능 — 처리 안 하면 <code>undefined</code>가 <code>computeEventRanking</code>에 흘러들어 런타임 에러</td>
+          <td>설계(§3)대로 <code>filter</code>로 조용히 제외 — 파서가 불변식을 보장하면 실제로는 도달 안 하는 방어 코드</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test</code> (vitest run) — <code>compute-rankings.test.ts</code> 전체(<code>computeEventRanking</code> 15건 + <code>computeSessionRankings</code> 기존 2건 + 신규 픽스처) 그린 확인</li>
+      <li>신규 픽스처: 4종목 <code>eventKeys</code> 회차 + 7종목 <code>eventKeys</code> 회차를 같은 스위트에서 검증 — 각 회차 결과의 <code>events</code> 개수·key 목록·순서가 그 회차 <code>eventKeys</code>와 정확히 일치</li>
+      <li>신규 픽스처: <code>eventKeys</code>에 없는 종목이 결과의 <code>events</code> 배열에 항목 자체로도 나타나지 않음(옛 <code>entries: []</code> 방식이 아니라 완전 부재)을 단언</li>
+      <li><code>computeEventRanking</code> 기존 15개 테스트가 코드 무수정 상태로 그린인지 확인(완료 조건 그대로)</li>
+      <li><code>npm run typecheck</code> — 시그니처 변경 없음(반환 타입 <code>SessionRankings</code> 그대로)이라 그린이어야 함</li>
+      <li><code>compute-home-summary.test.ts</code> 등 <code>computeSessionRankings</code>를 픽스처로 쓰는 인접 스위트가 새 동작과 충돌하지 않는지 전체 테스트 실행으로 확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>회차별 순회·미측정 종목 부재 픽스처 테스트 추가(4종목 회차 + 7종목 회차 혼재) — <code>compute-rankings.test.ts</code></li>
+      <li><code>computeEventRanking</code> 기존 테스트 무수정 그린</li>
+      <li><code>computeSessionRankings</code>가 <code>session.eventKeys</code> 순서·길이에만 대응하는 <code>events</code> 배열을 반환(옛 "빈 종목도 entries: [] 유지" 동작 제거)</li>
+      <li><code>npm test</code>·<code>npm run typecheck</code> 전체 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/113">#113</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
