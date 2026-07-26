@@ -96,7 +96,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // 7. 헤더 매핑(열 순서 가정 없음) + 대상 행 찾기. 헤더 이상·동명 중복은 throw → 500.
-    const eventColumns = integrity(() => mapHeaderToEvents(round.values[0], events))
+    // 헤더 매핑은 읽기 경로와 같은 함수라 회차별 측정 종목 완화(V3)·종료 경계 검증(V4)을
+    // 그대로 상속한다 — 저장 대상 열은 목표 탭 전체가 아니라 그 회차 탭 헤더가 정한다(#112).
+    const eventColumns = integrity(() => mapHeaderToEvents(round.values[0], events, round.name))
     const location = locateParticipantRow(round.values, player.name)
     if (location.kind === 'not_participant') {
       return Response.json(
