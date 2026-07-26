@@ -8,8 +8,8 @@
 // home 계산 입력에도 동일하게 재사용한다 — computeEventRanking·computePlayerSummaries는
 // 어차피 활동/비탈퇴만 보므로 결과는 같고, 소스가 하나뿐이라 어긋날 일이 없다.
 
-import type { Player, RecordsResponse, Session } from '../../shared/domain'
-import type { SheetRawBundle } from './sheetsApi'
+import type { EventDefinition, Player, RecordsResponse, Session } from '../../shared/domain'
+import type { RoundRawTable, SheetRawBundle } from './sheetsApi'
 import { parseRoster } from './roster'
 import { parseGoals } from './parse-goals'
 import { buildPlayersByName, parseSession } from './parse-session'
@@ -26,6 +26,21 @@ export class RecordsAssemblyError extends Error {
   ) {
     super(message)
     this.name = 'RecordsAssemblyError'
+  }
+}
+
+// V6(docs/prd-event-lifecycle.html §05) — 종료 회차는 실존하는 회차 탭 이름과 일치해야 한다.
+// 회차 목록을 아는 곳이 조립 단계뿐이라 여기서만 대조 가능하다. V4(parse-session.ts)가 "종료
+// 회차 초과 회차에 컬럼 존재"를 잡는 것과 별개로, 이 검증은 애초에 종료 회차 자체가 오타로
+// 존재하지 않는 날짜를 가리키는 경우(조용히 "영원히 현역"이거나 조용히 모순이 되는 것)를 막는다.
+function validateEndSessionDates(events: EventDefinition[], rounds: RoundRawTable[]): void {
+  const roundNames = new Set(rounds.map((round) => round.name))
+  for (const event of events) {
+    if (event.endSessionDate !== null && !roundNames.has(event.endSessionDate)) {
+      throw new Error(
+        `목표 탭 종목 "${event.key}"의 종료 회차(${event.endSessionDate})에 해당하는 회차 탭을 찾을 수 없습니다 — 오타이거나 그 회차 탭이 아직 생성되지 않았을 수 있습니다`,
+      )
+    }
   }
 }
 
@@ -47,6 +62,7 @@ export function buildRecordsResponse(bundle: SheetRawBundle, generatedAt: string
 
   const { players } = parseRoster(bundle.roster.values)
   const { events } = parseGoals(bundle.goals.values)
+  validateEndSessionDates(events, bundle.rounds)
   const playersById = new Map(players.map((player) => [player.id, player]))
   // 회차 탭마다 이름→Player 맵을 다시 만들지 않도록 한 번만 생성해 재사용한다 —
   // players[]는 이 요청 안에서 바뀌지 않으므로 bundle.rounds 개수만큼 반복해서
