@@ -38,7 +38,7 @@ function collectValidScores(player: Player, event: EventDefinition, sessions: Se
     if (!entry) continue
 
     const score = entry.scores[event.key]
-    if (score.status !== 'recorded') continue
+    if (!score || score.status !== 'recorded') continue
 
     scores.push({ sessionDate: session.date, value: score.value, display: score.display })
   }

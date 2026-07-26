@@ -198,3 +198,58 @@ describe('computePlayerSummaries — 경계값·빈 입력', () => {
     expect(computePlayerSummaries([], [], [])).toEqual([])
   })
 })
+
+describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
+  // RECENT: 3회차부터 등장하는 신규 종목 — 1·2회차 eventKeys/scores엔 key 자체가 없음.
+  // ENDED: 2회차까지만 측정된 종료 종목 — 3·4회차 eventKeys/scores엔 key 자체가 없음.
+  const RECENT: EventDefinition = {
+    key: '신규종목',
+    valueKind: 'count',
+    target: '3',
+    targetValue: 3,
+    maxScore: null,
+    direction: '높을수록',
+    endSessionDate: null,
+  }
+  const ENDED: EventDefinition = {
+    key: '종료종목',
+    valueKind: 'time',
+    target: '10',
+    targetValue: 10,
+    maxScore: null,
+    direction: '낮을수록',
+    endSessionDate: '2025-02-01',
+  }
+  const players: Player[] = [{ id: 1, name: '선수1', status: '활동' }]
+  const sessions: Session[] = [
+    { date: '2025-01-01', entries: [entry(1, '선수1', { [ENDED.key]: recorded(12, '0:12') })], eventKeys: [ENDED.key] },
+    { date: '2025-02-01', entries: [entry(1, '선수1', { [ENDED.key]: recorded(9, '0:09') })], eventKeys: [ENDED.key] },
+    { date: '2025-03-01', entries: [entry(1, '선수1', { [RECENT.key]: recorded(4, '4') })], eventKeys: [RECENT.key] },
+    { date: '2025-04-01', entries: [entry(1, '선수1', { [RECENT.key]: recorded(5, '5') })], eventKeys: [RECENT.key] },
+  ]
+
+  const [summary] = computePlayerSummaries([RECENT, ENDED], players, sessions)
+
+  it('신규 종목: 등장 이전 회차들엔 scores에 key 자체가 없어도 크래시 없이 건너뛰고, 첫 유효 기록의 deltaFromPrevious는 null이다', () => {
+    const recentTrend = summary.trends.find((t) => t.event === RECENT.key)!
+    expect(recentTrend.points).toEqual([
+      { sessionDate: '2025-03-01', value: 4, display: '4', achieved: true, deltaFromPrevious: null, improved: null },
+      { sessionDate: '2025-04-01', value: 5, display: '5', achieved: true, deltaFromPrevious: 1, improved: true },
+    ])
+  })
+
+  it('종료 종목: 종료 이후 회차들엔 scores에 key가 없어도 크래시 없이 건너뛰고, 종료 전 이력과 PB가 그대로 보존된다', () => {
+    const endedTrend = summary.trends.find((t) => t.event === ENDED.key)!
+    expect(endedTrend.points).toEqual([
+      { sessionDate: '2025-01-01', value: 12, display: '0:12', achieved: false, deltaFromPrevious: null, improved: null },
+      { sessionDate: '2025-02-01', value: 9, display: '0:09', achieved: true, deltaFromPrevious: -3, improved: true },
+    ])
+    expect(summary.personalBests.find((pb) => pb.event === ENDED.key)).toEqual({
+      event: ENDED.key,
+      value: 9,
+      display: '0:09',
+      sessionDate: '2025-02-01',
+      achieved: true,
+    })
+  })
+})
