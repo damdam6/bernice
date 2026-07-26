@@ -139,9 +139,43 @@ describe('evaluateScores', () => {
   })
 })
 
+// 쓰기 경로는 헤더 매핑을 재구현하지 않고 parse-session의 mapHeaderToEvents를 재-export해
+// 그대로 쓴다(PRD docs/prd-event-lifecycle.html §09 "사실상 변경 없음"의 근거) — 회차별 종목
+// 서브셋 완화(V3)와 종료 경계 검증(V4)이 읽기/쓰기에 동일하게 적용됨을 여기서 못박는다.
+// 요청 scores에 그 회차 비측정 종목 key가 왔을 때의 엔드포인트 응답 계약은 #122 소관이다.
+describe('mapHeaderToEvents 재사용 — 읽기 경로와 동일한 완화·검증 (#112)', () => {
+  const SUBSET_HEADER = ['이름', '골밑슛', '드리블셔틀런']
+
+  it('목표 종목 일부만 있는 회차 헤더도 그대로 통과한다 (V3 완화)', () => {
+    const eventColumns = mapHeaderToEvents(SUBSET_HEADER, EVENTS, '2025-08-16')
+
+    expect(eventColumns.map((column) => column.event.key)).toEqual(['골밑슛', '드리블셔틀런'])
+  })
+
+  it('서브셋 회차의 쓰기 범위는 목표 전체가 아니라 그 회차 헤더 열만 덮는다', () => {
+    const eventColumns = mapHeaderToEvents(SUBSET_HEADER, EVENTS, '2025-08-16')
+    const scores = { 드리블셔틀런: '1:12', 골밑슛: '6', 자유투: '면제', '45도패스캐치': '' }
+
+    const plan = buildWritePlan('2025-08-16', 7, eventColumns, scores)
+
+    expect(plan.range).toBe("'2025-08-16'!B7:C7")
+    expect(plan.values).toEqual([['6', '1:12']])
+  })
+
+  it('종료된 종목이 이후 회차 헤더에 있으면 쓰기 경로에서도 동일하게 Error를 던진다 (V4)', () => {
+    const events = EVENTS.map((event) =>
+      event.key === '45도패스캐치' ? { ...event, endSessionDate: '2025-05-16' } : event,
+    )
+
+    expect(() => mapHeaderToEvents(HEADER, events, '2025-08-16')).toThrow(/45도패스캐치/)
+    // 경계(종료 회차 그 자체)는 읽기 경로와 마찬가지로 정상 통과한다.
+    expect(mapHeaderToEvents(HEADER, events, '2025-05-16')).toHaveLength(4)
+  })
+})
+
 describe('buildWritePlan', () => {
   it('점수 셀만 B열부터 연속 범위로, 값은 헤더 열 순서로 재배열한다', () => {
-    const eventColumns = mapHeaderToEvents(HEADER, EVENTS)
+    const eventColumns = mapHeaderToEvents(HEADER, EVENTS, '2025-08-16')
     // 일부러 요청 key 순서를 헤더와 다르게 준다 — 그래도 헤더 순서로 나와야 한다.
     const scores = { 자유투: '면제', '45도패스캐치': '', 드리블셔틀런: '1:12', 골밑슛: '6' }
 
@@ -152,7 +186,7 @@ describe('buildWritePlan', () => {
   })
 
   it('탭 이름의 작은따옴표를 A1 규칙대로 이스케이프한다', () => {
-    const eventColumns = mapHeaderToEvents(HEADER, EVENTS)
+    const eventColumns = mapHeaderToEvents(HEADER, EVENTS, '2025-08-16')
     const scores = { 드리블셔틀런: '1:12', 골밑슛: '6', 자유투: '면제', '45도패스캐치': '' }
 
     const plan = buildWritePlan("2025's-tab", 3, eventColumns, scores)

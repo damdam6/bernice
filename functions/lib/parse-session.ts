@@ -34,6 +34,15 @@
 // 상태(탈퇴 등) 필터링은 이 파서의 책임이 아니다: 활동/비대상·휴식/탈퇴별로 하류
 // 소비자(#28 랭킹은 활동만, #29 추이는 비대상·휴식도 포함)마다 포함 규칙이 달라, 여기서
 // 미리 걸러내면 그 정보를 복원할 수 없다.
+//
+// 회차별 측정 종목 — 헤더가 정본 (이슈 #112, PRD docs/prd-event-lifecycle.html §05):
+// 측정 종목은 회차 사이에 추가·종료될 수 있어서, "목표 탭 종목 전체가 모든 회차 탭 헤더에
+// 있어야 한다"는 완전일치 강제는 종목을 하나 추가하는 순간 그 컬럼이 없는 과거 회차 탭을
+// 전부 에러로 만든다. 그래서 어느 회차에서 무엇을 측정했는지의 정본은 목표 탭이 아니라
+// 그 회차 탭 헤더다 — 목표에만 있고 헤더에 없는 종목은 "그 회차 미측정"으로 조용히 빠진다.
+// 이 완화(V3) 하나만 풀고 나머지 fail-loud는 그대로 둔다: 목표에 없는 헤더(V1)·중복 헤더·
+// 빈 헤더 셀(V2)은 여전히 즉시 에러이고, 종료된 종목이 종료 회차 이후에 다시 나타나는
+// 데이터 모순(V4)은 새로 잡는다.
 
 import type { EventDefinition, EventScore, Session, SessionEntry, Player } from '../../shared/domain'
 import { buildEventScore } from '../../shared/build-event-score'
@@ -55,7 +64,7 @@ export function parseSession(
     throw new Error('회차 탭이 비어 있습니다 (헤더 행조차 없음)')
   }
 
-  const eventColumns = mapHeaderToEvents(rows[0], events)
+  const eventColumns = mapHeaderToEvents(rows[0], events, tabName)
   const dataRows = rows.slice(1)
 
   const entries: SessionEntry[] = []
@@ -123,7 +132,12 @@ export function buildPlayersByName(players: Player[]): Map<string, Player[]> {
 
 // export: 회차 탭 쓰기 경로(POST /api/admin/records, #64)가 같은 규칙으로 헤더→종목 열을
 // 매핑해야 한다(PRD §07 "parse-session의 mapHeaderToEvents와 같은 규칙"). 재구현 대신 재사용.
-export function mapHeaderToEvents(header: string[], events: EventDefinition[]): EventColumn[] {
+//
+// sessionDate(회차 탭 이름 = 그 회차 날짜)를 필수로 받는 이유는 V4(종료 경계) 때문이다.
+// 선택 인자로 두면 호출부가 조용히 V4를 건너뛸 수 있고 그 누락은 타입 검사에 걸리지 않는데,
+// 읽기(parseSession)·쓰기(records 엔드포인트) 양쪽 다 이미 날짜를 손에 쥐고 있어 필수화
+// 비용이 없다 — 완화와 검증이 두 경로에 항상 같이 적용되는 것이 이 함수를 공유하는 이유다.
+export function mapHeaderToEvents(header: string[], events: EventDefinition[], sessionDate: string): EventColumn[] {
   const firstCell = (header[0] ?? '').trim().normalize('NFC')
   if (firstCell !== NAME_HEADER) {
     throw new Error(`회차 탭 헤더 첫 열이 "이름"이 아닙니다: "${header[0] ?? ''}"`)
@@ -152,15 +166,24 @@ export function mapHeaderToEvents(header: string[], events: EventDefinition[]): 
       throw new Error(`회차 탭 헤더에 "${rawLabel}"가 중복됩니다`)
     }
 
+    // V4 — 종료된 종목이 종료 회차 이후 회차에 다시 나타나면 데이터 모순이다("종료 회차
+    // 까지만 데이터가 존재한다"는 PRD §02 R2 위반). 경계는 포함이라 종료 회차 그 자체(마지막
+    // 측정 회차)에 컬럼이 있는 것은 정상이고, 초과한 회차만 잡는다.
+    // 두 값 다 고정 폭 YYYY-MM-DD라 사전식 비교 = 시간순 비교다 — 형식 보증은 회차 쪽이
+    // sheetTabs.ts의 parseRoundDate(캘린더 유효성까지 왕복 검증), 종목 쪽이 목표 탭 파서의
+    // 종료 회차 검증(V5)이 각각 책임지므로 여기서 다시 파싱하지 않는다.
+    if (event.endSessionDate !== null && sessionDate > event.endSessionDate) {
+      throw new Error(
+        `회차 탭(${sessionDate}) 헤더에 이미 종료된 종목 "${rawLabel}" 컬럼이 있습니다 — 종료 회차가 ${event.endSessionDate}이므로 그 이후 회차에는 이 종목 기록이 있을 수 없습니다`,
+      )
+    }
+
     matchedKeys.add(label)
     columns.push({ event, columnIndex })
   }
 
-  const missing = events.filter((event) => !matchedKeys.has(event.key.normalize('NFC')))
-  if (missing.length > 0) {
-    throw new Error(`회차 탭 헤더에 다음 종목 컬럼이 없습니다: ${missing.map((event) => event.key).join(', ')}`)
-  }
-
+  // V3(목표 탭 종목이 회차 헤더에 없음)은 더 이상 에러가 아니다 — 파일 상단 "회차별 측정
+  // 종목 — 헤더가 정본" 참고. 여기 있던 missing 검사 제거가 이 이슈(#112)의 핵심 변경이다.
   return columns
 }
 

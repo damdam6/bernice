@@ -190,10 +190,13 @@ describe('parseSession', () => {
     expect(() => parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers()), buildEvents())).toThrow(/윗몸일으키기/)
   })
 
-  it('종목 컬럼이 누락되면 Error를 던진다', () => {
-    const rows = [['이름', '드리블셔틀런', '골밑슛', '자유투']] // 45도패스캐치 컬럼 없음
+  it('목표 탭에 있어도 회차 헤더에 없는 종목은 에러가 아니라 "그 회차 미측정"이다 (V3 완화)', () => {
+    const rows = [['이름', '드리블셔틀런', '골밑슛', '자유투'], ['선수1', '1:12', '5', '2']] // 45도패스캐치 컬럼 없음
 
-    expect(() => parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers()), buildEvents())).toThrow(/45도패스캐치/)
+    const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers()), buildEvents())
+
+    expect(session.eventKeys).toEqual(['드리블셔틀런', '골밑슛', '자유투'])
+    expect(session.entries[0].scores).not.toHaveProperty('45도패스캐치')
   })
 
   it('헤더에 같은 종목이 중복되면 Error를 던진다', () => {
@@ -293,9 +296,140 @@ describe('parseSession', () => {
     })
   })
 
+  // 이슈 #112 · PRD docs/prd-event-lifecycle.html §05 — 회차 탭 헤더가 "그 회차에 무엇을
+  // 측정했나"의 정본이 되면서 생기는 계약. 종목 추가 전의 과거 회차, 종목 종료 후의 이후
+  // 회차, 그냥 측정을 생략한 회차가 전부 이 한 규칙("헤더에 있는 종목만")으로 수용된다.
+  describe('회차별 종목 서브셋 (V3 완화)', () => {
+    // 목표는 4종목인데 이 회차엔 2종목만 측정 — 나머지 2종목은 아직 추가 전이거나 종료됐거나 생략됐다.
+    const SUBSET_HEADER = ['이름', '골밑슛', '드리블셔틀런']
+
+    it('eventKeys는 목표 탭 순서가 아니라 그 회차 헤더 순서를 그대로 담는다', () => {
+      const rows = [SUBSET_HEADER, ['선수1', '5', '1:12']]
+
+      const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
+
+      expect(session.eventKeys).toEqual(['골밑슛', '드리블셔틀런'])
+    })
+
+    it('scores는 헤더 종목만 채우고 비측정 종목은 key 자체가 없다', () => {
+      const rows = [SUBSET_HEADER, ['선수1', '5', '1:12']]
+
+      const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
+
+      expect(Object.keys(session.entries[0].scores)).toEqual(['골밑슛', '드리블셔틀런'])
+      expect(session.entries[0].scores['골밑슛']).toEqual({ status: 'recorded', value: 5, display: '5' })
+      expect(session.entries[0].scores['자유투']).toBeUndefined()
+      expect(session.entries[0].scores['45도패스캐치']).toBeUndefined()
+    })
+
+    it('participated의 분모는 그 회차 측정 종목이다 — 헤더 종목이 전부 빈칸이면 false', () => {
+      const rows = [SUBSET_HEADER, ['선수1', '', '']]
+
+      const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
+
+      expect(session.entries[0].participated).toBe(false)
+    })
+
+    it('participated의 분모는 그 회차 측정 종목이다 — 헤더 종목 중 하나라도 입력되면 true', () => {
+      const rows = [SUBSET_HEADER, ['선수1', '', '1:12']]
+
+      const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
+
+      expect(session.entries[0].participated).toBe(true)
+    })
+
+    it('참가자가 0명인 회차에서도 eventKeys로 측정 종목을 알 수 있다', () => {
+      const session = parseSession('2025-05-16', [SUBSET_HEADER], buildPlayersByName(buildPlayers()), buildEvents())
+
+      expect(session.entries).toEqual([])
+      expect(session.eventKeys).toEqual(['골밑슛', '드리블셔틀런'])
+    })
+
+    it('완화된 것은 "헤더에 없음"뿐 — 목표에 없는 헤더(V1)·중복 헤더(V2)는 그대로 에러다', () => {
+      const unknownHeader = [['이름', '골밑슛', '윗몸일으키기']]
+      const duplicateHeader = [['이름', '골밑슛', '골밑슛']]
+      const players = buildPlayersByName(buildPlayers())
+
+      expect(() => parseSession('2025-05-16', unknownHeader, players, buildEvents())).toThrow(/윗몸일으키기/)
+      expect(() => parseSession('2025-05-16', duplicateHeader, players, buildEvents())).toThrow(/중복/)
+    })
+  })
+
+  // V4 — 종료 회차 이후 회차에 그 종목 컬럼이 있으면 데이터 모순(PRD §05 R2 위반).
+  // endSessionDate는 목표 탭 5열 파싱(#111) 소관이라 여기서는 픽스처로 직접 주입한다.
+  describe('종료 경계 검증 (V4)', () => {
+    function eventsWithEnd(key: string, endSessionDate: string | null): EventDefinition[] {
+      return buildEvents().map((event) => (event.key === key ? { ...event, endSessionDate } : event))
+    }
+
+    it('종료 회차보다 뒤인 회차 헤더에 종료 종목 컬럼이 있으면 Error를 던진다', () => {
+      const rows = [['이름', '드리블셔틀런', '45도패스캐치'], ['선수1', '1:12', '6']]
+
+      expect(() =>
+        parseSession('2025-06-20', rows, buildPlayersByName(buildPlayers(['선수1'])), eventsWithEnd('45도패스캐치', '2025-05-16')),
+      ).toThrow(/45도패스캐치/)
+    })
+
+    it('에러 메시지에 회차 날짜와 종료 회차를 모두 담아 어느 쪽을 고칠지 알려준다', () => {
+      const rows = [['이름', '45도패스캐치']]
+
+      expect(() =>
+        parseSession('2025-06-20', rows, buildPlayersByName(buildPlayers()), eventsWithEnd('45도패스캐치', '2025-05-16')),
+      ).toThrow(/2025-06-20[\s\S]*2025-05-16/)
+    })
+
+    it('종료 회차 그 자체(마지막 측정 회차)에 컬럼이 있는 것은 정상이다 — 경계 포함', () => {
+      const rows = [['이름', '드리블셔틀런', '45도패스캐치'], ['선수1', '1:12', '6']]
+
+      const session = parseSession(
+        '2025-05-16',
+        rows,
+        buildPlayersByName(buildPlayers(['선수1'])),
+        eventsWithEnd('45도패스캐치', '2025-05-16'),
+      )
+
+      expect(session.eventKeys).toContain('45도패스캐치')
+      expect(session.entries[0].scores['45도패스캐치']).toEqual({ status: 'recorded', value: 6, display: '6' })
+    })
+
+    it('종료 회차 이후 회차라도 그 컬럼이 없으면 정상이다 — V3 완화로 자연 소멸한다', () => {
+      const rows = [['이름', '드리블셔틀런', '골밑슛', '자유투'], ['선수1', '1:12', '5', '2']]
+
+      const session = parseSession(
+        '2025-06-20',
+        rows,
+        buildPlayersByName(buildPlayers(['선수1'])),
+        eventsWithEnd('45도패스캐치', '2025-05-16'),
+      )
+
+      expect(session.eventKeys).not.toContain('45도패스캐치')
+    })
+
+    it('종료 회차가 아직 오지 않은 회차(현역 구간)는 컬럼이 있어도 정상이다', () => {
+      const rows = [['이름', '45도패스캐치'], ['선수1', '6']]
+
+      const session = parseSession(
+        '2025-05-16',
+        rows,
+        buildPlayersByName(buildPlayers(['선수1'])),
+        eventsWithEnd('45도패스캐치', '2025-06-20'),
+      )
+
+      expect(session.eventKeys).toEqual(['45도패스캐치'])
+    })
+
+    it('endSessionDate가 null인 현역 종목은 어느 회차에서도 V4에 걸리지 않는다', () => {
+      const rows = [HEADER, ['선수1', '1:12', '5', '2', '6']]
+
+      const session = parseSession('2099-12-31', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
+
+      expect(session.eventKeys).toHaveLength(4)
+    })
+  })
+
   it('헤더 중간에 빈 칸이 있으면(참조 수식 깨짐) 조용히 무시하지 않고 Error를 던진다', () => {
-    // 5개 비-이름 컬럼(events는 4개) 중 하나가 빈 칸 — missing-컬럼 체크로는 안 걸리는
-    // "여분 컬럼이 빈 채로 끼어든" 케이스를 직접 겨냥한다.
+    // 헤더 셀은 전부 종목 참조 수식이라 빈 칸이면 수식이 깨졌다는 뜻이다 — V3 완화로
+    // "종목 컬럼이 없는 것"은 정상이 됐지만 "있는데 비어 있는 것"은 여전히 에러여야 한다.
     const header = ['이름', '드리블셔틀런', '', '골밑슛', '자유투', '45도패스캐치']
     const rows = [header, ['선수1', '1:12', '', '5', '2', '6']]
 
