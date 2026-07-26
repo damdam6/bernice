@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#119 P7 — records-schema 문서·parse-records-response 런타임 검증 개정 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps.done li::before { content: "✓"; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/119">#119</a></span><span class="type-chip">문서 개정 · 테스트 보강</span>
+    <h1>P7 — records-schema 문서·parse-records-response 런타임 검증 개정</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/119-records-schema-runtime-validation</code></b> ← <code>main</code></span>
+      <span>라벨 <b>documentation, enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>이슈 #110(PR #130, 계약 키스톤)에서 <code>shared/domain.ts</code>와 <code>src/lib/parse-records-response.ts</code>에 이미 <code>EventDefinition.endSessionDate</code>·<code>Session.eventKeys</code>가 반영되고 런타임 검증 로직도 추가됐다. 하지만 <code>docs/records-schema.html</code>(§05 타입 정의 전문·§06 예시 응답)은 그 개정을 반영하지 못한 채 남아 있고, 신규 필드를 겨냥한 명시적 런타임 검증 테스트도 없다. 이번 작업은 <b>로직 변경 없이</b> 문서를 domain.ts 주석·<code>docs/prd-event-lifecycle.html</code> §06 계약표와 정합시키고, endSessionDate·eventKeys의 성공/실패 케이스 테스트를 추가한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><b>이미 완료된 부분(#110/#130, 커밋 <code>ecb4084</code>)</b> — 로직·타입은 정본이 이미 개정 완료 상태:</p>
+    <ul>
+      <li><code>shared/domain.ts:38-48</code> — <code>EventDefinition.endSessionDate: string | null</code> 신설, 3줄 주석(종료 회차·events[] 전체 보관 이유·파생 규칙)</li>
+      <li><code>shared/domain.ts:59-65</code> — <code>SessionEntry.scores</code> 완전성 계약 주석이 "events[] 전체 key 존재"에서 "그 회차 <code>Session.eventKeys</code> 전체가 항상 존재, 그 외 key는 없음"으로 개정</li>
+      <li><code>shared/domain.ts:68-74</code> — <code>Session.eventKeys: string[]</code> 신설 + 주석</li>
+      <li><code>shared/domain.ts:93-97</code> — <code>SessionRankings.events</code>에 "그 회차 eventKeys에 해당하는 종목만" 주석 신설</li>
+      <li><code>shared/domain.ts:126-130</code> — <code>PlayerSummary.trends</code> 주석에 "(종료 종목 포함)" 삽입</li>
+      <li><code>src/lib/parse-records-response.ts:56-74</code> — <code>parseEventDefinition</code>이 이미 <code>endSessionDate</code>를 <code>string | null</code>로 검증</li>
+      <li><code>src/lib/parse-records-response.ts:117-131</code> — <code>parseSession</code>이 <code>parseStringArray</code>로 <code>eventKeys</code>를 이미 검증</li>
+    </ul>
+    <p><b>미반영 부분(이 이슈의 실제 범위)</b>:</p>
+    <ul>
+      <li><code>docs/records-schema.html:213-220</code> — §05 <code>EventDefinition</code> 코드 블록에 <code>endSessionDate</code> 필드 자체가 없음</li>
+      <li><code>docs/records-schema.html:230-241</code> — §05 <code>SessionEntry.scores</code> 주석이 구 버전("events[] 전체 key가 항상 존재")이고, <code>Session</code>에 <code>eventKeys</code> 필드가 없음</li>
+      <li><code>docs/records-schema.html:258-262</code> — §05 <code>SessionRankings.events</code>에 완전성 주석이 아예 없음</li>
+      <li><code>docs/records-schema.html:289-293</code> — §05 <code>PlayerSummary.trends</code> 주석이 "(종료 종목 포함)" 없이 구 버전</li>
+      <li><code>docs/records-schema.html:325-443</code> — §06 예시 응답 JSON의 <code>events[]</code>·<code>sessions[]</code>에 두 신규 필드가 전혀 없음</li>
+      <li><code>docs/prd-event-lifecycle.html:224-258</code> — §06 계약표가 정본 대조 기준(이슈 원문의 "§06 표와 정합"). 이 표와 domain.ts는 이미 일치, records-schema.html만 뒤처짐</li>
+      <li><code>src/lib/parse-records-response.test.ts</code> — <code>FULL_RESPONSE</code> 픽스처가 두 필드값을 포함하긴 하나(10-11행, 57행), 그건 전체 응답 성공 케이스 1건에 곁다리로 낀 것일 뿐 — endSessionDate·eventKeys 각각을 겨냥한 성공/실패 케이스가 없음</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>문서 동기화</b>: domain.ts 주석 문구를 그대로(의미 보존) §05 코드 블록에 옮긴다 — 별도 표현으로 의역하면 "shared/domain.ts 주석과 문구 일치"라는 완료 조건을 재차 어길 위험이 있으므로 문구를 그대로 복사한다. §06 예시 JSON에는 각 종목에 <code>endSessionDate</code>(예시 2종목 모두 현역이므로 <code>null</code>), <code>sessions[].eventKeys</code>(그 회차 종목 key 배열)를 추가해 계약을 시각적으로도 보여준다.</p>
+    <p><b>테스트</b>: 기존 <code>parseRecordsResponse</code> describe 블록에 <code>it</code>을 추가하는 방식(신규 describe 분리보다 기존 스타일과 일관) — endSessionDate는 (a) 문자열 값 성공 (b) null 성공 (c) 숫자 등 다른 타입 거부 3케이스, eventKeys는 (a) 문자열 배열 성공(기존 FULL_RESPONSE로 이미 커버되므로 실패 케이스 위주로 추가) (b) 비배열 거부 (c) 원소에 비문자열 섞인 경우 거부 케이스를 추가한다. 로직 변경은 없음 — 파서는 이미 존재하므로 문서·테스트만 갱신하는 순수 회귀 작업.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ §05 <code>EventDefinition</code> 인터페이스에 <code>endSessionDate: string | null</code> 필드 + domain.ts와 동일한 3줄 주석 추가
+        <span class="files"><code>docs/records-schema.html</code></span>
+      </li>
+      <li>✅ §05 <code>SessionEntry.scores</code> 주석을 "그 회차 <code>Session.eventKeys</code> 전체가 항상 존재, 그 외 key는 없음"으로 개정
+        <span class="files"><code>docs/records-schema.html</code></span>
+      </li>
+      <li>✅ §05 <code>Session</code> 인터페이스에 <code>eventKeys: string[]</code> 필드 + 주석 추가
+        <span class="files"><code>docs/records-schema.html</code></span>
+      </li>
+      <li>✅ §05 <code>SessionRankings.events</code>에 "그 회차 eventKeys에 해당하는 종목만, 헤더 순서 — 미측정 종목×회차 조합은 항목 자체가 없다" 주석 추가
+        <span class="files"><code>docs/records-schema.html</code></span>
+      </li>
+      <li>✅ §05 <code>PlayerSummary.trends</code> 주석에 "(종료 종목 포함)" 반영
+        <span class="files"><code>docs/records-schema.html</code></span>
+      </li>
+      <li>✅ §06 예시 응답 JSON — <code>events[]</code> 각 항목에 <code>endSessionDate: null</code>, <code>sessions[]</code>에 <code>eventKeys</code> 추가(기존 4명·2종목·1회차 축약 예시 구조 유지)
+        <span class="files"><code>docs/records-schema.html</code></span>
+      </li>
+      <li>✅ <code>parseRecordsResponse</code> describe 블록에 endSessionDate 성공(문자열/null)·실패(숫자 등) 케이스, eventKeys 실패(비배열/원소 타입 오류) 케이스 테스트 추가
+        <span class="files"><code>src/lib/parse-records-response.test.ts</code></span>
+      </li>
+      <li>✅ <code>npm run typecheck</code> && <code>npm run test</code>로 회귀 확인 — typecheck 0 에러, 83 test files / 705 tests 통과
+        <span class="files"></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>문서·domain.ts 문구가 다시 어긋남</td><td>향후 개정 시 또 재발</td><td>domain.ts 주석 문구를 의역 없이 그대로 복사</td></tr>
+        <tr><td>신규 테스트가 기존 FULL_RESPONSE 성공 케이스와 중복</td><td>낮음 — 가독성 저하 정도</td><td>기존 성공 케이스는 유지, 신규 케이스는 <code>payload(mutate)</code>로 최소 diff만 추가</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> — 0 에러 확인(기존 규약)</li>
+      <li><code>npm run test -- parse-records-response</code> — 신규 endSessionDate/eventKeys 성공·실패 케이스 통과 확인</li>
+      <li><code>npm run test</code>(전체) — 문서·테스트만 건드리므로 회귀 없음 확인</li>
+      <li>수동: 플랜 서버로 <code>docs/records-schema.html</code>을 브라우저로 열어 §05/§06이 domain.ts·prd-event-lifecycle.html §06 표와 시각적으로 일치하는지 확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>문서 개정 완료 — <code>docs/records-schema.html</code> §05가 <code>shared/domain.ts</code> 주석·문구와 정합(endSessionDate, Session.eventKeys, scores/SessionRankings.events 완전성 계약, PlayerSummary.trends)</li>
+      <li>§06 예시 응답이 두 신규 필드를 반영</li>
+      <li>런타임 검증 성공/실패 케이스 테스트 추가 — endSessionDate·eventKeys 각각 성공 1건 이상 + 실패 1건 이상</li>
+      <li><code>npm run typecheck</code> / <code>npm run test</code> 통과</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/119">#119</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
