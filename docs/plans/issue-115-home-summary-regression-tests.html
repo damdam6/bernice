@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#115 P7 — compute-home-summary: 회차별 종목 회귀 테스트 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.checked::before { background: var(--ok); }
+  .done-list li.checked::after {
+    content: "✓"; position: absolute; left: 5px; top: 5px;
+    color: #fff; font-size: 11px; font-weight: 800; line-height: 1;
+  }
+  .steps li.done::after {
+    content: "✓ 완료"; position: absolute; right: 0; top: 12px;
+    color: var(--ok); font-size: 0.75rem; font-weight: 700;
+  }
+  .note-ok { display: block; margin-top: 4px; font-size: 0.82rem; color: var(--ok); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/115">#115</a></span><span class="type-chip">기능 개선 (테스트 전용)</span>
+    <h1>P7 — compute-home-summary: 회차별 종목 회귀 테스트</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/115-home-summary-regression-tests</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      §06 도메인 타입 개정(#110, 이미 병합)으로 <code>SessionRankings.events</code>는 "그 회차 측정 종목만" 담는 계약으로
+      바뀌었다. <code>computeHomeSummary</code>는 이 <code>SessionRankings</code>를 필터 없이 그대로 집계하므로,
+      입력이 회차별로 좁혀지면 <code>achievementRates</code>도 자동으로 최신 회차 종목만 담게 된다 — 즉
+      <b>실제 코드 변경은 없다</b>. 이 플랜은 그 불변 규칙(최신 회차 종목만 집계, <code>eligibleCount = 0</code> 가드,
+      <code>participantCount</code> 규칙)을 회귀 테스트 2건으로 못박는 작업만 다룬다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>대상 함수는 <code>functions/lib/compute-home-summary.ts:10-38</code> 전체(38줄짜리 파일 하나)다:</p>
+    <ul>
+      <li><code>participantCount</code> — <code>compute-home-summary.ts:19-21</code>에서 활동 상태 + <code>participated: true</code>만 필터링, <code>:35</code>에서 반환.</li>
+      <li><code>achievementRates</code> — <code>compute-home-summary.ts:23-32</code>에서 <code>latestRankings.events.map(...)</code>로 계산, <code>:36</code>에서 반환. 별도 종목 필터를 두지 않고 <code>SessionRankings.events</code>가 이미 들고 있는 것을 그대로 순회한다(파일 헤더 주석 <code>:1-4</code>가 이 설계 의도를 명시 — <code>computeEventRanking</code>(#28)과 같은 필터를 두 곳에 중복 구현하면 규칙이 어긋날 위험이 있어서 일부러 재필터링하지 않는다).</li>
+      <li><code>eligibleCount</code> — <code>compute-home-summary.ts:24</code> (<code>eventRanking.entries.length</code>), 0-가드는 <code>:30</code>.</li>
+      <li>호출 계약: <code>rankings</code>는 <code>sessions</code>와 1:1 인덱스 대응(<code>sessions.map(computeSessionRankings)</code> 전제) — <code>compute-home-summary.ts:8-9</code> 주석. 그래서 <code>sessions.at(-1)</code>과 <code>rankings.at(-1)</code>이 항상 같은 회차를 가리킨다.</li>
+    </ul>
+    <p>
+      기존 테스트 <code>functions/lib/compute-home-summary.test.ts</code>(97줄, <code>it</code> 5개)는 없음/단일회차/다회차
+      케이스를 덮지만, 다회차 케이스(<code>:84-96</code>)조차 두 회차가 <b>같은 단일 종목(골밑슛)</b>만 측정한다 — 즉
+      "회차마다 측정 종목 구성 자체가 다른" 상황은 아직 아무 테스트도 없다. 이게 #115가 채우려는 공백이다.
+    </p>
+    <p>
+      주의할 점: 실제 운영 파이프라인에서 이 좁혀짐이 <b>아직 실제로 일어나지 않는다</b> —
+      <code>computeSessionRankings</code>(<code>functions/lib/compute-rankings.ts:69-74</code>)는 여전히 호출자가 넘긴
+      <code>events</code> 전체를 <code>entries: []</code>로 개수 맞춰 순회하는 구식 로직이고(#113, 아직 OPEN),
+      프로덕션 호출부 <code>build-records-response.ts:61</code>도 매 회차 동일한 전체 종목 리스트를 넘긴다. 하지만
+      기존 테스트들(<code>compute-home-summary.test.ts:48,63,77,89-90</code>)은 이미 각 회차마다 <b>테스트 작성자가
+      직접 고른 서로 다른 <code>events</code> 배열</b>을 <code>computeSessionRankings</code>에 넘겨 <code>SessionRankings</code>
+      픽스처를 만드는 패턴을 쓰고 있다 — 그래서 #113의 실제 구현 완료 여부와 무관하게, "과거 4종목·최신 7종목"
+      상황을 오늘 당장 픽스처로 재현할 수 있다. 이슈에서 "#113과 병렬/독립"이라 명시한 이유가 바로 이것.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p>
+      <code>computeSessionRankings(session, events, players)</code>를 회차마다 <b>다른 <code>events</code> 배열</b>로
+      두 번 호출해 "과거 회차엔 있었지만 최신 회차엔 없는 종목"이 이미 반영된 <code>SessionRankings[]</code>를 만든 뒤,
+      이 배열을 <code>computeHomeSummary(sessions, rankings, players)</code>에 넘겨 결과를 검증한다 — 기존 5개 테스트와
+      동일한 패턴(로컬 빌더 함수 재사용, 공유 픽스처 모듈 없음)이라 새 인프라가 필요 없다.
+    </p>
+    <ul>
+      <li>혼재 픽스처: 과거 회차엔 4종목 배열, 최신 회차엔 7종목 배열(과거 4종목 중 일부를 포함해도 되고 완전히 겹치지 않아도 됨 — 이슈 문구가 "과거 4·최신 7"이라 개수만 맞추면 충분)을 넘겨 <code>computeSessionRankings</code>를 두 번 호출.</li>
+      <li>종료 종목 소멸: 과거 회차 <code>events</code> 배열에는 있고 최신 회차 <code>events</code> 배열에는 빠진 종목 하나를 지정 — PRD §08의 "종료 종목은 최신 회차에 나타나지 않으므로 게이지에서 자연 소멸" 시나리오를 그대로 재현.</li>
+      <li>두 테스트 모두 <code>achievementRates</code>의 <b>길이와 <code>event</code> 키 집합</b>을 단언해 "최신 회차 종목만, 과거 전용 종목은 전혀 없음"을 직접 증명한다 — 값(달성률 숫자)은 기존 테스트가 이미 충분히 덮고 있으므로 여기선 종목 구성만 집중.</li>
+      <li>기각한 대안: <code>SessionRankings</code>를 손으로 직접 조립(리터럴 객체)하는 방법도 가능하지만, 기존 테스트 전원이 <code>computeSessionRankings</code>를 통해 만드는 컨벤션을 따르는 편이 일관되고, 나중에 #113이 실제로 필터링을 구현해도 이 테스트들의 호출부는 그대로 유효하다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">혼재 픽스처(과거 4종목 · 최신 7종목) 회귀 테스트 추가 — 과거 회차를 4종목 <code>events</code> 배열로, 최신 회차를 7종목 <code>events</code> 배열로 각각 <code>computeSessionRankings</code> 호출해 <code>SessionRankings[]</code>를 만들고, <code>computeHomeSummary</code> 결과의 <code>achievementRates</code>가 정확히 최신 7종목만(길이 7, 과거 전용 종목 키 없음) 담는지 단언.
+        <span class="files"><code>functions/lib/compute-home-summary.test.ts</code></span>
+      </li>
+      <li class="done">종료 종목 자연 소멸 회귀 테스트 추가 — 과거 회차 <code>events</code>엔 있지만 최신 회차 <code>events</code>엔 없는 종목 하나를 지정하고, <code>achievementRates.find(r => r.event === '<해당 종목>')</code>가 <code>undefined</code>임을 단언(에러나 0-엔트리 항목이 아니라 항목 자체가 없어야 함).
+        <span class="files"><code>functions/lib/compute-home-summary.test.ts</code></span>
+      </li>
+      <li class="done">전체 스위트 실행해 기존 5개 + 신규 2개 = 7개 테스트 전원 그린 확인, 회귀 없음 확인.
+        <span class="files"><code>functions/lib/compute-home-summary.test.ts</code></span>
+        <span class="note-ok">실행 결과: compute-home-summary.test.ts + compute-rankings.test.ts 25개 통과, 전체 스위트(83 파일) 683개 통과, tsc -b 타입체크 그린.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>#113(compute-rankings 회차별 순회)이 아직 미구현이라 프로덕션에서 이 좁혀짐이 실제로 일어나지 않음</td>
+          <td>테스트가 "이상적인 미래 입력"만 검증하고 오늘의 실제 파이프라인 동작은 못 잡아낼 수 있음</td>
+          <td>범위 밖(#113 소관) — #115는 "입력이 이미 좁혀졌다는 가정 하의 <code>computeHomeSummary</code> 동작"만 못박는 게 목적이라 이슈 문구와 일치. #113이 랜딩되면 이 테스트들은 자동으로 실제 파이프라인 검증으로 전환됨</td>
+        </tr>
+        <tr>
+          <td>손으로 만든 <code>events</code> 배열이 실제 <code>computeSessionRankings</code> 출력 형태와 어긋날 가능성</td>
+          <td>테스트가 실제와 다른 것을 검증할 위험</td>
+          <td>기존 5개 테스트와 동일하게 <code>computeSessionRankings</code>를 실제로 호출해 <code>SessionRankings</code>를 만들므로(직접 리터럴 조립 아님) 형태 어긋남 위험 없음</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run functions/lib/compute-home-summary.test.ts</code> — 기존 5개 + 신규 2개 = 7개 전원 통과.</li>
+      <li>신규 테스트 1: 혼재 픽스처 — <code>achievementRates.length === 7</code>이고 과거 전용 4종목 중 최신에 없는 종목의 키가 결과에 없어야 함.</li>
+      <li>신규 테스트 2: 종료 종목 소멸 — 특정 종목 키로 <code>find</code>했을 때 <code>undefined</code>.</li>
+      <li>회귀 확인: <code>npx vitest run functions/lib/compute-rankings.test.ts</code>도 함께 실행해 인접 모듈에 영향 없음 확인(코드 변경이 없으므로 그린이어야 정상).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="checked">혼재 픽스처(과거 4종목·최신 7종목) 회귀 테스트 — 최신 회차 종목만 집계됨을 <code>functions/lib/compute-home-summary.test.ts</code>에 추가</li>
+      <li class="checked">종료 종목이 최신 회차 달성률에서 자연 소멸하는 케이스를 같은 파일에 추가</li>
+      <li class="checked"><code>compute-home-summary.ts</code> 소스 변경 없음(이슈의 "코드 무변경 예상" 확인됨) — 테스트 파일만 수정</li>
+      <li class="checked">전체 스위트 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/115">#115</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
