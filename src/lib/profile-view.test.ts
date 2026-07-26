@@ -178,6 +178,54 @@ describe('buildRadarAxes', () => {
     const axes = buildRadarAxes(EVENTS, sessionByDate('2026-06-08'), 999, scale)
     expect(axes.map((a) => a.value)).toEqual([0, 0])
   })
+
+  it('축 = 선택 회차의 측정 종목(session.eventKeys) — 회차마다 축 개수가 가변하고, 순서는 eventKeys 순서를 따른다(전역 events[] 순서 아님)', () => {
+    const sevenEvents: EventDefinition[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => ({
+      key,
+      valueKind: 'count',
+      target: '5',
+      targetValue: 5,
+      maxScore: 10,
+      direction: '높을수록',
+      endSessionDate: null,
+    }))
+    const recordedScore = (value: number) => ({ status: 'recorded' as const, value, display: String(value) })
+    const fourEventSession: Session = {
+      date: '2026-07-01',
+      entries: [
+        {
+          playerId: 1,
+          name: '선수1',
+          participated: true,
+          scores: { D: recordedScore(4), B: recordedScore(4), A: recordedScore(4), C: recordedScore(4) },
+        },
+      ],
+      eventKeys: ['D', 'B', 'A', 'C'], // events[] 정의 순서(A..G)와 다르게 섞어 순서 출처를 검증
+    }
+    const sevenEventSession: Session = {
+      date: '2026-07-08',
+      entries: [
+        {
+          playerId: 1,
+          name: '선수1',
+          participated: true,
+          scores: Object.fromEntries(sevenEvents.map((e) => [e.key, recordedScore(5)])),
+        },
+      ],
+      eventKeys: sevenEvents.map((e) => e.key),
+    }
+    const scale7 = buildPerformanceScale(sevenEvents, [fourEventSession, sevenEventSession])
+
+    const fourAxes = buildRadarAxes(sevenEvents, fourEventSession, 1, scale7)
+    expect(fourAxes.map((a) => a.label)).toEqual(['D', 'B', 'A', 'C'])
+
+    const sevenAxes = buildRadarAxes(sevenEvents, sevenEventSession, 1, scale7)
+    expect(sevenAxes).toHaveLength(7)
+  })
+
+  it('선택 회차가 없으면(session undefined) 빈 배열', () => {
+    expect(buildRadarAxes(EVENTS, undefined, 1, scale)).toEqual([])
+  })
 })
 
 describe('buildGrowthCards', () => {
@@ -222,6 +270,39 @@ describe('buildGrowthCards', () => {
     expect(cards.map((c) => c.value)).toEqual(['—', '—'])
     expect(cards.map((c) => c.delta.text)).toEqual(['—', '—'])
   })
+
+  it('현역 종목은 항상 ended:false 카드로 노출된다', () => {
+    const cards = buildGrowthCards(EVENTS, sessionByDate('2026-06-15'), PLAYER1)
+    expect(cards.every((c) => c.ended === false)).toBe(true)
+  })
+
+  it('종료 종목은 그 선수 유효 기록(PB)이 1건 이상일 때만 ended:true 카드로 노출되고, 없으면 카드 자체가 없다', () => {
+    const endedEvent: EventDefinition = {
+      key: '종료종목',
+      valueKind: 'count',
+      target: '5',
+      targetValue: 5,
+      maxScore: 10,
+      direction: '높을수록',
+      endSessionDate: '2026-06-08',
+    }
+    const eventsWithEnded = [...EVENTS, endedEvent]
+    const withRecord: PlayerSummary = {
+      id: 10,
+      name: '선수10',
+      status: '활동',
+      trends: [{ event: '종료종목', points: [{ sessionDate: '2026-06-01', value: 4, display: '4', achieved: false, deltaFromPrevious: null, improved: null }] }],
+      personalBests: [{ event: '종료종목', value: 4, display: '4', sessionDate: '2026-06-01', achieved: false }],
+    }
+    const noRecord: PlayerSummary = { id: 11, name: '선수11', status: '활동', trends: [], personalBests: [] }
+
+    const withRecordCards = buildGrowthCards(eventsWithEnded, sessionByDate('2026-06-15'), withRecord)
+    expect(withRecordCards.map((c) => c.eventKey)).toEqual(['골밑슛', '셔틀런', '종료종목'])
+    expect(withRecordCards.find((c) => c.eventKey === '종료종목')).toMatchObject({ ended: true, pb: '4' })
+
+    const noRecordCards = buildGrowthCards(eventsWithEnded, sessionByDate('2026-06-15'), noRecord)
+    expect(noRecordCards.map((c) => c.eventKey)).toEqual(['골밑슛', '셔틀런'])
+  })
 })
 
 describe('buildTrendSeries', () => {
@@ -245,6 +326,78 @@ describe('buildTrendSeries', () => {
 
   it('본인이 목록에 없으면 highlight는 빈 배열', () => {
     const series = buildTrendSeries(EVENTS[0], SESSIONS, PLAYERS, 999, scale)
+    expect(series.highlight).toEqual([])
+  })
+
+  it('종료 종목: 종료 회차 이후 세션까지 넘겨도 라인은 종료 회차에서 끊기고 이후 구간엔 점이 없다', () => {
+    const endedEvent: EventDefinition = {
+      key: '종료종목',
+      valueKind: 'count',
+      target: '5',
+      targetValue: 5,
+      maxScore: 10,
+      direction: '높을수록',
+      endSessionDate: '2026-06-08',
+    }
+    const player: PlayerSummary = {
+      id: 20,
+      name: '선수20',
+      status: '활동',
+      trends: [
+        {
+          event: '종료종목',
+          points: [
+            { sessionDate: '2026-06-01', value: 4, display: '4', achieved: false, deltaFromPrevious: null, improved: null },
+            { sessionDate: '2026-06-08', value: 6, display: '6', achieved: true, deltaFromPrevious: 2, improved: true },
+          ],
+        },
+      ],
+      personalBests: [{ event: '종료종목', value: 6, display: '6', sessionDate: '2026-06-08', achieved: true }],
+    }
+    const endedScale = buildPerformanceScale([endedEvent], SESSIONS)
+    const series = buildTrendSeries(endedEvent, SESSIONS, [player], 20, endedScale)
+    expect(series.highlight).toEqual([
+      { sessionIndex: 0, value: 0.4 },
+      { sessionIndex: 1, value: 0.6 },
+    ])
+    expect(series.highlight.some((p) => p.sessionIndex === 2)).toBe(false) // 3차(종료 이후)엔 점 없음
+  })
+
+  it('중간 회차가 미측정으로 빠져도(희소) 남은 포인트의 sessionIndex가 밀리지 않고 원래 회차를 그대로 가리킨다', () => {
+    const player: PlayerSummary = {
+      id: 21,
+      name: '선수21',
+      status: '활동',
+      trends: [
+        {
+          event: '골밑슛',
+          // 2차(2026-06-08)가 통째로 빠짐 — 3차 포인트의 sessionIndex는 1이 아니라 2여야 한다
+          points: [
+            { sessionDate: '2026-06-01', value: 5, display: '5', achieved: true, deltaFromPrevious: null, improved: null },
+            { sessionDate: '2026-06-15', value: 7, display: '7', achieved: true, deltaFromPrevious: 2, improved: true },
+          ],
+        },
+      ],
+      personalBests: [{ event: '골밑슛', value: 7, display: '7', sessionDate: '2026-06-15', achieved: true }],
+    }
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, [player], 21, scale)
+    expect(series.highlight).toEqual([
+      { sessionIndex: 0, value: 0.5 },
+      { sessionIndex: 2, value: 0.7 },
+    ])
+  })
+
+  it('sessions 목록에 없는 날짜를 가리키는 point는 방어적으로 무시된다', () => {
+    const player: PlayerSummary = {
+      id: 22,
+      name: '선수22',
+      status: '활동',
+      trends: [
+        { event: '골밑슛', points: [{ sessionDate: '2099-01-01', value: 5, display: '5', achieved: true, deltaFromPrevious: null, improved: null }] },
+      ],
+      personalBests: [],
+    }
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, [player], 22, scale)
     expect(series.highlight).toEqual([])
   })
 })
