@@ -64,11 +64,17 @@ export function computeEventRanking(event: EventDefinition, entries: SessionEntr
   return { event: event.key, entries: entriesRanked }
 }
 
-/** 회차 1개에 대한 종목별 랭킹 묶음. 엔트리가 0건인 종목도 entries: []로 유지해
- *  events[] 전체와 개수를 맞춘다(프론트 종목 탭이 회차마다 사라지지 않도록). */
+/** 회차 1개에 대한 종목별 랭킹 묶음. 그 회차 Session.eventKeys에 해당하는 종목만, 헤더 순서로
+ *  담는다(shared/domain.ts SessionRankings.events 계약) — 미측정 종목×회차 조합은 항목 자체가 없다.
+ *  eventKeys에 있는데 events(목표 탭)에 없는 key는 조용히 건너뛴다: 파서(#111/#112)가 이 불변식을
+ *  보장하지만, 이 파일은 그 완성을 기다리지 않고 Session 픽스처만으로 개발되므로 방어적으로 둔다. */
 export function computeSessionRankings(session: Session, events: EventDefinition[], players: Player[]): SessionRankings {
+  const eventsByKey = new Map(events.map((event) => [event.key, event]))
   return {
     sessionDate: session.date,
-    events: events.map((event) => computeEventRanking(event, session.entries, players)),
+    events: session.eventKeys
+      .map((key) => eventsByKey.get(key))
+      .filter((event): event is EventDefinition => event !== undefined)
+      .map((event) => computeEventRanking(event, session.entries, players)),
   }
 }
