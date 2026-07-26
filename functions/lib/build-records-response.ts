@@ -46,7 +46,7 @@ export function buildRecordsResponse(bundle: SheetRawBundle, generatedAt: string
   }
 
   const { players } = parseRoster(bundle.roster.values)
-  const events = parseGoals(bundle.goals.values)
+  const { events } = parseGoals(bundle.goals.values)
   const playersById = new Map(players.map((player) => [player.id, player]))
   // 회차 탭마다 이름→Player 맵을 다시 만들지 않도록 한 번만 생성해 재사용한다 —
   // players[]는 이 요청 안에서 바뀌지 않으므로 bundle.rounds 개수만큼 반복해서
