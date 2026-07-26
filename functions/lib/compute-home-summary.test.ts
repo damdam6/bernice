@@ -94,4 +94,36 @@ describe('computeHomeSummary', () => {
     expect(result.latestSession).toEqual({ date: '2025-05-16', participantCount: 1 })
     expect(result.achievementRates).toEqual([{ event: '골밑슛', achievedCount: 1, eligibleCount: 1, rate: 1 }])
   })
+
+  it('혼재 픽스처 — 과거 회차 4종목·최신 회차 7종목이면 achievementRates는 최신 7종목만 담는다', () => {
+    const players = [player(1, '활동')]
+    const pastEvents = ['종목A', '종목B', '종목C', '종목D'].map((key) => event({ key, direction: '높을수록', targetValue: 5 }))
+    const latestEvents = ['종목E', '종목F', '종목G', '종목H', '종목I', '종목J', '종목K'].map((key) =>
+      event({ key, direction: '높을수록', targetValue: 5 }),
+    )
+    const past = session('2025-04-01', [entry(1, Object.fromEntries(pastEvents.map((e) => [e.key, recorded(6)])))])
+    const latest = session('2025-05-16', [entry(1, Object.fromEntries(latestEvents.map((e) => [e.key, recorded(6)])))])
+    const pastRankings = computeSessionRankings(past, pastEvents, players)
+    const latestRankings = computeSessionRankings(latest, latestEvents, players)
+
+    const result = computeHomeSummary([past, latest], [pastRankings, latestRankings], players)
+
+    expect(result.achievementRates.map((r) => r.event)).toEqual(latestEvents.map((e) => e.key))
+    expect(result.achievementRates.some((r) => pastEvents.some((e) => e.key === r.event))).toBe(false)
+  })
+
+  it('종료 종목 — 과거 회차엔 있었으나 최신 회차 events에 없는 종목은 achievementRates에서 자연 소멸', () => {
+    const players = [player(1, '활동')]
+    const ongoing = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const ended = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77, endSessionDate: '2025-05-01' })
+    const past = session('2025-05-01', [entry(1, { 골밑슛: recorded(4), 셔틀런: recorded(70, '1:10') })])
+    const latest = session('2025-05-16', [entry(1, { 골밑슛: recorded(6) })])
+    const pastRankings = computeSessionRankings(past, [ongoing, ended], players)
+    const latestRankings = computeSessionRankings(latest, [ongoing], players)
+
+    const result = computeHomeSummary([past, latest], [pastRankings, latestRankings], players)
+
+    expect(result.achievementRates.find((r) => r.event === '셔틀런')).toBeUndefined()
+    expect(result.achievementRates).toEqual([{ event: '골밑슛', achievedCount: 1, eligibleCount: 1, rate: 1 }])
+  })
 })
