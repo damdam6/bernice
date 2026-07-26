@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#114 P7 — player-summary: 미측정 회차 스킵 가드 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  pre {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.82em;
+    background: var(--code-bg); border-radius: 8px; padding: 12px 14px;
+    overflow-x: auto; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--warn); }
+  .steps .done-note { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--ok); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/114">#114</a></span><span class="type-chip">버그 수정</span>
+    <h1>P7 — player-summary: 미측정 회차 스킵 가드</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/114-player-summary-unmeasured-skip-guard</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>#110에서 <code>SessionEntry.scores</code>의 계약이 "events[] 전체 key가 항상 존재"에서 "그 회차 <code>Session.eventKeys</code>에 있는 key만 존재, 그 외 key는 아예 없음"으로 바뀌었다. <code>player-summary.ts</code>의 <code>collectValidScores</code>는 여전히 <code>entry.scores[event.key]</code>를 무가드로 읽고 바로 <code>.status</code>를 참조해서, 그 회차에 측정되지 않은 종목(신규 종목의 과거 회차, 종료 종목의 이후 회차, 측정 생략 회차)을 만나면 <code>TypeError</code>가 난다. 이미 존재하는 "entries 없는 세션은 조용히 스킵"(<code>if (!entry) continue</code>) 패턴과 동형으로 한 줄 가드를 추가하고, 이 경로를 실제로 밟는 테스트 픽스처를 새로 추가한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>호출 체인: <code>functions/lib/build-records-response.ts:62</code>의 <code>buildRecordsResponse</code>가 <code>computePlayerSummaries(events, players, sessions)</code>(<code>functions/lib/player-summary.ts:93-111</code>)를 호출하고, 이 함수는 활동 중인 선수마다 <b>전체 <code>events[]</code>(종료 종목 포함)</b>를 순회하며 <code>collectValidScores(player, event, sessions)</code>(<code>player-summary.ts:33-47</code>)를 부른다.</p>
+    <p>버그 지점 — <code>player-summary.ts:40-41</code>:</p>
+    <pre><code>const score = entry.scores[event.key]
+if (score.status !== 'recorded') continue   // score가 undefined면 여기서 TypeError</code></pre>
+    <p>계약 근거 — <code>shared/domain.ts</code>의 <code>SessionEntry.scores</code> 필드 주석(#110에서 개정): "key = EventDefinition.key. 그 회차 <code>Session.eventKeys</code> 전체가 항상 존재, 그 외 key는 없음 — 소비자는 <code>scores[key]</code> 인덱싱 전에 그 회차 측정 여부를 전제해야 한다." <code>Session.eventKeys</code>는 그 회차 탭 헤더의 측정 종목 key 목록이다.</p>
+    <p><code>docs/prd-event-lifecycle.html</code> §07 표는 이 이슈와 1:1로 대응하는 행을 명시한다: "<code>collectValidScores</code>에 미측정 회차 스킵 가드 — <code>entry.scores[event.key]</code>가 없으면 건너뛴다(현행 코드는 여기서 TypeError). 'entries가 없는 세션(미가입)은 조용히 스킵'하는 기존 규칙과 동형. 추이·PB·델타 공식 불변 — 종료 종목도 과거 기록으로 동일 계산." §05 검증 매트릭스 V3 행: "목표 탭 종목이 회차 탭 헤더에 없음" → 정상, "그 회차 미측정"으로 취급 — 종목 추가(신규 종목의 과거 회차), 종목 종료(종료 이후 회차), 측정 생략(단발성 회차)이 모두 이 한 규칙으로 수용된다.</p>
+    <p>기존 방어 패턴 — <code>player-summary.ts:38</code>의 <code>if (!entry) continue</code>(엔트리 자체가 없는 세션 스킵)와, 같은 접근 지점을 이미 optional chaining으로 방어하고 있는 <code>compute-rankings.ts</code>의 <code>computeEventRanking</code>(<code>const score = entry.scores[event.key]; if (score?.status !== 'recorded') continue</code>) — 스타일 선례로 참고.</p>
+    <p>기존 테스트 — <code>functions/lib/player-summary.test.ts</code>의 모든 픽스처(<code>SESSIONS</code>, 경계값 블록 포함)는 매 세션의 <code>eventKeys</code>에 <code>events[]</code> 전체를 담고, 매 엔트리도 두 종목 모두에 대해 (<code>unmeasured()</code>이라도) 명시적인 <code>EventScore</code>를 채워 넣는다. <b>즉 현재 테스트 스위트는 <code>entry.scores[event.key] === undefined</code> 경로를 한 번도 밟지 않는다</b> — 이 이슈가 요구하는 픽스처 공백 그 자체.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+    <p><b>근본 원인</b>: #110에서 <code>SessionEntry.scores</code>의 인덱스 보장 범위가 "전체 종목"에서 "그 회차 측정 종목만"으로 좁혀졌는데, <code>collectValidScores</code>는 이 계약 변경 전 가정(모든 키가 항상 존재)에 맞춰 작성된 채로 남아 있다. TypeScript의 <code>Record&lt;string, EventScore&gt;</code> 인덱스 시그니처는 <code>noUncheckedIndexedAccess</code>가 꺼져 있는 한 <code>undefined</code>를 타입에 노출하지 않으므로, 컴파일 타임에도 이 구멍이 잡히지 않는다.</p>
+    <p><b>대안 검토</b>: (a) <code>EventScore</code>에 <code>'unmeasured'</code>류의 명시적 값을 항상 채워 넣도록 파서/응답 생성 쪽을 바꾸는 방법은 §06/§07이 이미 확정한 "키 자체가 없다"는 계약과 어긋나고 응답 페이로드도 불필요하게 커진다 — 채택하지 않음. (b) <code>collectValidScores</code> 진입부에서 <code>event.key</code>가 <code>session.eventKeys</code>에 포함되는지 먼저 확인하는 방법도 동작은 하지만, 실제로 크래시를 내는 지점(스코어 접근)에서 한 줄로 막는 게 더 직접적이고 기존 <code>if (!entry) continue</code> 패턴과 형태가 맞는다 — 이걸 채택.</p>
+    <p><b>선택한 수정</b> — <code>player-summary.ts:40-41</code>:</p>
+    <pre><code>const score = entry.scores[event.key]
+if (!score || score.status !== 'recorded') continue</code></pre>
+    <p><code>buildTrend</code>/<code>buildPersonalBest</code>(<code>player-summary.ts:49-91</code>)는 이미 필터링된 <code>ValidScore[]</code>만 받으므로 전혀 손대지 않는다 — 추이·PB·델타 공식은 그대로 유지된다(완료 조건 그대로 충족).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">수정: <code>collectValidScores</code>의 <code>entry.scores[event.key]</code> 조회 직후에 <code>!score</code> 가드를 추가한다 — <code>if (!score || score.status !== 'recorded') continue</code>. 함수의 다른 부분(정렬, 반환 타입)은 그대로 둔다.
+        <span class="files"><code>functions/lib/player-summary.ts:40-41</code></span>
+        <span class="done-note">완료 — 계획대로 한 줄 가드만 추가. 임시로 되돌려 확인한 결과, 가드 없이는 <code>player-summary.ts:41</code>에서 정확히 <code>TypeError: Cannot read properties of undefined (reading 'status')</code>로 재현됨(회귀 재현 확인).</span>
+      </li>
+      <li class="done">신규 테스트: 기존 최상단 <code>SESSIONS</code>/<code>EVENTS</code>/<code>PLAYERS</code> 픽스처는 완료 조건에 따라 무수정으로 남겨두고, 새 <code>describe</code> 블록에 별도 로컬 픽스처를 추가한다 — (1) <b>신규 종목</b>: 초반 세션들엔 <code>eventKeys</code>/<code>scores</code>에 해당 key가 아예 없다가 이후 세션부터 등장하는 종목의 시계열 — 이 종목의 첫 유효 기록 포인트가 <code>deltaFromPrevious: null</code>로 나오는지 확인. (2) <b>종료 종목</b>: <code>endSessionDate</code>가 설정된 이벤트가 초반 세션(종료 전)엔 기록이 있다가, 그 이후 세션들에서는 <code>eventKeys</code>/<code>scores</code>에서 완전히 빠지는 시계열 — 종료 전 기록으로 계산된 trend/PB가 그대로 보존되고, 종료 이후 세션들을 순회해도 크래시 없이 조용히 스킵되는지 확인. 두 케이스 모두 가드 없이는 <code>collectValidScores</code>가 <code>entry.scores[event.key]</code> 접근에서 바로 TypeError를 내는 지점이므로, 수정 전에 실행하면 실패(크래시)해야 정상.
+        <span class="files"><code>functions/lib/player-summary.test.ts</code></span>
+        <span class="done-note">완료 — 계획대로 신규/종료 두 시나리오를 한 픽스처(1회차·2회차=종료종목만, 3회차·4회차=신규종목만)로 결합해 <code>describe('computePlayerSummaries — 미측정 회차 스킵 가드', …)</code>에 추가. 신규 종목 첫 포인트 <code>deltaFromPrevious: null</code>, 종료 종목 이력·PB 보존 두 단언 모두 통과.</span>
+      </li>
+      <li class="done">검증: <code>npm test</code>(vitest, 회귀 포함 전체)와 <code>npm run typecheck</code>(tsc -b)를 실행하고, 기존 <code>computePlayerSummaries</code>/경계값 테스트가 무수정으로 그린인지 확인한다.
+        <span class="files"><code>functions/lib/player-summary.test.ts</code></span>
+        <span class="done-note">완료 — <code>npm test</code>: 83개 파일 683개 테스트 전부 통과(기존 픽스처 무수정). <code>npm run typecheck</code>: 0 에러.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>가드 조건을 <code>score?.status !== 'recorded'</code> 형태로 바꾸면서 실수로 다른 상태(<code>exempt</code>/<code>invalid</code>) 처리 로직까지 건드릴 가능성</td><td>낮음 — 로직 오회귀 시 기존 면제/이상값 관련 테스트가 즉시 실패해 잡힘</td><td>변경을 한 줄 가드 추가로 최소화하고, 기존 테스트를 무수정으로 유지해 회귀 감지망으로 사용</td></tr>
+        <tr><td>새 픽스처가 기존 최상단 <code>SESSIONS</code>/<code>EVENTS</code>를 공유하면 기존 exact-match 단언(<code>toEqual</code> 배열)이 깨질 수 있음</td><td>중간 — 완료 조건("기존 테스트 무수정 그린")을 못 지킬 수 있음</td><td>새 시나리오는 별도 <code>describe</code> 블록에 독립된 로컬 이벤트/세션/선수 픽스처로 작성해 기존 블록과 완전히 분리</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test</code> 전체 실행 — 신규 스킵 가드 테스트(신규 종목 첫 기록 <code>deltaFromPrevious: null</code>, 종료 종목 이력 보존) 그린 확인.</li>
+      <li>수정 전 신규 테스트만 먼저 돌려 실제로 <code>TypeError</code>로 실패하는지 확인(리그레션 재현) — 수정 후 동일 테스트가 그린으로 전환되는지 확인.</li>
+      <li>기존 <code>functions/lib/player-summary.test.ts</code>의 모든 기존 <code>it</code> 블록(면제/이상값 delta, PB 동률, 비대상/휴식/미가입/무기록 선수, 정렬 무의존성, 경계값)이 소스 수정 없이 그린인지 확인.</li>
+      <li><code>npm run typecheck</code> — 타입 오류 없음 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>미측정 회차가 낀 시계열 픽스처 추가 — 신규 종목 첫 기록의 <code>deltaFromPrevious: null</code>, 종료 종목의 과거 이력 보존을 모두 검증하고 그린.</li>
+      <li>기존 추이·PB 테스트(<code>functions/lib/player-summary.test.ts</code> 상단 <code>describe</code> 블록 전체 + 경계값 블록)가 소스 무수정으로 그린.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/114">#114</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
