@@ -119,7 +119,7 @@ function ParticipantsContent({
               className="flex w-full items-center justify-between rounded-card border border-line bg-white px-5 py-4 text-left shadow-sm transition-colors hover:border-primary"
             >
               <span className="text-sm font-bold text-ink">{entry.name}</span>
-              <EntryStatusPill status={deriveEntryStatus(entry, data.events)} />
+              <EntryStatusPill status={deriveEntryStatus(entry, session.eventKeys)} />
             </button>
           ))}
         </div>
