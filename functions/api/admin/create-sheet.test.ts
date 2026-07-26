@@ -32,6 +32,7 @@ const ROSTER_VALUES = [
 const GOALS_VALUES = [
   ['종목', '목표', '만점', '방향', '종료 회차'],
   ['드리블셔틀런', '1:17', '', '낮을수록', ''],
+  ['45도패스캐치', '3', '5', '높을수록', '2025-08-01'], // 종료 종목 — 헤더에서 제외되고, 뒤 종목 참조가 밀리지 않아야 함
   ['골밑슛', '5', '10', '높을수록', ''],
 ]
 
@@ -105,6 +106,13 @@ describe('POST /api/admin/create-sheet', () => {
     expect(addSheet.properties.sheetId).toBe(23) // max(0,11,22)+1
     const rows = (requests[1] as { updateCells: { rows: { values: { userEnteredValue: unknown }[] }[] } }).updateCells
       .rows
+    // 헤더: 현역 종목(드리블셔틀런·골밑슛)만 — 종료 종목(45도패스캐치, GOALS_VALUES 2행) 제외.
+    // 골밑슛은 목표 탭 4행(=A4)이라 인덱스 기반(A3)이 아닌 실제 행 번호를 참조해야 한다.
+    expect(rows[0].values).toEqual([
+      { userEnteredValue: { stringValue: '이름' } },
+      { userEnteredValue: { formulaValue: "='목표'!A2" } },
+      { userEnteredValue: { formulaValue: "='목표'!A4" } },
+    ])
     expect(rows[1].values[0]).toEqual({ userEnteredValue: { formulaValue: "='버니스명단'!A2" } }) // 가은 id1
     expect(rows[2].values[0]).toEqual({ userEnteredValue: { formulaValue: "='버니스명단'!A5" } }) // 라온 id4
 
