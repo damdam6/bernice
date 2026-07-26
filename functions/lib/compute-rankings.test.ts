@@ -278,4 +278,67 @@ describe('computeSessionRankings', () => {
     expect(result.events.map((e) => e.event)).toEqual(['A', 'B'])
     expect(result.events[1].entries).toEqual([])
   })
+
+  it('회차마다 eventKeys가 달라도(4종목 회차 + 7종목 회차 혼재) 각자의 eventKeys에만 헤더 순서로 대응한다', () => {
+    const events = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => event({ key, direction: '높을수록', targetValue: 0 }))
+    const players = [player(1, '활동')]
+
+    const session4: Session = {
+      date: '2025-05-01',
+      entries: [entry(1, { A: recorded(1), B: recorded(2), C: unmeasured(), D: recorded(3) })],
+      eventKeys: ['A', 'B', 'C', 'D'],
+    }
+    const session7: Session = {
+      date: '2025-06-01',
+      entries: [
+        entry(1, {
+          A: recorded(1),
+          B: recorded(2),
+          C: recorded(3),
+          D: recorded(4),
+          E: recorded(5),
+          F: recorded(6),
+          G: recorded(7),
+        }),
+      ],
+      eventKeys: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+    }
+
+    const result4 = computeSessionRankings(session4, events, players)
+    const result7 = computeSessionRankings(session7, events, players)
+
+    expect(result4.events.map((e) => e.event)).toEqual(['A', 'B', 'C', 'D'])
+    expect(result7.events.map((e) => e.event)).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+  })
+
+  it('그 회차 eventKeys에 없는 종목은 entries: []가 아니라 결과에서 항목 자체가 빠진다', () => {
+    const a = event({ key: 'A', direction: '높을수록', targetValue: 0 })
+    const b = event({ key: 'B', direction: '높을수록', targetValue: 0 })
+    const c = event({ key: 'C', direction: '높을수록', targetValue: 0 })
+    const players = [player(1, '활동')]
+    const session: Session = {
+      date: '2025-07-01',
+      entries: [entry(1, { A: recorded(1), B: recorded(2) })],
+      eventKeys: ['A', 'B'], // C는 이 회차에서 측정하지 않음 — scores에도 C 없음
+    }
+
+    const result = computeSessionRankings(session, [a, b, c], players)
+
+    expect(result.events.map((e) => e.event)).toEqual(['A', 'B'])
+    expect(result.events.find((e) => e.event === 'C')).toBeUndefined()
+  })
+
+  it('eventKeys에 있는 key가 events(목표 탭)에 없으면 조용히 제외된다(파서 불변식 위반 방어)', () => {
+    const a = event({ key: 'A', direction: '높을수록', targetValue: 0 })
+    const players = [player(1, '활동')]
+    const session: Session = {
+      date: '2025-08-01',
+      entries: [entry(1, { A: recorded(1) })],
+      eventKeys: ['A', 'Z'], // 'Z'는 목표 탭(events)에 정의가 없는 종목
+    }
+
+    const result = computeSessionRankings(session, [a], players)
+
+    expect(result.events.map((e) => e.event)).toEqual(['A'])
+  })
 })
