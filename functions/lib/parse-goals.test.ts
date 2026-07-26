@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { parseGoals } from './parse-goals'
 
-// docs/sheet-integration.html §02 예시를 그대로 픽스처로 사용.
-const HEADER = ['종목', '목표', '만점', '방향']
+// docs/sheet-integration.html §02 예시 + docs/prd-event-lifecycle.html §04(5열 스키마)를 픽스처로 사용.
+// 기존 행들은 일부러 E열(종료 회차)을 안 채운 4칸 그대로 둔다 — Sheets API가 각 행의 trailing 빈
+// 셀을 생략해 돌려주는 실제 동작을 재현하며, row[4] ?? ''가 이를 "현역(null)"으로 처리함을 검증한다.
+const HEADER = ['종목', '목표', '만점', '방향', '종료 회차']
 const SAMPLE_ROWS = [
   HEADER,
   ['드리블셔틀런', '1:17', '-', '낮을수록'],
@@ -13,7 +15,7 @@ const SAMPLE_ROWS = [
 
 describe('parseGoals', () => {
   it('문서 예시(양방향 · 시간형/개수형 목표치 · 만점 null/숫자 혼합)를 그대로 파싱한다', () => {
-    expect(parseGoals(SAMPLE_ROWS)).toEqual([
+    expect(parseGoals(SAMPLE_ROWS).events).toEqual([
       { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
       { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
       { key: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null },
@@ -26,22 +28,22 @@ describe('parseGoals', () => {
     expect(nameNFD).not.toBe('드리블셔틀런') // 픽스처가 실제로 다른 바이트 표현인지 확인
 
     const result = parseGoals([HEADER, [nameNFD, '1:17', '-', '낮을수록']])
-    expect(result[0].key).toBe('드리블셔틀런')
+    expect(result.events[0].key).toBe('드리블셔틀런')
   })
 
   it('만점이 빈 칸이어도 "-"와 동일하게 null로 처리한다', () => {
     const result = parseGoals([HEADER, ['드리블셔틀런', '1:17', '', '낮을수록']])
-    expect(result[0].maxScore).toBeNull()
+    expect(result.events[0].maxScore).toBeNull()
   })
 
   it('목표치 앞뒤 공백은 trim해서 target에 저장한다 (회차 파서의 표시값 정책과 동일)', () => {
     const result = parseGoals([HEADER, ['골밑슛', '  5  ', '10', '높을수록']])
-    expect(result[0].target).toBe('5')
+    expect(result.events[0].target).toBe('5')
   })
 
   it('표 중간의 완전 공백 행은 에러 없이 건너뛴다', () => {
     const result = parseGoals([HEADER, ['골밑슛', '5', '10', '높을수록'], ['', '', '', ''], ['자유투', '2', '5', '높을수록']])
-    expect(result.map((event) => event.key)).toEqual(['골밑슛', '자유투'])
+    expect(result.events.map((event) => event.key)).toEqual(['골밑슛', '자유투'])
   })
 
   it('공백 행을 건너뛰어도 이후 행의 시트 행 번호가 밀리지 않는다 (회귀 테스트)', () => {
@@ -52,8 +54,64 @@ describe('parseGoals', () => {
   })
 
   it('헤더만 있거나 빈 배열이면 빈 배열을 반환한다', () => {
-    expect(parseGoals([HEADER])).toEqual([])
-    expect(parseGoals([])).toEqual([])
+    expect(parseGoals([HEADER]).events).toEqual([])
+    expect(parseGoals([]).events).toEqual([])
+  })
+
+  describe('종료 회차(E열) 파싱 — V5', () => {
+    it('빈칸이면 현역(null)', () => {
+      const result = parseGoals([HEADER, ['골밑슛', '5', '10', '높을수록', '']])
+      expect(result.events[0].endSessionDate).toBeNull()
+    })
+
+    it('"-"이면 현역(null) — 만점 열과 동일 관례', () => {
+      const result = parseGoals([HEADER, ['골밑슛', '5', '10', '높을수록', '-']])
+      expect(result.events[0].endSessionDate).toBeNull()
+    })
+
+    it('Sheets API가 행의 trailing 빈 셀을 생략해 4칸짜리 행이 와도 현역(null)으로 처리한다', () => {
+      const result = parseGoals([HEADER, ['골밑슛', '5', '10', '높을수록']])
+      expect(result.events[0].endSessionDate).toBeNull()
+    })
+
+    it('실존하는 YYYY-MM-DD 날짜면 그대로 endSessionDate에 담는다', () => {
+      const result = parseGoals([HEADER, ['45도패스캐치', '5', '7', '높을수록', '2025-05-16']])
+      expect(result.events[0].endSessionDate).toBe('2025-05-16')
+    })
+
+    it('날짜 형식이 아니면 에러 (행 번호·종목명 포함)', () => {
+      expect(() => parseGoals([HEADER, ['45도패스캐치', '5', '7', '높을수록', '2025/05/16']])).toThrow(
+        /2행 "45도패스캐치".*종료 회차 형식이 올바르지 않음/,
+      )
+    })
+
+    it('캘린더에 없는 날짜(2025-02-30)면 에러', () => {
+      expect(() => parseGoals([HEADER, ['45도패스캐치', '5', '7', '높을수록', '2025-02-30']])).toThrow(
+        /종료 회차 형식이 올바르지 않음/,
+      )
+    })
+  })
+
+  describe('행 번호 동반 (sheetRowByKey) — create-sheet(#121)가 참조 수식에 쓸 내부 값, RecordsResponse에는 비노출', () => {
+    it('각 종목 key에 목표 탭 실제 행 번호를 매핑한다', () => {
+      const result = parseGoals(SAMPLE_ROWS)
+      expect(Object.fromEntries(result.sheetRowByKey)).toEqual({
+        드리블셔틀런: 2,
+        골밑슛: 3,
+        자유투: 4,
+        '45도패스캐치': 5,
+      })
+    })
+
+    it('중간에 완전 공백 행이 있어도 이후 종목의 행 번호가 밀리지 않는다', () => {
+      const result = parseGoals([
+        HEADER,
+        ['골밑슛', '5', '10', '높을수록'],
+        ['', '', '', ''],
+        ['자유투', '2', '5', '높을수록'],
+      ])
+      expect(Object.fromEntries(result.sheetRowByKey)).toEqual({ 골밑슛: 2, 자유투: 4 })
+    })
   })
 
   describe('잘못된 행 → 에러 (시트 행 번호·종목명을 담아 throw)', () => {
@@ -79,8 +137,14 @@ describe('parseGoals', () => {
       ).toThrow(/종목명이 중복됨/)
     })
 
-    it('헤더가 예상(종목|목표|만점|방향)과 다르면 에러', () => {
-      expect(() => parseGoals([['이름', '목표', '만점', '방향'], ['골밑슛', '5', '10', '높을수록']])).toThrow(
+    it('헤더가 예상(종목|목표|만점|방향|종료 회차)과 다르면 에러', () => {
+      expect(() => parseGoals([['이름', '목표', '만점', '방향', '종료 회차'], ['골밑슛', '5', '10', '높을수록']])).toThrow(
+        /헤더가 예상과 다릅니다/,
+      )
+    })
+
+    it('4열 구 헤더(종료 회차 열 누락)는 에러 — 과도기 허용 없이 즉시 실패', () => {
+      expect(() => parseGoals([['종목', '목표', '만점', '방향'], ['골밑슛', '5', '10', '높을수록']])).toThrow(
         /헤더가 예상과 다릅니다/,
       )
     })

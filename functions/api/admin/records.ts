@@ -68,7 +68,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // 파싱 중 나는 Error는 시트 무결성 문제다 — integrity()로 표식해 sheet_data_invalid로,
     // 그 외 예기치 못한 오류는 internal_error로 구분한다.
     const { players } = integrity(() => parseRoster(rosterTable.values))
-    const events = integrity(() => parseGoals(goalsTable.values))
+    const { events } = integrity(() => parseGoals(goalsTable.values))
 
     // 4. playerId → 명단 선수(이름) 해석. id는 명단 행 위치라 결번 가능 — 값으로 조회.
     const player = players.find((candidate) => candidate.id === playerId)
