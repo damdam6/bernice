@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#117 P7 — entry-status: 판정 분모를 회차 측정 종목으로 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li.done { opacity: 0.6; }
+  .steps li.done::after { content: "완료"; position: absolute; right: 0; top: 10px; font-size: 0.75rem; color: var(--ok); font-weight: 700; }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/117">#117</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — entry-status: 판정 분모를 회차 측정 종목으로</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/117-entry-status-session-denominator</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>deriveEntryStatus</code>·<code>countCompleted</code>(<code>src/lib/entry-status.ts</code>)가 완료 판정 분모로 전역 목표 탭 종목 목록(<code>events[]</code>) 전체를 쓴다. 하지만 종목은 회차 사이에 추가·종료될 수 있고(<code>EventDefinition.endSessionDate</code>), 한 회차가 실제로 측정한 종목은 그 회차 탭 헤더, 즉 <code>Session.eventKeys</code>뿐이다(<code>shared/domain.ts:72-73</code>). 전역 분모를 쓰면 그 회차 <code>eventKeys</code>에 없는 종목이 분모에 섞여 들어가 "완전히 채워짐" 판정(<code>unmeasuredCount === 분모</code> / <code>=== 0</code>)이 회차 고유 종목 수가 아니라 그때그때 전역 종목 개수에 흔들린다. 분모를 <code>Session.eventKeys</code>로 좁혀 각 회차가 자신이 측정한 종목만으로 독립적으로 판정하게 한다. 같은 계열의 선행 PR(#132 <code>compute-rankings</code>, #134 <code>compute-home-summary</code>, #131 <code>player-summary</code>)이 이미 이 패턴을 정착시켰고, PRD(<code>docs/prd-event-lifecycle.html</code> §08 작업 항목 6)도 <code>entry-status(분모 = eventKeys)</code>를 명시한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>src/lib/entry-status.ts:12-18</code> — <code>deriveEntryStatus(entry, events: EventDefinition[])</code>가 <code>events</code> 전체를 순회하며 <code>entry.scores[event.key]?.status === 'unmeasured'</code>인 개수(<code>unmeasuredCount</code>)를 센다. 전부 unmeasured면 미입력, 0개면 완료, 그 외 일부.</p>
+    <p>호출부 둘 다 전역 <code>data.events</code>를 그대로 넘긴다: <code>src/pages/admin/RecordsParticipants.tsx:122</code>의 <code>deriveEntryStatus(entry, data.events)</code>, <code>src/pages/admin/RecordsDateSelect.tsx:68</code>의 <code>countCompleted(session.entries, events)</code>(<code>events</code> = <code>data.events</code>).</p>
+    <p><code>SessionEntry.scores</code>는 계약상(<code>shared/domain.ts:62-63</code>) 그 회차 <code>eventKeys</code>에 있는 key만 존재하고 그 외 key는 아예 없다 — <code>functions/lib/parse-session.ts:106-109</code>가 <code>eventColumns</code>(= 그 회차 헤더 매칭 종목)에 대해서만 <code>scores[event.key]</code>를 채운다. 따라서 그 회차 <code>eventKeys</code>에 없는 종목은 <code>entry.scores[event.key]</code>가 <code>undefined</code>이고, optional chaining으로 <code>undefined?.status !== 'unmeasured'</code>가 되어 <code>unmeasuredCount</code>에 잡히지 않는다 — 측정된 것도 아니고 unmeasured로 셈해지지도 않는, "존재하지 않는 종목"으로 조용히 빠진다.</p>
+    <p>결과: 과거 회차가 자신의 <code>eventKeys</code> 종목을 전부 채웠어도(예: A·B·C 3종목 전부 recorded), 그 뒤 새 종목 D가 전역에 추가되면 <code>events.length</code>가 4로 늘어난다. 그 회차 entry가 정말 아무것도 안 채운 경우(A·B·C 전부 unmeasured) <code>unmeasuredCount</code>는 3인데 <code>events.length</code>는 4라 <code>unmeasuredCount === events.length</code> 조건이 깨져 "미입력"이어야 할 회차가 "일부"로 오판된다 — 회차별 <code>eventKeys</code> 크기와 무관하게 전역 종목 수만 늘어도 과거 회차 판정이 흔들리는 것이 이 이슈의 핵심 증상이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>선택:</b> <code>deriveEntryStatus</code>·<code>countCompleted</code>의 두 번째 인자를 <code>events: EventDefinition[]</code> 대신 <code>eventKeys: string[]</code>로 바꾼다. <code>entry.scores[key]</code>만 필요하므로 <code>EventDefinition</code> 객체 전체가 아니라 key 문자열만 받으면 충분하다 — <code>computeSessionRankings</code>(<code>functions/lib/compute-rankings.ts:71-79</code>)가 <code>session.eventKeys</code>를 그대로 순회하는 것과 동일한 패턴. 호출부는 <code>data.events</code> 대신 <code>session.eventKeys</code>를 넘기도록 바뀐다.</p>
+    <p><b>기각한 대안:</b></p>
+    <ul>
+      <li><code>events</code>는 그대로 받고 함수 내부에서 <code>events.filter(e => session.eventKeys.includes(e.key))</code>로 좁히는 방식 — 어차피 <code>event.key</code>만 쓰는데 <code>EventDefinition</code> 객체 조회·매핑을 거칠 이유가 없고, 호출부가 <code>session</code> 전체를 들고 있지 않은 자리(<code>countCompleted(entries, events)</code>)에서는 오히려 더 번거롭다.</li>
+      <li><code>entry.scores</code>의 key 개수(<code>Object.keys(entry.scores).length</code>)를 분모로 직접 재도출 — <code>scores</code>는 계약상 이미 <code>Session.eventKeys</code>와 정확히 같은 key 집합이므로, <code>Session.eventKeys</code>라는 이미 존재하는 단일 출처를 두고 매 entry마다 재도출할 이유가 없다(값이 어긋나면 계약 위반이지 이 함수가 감지할 문제가 아님).</li>
+    </ul>
+    <p><b>null 체크:</b> 새 계약(그 회차 <code>eventKeys</code> 전체가 <code>scores</code>에 항상 존재)상 <code>entry.scores[key]</code>는 이제 절대 <code>undefined</code>가 아니지만, <code>computeEventRanking</code>(<code>functions/lib/compute-rankings.ts:39</code>)이 같은 보장 아래에서도 방어적으로 optional chaining을 유지하는 선례를 따라 <code>?.</code>는 그대로 둔다 — 동작 변화 폭을 분모 교체 하나로 최소화하기 위함.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">
+        <code>src/lib/entry-status.ts</code>: <code>deriveEntryStatus(entry, eventKeys: string[])</code>·<code>countCompleted(entries, eventKeys: string[])</code>로 시그니처 변경, <code>eventKeys</code>를 순회하며 <code>entry.scores[key]?.status</code>로 판정. <code>EventDefinition</code> import 제거(더 이상 불필요). 상단 계약 주석을 "분모 = 그 회차 eventKeys"로 갱신.
+        <span class="files"><code>src/lib/entry-status.ts</code></span>
+      </li>
+      <li class="done">
+        <code>src/pages/admin/RecordsParticipants.tsx:122</code>: <code>deriveEntryStatus(entry, data.events)</code> → <code>deriveEntryStatus(entry, session.eventKeys)</code> (<code>session</code>은 이미 스코프에 있음).
+        <span class="files"><code>src/pages/admin/RecordsParticipants.tsx</code></span>
+      </li>
+      <li class="done">
+        <code>src/pages/admin/RecordsDateSelect.tsx:68</code>: <code>countCompleted(session.entries, events)</code> → <code>countCompleted(session.entries, session.eventKeys)</code>. <code>const { sessions, events } = data</code>에서 이제 쓰이지 않는 <code>events</code> 구조분해 제거.
+        <span class="files"><code>src/pages/admin/RecordsDateSelect.tsx</code></span>
+      </li>
+      <li class="done">
+        <code>src/lib/entry-status.test.ts</code>: 기존 4개 케이스의 픽스처를 <code>EventDefinition[]</code>(<code>EVENTS</code>)에서 <code>eventKeys: string[]</code>로 갱신. 완료 조건에 명시된 두 테스트 추가 — (a) 4종목 회차 전부 recorded/exempt/invalid 등 non-unmeasured로 채우면 '완료', (b) 과거 회차(2종목 eventKeys)가 이미 어떤 상태였든, 그 뒤 전역에 새 종목이 추가된 시나리오를 시뮬레이션(같은 entry에 신규 종목 key가 없는 채로)해도 <code>deriveEntryStatus</code>·<code>countCompleted</code> 결과가 회차 자신의 <code>eventKeys</code>만으로 그대로 유지됨을 확인 — <code>compute-rankings.test.ts</code>의 "회차마다 eventKeys가 달라도(4종목 회차 + 7종목 회차 혼재)" 테스트와 같은 스타일.
+        <span class="files"><code>src/lib/entry-status.test.ts</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>특이 리스크 없음</td><td>—</td><td>순수 함수 시그니처 변경 + 호출부 2곳뿐인 좁은 범위, 기존 테스트 스위트로 회귀 확인 가능</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm test</code> (vitest) — <code>src/lib/entry-status.test.ts</code> 기존 4케이스 + 신규 2케이스 전부 통과</li>
+      <li>신규 케이스 1: <code>eventKeys</code> 4개짜리 회차에서 4개 전부 recorded(혹은 exempt/invalid 혼합) → <code>deriveEntryStatus</code>가 '완료' 반환</li>
+      <li>신규 케이스 2(회귀): 2개 <code>eventKeys</code>짜리 과거 회차 entry(신규 종목 key는 scores에 없음)에 대해 <code>deriveEntryStatus</code>/<code>countCompleted</code> 결과가 그 회차 자신의 <code>eventKeys</code> 기준으로만 정해지고, 전역 종목 개수 변화(더 큰 목록을 넘기는 시나리오)에 영향받지 않음을 확인</li>
+      <li><code>npm run typecheck</code> — <code>RecordsParticipants.tsx</code>·<code>RecordsDateSelect.tsx</code> 호출부 타입 정합성 확인(구조분해에서 제거된 <code>events</code> 미사용 경고 없는지 포함)</li>
+      <li><b>실행 결과:</b> <code>npm test</code> 83 파일 705 테스트 전부 통과, <code>npm run typecheck</code> 클린.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>회차별 분모 판정 테스트 (4종목 회차 전부 입력 = '완료')</li>
+      <li>종목 추가 후 과거 회차 상태 불변 회귀 테스트</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/117">#117</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
