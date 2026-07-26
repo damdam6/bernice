@@ -57,7 +57,7 @@ interface SessionRow {
 }
 
 function DateSelectContent({ data, onSelect }: { data: RecordsResponse; onSelect: (date: string) => void }) {
-  const { sessions, events } = data
+  const { sessions } = data
 
   // sessions는 날짜 오름차순이 계약(shared/domain.ts) — n차 라벨은 그 순서의 인덱스+1이므로
   // 먼저 오름차순 그대로 라벨을 매긴 뒤, 표시만 최신부터 뒤집는다.
@@ -65,7 +65,7 @@ function DateSelectContent({ data, onSelect }: { data: RecordsResponse; onSelect
     .map((session, index) => ({
       session,
       roundLabel: index + 1,
-      completed: countCompleted(session.entries, events),
+      completed: countCompleted(session.entries, session.eventKeys),
       total: session.entries.length,
     }))
     .slice()
