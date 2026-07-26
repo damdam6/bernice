@@ -3,7 +3,7 @@ import type { EventAchievementRate, EventDefinition, Session } from '../../share
 import { averageAchievementPct, buildHomeGauges, latestSessionOrdinal } from './home-summary'
 
 function session(date: string): Session {
-  return { date, entries: [] }
+  return { date, entries: [], eventKeys: [] }
 }
 
 function rate(event: string, achievedCount: number, eligibleCount: number, r: number): EventAchievementRate {
@@ -11,7 +11,7 @@ function rate(event: string, achievedCount: number, eligibleCount: number, r: nu
 }
 
 function event(key: string): EventDefinition {
-  return { key, valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' }
+  return { key, valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null }
 }
 
 describe('latestSessionOrdinal', () => {

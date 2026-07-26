@@ -33,6 +33,7 @@ function excludeWithdrawn(session: Session, playersById: Map<number, Player>): S
   return {
     date: session.date,
     entries: session.entries.filter((entry) => playersById.get(entry.playerId)?.status !== '탈퇴'),
+    eventKeys: session.eventKeys,
   }
 }
 

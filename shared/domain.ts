@@ -42,6 +42,9 @@ export interface EventDefinition {
   targetValue: number // 정규화 목표치(시간=초, 개수=그대로) — 달성 판정 기준
   maxScore: number | null // 만점(표시용 분모). 없으면 null (예: 셔틀런)
   direction: RankDirection
+  endSessionDate: string | null // 종료 회차(YYYY-MM-DD) — null이면 현역. events[]는 종료 종목을 포함한
+  // 전체를 목표 탭 행 순서대로 담는다(과거 회차 랭킹·추이가 종료 종목 정의를 필요로 함).
+  // '종료 여부'는 소비자가 endSessionDate !== null로 파생한다.
 }
 
 /** 회차 1건, 종목 1개의 점수 한 칸 — status로 분기하면 value/display를 null 체크 없이 쓸 수 있다.
@@ -56,8 +59,8 @@ export type EventScore =
 export interface SessionEntry {
   playerId: number
   name: string // 그 시점 이름(참조 수식이라 개명 시 항상 최신과 동일)
-  scores: Record<string, EventScore> // key = EventDefinition.key. events[] 전체 key가 항상 존재(누락 없음) —
-  // participated 파생과 프론트 인덱싱이 이 완전성 전제에 의존한다.
+  scores: Record<string, EventScore> // key = EventDefinition.key. 그 회차 Session.eventKeys 전체가
+  // 항상 존재, 그 외 key는 없음 — 소비자는 scores[key] 인덱싱 전에 그 회차 측정 여부를 전제해야 한다.
   participated: boolean // 전 종목이 unmeasured면 false. exempt·invalid는 "무언가 입력됨"으로 간주해 참여로 침
 }
 
@@ -66,6 +69,8 @@ export interface Session {
   date: string // YYYY-MM-DD, 탭 이름 원본
   entries: SessionEntry[] // 그 회차 탭에 실제로 존재하는 명단 행만
   // (이후 가입자는 과거 회차에 엔트리 자체가 없음)
+  eventKeys: string[] // 그 회차 탭 헤더의 측정 종목 key 목록(헤더 순서). 참가자가 0명인 회차에서도
+  // 측정 종목을 알 수 있도록 entries에서 유추하지 않고 명시한다.
 }
 
 /** 종목별 랭킹 1행. */
@@ -87,7 +92,8 @@ export interface EventRanking {
 /** 회차 1개에 대한 종목별 랭킹 묶음 — 랭킹 화면의 "회차 선택 → 종목 탭" 흐름과 그대로 대응. */
 export interface SessionRankings {
   sessionDate: string
-  events: EventRanking[]
+  events: EventRanking[] // 그 회차 Session.eventKeys에 해당하는 종목만, 헤더 순서 — 미측정
+  // 종목×회차 조합은 항목 자체가 없다(빈 종목도 entries: []로 개수 맞추던 규칙은 폐기).
 }
 
 /** 개인 추이 — 종목 1개의 회차별 기록 흐름. */
@@ -119,7 +125,7 @@ export interface PlayerPersonalBest {
  *  응답에 아예 나타날 수 없음이 타입 수준에서 강제된다(활동 외 상태의 랭킹 제외는 응답 구성 규칙으로 별도 처리). */
 export interface PlayerSummary extends Player {
   status: Exclude<PlayerStatus, '탈퇴'>
-  trends: PlayerEventTrend[] // events[] 전체에 대해 항상 하나씩 존재(기록이 전혀 없으면 points: [])
+  trends: PlayerEventTrend[] // events[] 전체(종료 종목 포함)에 대해 항상 하나씩 존재(기록이 전혀 없으면 points: [])
   personalBests: PlayerPersonalBest[] // 유효 기록이 1건이라도 있는 종목만 포함(스파스 — 미기록 종목은 항목 자체가 없음)
 }
 
