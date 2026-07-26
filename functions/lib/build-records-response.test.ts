@@ -95,6 +95,70 @@ describe('buildRecordsResponse', () => {
     expect(result.generatedAt).toBe('2026-01-01T00:00:00.000Z')
   })
 
+  it('V6: 종료 회차가 실존 회차 탭 이름과 일치하면 정상 조립된다', () => {
+    const goals = [
+      ['종목', '목표', '만점', '방향', '종료 회차'],
+      ['골밑슛', '5', '10', '높을수록', '2025-05-16'],
+    ]
+    const bundle = baseBundle({ goals: { name: '목표', values: goals } })
+
+    const result = buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')
+
+    expect(result.events[0].endSessionDate).toBe('2025-05-16')
+  })
+
+  it('V6: 종료 회차가 실존하지 않는 회차 탭을 가리키면 종목명·날짜를 담아 에러', () => {
+    const goals = [
+      ['종목', '목표', '만점', '방향', '종료 회차'],
+      ['골밑슛', '5', '10', '높을수록', '2099-01-01'],
+    ]
+    const bundle = baseBundle({ goals: { name: '목표', values: goals } })
+
+    expect(() => buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')).toThrow(/골밑슛.*2099-01-01/)
+  })
+
+  it('V6: 종료 회차가 빈칸(현역)이면 회차 탭 존재 여부와 무관하게 통과한다', () => {
+    const bundle = baseBundle({ rounds: [] }) // GOALS_ROWS의 골밑슛은 종료 회차 빈칸 — 대조할 회차가 아예 없어도 통과해야 함
+
+    expect(() => buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')).not.toThrow()
+  })
+
+  it('혼재 번들: 구 회차(종료 종목 포함)와 신규 회차(현역 종목만)가 각자의 eventKeys로 정합하게 조립된다', () => {
+    // §10 마이그레이션 시나리오 축소 재현 — 골밑슛(현역)은 두 회차 모두 측정, 45도패스캐치는
+    // 2025-05-16에서 종료되어 그 회차까지만 컬럼이 있고 신규 회차 헤더에는 없다.
+    const goals = [
+      ['종목', '목표', '만점', '방향', '종료 회차'],
+      ['골밑슛', '5', '10', '높을수록', ''],
+      ['45도패스캐치', '5', '7', '높을수록', '2025-05-16'],
+    ]
+    const oldRound = [
+      ['이름', '골밑슛', '45도패스캐치'],
+      ['철수', '6', '7'],
+    ]
+    const newRound = [
+      ['이름', '골밑슛'],
+      ['철수', '8'],
+    ]
+    const bundle = baseBundle({
+      goals: { name: '목표', values: goals },
+      rounds: [
+        { name: '2025-05-16', date: new Date('2025-05-16'), values: oldRound },
+        { name: '2026-07-23', date: new Date('2026-07-23'), values: newRound },
+      ],
+    })
+
+    const result = buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')
+
+    expect(result.events.map((e) => ({ key: e.key, endSessionDate: e.endSessionDate }))).toEqual([
+      { key: '골밑슛', endSessionDate: null },
+      { key: '45도패스캐치', endSessionDate: '2025-05-16' },
+    ])
+    expect(result.sessions.map((s) => ({ date: s.date, eventKeys: s.eventKeys }))).toEqual([
+      { date: '2025-05-16', eventKeys: ['골밑슛', '45도패스캐치'] },
+      { date: '2026-07-23', eventKeys: ['골밑슛'] },
+    ])
+  })
+
   it('실제 2025-05-16 탭 형태(명단은 가입순, 회차는 참가자 일부만 가나다순)도 정상 조립된다 (이슈 #60)', () => {
     // 명단(가입순): 다솜(1), 가영(2), 라희(3), 나은(4), 마루(5) — 회차엔 라희를 뺀 4명만, 가나다순으로 수기 입력
     const roster = [

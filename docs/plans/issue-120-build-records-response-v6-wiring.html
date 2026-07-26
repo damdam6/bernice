@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#120 P7 — build-records-response 조립: V6 실존 회차 대조 + eventKeys 배선 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.done::before {
+    background: var(--ok); border-color: var(--ok);
+  }
+  .done-list li.done::after {
+    content: "✓"; position: absolute; left: 4px; top: 1px; color: var(--card);
+    font-size: 0.78rem; font-weight: 800; line-height: 1.6;
+  }
+  .steps li.done::before { background: var(--ok); color: #fff; }
+  .steps li.done { color: var(--muted); }
+  .steps li.done b { color: var(--ink); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/120">#120</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — build-records-response 조립: V6 실존 회차 대조 + eventKeys 배선</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/120-build-records-response-v6-wiring</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>선행 이슈 #111(parse-goals 5열 스키마)·#112(parse-session 매핑 완화)가 이미 병합되어
+    <code>EventDefinition.endSessionDate</code>와 <code>Session.eventKeys</code>는 조립 단계까지
+    관통 배선이 끝난 상태다. 남은 것은 PRD <code>docs/prd-event-lifecycle.html</code> §05의
+    검증 매트릭스 중 유일하게 조립 단계(<code>build-records-response.ts</code>) 몫으로 배정된
+    <b>V6</b> — 목표 탭 <code>종료 회차</code> 값이 실제로 존재하는 회차 탭 이름과 일치하는지
+    대조하는 로직이 아직 없다는 점뿐이다. 이 이슈는 그 V6 검증 함수를 추가하고, 성공/실패
+    테스트와 혼재 번들(구 회차 + 신규 회차, 서로 다른 <code>eventKeys</code>) 조립 정합성
+    테스트를 채운다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>functions/lib/parse-goals.ts:19,82,103-110</code> — 5열 헤더(<code>종목|목표|만점|방향|종료 회차</code>)
+      엄격 검증과 <code>parseEndSessionDate</code>(V5: 형식·캘린더 검증, <code>isValidRoundTabName</code> 재사용)가
+      이미 구현·병합됨(#135). 반환 타입은 <code>ParseGoalsResult { events, sheetRowByKey }</code>.</li>
+      <li><code>functions/lib/parse-session.ts:116,140,175-179</code> — <code>parseSession</code>이 이미
+      <code>Session.eventKeys</code>를 헤더 순서로 산출하고, <code>mapHeaderToEvents</code>가 V3(목표
+      종목 전체 헤더 강제 제거)·V4(종료 회차 초과 회차에 컬럼 존재 시 에러)를 이미 구현함(#112/#133).</li>
+      <li><code>shared/domain.ts:45,72,148-155</code> — <code>EventDefinition.endSessionDate</code>,
+      <code>Session.eventKeys</code>, <code>RecordsResponse.events</code>가 이미 타입 계약에 반영돼 있다.</li>
+      <li><code>functions/lib/build-records-response.ts:49,57-58</code> — <code>buildRecordsResponse</code>가
+      이미 <code>const { events } = parseGoals(...)</code>로 새 반환 타입을 받아 <code>parseSession</code>에
+      넘기고, <code>excludeWithdrawn</code>(:32-38)이 <code>eventKeys</code>를 그대로 통과시킨다 — 즉
+      "관통 배선" 자체는 완료 상태다.</li>
+      <li>반면 <b>V6(종료 회차 ↔ 실존 회차 탭 대조)에 해당하는 코드는 어디에도 없다</b> —
+      <code>build-records-response.ts</code> 전체를 검토했으나 <code>event.endSessionDate</code>를
+      <code>bundle.rounds</code>와 비교하는 로직이 없다(<code>grep -rn "endSessionDate" functions/lib/build-records-response.ts</code> →
+      <code>excludeWithdrawn</code>의 <code>eventKeys</code> 통과 줄 1건만 매치). PRD §07 표
+      (<code>docs/prd-event-lifecycle.html:277-279</code>)도 이 배치를 명시한다: "종료 회차 ↔ 실존
+      회차 탭 대조(V6)를 이 단계에 배치(회차 목록을 아는 유일한 지점)".</li>
+      <li><code>functions/lib/build-records-response.test.ts</code>는 이미 5열 <code>GOALS_ROWS</code>
+      픽스처(:13, <code>종료 회차</code> 빈칸)를 쓰지만 단일 회차 번들만 다루고, V6 성공/실패
+      케이스도 다중 회차(혼재 <code>eventKeys</code>) 케이스도 없다.</li>
+      <li>에러 처리 경로 — <code>functions/api/records.ts:36-50</code>의 <code>errorResponse</code>는
+      <code>RecordsAssemblyError</code>(구조적 사전조건: 탭 자체 누락)는 <code>err.code</code>로,
+      그 외 일반 <code>Error</code>는 <code>sheet_data_invalid</code>/500으로 매핑한다. V1~V5는
+      전부 일반 <code>Error</code>를 던진다(<code>parse-goals.ts:112-114</code>,
+      <code>parse-session.ts</code> 각 <code>throw new Error(...)</code>) — <code>RecordsAssemblyErrorCode</code>는
+      현재 <code>'missing_roster_tab' | 'missing_goals_tab'</code> 두 구조적 케이스만 갖는다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>채택:</b> <code>buildRecordsResponse</code> 안, <code>parseGoals</code> 직후·세션 파싱 이전에
+    <code>validateEndSessionDates(events, bundle.rounds)</code> 헬퍼를 호출한다. 헬퍼는
+    <code>bundle.rounds</code>의 탭 이름 집합을 만들고, <code>endSessionDate !== null</code>인
+    각 종목에 대해 그 날짜가 집합에 있는지 확인한다. 없으면 종목명·종료 회차 날짜를 담은
+    메시지로 일반 <code>Error</code>를 던진다 — V1~V5와 동일한 fail-loud 스타일(에러 코드가 아니라
+    사람이 읽을 메시지로 원인을 특정)을 그대로 잇는다. 위치를 세션 파싱 이전으로 두는 이유는
+    V6이 "회차 목록을 아는 유일한 지점"(PRD)이라는 원칙을 <code>parseGoals</code> 호출 직후로
+    가장 좁게 해석하면, 이후 세션 파싱(V4)이나 랭킹 계산이 이미 모순된 <code>endSessionDate</code>를
+    전제로 작업을 진행하기 전에 즉시 끊어낼 수 있기 때문이다. 두 검증(V4·V6)은 독립적이라 순서
+    자체가 결과를 바꾸지는 않지만, 더 이른 실패가 디버깅 시 더 명확한 원인을 준다.</p>
+    <p><b>기각 — 새 <code>RecordsAssemblyErrorCode</code> 추가:</b> <code>'unknown_end_session_date'</code>
+    같은 새 코드를 만들고 <code>RecordsAssemblyError</code>로 던지는 방안도 가능했지만, 기존
+    <code>RecordsAssemblyErrorCode</code>는 "탭 자체가 없음"이라는 구조적 사전조건 전용으로 쓰이고
+    있고(<code>functions/api/admin/create-sheet.ts:60,63</code>도 같은 두 코드만 별도 분기), V6은
+    성격상 V1~V5와 같은 시트 데이터 정합성 오류다. 새 코드를 추가하면 오히려 두 카테고리(사전조건 vs
+    데이터 정합성)의 경계가 흐려진다. 일반 <code>Error</code>로도 <code>errorResponse</code>가 이미
+    500 + 메시지로 응답하므로 별도 배선이 필요 없다.</p>
+    <p><b>기각 — <code>parseGoals</code> 내부에서 검증:</b> <code>parseGoals</code>는 회차 탭 목록을
+    모른다(목표 탭 값만 받음). 회차 목록을 인자로 추가로 넘기는 방안은 파서의 단일 책임(목표 탭
+    파싱)을 흐리고, PRD가 명시적으로 조립 단계를 지정한 이유(§07)와도 어긋난다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><code>validateEndSessionDates(events, rounds)</code> 헬퍼를 추가하고
+      <code>buildRecordsResponse</code>에서 <code>const { events } = parseGoals(...)</code> 바로
+      다음 줄에서 호출한다. 회차 탭 이름 집합은 <code>new Set(bundle.rounds.map(r =&gt; r.name))</code>로
+      만들고, 매치 실패 시 메시지에 종목 key와 <code>endSessionDate</code> 값을 포함해 "오타이거나
+      아직 그 회차 탭이 생성되지 않았을 수 있다"는 취지를 안내한다(V4/V5 메시지 톤과 통일).
+        <span class="files"><code>functions/lib/build-records-response.ts</code></span>
+      </li>
+      <li class="done">V6 성공/실패/현역(null) 단위 테스트 3건을 추가한다: (a) <code>endSessionDate</code>가
+      <code>bundle.rounds</code> 중 하나와 일치 → 정상 조립, (b) 존재하지 않는 날짜 → throw +
+      메시지에 종목명·날짜 포함 검증, (c) <code>endSessionDate: null</code>(현역) → 회차 목록과
+      무관하게 항상 통과(회귀 방지 — 오탐 없음을 명시적으로 고정).
+        <span class="files"><code>functions/lib/build-records-response.test.ts</code></span>
+      </li>
+      <li class="done">혼재 번들 조립 정합성 테스트를 추가한다 — PRD §10 마이그레이션 시나리오를 축소 재현:
+      회차 A(과거, 구 종목 헤더 + 그중 하나는 <code>endSessionDate</code>가 회차 A로 종료)와 회차
+      B(최신, 신규 종목 헤더, 종료 종목 컬럼 없음) 두 개짜리 번들을 조립해 (i) <code>result.events</code>가
+      목표 탭 행 순서대로 전체(종료 종목 포함) 노출되는지, (ii) <code>result.sessions[0].eventKeys</code>와
+      <code>result.sessions[1].eventKeys</code>가 각 회차 헤더와 정확히 일치하는지, (iii) V4 위반이
+      없어 에러 없이 통과하는지를 검증한다.
+        <span class="files"><code>functions/lib/build-records-response.test.ts</code></span>
+      </li>
+      <li class="done"><code>npm run test</code>(vitest)와 <code>npm run typecheck</code>(tsc -b)로 전체 회귀
+      확인 후 커밋. 결과: 83개 파일 716개 테스트 전부 통과, 타입 에러 없음.
+        <span class="files"></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>운영 시트가 이미 존재하지 않는 회차를 <code>종료 회차</code>로 참조 중일 가능성
+          (예: 오타, 삭제된 탭)</td>
+          <td>신규 코드 배포 즉시 <code>/api/records</code> 500 — V6이 새로 잡아내는 데이터
+          모순이므로 이 이슈 자체의 목적과 부합하지만, 배포 타이밍에 따라 일시적 장애로 보일 수 있음</td>
+          <td>이 이슈는 코드만 다루고 실제 시트 정합화는 PRD §10 별도 이슈(#121 등)가 맡는다 —
+          PR 설명에 배포 전 시트 점검 필요성을 명시</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run test</code> — <code>build-records-response.test.ts</code> 신규 V6
+      성공/실패/현역 케이스 3건 + 혼재 번들 정합성 케이스 1건 포함, 기존 스위트 전체 그린 확인</li>
+      <li><code>npm run typecheck</code> — 새 헬퍼·테스트 픽스처가 <code>EventDefinition</code>/
+      <code>RoundRawTable</code> 타입과 어긋나지 않는지 확인</li>
+      <li>수동 UI 검증은 불필요 — 이 이슈는 백엔드 순수 조립 로직(<code>functions/lib</code>)만
+      다루고 화면 변경이 없다</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="done">V6 성공/실패 테스트 (실존 날짜·미존재 날짜·현역 null) — <code>build-records-response.test.ts</code>에
+      3개 케이스로 반영</li>
+      <li class="done">혼재 번들 조립 결과의 <code>eventKeys</code>·<code>events[]</code> 정합 테스트 —
+      2개 이상 회차(서로 다른 측정 종목 헤더)를 가진 번들로 <code>buildRecordsResponse</code> 결과의
+      <code>sessions[].eventKeys</code>·<code>events[]</code> 정합성 확인</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/120">#120</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
