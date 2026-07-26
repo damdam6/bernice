@@ -159,6 +159,45 @@ describe('parseRecordsResponse', () => {
       ),
     ).toBeNull()
   })
+
+  it('EventDefinition.endSessionDate는 문자열·null 둘 다 통과, 그 외 타입은 거부한다', () => {
+    const withDate = parseRecordsResponse(
+      payload((d) => {
+        const events = d.events as Record<string, unknown>[]
+        events[0].endSessionDate = '2026-06-01'
+      }),
+    )
+    expect(withDate?.events[0].endSessionDate).toBe('2026-06-01')
+    expect(
+      parseRecordsResponse(
+        payload((d) => {
+          const events = d.events as Record<string, unknown>[]
+          events[0].endSessionDate = 20260601
+        }),
+      ),
+    ).toBeNull()
+    expect(parseRecordsResponse(payload((d) => delete (d.events as Record<string, unknown>[])[0].endSessionDate))).toBeNull()
+  })
+
+  it('Session.eventKeys는 문자열 배열만 통과, 비배열·비문자열 원소는 거부한다', () => {
+    expect(
+      parseRecordsResponse(
+        payload((d) => {
+          const sessions = d.sessions as Record<string, unknown>[]
+          sessions[0].eventKeys = '골밑슛,드리블셔틀런'
+        }),
+      ),
+    ).toBeNull()
+    expect(
+      parseRecordsResponse(
+        payload((d) => {
+          const sessions = d.sessions as Record<string, unknown>[]
+          sessions[0].eventKeys = ['골밑슛', 1]
+        }),
+      ),
+    ).toBeNull()
+    expect(parseRecordsResponse(payload((d) => delete (d.sessions as Record<string, unknown>[])[0].eventKeys))).toBeNull()
+  })
 })
 
 describe('parseEventScore', () => {
