@@ -27,6 +27,8 @@ export function buildRankingRows(
     if (!activePlayerIds.has(entry.playerId) || rankedIds.has(entry.playerId)) continue
 
     const score = entry.scores[eventKey]
+    // score가 없으면 eventKey가 그 회차 측정 종목이 아니다(계약 위반 데이터) — 크래시 대신 건너뛴다.
+    if (!score) continue
     if (score.status === 'exempt' || score.status === 'unmeasured') {
       supplemental.push({ status: score.status, playerId: entry.playerId, name: entry.name })
     } else if (score.status === 'invalid') {

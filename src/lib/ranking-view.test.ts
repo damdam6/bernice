@@ -108,6 +108,45 @@ describe('buildRankingRows', () => {
   })
 })
 
+describe('buildRankingRows — 미측정 종목 가드', () => {
+  const OTHER_KEY = '팔굽혀펴기'
+
+  it('대상 종목이 그 회차 eventKeys에 없으면(scores에 key 자체가 없으면) 크래시 없이 빈 배열을 반환한다', () => {
+    const eventRanking: EventRanking = { event: EVENT_KEY, entries: [] }
+    const session: Session = {
+      date: '2026-07-01',
+      entries: [sessionEntry(1, { [OTHER_KEY]: recorded(5) })],
+      eventKeys: [OTHER_KEY], // EVENT_KEY는 이 회차에서 아예 측정되지 않음
+    }
+    const players = [player(1, '활동')]
+
+    expect(() => buildRankingRows(eventRanking, session, EVENT_KEY, players)).not.toThrow()
+    expect(buildRankingRows(eventRanking, session, EVENT_KEY, players)).toEqual([])
+  })
+
+  it('혼재 회차(종목 2개 측정)에서 보충 행은 호출 대상 종목 하나의 점수만 반영한다', () => {
+    const eventRanking: EventRanking = { event: EVENT_KEY, entries: [rankingEntry({ playerId: 1, rank: 1, achieved: true })] }
+    const session: Session = {
+      date: '2026-07-01',
+      entries: [
+        sessionEntry(1, { [EVENT_KEY]: recorded(8), [OTHER_KEY]: recorded(3) }),
+        sessionEntry(2, { [EVENT_KEY]: exempt(), [OTHER_KEY]: recorded(1) }),
+        sessionEntry(3, { [EVENT_KEY]: unmeasured(), [OTHER_KEY]: exempt() }),
+      ],
+      eventKeys: [EVENT_KEY, OTHER_KEY],
+    }
+    const players = [player(1, '활동'), player(2, '활동'), player(3, '활동')]
+
+    const rows = buildRankingRows(eventRanking, session, EVENT_KEY, players)
+
+    expect(rows).toEqual([
+      { status: 'recorded', playerId: 1, name: '선수1', rank: 1, value: 0, display: '0', achieved: true },
+      { status: 'exempt', playerId: 2, name: '선수2' },
+      { status: 'unmeasured', playerId: 3, name: '선수3' },
+    ])
+  })
+})
+
 describe('findTiedRanks', () => {
   it('표준 공동순위(1,1,3) — rank 1이 2회 이상이면 그 rank만 포함', () => {
     const rows = [
