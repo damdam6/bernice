@@ -9,6 +9,7 @@ const SHUTTLE: EventDefinition = {
   targetValue: 77,
   maxScore: null,
   direction: '낮을수록',
+  endSessionDate: null,
 }
 const BASKET: EventDefinition = {
   key: '골밑슛',
@@ -17,6 +18,7 @@ const BASKET: EventDefinition = {
   targetValue: 5,
   maxScore: 10,
   direction: '높을수록',
+  endSessionDate: null,
 }
 const EVENTS: EventDefinition[] = [SHUTTLE, BASKET]
 
@@ -52,6 +54,8 @@ const PLAYERS: Player[] = [
   { id: 6, name: '선수6', status: '활동' },
 ]
 
+const SESSION_EVENT_KEYS = [SHUTTLE.key, BASKET.key]
+
 const SESSIONS: Session[] = [
   {
     date: '2025-01-01',
@@ -60,6 +64,7 @@ const SESSIONS: Session[] = [
       entry(2, '선수2', { [SHUTTLE.key]: recorded(50, '0:50'), [BASKET.key]: recorded(5, '5') }),
       entry(4, '선수4', { [SHUTTLE.key]: unmeasured(), [BASKET.key]: recorded(3, '3') }),
     ],
+    eventKeys: SESSION_EVENT_KEYS,
   },
   {
     date: '2025-02-01',
@@ -68,6 +73,7 @@ const SESSIONS: Session[] = [
       entry(3, '선수3', { [SHUTTLE.key]: recorded(70, '1:10'), [BASKET.key]: unmeasured() }),
       entry(4, '선수4', { [SHUTTLE.key]: unmeasured(), [BASKET.key]: unmeasured() }),
     ],
+    eventKeys: SESSION_EVENT_KEYS,
   },
   {
     date: '2025-03-01',
@@ -75,6 +81,7 @@ const SESSIONS: Session[] = [
       entry(1, '선수1', { [SHUTTLE.key]: recorded(75, '1:15'), [BASKET.key]: recorded(6, '6') }),
       entry(5, '선수5', { [SHUTTLE.key]: recorded(76, '1:16'), [BASKET.key]: unmeasured() }),
     ],
+    eventKeys: SESSION_EVENT_KEYS,
   },
   {
     date: '2025-04-01',
@@ -82,6 +89,7 @@ const SESSIONS: Session[] = [
       entry(1, '선수1', { [SHUTTLE.key]: recorded(75, '1:15'), [BASKET.key]: recorded(4, '4') }),
       entry(5, '선수5', { [SHUTTLE.key]: recorded(74, '1:14'), [BASKET.key]: unmeasured() }),
     ],
+    eventKeys: SESSION_EVENT_KEYS,
   },
 ]
 
@@ -179,7 +187,7 @@ describe('computePlayerSummaries — 경계값·빈 입력', () => {
   it('낮을수록 종목: 목표치와 정확히 같아도 달성으로 처리한다', () => {
     const players: Player[] = [{ id: 1, name: '선수1', status: '활동' }]
     const sessions: Session[] = [
-      { date: '2025-01-01', entries: [entry(1, '선수1', { [SHUTTLE.key]: recorded(77, '1:17') })] },
+      { date: '2025-01-01', entries: [entry(1, '선수1', { [SHUTTLE.key]: recorded(77, '1:17') })], eventKeys: [SHUTTLE.key] },
     ]
     const [summary] = computePlayerSummaries([SHUTTLE], players, sessions)
     expect(summary.trends[0].points[0].achieved).toBe(true)

@@ -61,6 +61,7 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
   if (typeof raw.targetValue !== 'number') return null
   if (typeof raw.maxScore !== 'number' && raw.maxScore !== null) return null
   if (!isOneOf(raw.direction, RANK_DIRECTIONS)) return null
+  if (typeof raw.endSessionDate !== 'string' && raw.endSessionDate !== null) return null
   return {
     key: raw.key,
     valueKind: raw.valueKind,
@@ -68,6 +69,7 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
     targetValue: raw.targetValue,
     maxScore: raw.maxScore,
     direction: raw.direction,
+    endSessionDate: raw.endSessionDate,
   }
 }
 
@@ -112,12 +114,20 @@ function parseSessionEntry(raw: unknown): SessionEntry | null {
   return { playerId: raw.playerId, name: raw.name, scores, participated: raw.participated }
 }
 
+function parseStringArray(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null
+  const list: unknown[] = raw
+  return list.every((item): item is string => typeof item === 'string') ? list : null
+}
+
 function parseSession(raw: unknown): Session | null {
   if (!isPlainObject(raw)) return null
   if (typeof raw.date !== 'string') return null
   const entries = parseArray(raw.entries, parseSessionEntry)
   if (entries === null) return null
-  return { date: raw.date, entries }
+  const eventKeys = parseStringArray(raw.eventKeys)
+  if (eventKeys === null) return null
+  return { date: raw.date, entries, eventKeys }
 }
 
 function parseRankingEntry(raw: unknown): RankingEntry | null {

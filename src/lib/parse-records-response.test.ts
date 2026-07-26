@@ -7,8 +7,8 @@ import { parseEventScore, parseRecordsResponse } from './parse-records-response'
 const FULL_RESPONSE: RecordsResponse = {
   generatedAt: '2026-07-17T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' },
-    { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록' },
+    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
+    { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
   ],
   players: [
     {
@@ -54,6 +54,7 @@ const FULL_RESPONSE: RecordsResponse = {
           participated: true,
         },
       ],
+      eventKeys: ['골밑슛', '드리블셔틀런'],
     },
   ],
   rankings: [

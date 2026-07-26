@@ -17,9 +17,10 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록' },
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' },
+  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
+  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
 ]
+const SESSION_EVENT_KEYS = EVENTS.map((e) => e.key)
 
 function entryWith(playerId: number, name: string, scores: SessionEntry['scores']): SessionEntry {
   return { playerId, name, participated: true, scores }
@@ -88,6 +89,7 @@ describe('RecordsParticipants', () => {
             entryWith(1, '가은', RECORDED),
             entryWith(2, '나연', { ...UNMEASURED, 골밑슛: RECORDED.골밑슛 }),
           ],
+          eventKeys: SESSION_EVENT_KEYS,
         },
       ],
     })
@@ -107,7 +109,7 @@ describe('RecordsParticipants', () => {
 
   it('참가자 행을 탭하면 선수별 입력 화면으로 이동한다', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)] }],
+      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],
     })
 
     renderPage('2025-05-16', data)
@@ -118,7 +120,7 @@ describe('RecordsParticipants', () => {
 
   it('[참가자 추가]를 탭하면 현재 회차를 넘겨 참가자 추가 화면으로 이동한다', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)] }],
+      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],
     })
 
     renderPage('2025-05-16', data)
@@ -129,7 +131,7 @@ describe('RecordsParticipants', () => {
 
   it('navigate state로 toast 메시지가 넘어오면 진입 시 노출한다(기록지 만들기·참가자 추가 성공 착지)', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)] }],
+      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 

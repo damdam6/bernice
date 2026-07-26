@@ -4,7 +4,7 @@ import { buildEventScore } from './build-event-score'
 
 // key·valueKind만 판정에 쓰이지만 타입 충족을 위해 나머지 필드도 채운다.
 function ev(key: string, valueKind: 'count' | 'time', direction: RankDirection = '높을수록'): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore: null, direction }
+  return { key, valueKind, target: '0', targetValue: 0, maxScore: null, direction, endSessionDate: null }
 }
 
 describe('buildEventScore', () => {

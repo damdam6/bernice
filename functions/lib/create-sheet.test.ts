@@ -3,8 +3,8 @@ import type { EventDefinition, Player } from '../../shared/domain'
 import { buildCreateSheetPlan } from './create-sheet'
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록' },
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' },
+  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
+  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
 ]
 
 // id는 명단 데이터 행 위치(헤더 제외). 가나다 순서를 흐트러뜨린 채로 둬 정렬이 실제로 도는지 본다.

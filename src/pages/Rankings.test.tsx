@@ -41,8 +41,8 @@ const EMPTY_BODY: RecordsResponse = {
 const RECORDS_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' },
-    { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록' },
+    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
+    { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
   ],
   players: [
     { id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] },
@@ -71,6 +71,7 @@ const RECORDS_BODY: RecordsResponse = {
           },
         },
       ],
+      eventKeys: ['골밑슛', '셔틀런'],
     },
     {
       date: '2026-06-08',
@@ -94,6 +95,7 @@ const RECORDS_BODY: RecordsResponse = {
           },
         },
       ],
+      eventKeys: ['골밑슛', '셔틀런'],
     },
   ],
   rankings: [

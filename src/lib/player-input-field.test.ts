@@ -7,7 +7,7 @@ function ev(
   key = '종목',
   direction: RankDirection = '높을수록',
 ): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction }
+  return { key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction, endSessionDate: null }
 }
 
 const RECORDED_TIME: EventScore = { status: 'recorded', value: 72, display: '1:12' }

@@ -44,6 +44,7 @@ describe('buildRankingRows', () => {
     const session: Session = {
       date: '2026-07-01',
       entries: [sessionEntry(2, { [EVENT_KEY]: recorded(8) }), sessionEntry(1, { [EVENT_KEY]: recorded(6) })],
+      eventKeys: [EVENT_KEY],
     }
     const players = [player(1, '활동'), player(2, '활동')]
 
@@ -65,6 +66,7 @@ describe('buildRankingRows', () => {
         sessionEntry(3, { [EVENT_KEY]: unmeasured() }),
         sessionEntry(4, { [EVENT_KEY]: invalid('열개') }),
       ],
+      eventKeys: [EVENT_KEY],
     }
     const players = [player(1, '활동'), player(2, '활동'), player(3, '활동'), player(4, '활동')]
 
@@ -82,6 +84,7 @@ describe('buildRankingRows', () => {
     const session: Session = {
       date: '2026-07-01',
       entries: [sessionEntry(1, { [EVENT_KEY]: exempt() }), sessionEntry(2, { [EVENT_KEY]: unmeasured() })],
+      eventKeys: [EVENT_KEY],
     }
     const players = [player(1, '비대상'), player(2, '휴식')]
 
@@ -90,7 +93,7 @@ describe('buildRankingRows', () => {
 
   it('그 회차에 엔트리 자체가 없는 활동 선수는 노출되지 않는다', () => {
     const eventRanking: EventRanking = { event: EVENT_KEY, entries: [] }
-    const session: Session = { date: '2026-07-01', entries: [] } // 아직 이 회차 탭에 참가자 행이 없음
+    const session: Session = { date: '2026-07-01', entries: [], eventKeys: [EVENT_KEY] } // 아직 이 회차 탭에 참가자 행이 없음
     const players = [player(1, '활동')] // 명단엔 있지만 이 회차엔 참가 자체가 없음(가입 이전 등)
 
     expect(buildRankingRows(eventRanking, session, EVENT_KEY, players)).toEqual([])
@@ -98,7 +101,7 @@ describe('buildRankingRows', () => {
 
   it('이미 순위권에 있는 선수는 보충 목록에 중복으로 나타나지 않는다', () => {
     const eventRanking: EventRanking = { event: EVENT_KEY, entries: [rankingEntry({ playerId: 1, rank: 1, achieved: true })] }
-    const session: Session = { date: '2026-07-01', entries: [sessionEntry(1, { [EVENT_KEY]: recorded(0) })] }
+    const session: Session = { date: '2026-07-01', entries: [sessionEntry(1, { [EVENT_KEY]: recorded(0) })], eventKeys: [EVENT_KEY] }
     const players = [player(1, '활동')]
 
     expect(buildRankingRows(eventRanking, session, EVENT_KEY, players)).toHaveLength(1)
@@ -139,7 +142,7 @@ describe('findTiedRanks', () => {
 
 describe('buildEventGuidance', () => {
   function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'target' | 'targetValue' | 'direction'>): EventDefinition {
-    return { key: '종목', valueKind: 'count', maxScore: null, ...overrides }
+    return { key: '종목', valueKind: 'count', maxScore: null, endSessionDate: null, ...overrides }
   }
 
   it('개수 + 높을수록 + 만점 있음 — PRD §05 예시와 일치', () => {

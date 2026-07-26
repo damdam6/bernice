@@ -104,7 +104,7 @@ export function parseSession(
     entries.push({ playerId: player.id, name: normalizedNameCell, scores, participated })
   })
 
-  return { date: tabName, entries }
+  return { date: tabName, entries, eventKeys: eventColumns.map(({ event }) => event.key) }
 }
 
 export function buildPlayersByName(players: Player[]): Map<string, Player[]> {

@@ -17,7 +17,7 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 function event(key: string, valueKind: 'count' | 'time', maxScore: number | null = null): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore, direction: '높을수록' }
+  return { key, valueKind, target: '0', targetValue: 0, maxScore, direction: '높을수록', endSessionDate: null }
 }
 
 const EVENTS: EventDefinition[] = [
@@ -40,7 +40,7 @@ function makeEntry(scores: Record<string, EventScore>): SessionEntry {
 }
 
 function makeSession(date: string, entries: SessionEntry[]): Session {
-  return { date, entries }
+  return { date, entries, eventKeys: EVENTS.map((e) => e.key) }
 }
 
 function baseData(overrides: Partial<RecordsResponse> = {}): RecordsResponse {

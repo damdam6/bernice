@@ -23,11 +23,11 @@ function entry(playerId: number, scores: Record<string, EventScore>, name = `선
 }
 
 function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'key' | 'direction' | 'targetValue'>): EventDefinition {
-  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, ...overrides }
+  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, ...overrides }
 }
 
 function session(date: string, entries: SessionEntry[]): Session {
-  return { date, entries }
+  return { date, entries, eventKeys: [...new Set(entries.flatMap((entry) => Object.keys(entry.scores)))] }
 }
 
 describe('computeHomeSummary', () => {

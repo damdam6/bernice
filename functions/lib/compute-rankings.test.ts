@@ -25,7 +25,7 @@ function entry(playerId: number, scores: Record<string, EventScore>, name = `선
 }
 
 function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'key' | 'direction' | 'targetValue'>): EventDefinition {
-  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, ...overrides }
+  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, ...overrides }
 }
 
 describe('computeEventRanking', () => {
@@ -240,6 +240,7 @@ describe('computeSessionRankings', () => {
         entry(5, { 드리블셔틀런: recorded(76, '1:16'), 골밑슛: exempt() }, '선수5'),
         entry(7, { 드리블셔틀런: unmeasured(), 골밑슛: unmeasured() }, '선수7'),
       ],
+      eventKeys: ['드리블셔틀런', '골밑슛'],
     }
 
     const result = computeSessionRankings(session, events, players)
@@ -266,7 +267,11 @@ describe('computeSessionRankings', () => {
     const a = event({ key: 'A', direction: '높을수록', targetValue: 0 })
     const b = event({ key: 'B', direction: '높을수록', targetValue: 0 })
     const players = [player(1, '활동')]
-    const session: Session = { date: '2025-06-01', entries: [entry(1, { A: recorded(1), B: unmeasured() })] }
+    const session: Session = {
+      date: '2025-06-01',
+      entries: [entry(1, { A: recorded(1), B: unmeasured() })],
+      eventKeys: ['A', 'B'],
+    }
 
     const result = computeSessionRankings(session, [a, b], players)
 

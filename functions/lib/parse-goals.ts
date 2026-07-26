@@ -67,6 +67,7 @@ function parseGoalRow(row: string[], sheetRow: number): EventDefinition {
     targetValue: score.value,
     maxScore: parseMaxScore(row[2] ?? '', sheetRow, name),
     direction: parseDirection(row[3] ?? '', sheetRow, name),
+    endSessionDate: null, // 5열(종료 회차) 파싱은 별도 이슈 — 이 파서는 아직 4열만 읽는다
   }
 }
 

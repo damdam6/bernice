@@ -80,7 +80,7 @@ describe('onRequestGet /api/records', () => {
 
     const body = (await response.clone().json()) as { events: unknown }
     expect(body.events).toEqual([
-      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' },
+      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
     ])
   })
 

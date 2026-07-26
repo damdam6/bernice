@@ -12,6 +12,7 @@ function countEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
     targetValue: 5,
     maxScore: 10,
     direction: '높을수록',
+    endSessionDate: null,
     ...overrides,
   }
 }
@@ -24,6 +25,7 @@ function timeEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
     targetValue: 77,
     maxScore: null,
     direction: '낮을수록',
+    endSessionDate: null,
     ...overrides,
   }
 }
@@ -44,6 +46,7 @@ function sessionsWithValues(eventKey: string, values: Array<number | EventScore>
         participated: true,
       },
     ],
+    eventKeys: [eventKey],
   }))
 }
 

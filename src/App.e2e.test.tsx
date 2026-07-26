@@ -46,10 +46,10 @@ afterEach(() => {
 const ADMIN_CODE = 'admin-secret-71'
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록' },
-  { key: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록' },
-  { key: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록' },
-  { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록' },
+  { key: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록', endSessionDate: null },
+  { key: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록', endSessionDate: null },
+  { key: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: null },
+  { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null },
 ]
 
 // satisfies로 Player[] 형태를 검증하되 status 리터럴('활동')은 넓히지 않는다 — 아래
@@ -158,7 +158,11 @@ function createRecordsBackend() {
     if (method === 'POST' && url === '/api/admin/create-sheet') {
       const participantIds = body.participantIds as number[]
       const participants = PLAYERS.filter((player) => participantIds.includes(player.id)).sort(compareKorean)
-      sessionState = { date: formatSeoulDate(new Date()), entries: participants.map((player) => makeEntry(player)) }
+      sessionState = {
+        date: formatSeoulDate(new Date()),
+        entries: participants.map((player) => makeEntry(player)),
+        eventKeys: EVENTS.map((e) => e.key),
+      }
       return jsonResponse(201, { sessionDate: sessionState.date, participantCount: participants.length })
     }
 
