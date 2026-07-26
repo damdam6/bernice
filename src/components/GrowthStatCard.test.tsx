@@ -10,6 +10,7 @@ afterEach(cleanup)
 const CARD: GrowthCardDatum = {
   eventKey: '골밑슛',
   label: '골밑슛',
+  ended: false,
   pb: '8',
   value: '8',
   delta: { text: '▲ 2', tone: 'up' },

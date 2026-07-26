@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#118 P7 — profile-view: 종료 종목 카드 조건·미측정 가드 파생 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/118">#118</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — profile-view: 종료 종목 카드 조건·미측정 가드 파생</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/118-profile-view-ended-event-guards</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>#110에서 도입된 <code>Session.eventKeys</code>·<code>EventDefinition.endSessionDate</code> 계약을 개인 프로필 파생 함수 3개(<code>buildRadarAxes</code>·<code>buildGrowthCards</code>·<code>buildTrendSeries</code>)에 반영한다. 레이더 축은 전역 종목이 아닌 선택 회차의 측정 종목만 남기고, 성장 카드는 종료 종목을 "그 선수 유효 기록 1건 이상"일 때만 노출하며 종료 플래그를 데이터에 얹는다(렌더는 후속 #125). 추이 차트는 이미 희소 구조를 안전하게 다루고 있음을 회귀 테스트로 고정한다. 세 함수 모두 순수 함수라 <code>Players.tsx</code> 호출부와 컴포넌트는 변경 없이 그대로 동작한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>src/lib/profile-view.ts</code>의 세 함수는 #110 이전 계약(전역 <code>events[]</code>만 존재, <code>endSessionDate</code> 없음) 기준으로 작성되어 있다:</p>
+    <ul>
+      <li><b><code>buildRadarAxes</code></b> (<code>src/lib/profile-view.ts:26-38</code>) — 인자로 받은 <code>events</code>(목표 탭 전체, 종료 종목 포함)를 그대로 순회해 축을 만든다. <code>session.eventKeys</code>는 시그니처에 없고 전혀 참조하지 않는다 — 종료 종목이 있으면 그 회차에 측정되지 않았어도 값 0인 축이 계속 그려진다.</li>
+      <li><b><code>buildGrowthCards</code></b> / <code>GrowthCardDatum</code> (<code>src/lib/profile-view.ts:48-56, 86-101</code>) — 역시 <code>events.map(...)</code>으로 전 종목(종료 포함)에 대해 무조건 카드를 만든다. <code>event.endSessionDate</code> 참조가 없고, <code>GrowthCardDatum</code>에 종료 여부 필드도 없다.</li>
+      <li><b><code>buildTrendSeries</code></b> (<code>src/lib/profile-view.ts:114-140</code>) — <code>trend.points</code>(유효 기록 회차만 담는 희소 배열, <code>shared/domain.ts:111</code>)를 그대로 매핑하고, <code>indexByDate.get(point.sessionDate) ?? -1</code> 후 <code>sessionIndex &gt;= 0</code> 필터(<code>:125,128</code>)로 알 수 없는 회차를 걸러낸다 — 구조상 이미 대부분의 미측정·종료 시나리오에 안전하다.</li>
+      <li>호출부 <code>src/pages/Players.tsx:71-72,102-106</code> — 여전히 전역 <code>events</code>를 세 함수에 그대로 넘긴다. 다만 <code>102-104</code>에서 <code>cardByEvent.get(event.key)</code>가 없으면 <code>return null</code>하므로, <code>buildGrowthCards</code>가 카드를 아예 만들지 않는 것만으로 렌더 쪽에서 자연히 숨겨진다 — <b>이 이슈는 <code>Players.tsx</code>를 건드릴 필요가 없다</b>.</li>
+      <li>디자인 PRD <code>docs/prd-event-lifecycle.html:301-332</code>(§08 "👤 개인 프로필")가 이 이슈의 스펙 소스: 레이더 축 가변, 성장 카드 조건부 노출 + 종료 뱃지, 추이 차트는 기존 희소 구조 유지·"별도 처리 없음"이라고 명시한다.</li>
+    </ul>
+    <p>같은 P7 시리즈에서 이미 확립된 선례 패턴(동일 스타일을 그대로 따른다):</p>
+    <ul>
+      <li><b>패턴 A</b> — <code>functions/lib/compute-rankings.ts:71-80</code> (<code>computeSessionRankings</code>): <code>events</code>로 <code>Map</code>을 만들고 <code>session.eventKeys</code>를 순회 기준으로 뒤집은 뒤 <code>eventsByKey.get(key)</code> + <code>undefined</code> 필터로 역참조.</li>
+      <li><b>패턴 C</b> — <code>functions/lib/player-summary.ts</code> / <code>shared/domain.ts:129</code>: <code>PlayerSummary.personalBests</code>는 이미 "유효 기록이 1건이라도 있는 종목만"으로 스파스 필터링되어 있다 — 종료 종목의 "유효 기록 보유 여부"를 판정할 때 <code>sessions</code>를 다시 순회할 필요 없이 <code>personalBests</code> 존재 여부만 보면 된다.</li>
+      <li><b>패턴 D</b> — <code>functions/lib/parse-session.ts:175-179</code>: <code>event.endSessionDate !== null</code>이 종료 여부를 판정하는 원형 표현.</li>
+      <li><b>회귀 테스트 선례</b> — <code>functions/lib/compute-home-summary.test.ts:115-128</code>, <code>functions/lib/player-summary.test.ts:202-254</code>: 코드 변경 없이도(또는 최소 변경으로) 종료/신규 종목 시나리오를 회귀 테스트로 고정한 전례.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b><code>buildRadarAxes</code></b> — 순회 기준을 <code>events</code>에서 <code>session?.eventKeys ?? []</code>로 뒤집는다(패턴 A와 동형). <code>events</code>로 <code>eventsByKey</code> Map을 만들어 각 key를 역참조하고, <code>events</code>에 없는 key(있을 수 없지만 계약을 아직 보장 못 하는 파서를 감안해 방어적으로)는 필터링한다. <code>session</code>이 없으면 "선택 회차"가 없다는 뜻이므로 빈 배열을 돌려준다(현재는 <code>session</code>이 없어도 전역 <code>events</code> 개수만큼 0값 축이 그려지는데, 이는 §08이 요구하는 "축 = 선택 회차 측정 종목"과 애초에 상충하는 상태였다). 시그니처는 그대로 유지.</li>
+      <li><b><code>buildGrowthCards</code></b> — 카드 생성 전에 <code>events.filter(event =&gt; event.endSessionDate === null || pbByEvent.has(event.key))</code>로 좁힌다. <code>pbByEvent</code>는 이미 <code>player.personalBests</code>(스파스)로 만들어져 있어 별도 <code>sessions</code> 순회 없이 "그 선수 유효 기록 1건 이상"을 그대로 판정한다(패턴 C). <code>GrowthCardDatum</code>에 <code>ended: boolean</code> 필드를 추가하고 <code>event.endSessionDate !== null</code>로 채운다 — 뱃지 렌더 자체는 #125 스코프이므로 <code>GrowthStatCard.tsx</code>는 건드리지 않는다(구조적 타이핑이라 추가 필드가 있어도 기존 소비자는 영향 없음).</li>
+      <li><b><code>buildTrendSeries</code></b> — 코드는 변경하지 않는다. <code>indexByDate.get(...) ?? -1</code> + <code>sessionIndex &gt;= 0</code> 필터가 이미 "알 수 없는/제거된 회차"를 안전하게 걸러내고, <code>trend.points</code>가 애초에 유효 기록 회차만 담는 희소 배열이라 종료 종목은 종료 회차 이후 그냥 점이 없을 뿐 별도 처리가 필요 없다(§08 "종료 회차 이후 구간에 점이 없을 뿐 별도 처리 없음"과 정확히 일치). 이 설계 판단을 회귀 테스트로 고정해 향후 리팩토링이 이 불변식을 깨지 않도록 한다. <i>단, 구현 중 회귀 테스트가 실제로 깨지는 케이스를 발견하면 그 지점에서만 최소 가드를 추가한다.</i></li>
+      <li>기각한 대안: <code>buildGrowthCards</code>에서 "유효 기록 보유"를 <code>sessions</code>를 다시 순회해 판정하는 방식 — <code>personalBests</code>가 이미 그 정보를 스파스하게 담고 있어 불필요한 재계산이자 새 소스(계약 밖 로직) 추가라 기각.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ <code>buildRadarAxes</code>를 <code>session.eventKeys</code> 기준 순회(패턴 A)로 재작성 — <code>eventsByKey</code> Map 역참조, <code>session</code> 없으면 빈 배열.
+        <span class="files"><code>src/lib/profile-view.ts</code></span>
+      </li>
+      <li>✅ <code>GrowthCardDatum</code>에 <code>ended: boolean</code> 필드 추가, <code>buildGrowthCards</code>에 종료 종목 노출 조건(<code>endSessionDate === null || pbByEvent.has(key)</code>) 적용.
+        <span class="files"><code>src/lib/profile-view.ts</code></span>
+        <span class="files">편차: <code>GrowthCardDatum</code>이 필수 필드가 되어 리터럴로 이 타입을 직접 만들던 <code>src/components/GrowthStatCard.test.tsx</code>의 <code>CARD</code>픽스처에 <code>ended: false</code> 한 줄을 추가(<code>npm run typecheck</code>가 잡아냄) — 계획엔 없던 파일이지만 타입 추가의 직접 결과라 같은 커밋 범위로 처리.</span>
+      </li>
+      <li>✅ <code>buildRadarAxes</code> 회차별 가변 축 테스트 추가 — 동일 회차에 eventKeys 4개짜리·7개짜리 두 세트를 구성해 축 개수·라벨 순서(<code>session.eventKeys</code> 순서, 전역 <code>events</code> 순서 아님)를 검증. <code>session</code>이 <code>undefined</code>일 때 빈 배열인지도 확인.
+        <span class="files"><code>src/lib/profile-view.test.ts</code></span>
+      </li>
+      <li>✅ <code>buildGrowthCards</code> 종료 종목 카드 노출 조건 테스트 추가 — 현역 종목은 기록 유무와 무관히 항상 노출, 종료 종목은 <code>personalBests</code>에 항목이 있는 선수에겐 <code>ended: true</code> 카드로 노출되고 없는 선수에겐 카드 자체가 배열에서 빠지는지 검증. 기존 PB·델타 테스트(<code>profile-view.test.ts:183-225</code>)는 무수정으로 그린 유지.
+        <span class="files"><code>src/lib/profile-view.test.ts</code></span>
+      </li>
+      <li>✅ <code>buildTrendSeries</code> 희소 구조 회귀 테스트 추가 — (a) 종료 종목: 종료 회차 이후 세션까지 <code>sessions</code>에 넘겨도 라인이 종료 회차에서 자연스럽게 끊기고 이후 구간엔 점이 생기지 않는다, (b) 중간 회차 미측정(스파스): 특정 회차만 유효 기록이 빠져도 남은 포인트의 <code>sessionIndex</code>가 밀리지 않고 올바른 회차에 매핑된다, (c) <code>sessions</code>에 없는 날짜를 가리키는 point는 무시된다(방어적 케이스). 셋 다 설계대로 코드 변경 없이 그린 — 가드 추가는 불필요했다.
+        <span class="files"><code>src/lib/profile-view.test.ts</code></span>
+      </li>
+      <li>✅ <code>npm run test</code>·<code>npm run typecheck</code> 전체 실행 — 83개 테스트 파일 710개 테스트 전부 그린, 타입체크 클린.
+        <span class="files">전체 저장소</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>레이더 축 순서가 전역 <code>events</code> 순서 → <code>session.eventKeys</code> 순서로 바뀜</td><td>다른 소비자가 있다면 순서 의존 로직이 깨질 수 있음</td><td><code>buildRadarAxes</code>는 <code>Players.tsx</code> 한 곳에서만 소비되고 반환값(<code>RadarAxis[]</code>)은 표시용 라벨+값 쌍이라 순서 의존 로직 없음(grep 확인 완료)</td></tr>
+        <tr><td><code>GrowthCardDatum</code>에 <code>ended</code> 필드 추가</td><td>기존 소비자(<code>GrowthStatCard.tsx</code>) 타입 영향 가능성</td><td>함수 반환값을 통해 전달되므로 초과 프로퍼티 체크 미적용 — 구조적 타이핑상 무해. <code>npm run typecheck</code>로 최종 확인</td></tr>
+        <tr><td><code>buildTrendSeries</code> 무변경 가정이 틀릴 가능성(회귀 테스트가 실제로 실패)</td><td>계획 대비 범위가 늘어남(S → 약간 초과)</td><td>실패하는 케이스만 최소 가드 추가 — 계획 HTML에 편차 기록</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run test -- src/lib/profile-view.test.ts</code> — 신규 3개 테스트 그룹(레이더 가변 축·성장 카드 종료 조건·추이 희소 가드) 모두 그린.</li>
+      <li>같은 파일의 기존 케이스(<code>buildRadarAxes</code> 3개, <code>buildGrowthCards</code> 6개, <code>buildTrendSeries</code> 3개, <code>buildSessionLabels</code> 1개) 무수정으로 그린 — 이슈의 "델타·PB 파생 기존 테스트 무수정 그린" 조건.</li>
+      <li><code>npm run test</code> 전체 스위트 — <code>compute-rankings</code>·<code>compute-home-summary</code>·<code>player-summary</code>·<code>parse-session</code> 등 다른 P7 커밋의 테스트에 회귀 없는지 확인.</li>
+      <li><code>npm run typecheck</code> — <code>GrowthCardDatum.ended</code> 추가가 <code>src/pages/Players.tsx</code>·<code>src/components/GrowthStatCard.tsx</code>에서 타입 에러를 내지 않는지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>✅ 회차별 레이더 축 테스트 — <code>session.eventKeys</code> 기준, 4축·7축 가변 통과</li>
+      <li>✅ 종료 종목 카드 노출 조건 테스트 — 유효 기록 보유 선수는 <code>ended: true</code> 카드 노출, 미보유 선수는 카드 자체 없음</li>
+      <li>✅ 델타·PB 파생 기존 테스트 무수정 그린</li>
+      <li>✅ <code>buildTrendSeries</code> 희소 구조(종료·중간 미측정) 회귀 테스트 통과</li>
+      <li>✅ <code>npm run test</code>(710 passed)·<code>npm run typecheck</code>(clean) 전체 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/118">#118</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>

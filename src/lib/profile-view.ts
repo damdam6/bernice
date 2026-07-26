@@ -21,20 +21,25 @@ export function buildSessionLabels(sessions: Session[]): string[] {
   return sessions.map((_, i) => `${i + 1}차`)
 }
 
-/** 선택 회차의 4종목 정규화 성능 레이더 축. recorded면 정규화, 그 외(면제·미측정·이상값·미참여)는
- *  0으로 둔다(목업 radar의 `perfs.map(p=>p==null?0:p)`과 동일). 라벨은 종목 key가 곧 short 라벨. */
+/** 선택 회차의 측정 종목(session.eventKeys) 정규화 성능 레이더 축 — 회차마다 축 개수가
+ *  가변(4각형↔7각형 등, PRD §08). compute-rankings.ts의 eventKeys 기준 순회와 동형 패턴.
+ *  recorded면 정규화, 그 외(면제·미측정·이상값·미참여)는 0으로 둔다. 라벨은 종목 key가 곧 short 라벨. */
 export function buildRadarAxes(
   events: EventDefinition[],
   session: Session | undefined,
   playerId: number,
   scale: PerformanceScale,
 ): RadarAxis[] {
+  const eventsByKey = new Map(events.map((event) => [event.key, event]))
   const entry = session?.entries.find((e) => e.playerId === playerId)
-  return events.map((event) => {
-    const score = entry?.scores[event.key]
-    const value = score?.status === 'recorded' ? scale.normalize(event.key, score.value) : 0
-    return { label: event.key, value }
-  })
+  return (session?.eventKeys ?? [])
+    .map((key) => eventsByKey.get(key))
+    .filter((event): event is EventDefinition => event !== undefined)
+    .map((event) => {
+      const score = entry?.scores[event.key]
+      const value = score?.status === 'recorded' ? scale.normalize(event.key, score.value) : 0
+      return { label: event.key, value }
+    })
 }
 
 /** 델타 색상 톤 — 개선(up)=green, 악화(down)=red, 첫 기록·미기록·동률(muted)=회색. */
@@ -48,6 +53,8 @@ export interface GrowthDelta {
 export interface GrowthCardDatum {
   eventKey: string
   label: string
+  /** 종료 종목 여부(event.endSessionDate !== null) — 카드 뱃지 렌더는 #125 스코프 */
+  ended: boolean
   /** PB 표시값 — 스파스(유효 기록 없는 종목은 '—') */
   pb: string
   /** 선택 회차 현재값 — recorded면 display, 면제면 '면제', 그 외 '—' */
@@ -82,7 +89,9 @@ function buildDelta(
   }
 }
 
-/** 종목별 성장 카드 목록 — 종목 순서(events[]) 그대로. PB·현재값·직전 유효 기록 대비 델타. */
+/** 종목별 성장 카드 목록 — 종목 순서(events[]) 그대로. 현역 종목은 전부, 종료 종목은 그 선수
+ *  유효 기록이 1건 이상(personalBests에 항목 존재 — 이미 스파스 필터링됨)일 때만 포함한다(PRD §08).
+ *  PB·현재값·직전 유효 기록 대비 델타. */
 export function buildGrowthCards(
   events: EventDefinition[],
   session: Session | undefined,
@@ -91,13 +100,16 @@ export function buildGrowthCards(
   const entry = session?.entries.find((e) => e.playerId === player.id)
   const pbByEvent = new Map(player.personalBests.map((pb) => [pb.event, pb]))
   const trendByEvent = new Map(player.trends.map((t) => [t.event, t]))
-  return events.map((event) => ({
-    eventKey: event.key,
-    label: event.key,
-    pb: pbByEvent.get(event.key)?.display ?? '—',
-    value: currentValueText(entry?.scores[event.key]),
-    delta: buildDelta(trendByEvent.get(event.key), session?.date, event.valueKind),
-  }))
+  return events
+    .filter((event) => event.endSessionDate === null || pbByEvent.has(event.key))
+    .map((event) => ({
+      eventKey: event.key,
+      label: event.key,
+      ended: event.endSessionDate !== null,
+      pb: pbByEvent.get(event.key)?.display ?? '—',
+      value: currentValueText(entry?.scores[event.key]),
+      delta: buildDelta(trendByEvent.get(event.key), session?.date, event.valueKind),
+    }))
 }
 
 export interface TrendSeries {
