@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#110 P7 — 도메인 타입 개정: endSessionDate · Session.eventKeys (계약 키스톤) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--warn); }
+  .steps .done-note { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--ok); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/110">#110</a></span><span class="type-chip">타입·계약 개정</span>
+    <h1>P7 — 도메인 타입 개정: endSessionDate · Session.eventKeys (계약 키스톤)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/110-domain-types-endsessiondate-eventkeys</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-26</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>shared/domain.ts</code>에 종목 생애주기 계약을 위한 필드 2개(<code>EventDefinition.endSessionDate</code>, <code>Session.eventKeys</code>)를 신설하고, 완전성·구성 규칙 주석 3곳을 개정한다. 로직 자체는 바꾸지 않지만, 두 필드가 <b>필수</b>이므로 TypeScript 구조적 타이핑상 이 두 타입을 리터럴로 만드는 모든 지점(운영 코드 3곳 + 런타임 검증 1곳 + 테스트 픽스처 다수)이 컴파일 에러로 드러난다. 이 이슈의 실제 작업량 대부분은 그 컴파일 에러를 <code>npm run typecheck</code>가 그린이 될 때까지 기계적으로 메우는 것이고, 값 자체는 오늘 시점의 실제 동작을 그대로 반영하는 값(예: 아직 5열 파싱이 없으니 <code>endSessionDate: null</code> 고정)만 채운다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>shared/domain.ts:38-45</code>의 <code>EventDefinition</code>과 <code>:64-69</code>의 <code>Session</code>은 각각 종료 회차, 회차별 측정 종목 목록을 표현할 필드가 없다. PRD(<code>docs/prd-event-lifecycle.html</code> §03 D3, §06)가 이 계약 개정을 P7 전체의 유일한 하드 선행으로 지정했다 — 이 타입이 안정되어야 파서(V3 완화·V4 신설)·계산(회차별 순회)·프론트 파생(Wave 1의 9건)이 픽스처 기준으로 병렬 착수 가능해진다.</p>
+    <p>두 신규 필드를 <b>필수</b>로 추가하면 다음 3개 운영 코드 지점이 즉시 컴파일 에러가 된다(임시로 필드를 추가해 <code>npx tsc -b --force</code>로 실측 확인함):</p>
+    <ul>
+      <li><code>functions/lib/parse-goals.ts:63-70</code> <code>parseGoalRow()</code> — 목표 탭 4열(종목|목표|만점|방향)만 읽는 현재 파서. 5열(종료 회차) 파싱은 이 이슈 범위 밖(Wave 1 별도 이슈)이므로, 지금은 실제 동작과 일치하는 고정값 <code>endSessionDate: null</code>만 채운다.</li>
+      <li><code>functions/lib/parse-session.ts:107</code> <code>parseSession()</code> 반환값 <code>{ date: tabName, entries }</code> — 같은 함수 58행에서 이미 <code>mapHeaderToEvents(rows[0], events)</code>로 헤더 순서의 <code>EventColumn[]</code>(각 <code>{ event, columnIndex }</code>)을 계산해두고 있다. <code>eventKeys: eventColumns.map(c => c.event.key)</code>는 이미 계산된 값을 노출하는 것뿐, 새 로직이 아니다. (현재 <code>mapHeaderToEvents</code>는 헤더에 없는 목표 종목이 있으면 즉시 에러를 던지므로(159-162행, V3 완화 전) 지금 시점엔 이 값이 사실상 <code>events[]</code> 전체 key와 항상 같다 — 그래도 계약대로 헤더 순서를 그대로 노출한다.)</li>
+      <li><code>functions/lib/build-records-response.ts:32-37</code> <code>excludeWithdrawn()</code> — 탈퇴 선수를 걸러낸 새 <code>Session</code> 리터럴을 만들면서 <code>date</code>·<code>entries</code>만 복사하고 있어(원본 <code>eventKeys</code>가 조용히 유실됨), <code>eventKeys: session.eventKeys</code>를 명시적으로 이어받아야 한다.</li>
+    </ul>
+    <p><code>src/lib/parse-records-response.ts</code>는 자기 파일 헤더 주석(1-4행)에서 스스로 "조립형이라 domain.ts에 필수 필드가 추가되면 여기가 컴파일 에러로 함께 강제된다"고 명시한 설계다 — <code>parseEventDefinition()</code>(56-72행)과 <code>parseSession()</code>(115-121행)이 정확히 그 지점이다.</p>
+    <p>반대로 <b>구조 변경이 없는</b> 세 가지 주석 전용 개정(<code>SessionEntry.scores</code> 완전성 계약, <code>SessionRankings.events</code> 구성 규칙, <code>PlayerSummary.trends</code> 보강)은 필드 타입 자체(<code>Record&lt;string, EventScore&gt;</code>, <code>EventRanking[]</code>, <code>PlayerEventTrend[]</code>)가 그대로라 <code>functions/lib/compute-rankings.ts</code>·<code>functions/lib/player-summary.ts</code> 등 소비 코드는 손대지 않는다 — 실제 필터링 로직 변경(예: <code>computeSessionRankings</code>가 <code>eventKeys</code>만 순회하도록)은 PRD §07이 명시한 대로 Wave 1(파서 V3 완화 이후 이슈)의 몫이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p>선택한 접근: (a) <code>shared/domain.ts</code>에 두 신규 필드를 추가하고 세 곳 주석을 개정 → (b) 컴파일러가 강제하는 3개 운영 코드 지점 + 1개 런타임 검증 지점을 "오늘 시점 실제 동작과 일치하는" 최소 값으로 메움 → (c) <code>npm run typecheck</code>가 나열하는 나머지 전부(테스트 픽스처)를 기계적으로 메움 → (d) <code>toEqual</code>로 파서 실제 출력과 정확 비교하는 테스트(타입 체커가 못 잡는 런타임 값 불일치) 별도 확인.</p>
+    <p>기각한 대안: 두 필드를 옵셔널(<code>?:</code>)로 추가 — PRD·이슈 모두 "항상 존재"를 계약으로 명시했고(§06 "eventKeys 신설 — 참가자 0명 회차에서도 측정 종목을 알 수 있도록 명시"), 옵셔널로 두면 하류 소비자가 다시 <code>undefined</code> 분기를 넣어야 해 오히려 Wave 1의 전제(완전성)를 깬다. 컴파일 에러가 늘어나는 비용을 감수하고 필수로 간다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><b>도메인 계약 개정</b> — <code>EventDefinition</code>에 <code>endSessionDate: string | null</code>, <code>Session</code>에 <code>eventKeys: string[]</code> 신설. <code>SessionEntry.scores</code>·<code>SessionRankings.events</code>·<code>PlayerSummary.trends</code> 주석 3곳을 이슈 본문 문구대로 개정(구조 변경 없음).
+        <span class="files"><code>shared/domain.ts</code></span>
+      </li>
+      <li class="done"><b>목표 탭 파서 — 고정값 채움</b> — <code>parseGoalRow()</code> 반환 객체에 <code>endSessionDate: null</code> 추가(5열 파싱은 별도 이슈, 지금은 항상 null이 맞는 값).
+        <span class="files"><code>functions/lib/parse-goals.ts:63-70</code></span>
+      </li>
+      <li class="done"><b>회차 탭 파서 — 이미 계산된 값 노출</b> — <code>parseSession()</code> 반환 객체에 <code>eventKeys: eventColumns.map(c => c.event.key)</code> 추가(58행에서 이미 만든 <code>eventColumns</code> 재사용, 새 순회 없음).
+        <span class="files"><code>functions/lib/parse-session.ts:58,107</code></span>
+      </li>
+      <li class="done"><b>조립 단계 — 필드 전달 누락 수정</b> — <code>excludeWithdrawn()</code>이 새로 만드는 <code>Session</code> 리터럴에 <code>eventKeys: session.eventKeys</code> 추가(원본 파싱 결과를 그대로 이어받음).
+        <span class="files"><code>functions/lib/build-records-response.ts:32-37</code></span>
+      </li>
+      <li class="done"><b>프론트 런타임 검증 — 필드 검증·통과 추가</b> — <code>parseEventDefinition()</code>에 <code>endSessionDate</code>(문자열 또는 null) 검증+통과, <code>parseSession()</code>에 <code>eventKeys</code>(문자열 배열) 검증+통과 추가. 기존 <code>parseArray</code>·<code>isPlainObject</code> 관용구 그대로 재사용.
+        <span class="files"><code>src/lib/parse-records-response.ts:56-72,115-121</code></span>
+      </li>
+      <li class="done"><b>타입 체크 그린화 — 테스트 픽스처 일괄 보정</b> — <code>npm run typecheck</code>를 반복 실행하며 아래 파일들의 <code>EventDefinition</code>/<code>Session</code> 리터럴(대부분 각 파일에 로컬 헬퍼 함수 1곳 — <code>event()</code>/<code>ev()</code>/<code>session()</code> 류 — 라 파일당 수정 지점은 적음)에 새 필드 기본값을 채운다. 가짜 값이 아니라 그 테스트가 실제로 의도하는 의미에 맞는 값(측정 종목 목록이면 그 테스트의 종목 key들, 종료 여부 테스트가 아니면 <code>endSessionDate: null</code>)으로 채운다.
+        <span class="files">
+          <code>functions/lib/compute-home-summary.test.ts</code>,
+          <code>functions/lib/compute-rankings.test.ts</code>,
+          <code>functions/lib/create-sheet.test.ts</code>,
+          <code>functions/lib/parse-session.test.ts</code>,
+          <code>functions/lib/player-summary.test.ts</code>,
+          <code>functions/lib/record-write.test.ts</code>,
+          <code>shared/build-event-score.test.ts</code>,
+          <code>src/App.e2e.test.tsx</code>,
+          <code>src/components/RankingRow.test.tsx</code>,
+          <code>src/lib/entry-status.test.ts</code>,
+          <code>src/lib/home-summary.test.ts</code>,
+          <code>src/lib/parse-records-response.test.ts</code>,
+          <code>src/lib/performance-scale.test.ts</code>,
+          <code>src/lib/player-input-field.test.ts</code>,
+          <code>src/lib/profile-view.test.ts</code>,
+          <code>src/lib/ranking-view.test.ts</code>,
+          <code>src/pages/admin/AddPlayers.test.tsx</code>,
+          <code>src/pages/admin/RecordsDateSelect.test.tsx</code>,
+          <code>src/pages/admin/RecordsParticipants.test.tsx</code>,
+          <code>src/pages/admin/RecordsPlayerInput.test.tsx</code>,
+          <code>src/pages/Home.test.tsx</code>,
+          <code>src/pages/Players.test.tsx</code>,
+          <code>src/pages/Rankings.test.tsx</code>
+        </span>
+        <span class="done-note">완료 — 예상대로 27개 파일 108줄 전부 해소. src/App.e2e.test.tsx:161-162의 TS18047 부수 에러도 eventKeys 추가만으로 함께 사라짐(별도 조치 불필요).</span>
+      </li>
+      <li class="done"><b>런타임 등가성 보정 — 실제 파서 출력과 정확 비교하는 테스트</b> — 타입 체커가 못 잡는 지점: <code>toEqual</code>이 실제 파서 반환값과 손으로 쓴 기대값 리터럴을 완전 일치 비교하므로, 새 필드가 실제로 채워지면 기대값에 없는 만큼 런타임에 실패한다.
+        <span class="files">
+          <code>functions/lib/parse-goals.test.ts</code>(16-21행 기대 배열 4건에 <code>endSessionDate: null</code> 추가),
+          <code>functions/api/records.test.ts</code>(82-84행 <code>body.events</code> 기대값에 <code>endSessionDate: null</code> 추가)
+        </span>
+      </li>
+      <li class="done"><b>전체 검증</b> — <code>npm run typecheck</code>·<code>npm run test</code> 그린 확인.
+        <span class="files">전체</span>
+        <span class="done-note">완료 — typecheck 0 에러, vitest 83 test files / 681 tests 전부 통과.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>테스트 픽스처 20여 곳을 손으로 고치다 값 하나를 빠뜨림</td><td>typecheck는 그린인데 특정 테스트가 의미상 틀린 값으로 통과(거짓 양성)</td><td>모든 수정에서 "그 테스트가 실제로 의도하는 의미"를 우선(예: 종료 종목 시나리오가 아니면 <code>endSessionDate: null</code>, 회차 픽스처는 그 회차에 실제로 등장하는 종목 key로 <code>eventKeys</code> 채움) — 기계적 아무 값 채우기 금지</td></tr>
+        <tr><td><code>docs/records-schema.html</code>(shared/domain.ts를 <pre> 블록으로 수기 미러링한 문서, 213-241행)이 이번 개정 후 구버전으로 남음</td><td>문서만 참고하는 사람에게 계약 드리프트 — 코드·테스트 그린에는 영향 없음</td><td>이슈 범위 밖(PRD #11 "문서·시딩 개정" 이슈 몫)이라 이번 PR에서는 손대지 않음. 리뷰 코멘트로 나오면 그때 별도 이슈로 분리</td></tr>
+        <tr><td>src/App.e2e.test.tsx의 TS18047 부수 에러가 eventKeys 추가만으로 사라지지 않음</td><td>1건의 별도 원인 불명 타입 에러가 남을 가능성</td><td>eventKeys 추가 직후 재-typecheck로 확인, 남아있으면 그 시점의 실제 에러 메시지 기준으로 별도 조치(널 가드 등 최소 수정)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code>(<code>tsc -b</code>) — 그린. 1단계 직후 임시로 확인한 실측 에러 108줄(27개 파일)이 단계 2~6을 거치며 0으로 수렴하는지 확인.</li>
+      <li><code>npm run test</code>(<code>vitest run</code>) — 전체 스위트 그린. 특히 <code>functions/lib/parse-goals.test.ts</code>·<code>functions/api/records.test.ts</code>는 타입 에러 없이도 런타임에 깨질 수 있는 지점이라 개별 확인.</li>
+      <li>회귀 확인: 로직을 바꾸지 않았으므로 각 테스트의 <b>기존 단언 내용</b>(랭킹 순서, 참여 여부, 달성률 등)은 값 하나 안 바뀌어야 한다 — 새 필드 추가로 다른 단언이 깨지면 그건 실수.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>타입·계약 주석 개정 — <code>EventDefinition.endSessionDate</code>·<code>Session.eventKeys</code> 신설, <code>SessionEntry.scores</code>·<code>SessionRankings.events</code>·<code>PlayerSummary.trends</code> 주석 3곳 개정, <code>npm run typecheck</code> 그린</li>
+      <li>기존 테스트 전체 그린(로직 무변경 확인) — <code>npm run test</code></li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/110">#110</a> · 2026-07-26</footer>
+</main>
+</body>
+</html>
