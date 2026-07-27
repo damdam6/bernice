@@ -172,6 +172,17 @@ const MIXED_EVENT_COUNT_BODY: RecordsResponse = {
   home: { latestSession: null, achievementRates: [] },
 }
 
+// 회차에 eventKeys 자체가 없는(계약 위반) 방어 케이스 — sessionEvents가 비어도 크래시 없이
+// 빈 상태로 수렴하는지 검증한다(#123 리뷰 코멘트).
+const EMPTY_SESSION_EVENTS_BODY: RecordsResponse = {
+  generatedAt: '2026-07-19T00:00:00.000Z',
+  events: [mixedEventDefinition('골밑슛')],
+  players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
+  sessions: [{ date: '2026-06-01', entries: [], eventKeys: [] }],
+  rankings: [{ sessionDate: '2026-06-01', events: [] }],
+  home: { latestSession: null, achievementRates: [] },
+}
+
 describe('Rankings', () => {
   it('로딩 중에는 스피너를 보여준다', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
@@ -271,5 +282,14 @@ describe('Rankings', () => {
 
     expect(screen.queryByRole('button', { name: '달리기' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '골밑슛' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('선택 회차에 eventKeys가 없으면(계약 위반 데이터) 크래시 없이 빈 상태를 보여준다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, EMPTY_SESSION_EVENTS_BODY)))
+
+    renderRankings()
+
+    await waitFor(() => expect(screen.getByText('표시할 기록이 없습니다')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: '골밑슛' })).not.toBeInTheDocument()
   })
 })
