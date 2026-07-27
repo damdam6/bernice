@@ -46,7 +46,7 @@
 <div class="wrap">
 
   <header class="hero">
-    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">연동 확정안</a> · <a href="sheet-rules.html">편집 규칙</a> · <a href="records-schema.html">도메인 타입·API 계약</a> · <a href="prd-event-lifecycle.html">PRD · 종목 생애주기</a></div>
     <span class="badge">작업 계획 · 구축 대기 중</span>
     <h1>🏗️ 사이트 구축 작업 계획</h1>
     <p class="sub">확정된 설계를 실제 사이트로 만드는 순서. 위 → 아래 의존성 순.</p>
@@ -139,6 +139,25 @@
     </ol>
   </section>
 
+  <section>
+    <h2><span class="ph">P7</span> 종목 생애주기 <span class="goal">측정 종목의 추가·종료 지원</span></h2>
+    <div class="dep">의존: P1(파서·계산 재사용), P4(화면), P5(쓰기) · 배경: <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a></div>
+    <ol class="tasks">
+      <li><span class="k">계약</span> <b>도메인 타입·API 계약 개정</b> — <code class="inline">EventDefinition.endSessionDate</code>·<code class="inline">Session.eventKeys</code>·<code class="inline">scores</code> 완전성 계약, <code class="inline">records-schema.html</code> 개정 (이슈 #110, #119) <span class="good">✓ 완료</span></li>
+      <li><span class="k">파서</span> <b>목표 5열 스키마 + 회차 매핑 완화</b> — 종료 회차 파싱(V5)·행 번호 동반, <code class="inline">mapHeaderToEvents</code> V3 완화·V4 신설, <code class="inline">eventKeys</code> 산출 (이슈 #111, #112) <span class="good">✓ 완료</span></li>
+      <li><span class="k">계산</span> <b>랭킹·추이·홈 회차별 대응</b> — <code class="inline">computeSessionRankings</code> 회차별 순회, <code class="inline">player-summary</code> 미측정 가드, 홈 회귀 테스트 (이슈 #113~#115) <span class="good">✓ 완료</span></li>
+      <li><span class="k">조립</span> <b>build-records-response V6 검증</b> — 종료 회차 ↔ 실존 회차 대조 + <code class="inline">eventKeys</code> 배선 (이슈 #120) <span class="good">✓ 완료</span></li>
+      <li><span class="k">쓰기</span> <b>create-sheet 현역 필터 + 실제 행 참조</b>, <code class="inline">admin/records</code> 비측정 종목 4xx 계약 (이슈 #121, #122) <span class="good">✓ 완료</span></li>
+      <li><span class="k">FE 파생</span> <b>ranking-view · entry-status · profile-view</b> 회차 기준 파생 로직 (이슈 #116~#118) <span class="good">✓ 완료</span></li>
+      <li><span class="k">화면</span> <b>랭킹·홈</b> — 선택 회차 측정 종목 칩 + 폴백, 최신 회차 게이지 (이슈 #123, #124) <span class="good">✓ 완료</span></li>
+      <li><span class="k">화면</span> <b>개인 프로필</b> — 가변 축 레이더(4~7각형) + 종료 종목 조건부 카드·<code class="inline">종료</code> 뱃지 (이슈 #125)</li>
+      <li><span class="k">화면</span> <b>기록 입력</b> — 회차별 <code class="inline">eventKeys</code> 입력 필드, 완료 n/N 판정, <code class="inline">exemptable-events</code> 상수 갱신 (이슈 #126)</li>
+      <li><span class="k">검증</span> <b>E2E 혼재 번들 스모크</b> — 4종목 과거 + 7종목 신규 + 종료 종목 계약 (이슈 #127)</li>
+      <li><span class="k">운영</span> <b>문서·시딩 개정</b> — <code class="inline">sheet-rules</code>·<code class="inline">sheet-integration</code>·<code class="inline">build-plan</code>(이 섹션)·<code class="inline">seed-sheet.mjs</code> (이슈 #128) <span class="good">✓ 완료</span></li>
+      <li><span class="k">운영</span> <b>실시트 정합화 마이그레이션 실행</b> — 종료 회차 헤더·45도패스캐치 행 복원·참조식 교체(시트 편집) + 배포, 코드 이슈 #110~#128 전부 머지 후 실행 (이슈 #129)</li>
+    </ol>
+  </section>
+
   <div class="blockers">
     <h3>✅ 착수 전 결정 — 확정 완료 (2026-07-13)</h3>
     <ul>
@@ -149,7 +168,7 @@
   </div>
 
   <div class="footer">
-    사이트 구축 작업 계획 · 작성 2026-07-12 · 상태: 구축 대기 (사용자 착수 지시 시 진행)
+    사이트 구축 작업 계획 · 작성 2026-07-12 · 최종 업데이트 2026-07-27 (P7 종목 생애주기 단계 추가 — 이슈 #110~#129)
   </div>
 
 </div>
