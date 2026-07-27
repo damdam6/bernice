@@ -55,6 +55,13 @@ function makeBundle(): SheetRawBundle {
 
 const FULL_SCORES = { 드리블셔틀런: '1:12', 골밑슛: '6', 자유투: '면제', '45도패스캐치': '' }
 
+// makeBundle()은 goals를 항상 채워 돌려주지만 SheetRawBundle 타입상 goals는 null일 수 있어,
+// 테스트에서 목표 탭에 종목 행을 추가할 때(#122) 매번 null 좁히기를 반복하지 않도록 모은다.
+function addGoalRow(bundle: SheetRawBundle, row: string[]): void {
+  if (bundle.goals === null) throw new Error('unreachable — makeBundle()이 항상 goals를 채운다')
+  bundle.goals.values.push(row)
+}
+
 function makeContext(body: unknown, { raw }: { raw?: string } = {}) {
   const request = new Request('https://bernice.example/api/admin/records', {
     method: 'POST',
@@ -247,6 +254,52 @@ describe('POST /api/admin/records', () => {
     expect(res.status).toBe(400)
     expect(((await res.json()) as { error: string }).error).toBe('validation_failed')
     expect(fetchSheetBundleMock).not.toHaveBeenCalled()
+  })
+
+  // #122 — mapHeaderToEvents 재사용으로 #112의 회차별 종목 서브셋 완화(V3)를 엔드포인트 응답
+  // 계약(4xx)까지 상속하는지 못박는다. 목표 탭 종목·회차 헤더가 어긋나는 두 경계를 검증한다:
+  // 종료 회차보다 뒤 회차(비측정, 그 컬럼이 헤더에 없음) vs 종료 회차 당일(경계 포함, 있음).
+  describe('회차별 측정 종목 계약 — 비측정 종목 4xx · 종료 경계 정상 동작 (#122)', () => {
+    it('scores에 그 회차 비측정 종목(이미 종료된 종목) key가 오면 400 + unknown, 시트에 쓰지 않는다', async () => {
+      const bundle = makeBundle()
+      // 윗몸일으키기는 2025-07-01에 종료 — 2025-08-16 회차 헤더엔 이 컬럼이 없다(V3 자연 소멸).
+      addGoalRow(bundle, ['윗몸일으키기', '10', '15', '높을수록', '2025-07-01'])
+      fetchSheetBundleMock.mockResolvedValue(bundle)
+
+      const res = await onRequestPost(
+        makeContext({ sessionDate: '2025-08-16', playerId: 2, scores: { ...FULL_SCORES, 윗몸일으키기: '12' } }),
+      )
+
+      expect(res.status).toBe(400)
+      const body = (await res.json()) as { error: string; unknown: string[] }
+      expect(body.error).toBe('validation_failed')
+      expect(body.unknown).toEqual(['윗몸일으키기'])
+      expect(updateValuesMock).not.toHaveBeenCalled()
+    })
+
+    it('종료 회차 경계(그 당일) 회차는 헤더에 컬럼이 있으므로 정상 저장된다', async () => {
+      const bundle = makeBundle()
+      // 윗몸일으키기의 종료 회차가 이 회차(2025-08-16) 그 자체 — 경계 포함이라 헤더에 컬럼이 있다.
+      addGoalRow(bundle, ['윗몸일으키기', '10', '15', '높을수록', '2025-08-16'])
+      bundle.rounds[0].values[0].push('윗몸일으키기')
+      bundle.rounds[0].values[1].push('7') // 선수1
+      bundle.rounds[0].values[2].push('') // 선수2
+      fetchSheetBundleMock.mockResolvedValue(bundle)
+
+      const res = await onRequestPost(
+        makeContext({ sessionDate: '2025-08-16', playerId: 2, scores: { ...FULL_SCORES, 윗몸일으키기: '9' } }),
+      )
+
+      expect(res.status).toBe(200)
+      expect(updateValuesMock).toHaveBeenCalledWith(
+        expect.anything(),
+        'sheet-under-test',
+        "'2025-08-16'!B3:F3",
+        [['1:12', '6', '면제', '', '9']],
+      )
+      const body = (await res.json()) as { scores: Record<string, { status: string; value: number | null }> }
+      expect(body.scores['윗몸일으키기']).toEqual({ status: 'recorded', value: 9, display: '9' })
+    })
   })
 
   it('예기치 못한 오류는 내부 메시지를 노출하지 않고 500 internal_error로 응답한다', async () => {

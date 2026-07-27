@@ -5,9 +5,10 @@
 // admin 세션. 이 핸들러는 200/400/404×2/502(+무결성 폴백 500)만 구현한다.
 //
 // 파이프라인: 바디 형식 검증(400) → fetchSheetBundle 읽기 → 목표/명단 파싱·playerId 해석 →
-// scores key 집합 검증(400) → 회차 탭 존재(404 session_not_found) → 헤더 매핑·대상 행 찾기
-// (404 not_participant / 500) → 값 검증(400·시트 미기록) → updateValues(RAW·502) →
-// RECORDS_CACHE_KEY 무효화(응답 전 await, PRD §09) → 정규화 결과(EventScore) 200.
+// 회차 탭 존재(404 session_not_found) → 헤더 매핑·대상 행 찾기(404 not_participant / 500) →
+// scores key 집합 검증(400, 그 회차 측정 종목 기준) → 값 검증(400·시트 미기록) →
+// updateValues(RAW·502) → RECORDS_CACHE_KEY 무효화(응답 전 await, PRD §09) →
+// 정규화 결과(EventScore) 200.
 //
 // 판정 순서 = 요청 형식(400) → 자원 존재(404) → 값 유효성(400) → 쓰기(502). 검증·헤더 매핑·
 // 이름 매칭 규칙은 새로 만들지 않고 기존 순수 함수를 재사용한다(PRD §08).
@@ -74,16 +75,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const player = players.find((candidate) => candidate.id === playerId)
     if (!player) return validationFailed(`존재하지 않는 선수 ID입니다: ${playerId}`)
 
-    // 5. scores key 집합 == events (누락·미지 → 400).
-    const keyCheck = validateScoreKeys(scores, events)
-    if (keyCheck.missing.length > 0 || keyCheck.unknown.length > 0) {
-      return validationFailed('점수 종목 key가 목표 종목과 일치하지 않습니다.', {
-        missing: keyCheck.missing,
-        unknown: keyCheck.unknown,
-      })
-    }
-
-    // 6. 회차 탭 존재 (404 session_not_found). round.name은 원본 탭 이름(날짜)이라 A1 참조에 그대로 재사용.
+    // 5. 회차 탭 존재 (404 session_not_found). round.name은 원본 탭 이름(날짜)이라 A1 참조에 그대로 재사용.
     const round = bundle.rounds.find((candidate) => candidate.name === sessionDate)
     if (!round) {
       return Response.json(
@@ -95,10 +87,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return sheetDataInvalid(`회차 탭(${sessionDate})이 비어 있습니다 (헤더 행조차 없음).`)
     }
 
-    // 7. 헤더 매핑(열 순서 가정 없음) + 대상 행 찾기. 헤더 이상·동명 중복은 throw → 500.
+    // 6. 헤더 매핑(열 순서 가정 없음) + 대상 행 찾기. 헤더 이상·동명 중복은 throw → 500.
     // 헤더 매핑은 읽기 경로와 같은 함수라 회차별 측정 종목 완화(V3)·종료 경계 검증(V4)을
-    // 그대로 상속한다 — 저장 대상 열은 목표 탭 전체가 아니라 그 회차 탭 헤더가 정한다(#112).
+    // 그대로 상속한다 — 저장 대상 종목은 목표 탭 전체가 아니라 그 회차 탭 헤더가 정한다(#112).
     const eventColumns = integrity(() => mapHeaderToEvents(round.values[0], events, round.name))
+    const measuredEvents = eventColumns.map(({ event }) => event)
     const location = locateParticipantRow(round.values, player.name)
     if (location.kind === 'not_participant') {
       return Response.json(
@@ -107,8 +100,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       )
     }
 
+    // 7. scores key 집합 == 그 회차 측정 종목(measuredEvents, 누락·미지 → 400). 목표 탭 전체가
+    // 아니라 헤더 매핑 결과 기준이라 회차별 종목 서브셋 완화(V3)를 그대로 상속한다 — 목표엔
+    // 있지만 이 회차엔 없는(비측정) 종목 key가 오면 unknown으로 잡힌다(#122).
+    const keyCheck = validateScoreKeys(scores, measuredEvents)
+    if (keyCheck.missing.length > 0 || keyCheck.unknown.length > 0) {
+      return validationFailed('점수 종목 key가 그 회차 측정 종목과 일치하지 않습니다.', {
+        missing: keyCheck.missing,
+        unknown: keyCheck.unknown,
+      })
+    }
+
     // 8. 값 검증 — invalid·valueKind 불일치면 400 후 즉시 반환(시트에 쓰지 않는다).
-    const { scoreMap, invalid } = evaluateScores(scores, events)
+    const { scoreMap, invalid } = evaluateScores(scores, measuredEvents)
     if (invalid.length > 0) {
       return validationFailed('점수 값이 올바르지 않습니다.', { invalid })
     }
