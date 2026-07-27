@@ -142,7 +142,8 @@ describe('evaluateScores', () => {
 // 쓰기 경로는 헤더 매핑을 재구현하지 않고 parse-session의 mapHeaderToEvents를 재-export해
 // 그대로 쓴다(PRD docs/prd-event-lifecycle.html §09 "사실상 변경 없음"의 근거) — 회차별 종목
 // 서브셋 완화(V3)와 종료 경계 검증(V4)이 읽기/쓰기에 동일하게 적용됨을 여기서 못박는다.
-// 요청 scores에 그 회차 비측정 종목 key가 왔을 때의 엔드포인트 응답 계약은 #122 소관이다.
+// 요청 scores에 그 회차 비측정 종목 key가 왔을 때의 엔드포인트 응답 계약(4xx)은
+// functions/api/admin/records.test.ts가 못박는다(#122).
 describe('mapHeaderToEvents 재사용 — 읽기 경로와 동일한 완화·검증 (#112)', () => {
   const SUBSET_HEADER = ['이름', '골밑슛', '드리블셔틀런']
 
