@@ -228,6 +228,66 @@ describe('GET /api/records — 혼재 번들 계약 스모크 (#127)', () => {
     expect(body.message).toMatch(/2025-05-16/)
   })
 
+  // #149 원상태 회귀 — 신규 종목 4개가 목표 탭에만 있고 어떤 회차 탭 헤더에도 없는 번들.
+  // 종목 추가 직후·다음 기록지 생성 전이라는 정상 운영 구간(PRD §11 "과거 회차 탭은 손대지
+  // 않는다")이며, V3 완화 이전 코드는 정확히 이 번들에서 "회차 탭 헤더에 다음 종목 컬럼이
+  // 없습니다: 패스 - 체스트, 패스 - 바운드, 패스 - 원핸드, 볼 캐치"로 throw해 앱 전체를
+  // 죽였다. 위 혼재 케이스들과 달리 신규 종목이 단 하나의 회차에도 등장하지 않는 극단이
+  // 조립 전 구간(events·eventKeys·rankings·trends·home)에서 200으로 살아남는지를 고정한다.
+  describe('신규 종목이 목표 탭에만 있고 어떤 회차 탭에도 없음 (#149)', () => {
+    const oldRoundOnly = () =>
+      migratedBundle({ rounds: [{ name: '2025-05-16', date: new Date('2025-05-16'), values: OLD_ROUND_ROWS }] })
+
+    const NEW_EVENT_KEYS = ['패스 - 체스트', '패스 - 바운드', '패스 - 원핸드', '볼 캐치']
+
+    it('200으로 조립되고 events[]는 목표 탭 8종목을 그대로 유지한다', async () => {
+      const { response, body } = await getRecords(oldRoundOnly())
+
+      expect(response.status).toBe(200)
+      expect(body.events.map((e) => e.key)).toEqual([
+        '드리블셔틀런',
+        '골밑슛',
+        '자유투',
+        ...NEW_EVENT_KEYS,
+        '45도패스캐치',
+      ])
+      expect(body.events.filter((e) => NEW_EVENT_KEYS.includes(e.key)).every((e) => e.endSessionDate === null)).toBe(
+        true,
+      )
+    })
+
+    it('유일한 회차의 eventKeys·rankings는 그 회차 측정 4종목뿐 — 신규 종목 슬롯이 없다', async () => {
+      const { body } = await getRecords(oldRoundOnly())
+
+      expect(body.sessions).toHaveLength(1)
+      expect(body.sessions[0].eventKeys).toEqual(['드리블셔틀런', '골밑슛', '자유투', '45도패스캐치'])
+      expect(body.rankings[0].events.map((e) => e.event)).toEqual(['드리블셔틀런', '골밑슛', '자유투', '45도패스캐치'])
+    })
+
+    it('신규 종목은 trends 슬롯만 있고 points: [], personalBests에는 등장하지 않는다', async () => {
+      const { body } = await getRecords(oldRoundOnly())
+
+      const player1 = body.players.find((p) => p.name === '선수1')!
+      expect(player1.trends).toHaveLength(8)
+      for (const key of NEW_EVENT_KEYS) {
+        expect(player1.trends.find((t) => t.event === key)!.points).toEqual([])
+      }
+      expect(player1.personalBests.some((pb) => NEW_EVENT_KEYS.includes(pb.event))).toBe(false)
+    })
+
+    it('home 달성률은 최신(유일) 회차 측정 종목만 담는다 — 신규 종목은 게이지 대상이 아니다', async () => {
+      const { body } = await getRecords(oldRoundOnly())
+
+      expect(body.home.latestSession).toEqual({ date: '2025-05-16', participantCount: 6 })
+      expect(body.home.achievementRates.map((r) => r.event)).toEqual([
+        '드리블셔틀런',
+        '골밑슛',
+        '자유투',
+        '45도패스캐치',
+      ])
+    })
+  })
+
   it('V6 위반: 목표 탭 종료 회차가 실존하지 않는 회차 탭을 가리키면 500', async () => {
     const goalsWithBadEndDate = GOALS_ROWS.map((row) =>
       row[0] === '45도패스캐치' ? [row[0], row[1], row[2], row[3], '2025-05-01'] : row,
