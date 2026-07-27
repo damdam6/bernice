@@ -23,8 +23,11 @@ export interface BuildCreateSheetParams {
   rosterName: string
   /** 목표 원본 탭 이름 — 종목 헤더 참조 수식에 그대로 사용 */
   goalsName: string
-  /** parseGoals 결과 — 헤더 종목 컬럼 개수/순서 */
+  /** parseGoals 결과 — 헤더 종목 컬럼 개수/순서(종료 종목 포함, 현역 필터는 이 함수가 한다) */
   events: EventDefinition[]
+  /** parseGoals가 동반하는 종목 key → 목표 탭 실제 행 번호. 종료 종목이 섞여 목표 탭 행이
+   *  비연속일 수 있어, 헤더 참조 수식(=목표!A{행})은 배열 인덱스가 아니라 이 값을 쓴다. */
+  sheetRowByKey: Map<string, number>
   /** parseRoster 결과 (전 상태 포함) — 참가자 활동 여부·이름 조회 */
   players: Player[]
   /** 요청이 고른 참가자 id */
@@ -44,7 +47,8 @@ export type BuildCreateSheetResult =
   | { ok: false; code: 'invalid_participants'; invalidIds: number[] }
 
 export function buildCreateSheetPlan(params: BuildCreateSheetParams): BuildCreateSheetResult {
-  const { sessionDate, existingSheetIds, rosterName, goalsName, events, players, participantIds } = params
+  const { sessionDate, existingSheetIds, rosterName, goalsName, events, sheetRowByKey, players, participantIds } =
+    params
 
   // 활동 선수만 참가 대상 — id로 조회한다. parseRoster가 name을 이미 NFC 정규화해 두므로
   // 가나다 비교에 그대로 쓸 수 있다(roster.ts:67).
@@ -76,7 +80,18 @@ export function buildCreateSheetPlan(params: BuildCreateSheetParams): BuildCreat
   // 사용 중일 수 없어 충돌하지 않는다.
   const newSheetId = existingSheetIds.reduce((max, id) => Math.max(max, id), -1) + 1
 
-  const requests = buildBatchRequests({ sessionDate, sheetId: newSheetId, rosterName, goalsName, events, participants })
+  // 신규 회차 탭 헤더 = 현역 종목만 — 종료 종목은 그 이후 회차에 기록이 있을 수 없다(docs/prd-event-lifecycle.html §09).
+  const activeEvents = events.filter((event) => event.endSessionDate === null)
+
+  const requests = buildBatchRequests({
+    sessionDate,
+    sheetId: newSheetId,
+    rosterName,
+    goalsName,
+    events: activeEvents,
+    sheetRowByKey,
+    participants,
+  })
   return { ok: true, sessionDate, sheetId: newSheetId, requests, participants }
 }
 
@@ -86,17 +101,19 @@ function buildBatchRequests(args: {
   rosterName: string
   goalsName: string
   events: EventDefinition[]
+  sheetRowByKey: Map<string, number>
   participants: CreateSheetParticipant[]
 }): unknown[] {
-  const { sessionDate, sheetId, rosterName, goalsName, events, participants } = args
+  const { sessionDate, sheetId, rosterName, goalsName, events, sheetRowByKey, participants } = args
   const goalsRef = quoteSheetName(goalsName)
   const rosterRef = quoteSheetName(rosterName)
 
-  // 헤더: 이름 + 종목명(목표 탭 참조 수식). 목표 데이터 행은 A2부터라 i번째 종목 = A{i+2}.
-  // 목표 탭이 빈 행 없이 연속이라는 전제는 시딩(scripts/seed-sheet.mjs:138)·파서와 동일하다.
+  // 헤더: 이름 + 종목명(목표 탭 참조 수식). 종료 종목이 섞여 목표 탭 행이 비연속일 수 있어
+  // 배열 인덱스가 아니라 종목별 실제 행 번호(sheetRowByKey, parse-goals.ts)를 쓴다. events가
+  // 이미 sheetRowByKey를 만든 같은 parseGoals 호출의 결과라 모든 key가 맵에 존재함이 보장된다.
   const headerCells = [
     { userEnteredValue: { stringValue: '이름' } },
-    ...events.map((_, index) => ({ userEnteredValue: { formulaValue: `=${goalsRef}!A${index + 2}` } })),
+    ...events.map((event) => ({ userEnteredValue: { formulaValue: `=${goalsRef}!A${sheetRowByKey.get(event.key)!}` } })),
   ]
 
   // 참가자 행: 이름 열(A)만 명단 참조 수식으로 채우고 점수 칸(B~)은 비운다("빈 점수").
