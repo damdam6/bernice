@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#151 어드민 화면에 데이터 새로 고침 버튼 추가 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  .tag-done {
+    display: inline-block; margin-left: 8px; font-size: 0.72rem; font-weight: 700;
+    color: var(--ok); border: 1px solid var(--ok); border-radius: 999px;
+    padding: 0 8px; vertical-align: 2px;
+  }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/151">#151</a></span><span class="type-chip">기능 개선</span>
+    <h1>어드민 화면에 데이터 새로 고침 버튼 추가 — 캐시 무시하고 시트 최신 데이터 강제 반영</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/151-admin-data-refresh-button</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>시트 관리 홈에 "데이터 새로 고침" 버튼을 추가한다. 누르면 ① 기존 <code>POST /api/refresh</code>(#43)로 엣지 캐시를 퍼지하고 ② <code>fetch(…, { cache: 'reload' })</code>로 브라우저 HTTP 캐시를 우회해 최신 데이터를 받아 ③ <code>setQueryData</code>로 TanStack Query 캐시에 즉시 반영한다. reload 응답이 브라우저 캐시 엔트리를 교체하고 엣지 캐시도 재적재하므로, 버튼 한 번으로 관리자 본인과 팀원 모두 최신 데이터를 보게 된다. 서버 캐시 정책(<code>functions/api/records.ts</code>·<code>records-cache.ts</code>)은 건드리지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>2중 캐시 구조</b>: <code>GET /api/records</code>는 엣지 Cache API에 고정 합성 키(<code>functions/lib/records-cache.ts:7</code>)로 6시간 저장하고(<code>functions/api/records.ts:29</code>), 응답 헤더 <code>Cache-Control: public, max-age=21600</code>(<code>functions/api/records.ts:26</code>)로 브라우저 HTTP 캐시에도 6시간 저장된다.</li>
+      <li><b>퍼지 엔드포인트는 있으나 미연결</b>: <code>POST /api/refresh</code>(<code>functions/api/refresh.ts:7</code>)가 엣지 캐시를 <code>cache.delete</code>하지만, 프론트 소스 전체에서 호출부가 0곳 — 현재 curl 전용이다. 인증은 <code>functions/api/_middleware.ts:33</code>의 401 게이트만 거친다(admin 전용 경로 아님).</li>
+      <li><b>프론트 refetch는 브라우저 캐시에 막힘</b>: <code>fetchRecords</code>(<code>src/hooks/useRecords.ts:10</code>)가 옵션 없는 일반 <code>fetch('/api/records')</code>라, <code>invalidateQueries</code>로 refetch해도 브라우저가 캐시된 옛 응답을 그대로 돌려줄 수 있다. 엣지만 퍼지해서는 부족한 이유다.</li>
+      <li><b>어드민 홈</b>: <code>SheetManagementHome</code>(<code>src/pages/admin/SheetManagementHome.tsx:27</code>)은 버튼 3개(기록 입력·참가자 추가·기록지 만들기) + 로그아웃 + 안내 카드 구성으로 데이터 갱신 수단이 없다. <code>/admin</code> 라우트는 AdminGate 뒤에 있다(<code>src/App.tsx:30</code>).</li>
+      <li><b>기존 관용구</b>: API 래퍼는 항상 <code>{ ok: true, … } | { ok: false, message }</code>로 resolve(<code>src/lib/add-players-api.ts:24</code>), 성공 피드백은 Toast(<code>src/hooks/useToast.ts</code>·<code>src/components/common/Toast.tsx</code>), 실패는 <code>role="alert"</code> 인라인 문구(<code>src/pages/admin/CreateSheet.tsx:66</code>), 진행 중은 disabled + "…하는 중" 라벨.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>흐름</b> (버튼 클릭 → 3단계, 순서 고정):</p>
+    <ol>
+      <li><code>POST /api/refresh</code> — 엣지 캐시 퍼지. 실패하면 여기서 중단하고 에러 표시(옛 데이터를 다시 심는 낭비 방지).</li>
+      <li><code>fetchRecords(undefined, 'reload')</code> — <code>cache: 'reload'</code>는 브라우저 캐시를 건너뛰고 네트워크로 가며, 엣지도 방금 비워졌으므로 시트를 재조회한 최신 응답이 온다. 이 응답이 <b>브라우저 캐시 엔트리를 교체</b>하고, <code>records.ts</code>의 <code>cache.put</code>이 <b>엣지 캐시도 재적재</b>한다 — 팀원들도 즉시 최신을 본다.</li>
+      <li><code>queryClient.setQueryData(RECORDS_QUERY_KEY, fresh)</code> — 화면 즉시 갱신.</li>
+    </ol>
+    <p><b>순서가 핵심</b>: 퍼지 전에 refetch하면 엣지의 옛 응답을 받아 브라우저 캐시에 다시 심는다. 반드시 퍼지 완료 후 refetch하며, 테스트로 호출 순서를 고정한다.</p>
+    <p><b>기각한 대안</b>:</p>
+    <ul>
+      <li><b>캐시 버스터(<code>?t=…</code>)</b>: 버스터 URL은 <code>/api/records</code> 원래 캐시 엔트리를 그대로 남겨, 이후 일반 refetch가 다시 옛 데이터에 히트한다. <code>cache: 'reload'</code>는 엔트리 자체를 새 응답으로 교체하고 URL 계약도 하나로 유지한다.</li>
+      <li><b><code>invalidateQueries</code>로 갱신</b>: refetch가 일반 <code>fetch</code>라 브라우저 캐시 의존이 남고 왕복도 이중이다. reload로 이미 받은 바디를 <code>setQueryData</code>로 직접 반영하는 쪽이 단순하고 원자적이다.</li>
+      <li><b><code>Cache-Control</code> 축소·저장 플로우 개편</b>: 완료 조건 "평상시 캐시 동작 불변" 위반 — 범위 밖.</li>
+      <li><b>새 admin 전용 엔드포인트</b>: 기존 #43 재사용으로 충분. 버튼 자체가 AdminGate 뒤라 노출면 증가 없음.</li>
+    </ul>
+    <p><b>UI</b>: 시트 관리 홈 버튼 스택 4번째(보조 스타일, "참가자 추가"와 동일)로 "데이터 새로 고침" 추가. 진행 중 disabled + "새로 고침 중…", 성공 시 Toast "최신 데이터를 불러왔어요", 실패 시 <code>role="alert"</code> 인라인 문구.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>refresh API 래퍼 신설 — <code>refreshRecordsCache(): Promise&lt;{ ok: true } | { ok: false; message: string }&gt;</code>. <code>POST /api/refresh</code> 호출, 네트워크 오류·비2xx도 ok:false로 resolve(add-players-api 관용구). 단위 테스트 동반. <span class="tag-done">✓ 완료 · 테스트 5건</span>
+        <span class="files"><code>src/lib/refresh-api.ts</code> (신규), <code>src/lib/refresh-api.test.ts</code> (신규)</span>
+      </li>
+      <li><code>fetchRecords</code>에 캐시 모드 매개변수 추가 — <code>fetchRecords(signal?, cache?: RequestCache)</code> → <code>fetch('/api/records', { signal, cache })</code>. 기존 호출부(useQuery queryFn)는 무변경·기본 동작 동일. reload 전달이 fetch에 그대로 실리는지 테스트 추가(완료 조건 ③ 직결). <span class="tag-done">✓ 완료 · 테스트 2건 추가</span>
+        <span class="files"><code>src/hooks/useRecords.ts</code>, <code>src/hooks/useRecords.test.tsx</code></span>
+      </li>
+      <li>새 훅 <code>useRefreshRecords</code> — <code>{ refreshing, refresh }</code> 반환. <code>refresh()</code>가 퍼지 → reload refetch → <code>setQueryData</code>를 오케스트레이션하고 <code>{ ok: true } | { ok: false; message }</code>로 resolve(refetch의 ApiError는 한국어 실패 문구로 변환). renderHook 테스트 동반. <span class="tag-done">✓ 완료 · 테스트 4건</span>
+        <span class="files"><code>src/hooks/useRefreshRecords.ts</code> (신규), <code>src/hooks/useRefreshRecords.test.tsx</code> (신규)</span>
+      </li>
+      <li>시트 관리 홈 배선 — "데이터 새로 고침" 버튼(보조 스타일·4번째) + <code>useToast</code>/<code>Toast</code> 성공 피드백 + 인라인 에러 + 진행 중 disabled/"새로 고침 중…". 컴포넌트 테스트에 노출·호출 순서·성공/실패/로딩 케이스 추가. <span class="tag-done">✓ 완료 · 테스트 3건 추가</span>
+        <span class="files"><code>src/pages/admin/SheetManagementHome.tsx</code>, <code>src/pages/admin/SheetManagementHome.test.tsx</code></span>
+      </li>
+      <li>전체 회귀 — <code>npm run typecheck</code> + <code>npm test</code>(vitest run) 그린 확인. 서버 쪽 파일 무변경 확인(diff에 <code>functions/</code> 없음). <span class="tag-done">✓ 완료 · typecheck 통과 · 86 파일 779 테스트 그린</span>
+        <span class="files">(변경 없음 — 검증만)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td><code>cache: 'reload'</code> 미지원 구형 브라우저</td><td>버튼이 브라우저 캐시를 못 뚫음</td><td>표준 fetch 옵션으로 모던 브라우저 전부 지원. 미지원이어도 최악이 "오늘과 동일"이라 회귀 없음</td></tr>
+        <tr><td>퍼지 성공 후 refetch 실패(네트워크·502)</td><td>엣지 캐시만 비워진 채 에러 표시</td><td>다음 <code>/api/records</code> 조회가 시트 재조회로 자연 복구. 에러 문구로 재시도 유도 — 데이터 유실 없음</td></tr>
+        <tr><td><code>setQueryData</code> 직후 동시 background refetch가 옛 데이터로 덮어씀</td><td>화면이 잠시 옛 데이터로 회귀</td><td><code>/admin</code>에는 useRecords 구독자가 없고 staleTime 5분 — 실질 발생 경로 없음. 발생해도 브라우저 캐시가 이미 교체돼 다음 refetch는 최신</td></tr>
+        <tr><td><code>/api/refresh</code>가 admin 전용이 아님(team 세션도 호출 가능)</td><td>—</td><td>#43의 기존 계약 그대로이며 이번 변경으로 서버 노출면 증가 없음(버튼만 AdminGate 뒤에 추가)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>refresh-api.test.ts</b>: 200 → <code>ok: true</code> · 비2xx → <code>ok: false</code>(바디 message 우선, 없으면 기본 문구) · 네트워크 reject → <code>ok: false</code>(네트워크 문구) · <code>fetch('/api/refresh', { method: 'POST' })</code> 호출 형태 검증.</li>
+      <li><b>useRecords.test.tsx</b>: <code>fetchRecords(undefined, 'reload')</code>가 fetch에 <code>cache: 'reload'</code>를 전달하는지(브라우저 캐시 우회 검증 — 완료 조건 ③) · 기본 호출은 cache 미지정으로 기존 동작 유지.</li>
+      <li><b>useRefreshRecords.test.tsx</b>: 성공 경로에서 퍼지 → reload refetch 순서 보장 · <code>getQueryData</code>로 쿼리 캐시 반영 확인 · 퍼지 실패 시 records fetch 미호출 + <code>ok: false</code> · refetch 실패(502) 시 한국어 실패 메시지 · <code>refreshing</code> 상태 토글.</li>
+      <li><b>SheetManagementHome.test.tsx</b>: 버튼 노출 · 클릭 → <code>/api/refresh</code> 후 <code>/api/records</code>(cache:'reload') 순서 · 성공 시 Toast 문구 · 실패 시 <code>role="alert"</code> 문구 · 진행 중 disabled + "새로 고침 중…" 라벨. 기존 5개 테스트 그대로 통과.</li>
+      <li><b>회귀</b>: <code>npm run typecheck</code> · <code>npm test</code> 전체 그린. <code>functions/</code> 무변경으로 평상시 캐시 계약(엣지 6시간·헤더) 자동 보존 — 기존 <code>records.test.ts</code>·<code>refresh.test.ts</code>가 그대로 지킨다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>어드민 시트 관리 홈에서 버튼 한 번으로 시트 최신 데이터가 즉시 화면에 반영된다 — 엣지 퍼지 + 브라우저 캐시 우회 + 쿼리 캐시 갱신 3단계 모두 통과.</li>
+      <li><code>POST /api/refresh</code>가 <code>refresh-api.ts</code> 경유로 UI에 연결된다.</li>
+      <li>새로 고침 refetch가 <code>cache: 'reload'</code>로 브라우저 HTTP 캐시를 우회하는 것이 테스트로 확인된다.</li>
+      <li><code>functions/api/records.ts</code>·<code>functions/lib/records-cache.ts</code> 무변경 — 평상시 캐시 동작(엣지 공유 6시간) 유지.</li>
+      <li>진행 중(disabled + 라벨)·성공(Toast)·실패(인라인 alert) 피드백이 모두 표시된다.</li>
+      <li><code>npm run typecheck</code>·<code>npm test</code> 전체 그린.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/151">#151</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
