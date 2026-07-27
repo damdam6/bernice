@@ -74,6 +74,11 @@ const SESSION_SCORES_BY_EVENT_NAME = [
 ];
 const SESSION_SCORES = SESSION_SCORES_BY_EVENT_NAME.map((row) => SCORE_HEADER.map((key) => row[key]));
 
+// 종목명 → 목표 탭 실제 행 번호. SCORE_HEADER는 필터링된 배열이라 그 인덱스가 원본 행
+// 번호와 연속으로 대응한다는 보장이 없다(종료 종목이 중간에 생기면 어긋남 — create-sheet.ts
+// 의 실제 행 번호 참조와 동일한 이유, #121). 항상 이 맵으로 실제 행 번호를 찾는다.
+const GOALS_ROW_BY_NAME = new Map(SIMPLE_TABS['목표'].slice(1).map((row, i) => [row[0], i + 2]));
+
 // --- 색상 (0~1 float) --------------------------------------------------------
 const HEADER_BG = { red: 0.910, green: 0.384, blue: 0.227 }; // 농구 오렌지
 const HEADER_FG = { red: 1, green: 1, blue: 1 };
@@ -148,8 +153,8 @@ async function main() {
     console.log(`  ✓ ${title} 값 (${values.length}행)`);
   }
 
-  // 2b) 회차 헤더행(USER_ENTERED): 이름 + 종목명은 목표 탭 참조 (='목표'!A2..A8, 현역 종목만)
-  const drillRefs = SCORE_HEADER.map((_, i) => `='목표'!A${i + 2}`);
+  // 2b) 회차 헤더행(USER_ENTERED): 이름 + 종목명은 목표 탭 참조 (='목표'!A2..A8, 실제 행 번호)
+  const drillRefs = SCORE_HEADER.map((name) => `='목표'!A${GOALS_ROW_BY_NAME.get(name)}`);
   await call(`${SHEET_ID}/values/${encodeURIComponent(`${SESSION_TAB}!A1`)}?valueInputOption=USER_ENTERED`,
     { method: 'PUT', body: JSON.stringify({ range: `${SESSION_TAB}!A1`, majorDimension: 'ROWS', values: [['이름', ...drillRefs]] }) });
 
