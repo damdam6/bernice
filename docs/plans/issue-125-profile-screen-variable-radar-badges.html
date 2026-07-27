@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#125 P7 — 프로필 화면: 가변 축 레이더 + 종료 뱃지 카드 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .done-list li.done::before { background: var(--ok); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/125">#125</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — 프로필 화면: 가변 축 레이더 + 종료 뱃지 카드</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/125-profile-screen-variable-radar-badges</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>선행 이슈 #118(PR #140)이 이미 <code>profile-view.ts</code>의 데이터 파생 절반을 끝내놨다 — <code>buildRadarAxes</code>는 <code>session.eventKeys</code> 기준으로 축을 순회해 회차마다 4각형↔7각형으로 가변하고, <code>buildGrowthCards</code>는 종료 종목을 유효 기록 보유 선수에게만 <code>ended: true</code> 카드로 내려준다. 다만 PR #140의 커밋 메시지가 명시하듯 "뱃지 렌더는 후속 #125"로 미뤄뒀고, <code>radar-math</code>가 N축 일반이라는 사실도 4축 케이스로만 테스트돼 있다. 이번 이슈는 나머지 절반 — <b>①</b> <code>GrowthStatCard</code>에 실제 <code>종료</code> 뱃지 렌더 <b>②</b> <code>radar-math</code>·<code>RadarChart</code>의 7축 구조 검증 — 을 마무리한다. 화면 조립(<code>Players.tsx</code>)과 추이 차트는 변경이 필요 없다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><b>데이터 파생(완료, #118/PR140):</b></p>
+    <ul>
+      <li><code>src/lib/profile-view.ts:27-43</code> <code>buildRadarAxes</code> — 전역 <code>events[]</code>가 아니라 <code>session.eventKeys</code>를 순회해 축을 만든다. 세션이 없으면 빈 배열.</li>
+      <li><code>src/lib/profile-view.ts:53-63</code> <code>GrowthCardDatum</code>에 <code>ended: boolean</code> 필드가 이미 존재하고, 주석이 "카드 뱃지 렌더는 #125 스코프"라고 명시한다.</li>
+      <li><code>src/lib/profile-view.ts:95-113</code> <code>buildGrowthCards</code> — <code>events.filter((event) =&gt; event.endSessionDate === null || pbByEvent.has(event.key))</code>로 현역 종목 전부 + 종료 종목 중 유효 PB 보유 종목만 남기고, 각 카드에 <code>ended: event.endSessionDate !== null</code>을 채운다.</li>
+      <li><code>src/lib/profile-view.test.ts:182-224</code>에 4축/7축 <code>buildRadarAxes</code> 회귀 테스트, <code>:274-307</code>에 종료 카드 노출 조건 테스트가 이미 있다 — <b>데이터 레이어는 완전히 검증돼 있다.</b></li>
+    </ul>
+    <p><b>렌더(미완):</b></p>
+    <ul>
+      <li><code>src/components/GrowthStatCard.tsx:22-50</code> — <code>card.ended</code>를 전혀 참조하지 않는다. 라벨(<code>36행</code>)과 PB(<code>37행</code>) 옆에 뱃지가 없다.</li>
+      <li><code>src/components/GrowthStatCard.test.tsx</code> — <code>ended</code> 필드는 픽스처(<code>13행</code>)에 있지만 어떤 테스트도 뱃지 유무를 검증하지 않는다.</li>
+      <li><code>src/pages/Players.tsx:71-125</code> — 레이더는 <code>&lt;RadarChart axes={radarAxes} /&gt;</code>로 그대로 넘기고(<code>93행</code>), 카드는 <code>!card</code>면 <code>null</code>을 반환(<code>104행</code>)해 이미 종료 카드 숨김을 자연히 처리한다. <b>변경 불필요</b>(PR #140 본문이 동일하게 확인).</li>
+    </ul>
+    <p><b>기하 계산·렌더(구조는 N축 일반, 테스트만 4축 한정):</b></p>
+    <ul>
+      <li><code>src/components/charts/radar-math.ts:13-30</code> <code>axisAngle</code>/<code>radarPoint</code>는 <code>axisCount</code> 매개변수를 그대로 각도 계산에 쓴다 — 4축이든 7축이든 동일 공식.</li>
+      <li><code>src/components/charts/radar-math.test.ts</code>는 <code>radarPoint</code>·<code>radarLabelLayout</code> 전부 4축(<code>1-43행</code>)만 다룬다. 7축 케이스 없음.</li>
+      <li><code>src/components/charts/radar-chart.tsx:26-74</code> <code>RadarChart</code>도 <code>axes.length</code>를 그대로 <code>ringPoints</code>/<code>polygonPoints</code>/<code>radarPoint</code>에 넘겨 N축 일반이다. 배경 링 개수(<code>RING_COUNT = 4</code>, 17행)는 축 개수와 무관하게 고정 4개.</li>
+      <li><code>src/components/charts/radar-chart.test.tsx</code>도 4축 픽스처(<code>8-13행</code>)만 사용 — 7축 렌더 구조(도트·라벨 개수, aria-label 문구)를 확인한 테스트가 없다.</li>
+    </ul>
+    <p><b>디자인 근거:</b> <code>docs/prd-event-lifecycle.html</code> §08 라인 319-320 — "레이더 축 = 선택 회차의 측정 종목 … <code>radar-math</code>는 이미 N축 일반이므로 7축 시각 검증만 필요" / "종료 종목은 … 카드에 <code>종료</code> 뱃지를 단다". 같은 문서 마이그레이션 시나리오(라인 382)가 기대 화면을 명시: "1차(4종목) 참가자는 45도패스캐치 성장 카드를 <code>종료</code> 뱃지와 함께 보고, 그 외 선수에겐 카드 자체가 없다."</p>
+    <p><b>뱃지 스타일 컨벤션:</b> 이 레포는 상태 뱃지를 전부 <code>Pill</code> 공용 컴포넌트(<code>src/components/Pill.tsx</code>)로 만든다 — <code>PlayerStatusPill</code>·<code>EntryStatusPill</code>·<code>AchievementBadge</code>가 전부 동일 패턴(<code>&lt;Pill colorClassName="bg-*-tint text-*-strong"&gt;텍스트&lt;/Pill&gt;</code>). "미측정"류 중립 상태는 전부 <code>bg-neutral-tint text-neutral-strong</code>(<code>EntryStatusPill.tsx:10</code>, <code>RankingRow.tsx:47</code>) — "종료"도 달성/실패가 아닌 생애주기 상태이므로 같은 neutral 톤이 맞다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>뱃지 배치:</b> <code>GrowthStatCard</code> 헤더 좌측 컬럼(라벨+PB)에서 라벨 옆에 인라인으로 <code>종료</code> Pill을 <code>card.ended</code>일 때만 렌더한다. 우측 컬럼(현재값/델타)은 손대지 않는다 — PRD가 뱃지 위치를 못박지 않았고, 다른 화면(랭킹)도 이름 옆 상태 뱃지 패턴을 쓰므로 동형을 유지한다.</li>
+      <li><b>색 톤:</b> <code>bg-neutral-tint text-neutral-strong</code> (기존 <code>Pill</code> 재사용, 새 컴포넌트 불필요 — <code>AchievementBadge</code>처럼 별도 래퍼를 만들 수도 있지만 "종료"는 이분법 매핑이 아니라 조건부 존재이므로 <code>GrowthStatCard</code> 안에서 직접 <code>{card.ended &amp;&amp; &lt;Pill&gt;...&lt;/Pill&gt;}</code>로 충분하다).</li>
+      <li><b>레이더 검증 방식:</b> 이슈가 "스크린샷 또는 구조 검증"을 모두 허용하고, 이 레포에 시각 회귀 도구(Storybook/Playwright 등)가 없다 — <code>radar-math</code>·<code>RadarChart</code> 둘 다 7축 좌표/구조를 결정론적으로 단언하는 단위 테스트로 검증한다(기존 4축 테스트와 동일 스타일, PR #140의 검증 방식과 동형). 계산값은 <code>axisAngle(i,7) = 2π·i/7 - π/2</code> 공식을 그대로 수치화해 미리 계산해둔다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">radar-math 7축 구조 검증 — 기존 4축 <code>describe</code> 옆에 7축 <code>radarPoint</code> 좌표(반지름 80·중심 100 기준, <code>axisAngle</code> 공식으로 사전 계산한 7개 좌표) 및 <code>radarLabelLayout</code> anchor/baseline 7축 케이스를 추가했다. Python으로 <code>axisAngle</code> 공식을 직접 재계산해 기대값을 뽑았고, 8개 테스트 전부 그린.
+        <span class="files"><code>src/components/charts/radar-math.test.ts</code></span>
+      </li>
+      <li class="done">RadarChart 7축 렌더 구조 검증 — 7개 종목 <code>axes</code> 픽스처로 렌더해 도트 7개·라벨 텍스트 7개(순서 유지)·aria-label에 7개 항목 모두 포함·배경 링은 여전히 4개(축 개수와 무관)임을 단언하는 테스트 3개를 <code>describe('7축(가변 축 상한 케이스)')</code>로 추가했다.
+        <span class="files"><code>src/components/charts/radar-chart.test.tsx</code></span>
+      </li>
+      <li class="done"><code>GrowthStatCard</code>에 종료 뱃지 렌더 — <code>Pill</code>을 import해 라벨 옆(flex row)에 <code>card.ended</code>일 때만 <code>&lt;Pill colorClassName="bg-neutral-tint text-neutral-strong"&gt;종료&lt;/Pill&gt;</code>를 렌더한다. 계획대로 별도 래퍼 컴포넌트 없이 기존 <code>Pill</code> 재사용.
+        <span class="files"><code>src/components/GrowthStatCard.tsx</code></span>
+      </li>
+      <li class="done">GrowthStatCard 뱃지 테스트 — <code>ended: true</code> 카드는 "종료" 텍스트가 렌더되고, <code>ended: false</code>(기존 <code>CARD</code> 픽스처)는 렌더되지 않음을 검증하는 테스트 2개를 추가했다.
+        <span class="files"><code>src/components/GrowthStatCard.test.tsx</code></span>
+      </li>
+      <li>수동 확인(베스트에포트) — 계획에서 예상한 대로 생략. <code>/api/records</code>는 실제 구글 시트 연동(<code>wrangler pages dev</code> + 시크릿)이 필요한데 이 워크트리 샌드박스엔 자격증명이 없어 <code>Players.tsx</code>를 실데이터로 띄워볼 수 없다. 구조 검증 테스트(위 1·2단계)로 완료 조건을 충족한 것으로 본다 — 이슈 문구가 "스크린샷 <b>또는</b> 구조 검증"을 명시적으로 허용.
+        <span class="note">스킵 — 사유: 로컬에 records API 자격증명 없음</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>7축 좌표 계산값을 손으로 잘못 미리 계산</td><td>테스트가 틀린 값을 정답으로 고정(그린인데 틀림)</td><td><code>axisAngle</code> 공식을 코드로 재계산해 검증 후 테스트에 반영(round2와 동일 반올림 규칙 적용)</td></tr>
+        <tr><td>뱃지 추가로 카드 헤더 레이아웃이 좁은 화면에서 줄바꿈 깨짐</td><td>사소한 시각 흠집</td><td><code>flex</code> + <code>min-w-0</code>/<code>truncate</code>가 이미 라벨에 적용돼 있어 뱃지는 <code>shrink-0</code>로 옆에 붙이면 기존 레이아웃 방어 로직을 그대로 탄다</td></tr>
+        <tr><td>로컬 dev 환경에 4축/7축 혼재 실데이터가 없어 수동 스크린샷이 불가능</td><td>완료 조건의 "스크린샷" 경로를 못 밟음</td><td>이슈 문구가 "스크린샷 <b>또는</b> 구조 검증"이라 구조 검증(1·2단계)만으로 완료 조건 충족 — PRD·PR #140도 동일 전제</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>src/components/charts/radar-math.test.ts</code> — 신규 7축 <code>radarPoint</code>·<code>radarLabelLayout</code> 테스트가 통과하는지, 기존 4축 테스트가 그린으로 남는지.</li>
+      <li><code>src/components/charts/radar-chart.test.tsx</code> — 신규 7축 렌더 구조 테스트(도트/라벨/aria-label) 통과, 기존 4축 테스트 회귀 없음.</li>
+      <li><code>src/components/GrowthStatCard.test.tsx</code> — <code>ended: true</code>/<code>false</code> 뱃지 렌더 조건 테스트 통과, 기존 라벨·PB·델타·토글 테스트 회귀 없음.</li>
+      <li><code>npm run test</code> 전체 스위트 그린, <code>npm run typecheck</code> clean.</li>
+      <li>(베스트에포트) <code>npm run dev</code>로 실제 화면에서 회차 전환 시 레이더 축 변화와 종료 뱃지 육안 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="done">회차 전환 → 레이더 축 개수 변화 테스트 (데이터 레이어는 #118에서 완료 — <code>profile-view.test.ts:182-224</code>; 렌더 레이어 <code>radar-chart.test.tsx</code>에 7축 구조 테스트 추가로 마무리)</li>
+      <li class="done">종료 뱃지 카드 조건부 렌더 테스트 (보유/미보유 선수) — 카드 노출 조건은 #118 완료, <code>GrowthStatCard</code>에 실제 뱃지 렌더 + 테스트 추가로 마무리</li>
+      <li class="done">7축 레이더 시각 확인 (구조 검증) — <code>radar-math.test.ts</code>·<code>radar-chart.test.tsx</code>에 7축 좌표/렌더 구조 단위 테스트로 충족(수동 스크린샷은 API 자격증명 부재로 생략)</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/125">#125</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
