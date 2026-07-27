@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { EventDefinition, EventRanking, EventScore, PlayerSummary, RankingEntry, Session, SessionEntry } from '../../shared/domain'
-import { buildEventGuidance, buildRankingRows, findTiedRanks } from './ranking-view'
+import { buildEventGuidance, buildRankingRows, deriveSessionEvents, findTiedRanks } from './ranking-view'
 
 // ── 픽스처 헬퍼 (functions/lib/compute-rankings.test.ts와 같은 결) ──────────────
 
@@ -31,6 +31,54 @@ function player(id: number, status: PlayerSummary['status'], name = `선수${id}
 }
 
 const EVENT_KEY = '골밑슛'
+
+describe('deriveSessionEvents', () => {
+  const layup: EventDefinition = {
+    key: '골밑슛',
+    valueKind: 'count',
+    target: '5',
+    targetValue: 5,
+    maxScore: 10,
+    direction: '높을수록',
+    endSessionDate: null,
+  }
+  const shuttleRun: EventDefinition = {
+    key: '셔틀런',
+    valueKind: 'time',
+    target: '1:17',
+    targetValue: 77,
+    maxScore: null,
+    direction: '낮을수록',
+    endSessionDate: null,
+  }
+  const freeThrow: EventDefinition = {
+    key: '자유투',
+    valueKind: 'count',
+    target: '5',
+    targetValue: 5,
+    maxScore: 10,
+    direction: '높을수록',
+    endSessionDate: null,
+  }
+
+  it('session.eventKeys 순서대로 정의를 담는다(events[] 선언 순서 무시)', () => {
+    const session: Session = { date: '2026-07-01', entries: [], eventKeys: ['셔틀런', '골밑슛'] }
+
+    expect(deriveSessionEvents([layup, shuttleRun, freeThrow], session)).toEqual([shuttleRun, layup])
+  })
+
+  it('그 회차에 측정하지 않은 종목은 제외된다(부분집합, #123 종목 칩의 근거)', () => {
+    const session: Session = { date: '2026-07-01', entries: [], eventKeys: ['골밑슛'] }
+
+    expect(deriveSessionEvents([layup, shuttleRun, freeThrow], session)).toEqual([layup])
+  })
+
+  it('eventKeys에 events[]와 매치되지 않는 키가 있으면(계약 위반 데이터) 크래시 없이 건너뛴다', () => {
+    const session: Session = { date: '2026-07-01', entries: [], eventKeys: ['없는종목', '골밑슛'] }
+
+    expect(deriveSessionEvents([layup], session)).toEqual([layup])
+  })
+})
 
 describe('buildRankingRows', () => {
   it('순위권 엔트리를 그대로(순서 포함) 유지한다', () => {
