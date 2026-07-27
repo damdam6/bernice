@@ -8,7 +8,7 @@ import { FilterChip } from '../components/FilterChip'
 import { RankingRow } from '../components/RankingRow'
 import { useRecords } from '../hooks/useRecords'
 import { buildPerformanceScale } from '../lib/performance-scale'
-import { buildEventGuidance, buildRankingRows, findTiedRanks } from '../lib/ranking-view'
+import { buildEventGuidance, buildRankingRows, deriveSessionEvents, findTiedRanks } from '../lib/ranking-view'
 
 export default function Rankings() {
   const { data, isError, error, refetch } = useRecords()
@@ -49,12 +49,16 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   const [selectedEventKey, setSelectedEventKey] = useState<string | null>(null)
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
 
-  const event = events.find((e) => e.key === selectedEventKey) ?? events[0]
   const latestSessionDate = sessions[sessions.length - 1].date
   const sessionDate = selectedSessionDate ?? latestSessionDate
+  const session = sessions.find((s) => s.date === sessionDate)
+
+  // 종목 칩 = 선택 회차의 측정 종목만(eventKeys 순서) — 회차 전환으로 선택 종목이 사라지면
+  // 아래 find/??가 렌더마다 다시 평가되어 첫 종목으로 자동 폴백한다(#123)
+  const sessionEvents = session ? deriveSessionEvents(events, session) : []
+  const event = sessionEvents.find((e) => e.key === selectedEventKey) ?? sessionEvents[0]
 
   const eventRanking = rankings.find((r) => r.sessionDate === sessionDate)?.events.find((er) => er.event === event.key)
-  const session = sessions.find((s) => s.date === sessionDate)
   const rows = eventRanking && session ? buildRankingRows(eventRanking, session, event.key, players) : []
   const tiedRanks = findTiedRanks(rows)
 
@@ -63,7 +67,7 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
       <h1 className="text-xl font-bold tracking-tight text-ink">랭킹</h1>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {events.map((e) => (
+        {sessionEvents.map((e) => (
           <FilterChip key={e.key} active={e.key === event.key} onClick={() => setSelectedEventKey(e.key)}>
             {e.key}
           </FilterChip>

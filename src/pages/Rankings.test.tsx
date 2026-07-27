@@ -129,6 +129,49 @@ const RECORDS_BODY: RecordsResponse = {
   home: { latestSession: null, achievementRates: [] },
 }
 
+// 종목 7개 × 회차 2개 — 1차는 4종목만 측정(eventKeys 부분집합), 최신은 7종목 전부 측정.
+// 종목 칩이 events[] 전체가 아니라 선택 회차 eventKeys만 반영하는지, 회차 전환 시
+// 선택 종목이 사라지면 첫 종목으로 폴백하는지를 검증한다(#123, PRD §08 마이그레이션 시나리오).
+const MIXED_EVENT_KEYS = ['골밑슛', '셔틀런', '자유투', '드리블', '패스', '던지기', '달리기']
+
+function mixedEventDefinition(key: string) {
+  return { key, valueKind: 'count' as const, target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' as const, endSessionDate: null }
+}
+
+function recordedScoresFor(keys: string[]) {
+  return Object.fromEntries(keys.map((key) => [key, { status: 'recorded' as const, value: 6, display: '6' }]))
+}
+
+function eventRankingsFor(keys: string[]) {
+  return keys.map((key) => ({
+    event: key,
+    entries: [{ playerId: 1, name: '선수1', value: 6, display: '6', rank: 1, achieved: true }],
+  }))
+}
+
+const MIXED_EVENT_COUNT_BODY: RecordsResponse = {
+  generatedAt: '2026-07-19T00:00:00.000Z',
+  events: MIXED_EVENT_KEYS.map(mixedEventDefinition),
+  players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
+  sessions: [
+    {
+      date: '2026-06-01',
+      entries: [{ playerId: 1, name: '선수1', participated: true, scores: recordedScoresFor(MIXED_EVENT_KEYS.slice(0, 4)) }],
+      eventKeys: MIXED_EVENT_KEYS.slice(0, 4),
+    },
+    {
+      date: '2026-06-08',
+      entries: [{ playerId: 1, name: '선수1', participated: true, scores: recordedScoresFor(MIXED_EVENT_KEYS) }],
+      eventKeys: MIXED_EVENT_KEYS,
+    },
+  ],
+  rankings: [
+    { sessionDate: '2026-06-01', events: eventRankingsFor(MIXED_EVENT_KEYS.slice(0, 4)) },
+    { sessionDate: '2026-06-08', events: eventRankingsFor(MIXED_EVENT_KEYS) },
+  ],
+  home: { latestSession: null, achievementRates: [] },
+}
+
 describe('Rankings', () => {
   it('로딩 중에는 스피너를 보여준다', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
@@ -189,5 +232,44 @@ describe('Rankings', () => {
     expect(screen.getByText('1:10')).toBeInTheDocument()
     expect(screen.getByText('1:30')).toBeInTheDocument()
     expect(screen.getByText('미달성')).toBeInTheDocument()
+  })
+
+  it('혼재 픽스처 — 1차는 4종목 칩, 최신 회차는 7종목 칩을 보여준다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, MIXED_EVENT_COUNT_BODY)))
+
+    renderRankings()
+
+    // 기본값: 최신 회차(2차) — eventKeys 7개가 그대로 칩 7개로
+    await waitFor(() => expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true'))
+    for (const key of MIXED_EVENT_KEYS) {
+      expect(screen.getByRole('button', { name: key })).toBeInTheDocument()
+    }
+
+    // 1차로 전환 — eventKeys 4개만 칩으로 남고, 나머지 3개는 렌더되지 않는다
+    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+
+    for (const key of MIXED_EVENT_KEYS.slice(0, 4)) {
+      expect(screen.getByRole('button', { name: key })).toBeInTheDocument()
+    }
+    for (const key of MIXED_EVENT_KEYS.slice(4)) {
+      expect(screen.queryByRole('button', { name: key })).not.toBeInTheDocument()
+    }
+  })
+
+  it('회차 전환 시 선택 종목이 새 회차에 없으면 첫 종목으로 폴백한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, MIXED_EVENT_COUNT_BODY)))
+
+    renderRankings()
+
+    // 최신 회차(2차)에서 1차엔 없는 종목(달리기, 7번째)을 선택
+    await waitFor(() => expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true'))
+    fireEvent.click(screen.getByRole('button', { name: '달리기' }))
+    expect(screen.getByRole('button', { name: '달리기' })).toHaveAttribute('aria-pressed', 'true')
+
+    // 1차로 전환 — 달리기 칩 자체가 사라지고, 선택은 1차의 첫 종목(골밑슛)으로 폴백
+    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+
+    expect(screen.queryByRole('button', { name: '달리기' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '골밑슛' })).toHaveAttribute('aria-pressed', 'true')
   })
 })
