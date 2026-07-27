@@ -8,7 +8,7 @@ import { FilterChip } from '../components/FilterChip'
 import { RankingRow } from '../components/RankingRow'
 import { useRecords } from '../hooks/useRecords'
 import { buildPerformanceScale } from '../lib/performance-scale'
-import { buildEventGuidance, buildRankingRows, findTiedRanks } from '../lib/ranking-view'
+import { buildEventGuidance, buildRankingRows, deriveSessionEvents, findTiedRanks } from '../lib/ranking-view'
 
 export default function Rankings() {
   const { data, isError, error, refetch } = useRecords()
@@ -49,13 +49,19 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   const [selectedEventKey, setSelectedEventKey] = useState<string | null>(null)
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
 
-  const event = events.find((e) => e.key === selectedEventKey) ?? events[0]
   const latestSessionDate = sessions[sessions.length - 1].date
   const sessionDate = selectedSessionDate ?? latestSessionDate
-
-  const eventRanking = rankings.find((r) => r.sessionDate === sessionDate)?.events.find((er) => er.event === event.key)
   const session = sessions.find((s) => s.date === sessionDate)
-  const rows = eventRanking && session ? buildRankingRows(eventRanking, session, event.key, players) : []
+
+  // 종목 칩 = 선택 회차의 측정 종목만(eventKeys 순서) — 회차 전환으로 선택 종목이 사라지면
+  // 아래 find/??가 렌더마다 다시 평가되어 첫 종목으로 자동 폴백한다(#123)
+  const sessionEvents = session ? deriveSessionEvents(events, session) : []
+  // sessionEvents가 비면(계약상 발생 불가하나 잘못된 데이터 방어) event는 undefined —
+  // 아래 렌더는 이 경우를 "표시할 기록이 없습니다"로 안전하게 수렴시킨다.
+  const event: (typeof sessionEvents)[number] | undefined = sessionEvents.find((e) => e.key === selectedEventKey) ?? sessionEvents[0]
+
+  const eventRanking = event && rankings.find((r) => r.sessionDate === sessionDate)?.events.find((er) => er.event === event.key)
+  const rows = eventRanking && session && event ? buildRankingRows(eventRanking, session, event.key, players) : []
   const tiedRanks = findTiedRanks(rows)
 
   return (
@@ -63,8 +69,8 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
       <h1 className="text-xl font-bold tracking-tight text-ink">랭킹</h1>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {events.map((e) => (
-          <FilterChip key={e.key} active={e.key === event.key} onClick={() => setSelectedEventKey(e.key)}>
+        {sessionEvents.map((e) => (
+          <FilterChip key={e.key} active={e.key === event?.key} onClick={() => setSelectedEventKey(e.key)}>
             {e.key}
           </FilterChip>
         ))}
@@ -78,10 +84,10 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
         ))}
       </div>
 
-      <p className="text-sm text-ink-sub">{buildEventGuidance(event)}</p>
+      {event && <p className="text-sm text-ink-sub">{buildEventGuidance(event)}</p>}
 
       <div className="flex flex-col gap-2">
-        {rows.length === 0 ? (
+        {!event || rows.length === 0 ? (
           <EmptyState title="표시할 기록이 없습니다" />
         ) : (
           rows.map((row) => <RankingRow key={row.playerId} row={row} event={event} scale={scale} tiedRanks={tiedRanks} />)
