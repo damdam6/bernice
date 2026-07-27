@@ -107,6 +107,46 @@ describe('RecordsDateSelect', () => {
     expect(cards[1]).toHaveTextContent('완료 1/2')
   })
 
+  it('회차마다 eventKeys 종목 수가 달라도 각자 자기 회차 기준으로만 완료를 판정한다(이슈 #126 회귀)', async () => {
+    const data = baseData({
+      sessions: [
+        {
+          date: '2025-05-16',
+          eventKeys: ['드리블셔틀런'],
+          entries: [
+            { playerId: 1, name: '가은', participated: true, scores: { 드리블셔틀런: { status: 'recorded', value: 72, display: '1:12' } } },
+          ],
+        },
+        {
+          date: '2025-06-20',
+          eventKeys: ['드리블셔틀런', '골밑슛'],
+          entries: [
+            {
+              playerId: 1,
+              name: '가은',
+              participated: true,
+              scores: {
+                드리블셔틀런: { status: 'recorded', value: 72, display: '1:12' },
+                골밑슛: { status: 'unmeasured', value: null, display: null },
+              },
+            },
+          ],
+        },
+      ],
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
+
+    renderPage()
+
+    const cards = await screen.findAllByRole('button')
+    // 2차(2종목 회차) — 드리블셔틀런만 기록, 골밑슛은 미측정이라 완료 아님(일부).
+    expect(cards[0]).toHaveTextContent('2차')
+    expect(cards[0]).toHaveTextContent('완료 0/1')
+    // 1차(1종목 회차) — 그 회차 유일한 종목을 기록해 완료. 2차에 종목이 늘었다고 흔들리지 않는다.
+    expect(cards[1]).toHaveTextContent('1차')
+    expect(cards[1]).toHaveTextContent('완료 1/1')
+  })
+
   it('회차 카드를 탭하면 그 회차 참가자 목록으로 이동한다', async () => {
     const data = baseData({
       sessions: [{ date: '2025-05-16', entries: [completedEntry(1, '가은')], eventKeys: SESSION_EVENT_KEYS }],
