@@ -21,8 +21,8 @@ const KEY_PATH = process.env.GOOGLE_APPLICATION_CREDENTIALS || './secrets/sa-key
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
 // --- 시딩 데이터 -------------------------------------------------------------
-const TAB_TITLES = ['버니스명단', '목표', '2025-05-16'];
-const TAB_COLS = { '버니스명단': 2, '목표': 4, '2025-05-16': 5 };
+const TAB_TITLES = ['버니스명단', '목표', '2026-07-23'];
+const TAB_COLS = { '버니스명단': 2, '목표': 5, '2026-07-23': 8 };
 
 // 버니스명단·목표: 수식 없음 → RAW ("1:17" 등 텍스트 보존)
 const SIMPLE_TABS = {
@@ -36,29 +36,36 @@ const SIMPLE_TABS = {
     ['선수17', '활동'], ['선수18', '활동'], ['선수19', '활동'], ['선수20', '활동'],
     ['선수21', '활동'],
   ],
+  // 종목 | 목표 | 만점 | 방향 | 종료 회차  (5열 — 종료 회차: 빈칸=현역, PRD §04)
   '목표': [
-    ['종목', '목표', '만점', '방향'],
-    ['드리블셔틀런', '1:17', '', '낮을수록'],
-    ['골밑슛', 5, 10, '높을수록'],
-    ['자유투', 2, 5, '높을수록'],
-    ['45도패스캐치', 5, 7, '높을수록'],
+    ['종목', '목표', '만점', '방향', '종료 회차'],
+    ['드리블셔틀런', '1:17', '', '낮을수록', ''],
+    ['골밑슛', 5, 10, '높을수록', ''],
+    ['자유투', 2, 5, '높을수록', ''],
+    ['패스 - 체스트', 3, 5, '높을수록', ''],
+    ['패스 - 바운드', 3, 5, '높을수록', ''],
+    ['패스 - 원핸드', 3, 5, '높을수록', ''],
+    ['볼 캐치', 7, 10, '높을수록', ''],
+    // 측정 이력 없이 종료(PRD §04 "측정 이력 없는 종목의 종료") — 종료 회차는 아래 회차 탭 날짜와 동일하게,
+    // 그 회차 헤더에는 포함하지 않는다(= 한 번도 측정 안 하고 접은 종목의 예시).
+    ['45도패스캐치', 5, 7, '높을수록', '2026-07-23'],
   ],
 };
 
 // 명단 행 수 (버니스명단 데이터 행 = 21명). 회차 이름 열이 이 수만큼 참조.
 const ROSTER_ROWS = SIMPLE_TABS['버니스명단'].length - 1; // 21
 
-// 회차 점수 헤더
-const SESSION_TAB = '2025-05-16';
-const SCORE_HEADER = ['드리블셔틀런', '골밑슛', '자유투', '45도패스캐치'];
+// 회차 점수 헤더 — 목표 탭의 현역 7종목(2~8행), 종료 종목(45도패스캐치, 9행)은 제외
+const SESSION_TAB = '2026-07-23';
+const SCORE_HEADER = ['드리블셔틀런', '골밑슛', '자유투', '패스 - 체스트', '패스 - 바운드', '패스 - 원핸드', '볼 캐치'];
 // 참여자 점수 — 버니스명단 행 순서(선수1..선수6 = 첫 6명)와 1:1 대응 (합성 예시 데이터)
 const SESSION_SCORES = [
-  ['1:12', 5, 2, 6],   // 선수1
-  ['1:14', 6, 1, 7],   // 선수2
-  ['1:10', 7, 3, 7],   // 선수3
-  ['1:22', 4, 2, 5],   // 선수4
-  ['1:16', 8, 2, '면제'], // 선수5
-  ['1:19', 6, 3, 6],   // 선수6
+  ['1:12', 5, 2, 2, 3, 1, 6],   // 선수1
+  ['1:14', 6, 1, 3, 2, 1, 8],   // 선수2
+  ['1:10', 7, 3, 3, 3, 2, 9],   // 선수3
+  ['1:22', 4, 2, 1, 2, 1, 5],   // 선수4
+  ['1:16', 8, 2, '면제', 3, 2, 7], // 선수5
+  ['1:19', 6, 3, 2, 1, 3, 6],   // 선수6
 ];
 
 // --- 색상 (0~1 float) --------------------------------------------------------
@@ -135,7 +142,7 @@ async function main() {
     console.log(`  ✓ ${title} 값 (${values.length}행)`);
   }
 
-  // 2b) 회차 헤더행(USER_ENTERED): 이름 + 종목명은 목표 탭 참조 (='목표'!A2..A5)
+  // 2b) 회차 헤더행(USER_ENTERED): 이름 + 종목명은 목표 탭 참조 (='목표'!A2..A8, 현역 종목만)
   const drillRefs = SCORE_HEADER.map((_, i) => `='목표'!A${i + 2}`);
   await call(`${SHEET_ID}/values/${encodeURIComponent(`${SESSION_TAB}!A1`)}?valueInputOption=USER_ENTERED`,
     { method: 'PUT', body: JSON.stringify({ range: `${SESSION_TAB}!A1`, majorDimension: 'ROWS', values: [['이름', ...drillRefs]] }) });
@@ -146,7 +153,7 @@ async function main() {
     { method: 'PUT', body: JSON.stringify({ range: `${SESSION_TAB}!A2`, majorDimension: 'ROWS', values: nameCol }) });
   console.log(`  ✓ ${SESSION_TAB} 헤더 종목 참조 + 이름 참조(${ROSTER_ROWS}명 미러링)`);
 
-  // 2d) 회차 점수 블록 B2:E?(RAW). 참여자만, 미참여자는 빈칸 유지.
+  // 2d) 회차 점수 블록 B2:H?(RAW). 참여자만, 미참여자는 빈칸 유지.
   await call(`${SHEET_ID}/values/${encodeURIComponent(`${SESSION_TAB}!B2`)}?valueInputOption=RAW`,
     { method: 'PUT', body: JSON.stringify({ range: `${SESSION_TAB}!B2`, majorDimension: 'ROWS', values: SESSION_SCORES }) });
   console.log(`  ✓ ${SESSION_TAB} 점수 (참여자 ${SESSION_SCORES.length}명)`);
