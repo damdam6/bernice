@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#128 P7 — 운영 문서·시딩 개정 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 2px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/128">#128</a></span><span class="type-chip">문서 개정</span>
+    <h1>P7 — 운영 문서·시딩 개정 (sheet-rules · sheet-integration · build-plan · seed)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>docs/128-ops-docs-seeding-revision</code></b> ← <code>main</code></span>
+      <span>라벨 <b>documentation</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>P7(종목 생애주기) 코드 이슈들(#110~#124)은 이미 머지됐지만, 운영 문서 4곳은 여전히 옛 4열/4종목 스키마를 반영하고 있다. <code>docs/sheet-rules.html</code>에 종목 추가·종료·재개·기준 개편 절차(PRD §11)를 반영하고, <code>docs/sheet-integration.html</code>의 목표 탭 예시를 5열·신규 7종목으로 갱신하고, <code>docs/build-plan.html</code>에 P7 단계를 추가하고, <code>scripts/seed-sheet.mjs</code>를 5열 헤더·신규 종목으로 갱신한다. 코드 변경은 없다 — 문서·시딩 스크립트 정합화만.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>docs/prd-event-lifecycle.html</code>(#109, 확정 PRD)의 §11 "운영 규칙 개정" 섹션(<code>docs/prd-event-lifecycle.html:387-399</code>)이 이미 4개 절차의 정확한 문구를 담고 있다 — 이 이슈는 그 문구를 <code>sheet-rules.html</code>로 옮겨 반영하는 작업이다.</p>
+    <ul>
+      <li><b>sheet-rules.html</b> 현재 4개 섹션(01 절대 규칙 · 02 새 회차 추가 · 03 가입/탈퇴 · 04 셀 입력 형식 · 05 현재 시트 구조)만 있고 종목 생애주기 절차가 없다. §01의 "헤더(1행)와 컬럼 순서 고정" 규칙(<code>docs/sheet-rules.html:93-97</code>)이 여전히 "열 추가/삭제/이동 금지"라고만 써서, 종료 회차(E열) 입력은 운영 대상인데도 이 규칙만 보면 목표 탭도 절대 손대면 안 되는 것처럼 읽힌다.</li>
+      <li><b>sheet-integration.html</b> §02 목표 탭 예시(<code>docs/sheet-integration.html:128-133</code>)가 4열(<code>종목|목표|만점|방향</code>) · 옛 4종목(드리블셔틀런·골밑슛·자유투·45도패스캐치)이다. 회차 탭 예시(<code>docs/sheet-integration.html:136-141</code>)의 헤더 참조 주석도 <code>='목표'!A2:A5</code>로 돼 있는데, 실제 개정 스키마에서 45도패스캐치는 목표 탭 맨 아래(9행, PRD §10)로 이동했으므로 이 연속 범위 표기 자체가 더 이상 성립하지 않는다. §03의 "정렬 방향" 설명(<code>docs/sheet-integration.html:162</code>)도 신규 종목명을 일일이 나열하는 방식이라 종목이 늘 때마다 또 고쳐야 한다.</li>
+      <li><b>build-plan.html</b> P0~P6까지만 있고 P7 섹션이 없다(<code>docs/build-plan.html:60-140</code>). 실제로는 P7 아래 이슈 #110~#129 20개가 이미 진행 중 — #110~#124는 CLOSED, #125~#127·#129는 OPEN(<code>gh issue list</code> 확인).</li>
+      <li><b>seed-sheet.mjs</b> <code>TAB_COLS.목표 = 4</code>·<code>SIMPLE_TABS.목표</code>가 옛 4종목·4열이고(<code>scripts/seed-sheet.mjs:25,39-45</code>), 종료 회차 개념이 전혀 없다. 이 스크립트는 "이미 시딩 완료 — 재실행 금지" 경고문(<code>scripts/seed-sheet.mjs:1-2</code>)이 붙은 일회성 스크립트라 실제 재실행 대상이 아니다 — 문서 정합 목적으로만 갱신한다.</li>
+      <li><b>records-schema.html</b>은 이미 #119에서 <code>endSessionDate</code>·<code>eventKeys</code> 계약으로 개정 완료(<code>docs/records-schema.html:220,245</code>) — 이번 작업의 참조 기준으로 그대로 사용, 수정 대상 아님.</li>
+      <li>신규 7종목의 정확한 이름·목표·만점·방향·행 순서는 PRD §04 코드 블록(<code>docs/prd-event-lifecycle.html:159-167</code>)에 확정돼 있다: 드리블셔틀런(2행)·골밑슛(3행)·자유투(4행)·패스 - 체스트(5행)·패스 - 바운드(6행)·패스 - 원핸드(7행)·볼 캐치(8행)·45도패스캐치(9행, 종료 2025-05-16). 코드베이스 자체는 종목명을 하드코딩하지 않으므로(시트 데이터 기반) 이 이름들은 문서·시딩 예시에만 등장한다(<code>grep -rn "패스 - \|볼 캐치"</code> 소스 전체 0건).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>sheet-rules.html</b>: 기존 §03(가입/탈퇴) 뒤에 새 섹션 "04 자주 하는 작업 ③ — 종목 추가 / 종료 / 재개 / 기준 개편"을 삽입하고, 이어지는 §04·§05를 §05·§06으로 밀어 번호를 유지한다. 내용은 PRD §11 표를 그대로 절차화하되 sheet-rules.html의 기존 톤(<code>.steps</code>/<code>.dodont</code>/<code>.rule .why</code>)에 맞춘다 — 특히 "종목 종료" 절차의 <b>"오늘 기록지 만들기 → 그 다음에 종료 회차 기입"</b> 순서 경고(먼저 기입하면 오늘 탭이 생성에서 제외됨)를 놓치지 않는다. §01의 "헤더(1행)와 컬럼 순서 고정" 규칙 문구를 PRD §11 "기존 규칙 문구 개정" 행 그대로 개정 — 회차 탭 열은 여전히 직접 추가·삭제 불가, 목표 탭은 E열(종료 회차) 입력만 운영 대상임을 명시. 30초 요약(tldr)에도 종목 종료/추가 규칙을 한 줄 추가. §06(구 §05) 시트 구조 다이어그램의 목표 탭 열도 5열로 갱신.</li>
+      <li><b>sheet-integration.html</b>: §02 목표 탭 예시를 PRD §04 코드 블록과 동일한 8행(7현역+1종료)·5열로 교체. 회차 탭 예시는 최신 회차(신규 7종목, 날짜는 PRD §10과 동일하게 <code>2026-07-23</code>)로 교체해 헤더 참조가 <code>='목표'!A2</code>~<code>A8</code>(연속 7행, 종료 종목은 9행이라 자동 제외)로 정확히 성립하게 한다 — 기존 2025-05-16 예시(4종목)는 삭제하지 않고 "과거 회차는 그대로 유지" 각주로 남긴다. §03 "정렬 방향" 설명은 특정 종목명 나열 대신 "셔틀런만 낮을수록, 그 외 전부 높을수록(목표 탭 방향 열 기준)"으로 일반화해 향후 종목이 늘어도 다시 고칠 필요가 없게 한다.</li>
+      <li><b>build-plan.html</b>: 기존 P0~P6 섹션과 동일한 마크업(<code>.dep</code>·<code>ol.tasks</code>)으로 P7 섹션을 추가한다. 계약→파서→계산→조립→쓰기→FE파생→화면(랭킹/홈/프로필/입력)→검증→운영(문서·마이그레이션) 순으로 그룹핑하고 각 항목에 실제 이슈 번호를 병기, 완료된 항목은 <code>&lt;span class="good"&gt;완료&lt;/span&gt;</code>로 표시한다(#110~#124 완료, 이 이슈 #128도 이 PR 반영 시점에 완료 표시, #125~#127·#129는 미표시). PRD 링크를 <code>.dep</code> 줄에 병기.</li>
+      <li><b>seed-sheet.mjs</b>: <code>TAB_COLS.목표</code> 4→5, <code>SIMPLE_TABS.목표</code>를 PRD §04 8행 데이터(종료 회차 열 포함)로 교체. 기존 <code>2025-05-16</code> 탭은 옛 4종목 그대로 유지하되 45도패스캐치 헤더 참조식만 목표 탭의 새 행 번호(9행 = <code>='목표'!A9</code>)로 갱신 — PRD §10 마이그레이션 3단계와 동일 조작. 신규 종목을 보여주는 두 번째 회차 탭 <code>2026-07-23</code>을 추가해 현역 7종목 헤더(<code>='목표'!A2</code>~<code>A8</code>)·참가자 점수 예시를 시딩한다. <code>TAB_TITLES</code>·서식/드롭다운 루프는 배열 기반이라 탭 하나 추가해도 자동으로 처리된다(방향 드롭다운 컬럼 인덱스는 D열 그대로 불변 — 종료 회차는 E열에 신설되므로 영향 없음).</li>
+      <li>코드(런타임) 변경은 없음 — 이 이슈는 <a href="https://github.com/damdam6/bernice/issues/120">#120</a>(build-records-response V6) 완료를 전제로 문서·시딩만 정합화한다(PRD §13 이슈표 11행 의존관계).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>sheet-rules.html에 "종목 추가/종료/재개/기준 개편" 섹션 신설 + 기존 섹션 번호 밀기 + §01 열 규칙 문구 개정 + tldr 갱신 + §06 다이어그램 5열 갱신
+        <span class="files"><code>docs/sheet-rules.html</code></span>
+      </li>
+      <li>sheet-integration.html §02 목표 탭 예시(5열·8행) + 회차 탭 예시(신규 7종목, 2026-07-23) 교체, §03 정렬 방향 설명 일반화
+        <span class="files"><code>docs/sheet-integration.html</code></span>
+      </li>
+      <li>build-plan.html에 P7 섹션 추가(이슈 번호·완료 상태 병기), PRD 링크 연결
+        <span class="files"><code>docs/build-plan.html</code></span>
+      </li>
+      <li>seed-sheet.mjs: 목표 탭 5열 데이터 교체, 2025-05-16 헤더 참조 갱신, 2026-07-23 회차 탭 신설
+        <span class="files"><code>scripts/seed-sheet.mjs</code></span>
+      </li>
+      <li>스크립트 dry-run 검증 — 실제 Sheets API·서비스 계정 없이, <code>fetch</code>를 모킹하고 임시 RSA 키로 <code>main()</code> 전체 경로를 실행해 배치 요청 payload(열 수·범위·헤더 수식·드롭다운 인덱스)가 스키마와 일치하는지 확인
+        <span class="note">실제 프로덕션 시트는 절대 건드리지 않는다 — SHEET_ID·GOOGLE_APPLICATION_CREDENTIALS 전부 임시값</span>
+      </li>
+      <li>레포 표준 빌드/테스트(타입체크 등) 실행 — 문서·mjs만 변경되므로 회귀 영향 없는지 확인 후 플랜 체크리스트 마무리</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>seed-sheet.mjs를 실수로 실제 SHEET_ID에 대해 실행</td><td>프로덕션 시트 전체 리셋(수동 편집·정렬·추가 데이터 소실) — 스크립트 최상단 경고문대로 매우 파괴적</td><td>dry-run은 반드시 스크래치 디렉토리의 임시 키·모킹된 fetch로만 수행. 실제 <code>node scripts/seed-sheet.mjs</code> 무인자 실행은 절대 하지 않는다</td></tr>
+        <tr><td>sheet-integration.html 예시를 신규 회차(2026-07-23)로 바꾸면서 기존 2025-05-16 예시가 사라져 "과거 회차 포맷"을 보여줄 참고가 없어짐</td><td>문서 완성도 저하</td><td>2025-05-16 예시는 삭제 대신 각주로 축소 보존(4종목 그대로, 헤더 참조만 A9로 정정)</td></tr>
+        <tr><td>PRD와 문구가 미묘하게 어긋나면(예: 종료 회차 형식 설명) 운영자가 실제 시트에서 혼란</td><td>운영 실수 재발(45도패스캐치 사고 재현 가능성)</td><td>모든 절차 문구는 PRD §11(<code>docs/prd-event-lifecycle.html:387-399</code>) 표를 원문 그대로 옮기고, 완료 후 records-schema.html·PRD와 크로스체크</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li>seed-sheet.mjs dry-run: 모킹된 fetch로 <code>main()</code> 전체 실행, 예외 없이 완료되는지 + 캡처된 batchUpdate/values 요청 body를 눈으로 검사(목표 탭 5열·8행, 방향 드롭다운 D열 인덱스 불변, 2026-07-23 탭 헤더가 연속 7행 참조인지, 2025-05-16 45도패스캐치 참조가 A9인지)</li>
+      <li><code>node --check scripts/seed-sheet.mjs</code>로 구문 오류 없는지 확인</li>
+      <li>레포 표준 lint/typecheck/test 스위트 실행 — 문서·mjs 변경이라 실패 시 무관한 회귀 여부만 확인(있다면 이 변경과 무관함을 확인)</li>
+      <li>4개 문서 파일을 브라우저에서 열어 렌더링 확인(테이블·섹션 번호·다크모드 스타일 깨짐 없는지)</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>sheet-rules.html·sheet-integration.html·build-plan.html·seed-sheet.mjs 4개 파일 개정 완료, PRD(<code>prd-event-lifecycle.html</code>)·records-schema.html과 문구 정합(종료 회차·eventKeys 용어 일치)</li>
+      <li>seed 스크립트 dry-run으로 5열·신규 종목·두 회차 탭 구성이 예외 없이·의도한 구조로 조립됨을 확인(실제 시트 미접촉)</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/128">#128</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>

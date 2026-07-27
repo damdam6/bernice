@@ -61,11 +61,11 @@
 <div class="wrap">
 
   <header class="hero">
-    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="records-schema.html">도메인 타입·API 계약</a></div>
+    <div class="crumb"><a href="index.html">← 설계 개요</a> · <a href="sheet-integration.html">시트 연동 확정안</a> · <a href="records-schema.html">도메인 타입·API 계약</a> · <a href="prd-event-lifecycle.html">PRD · 종목 생애주기</a></div>
     <span class="badge">운영 매뉴얼 · 편집 전 필독</span>
     <h1>📝 시트 편집 규칙</h1>
     <p class="sub">이 시트를 직접 수정하기 전에 읽어주세요. 몇 가지 규칙만 지키면 사이트가 안 깨집니다.</p>
-    <div class="tldr"><strong>30초 요약:</strong> ① <b>버니스명단·목표 행 순서 바꾸지 않기</b>(정렬·재배치 금지, 추가만) · ② 탈퇴는 <b>행 삭제 말고 상태만 '탈퇴'</b> · ③ <b>헤더(1행)·컬럼 순서 그대로</b> · ④ 새 회차 탭 이름은 <b><code style="color:inherit">YYYY-MM-DD</code></b> · ⑤ 서비스 계정 공유 <b>유지</b> · ⑥ 이름·종목명 칸은 <b>참조 수식</b>이라 손대지 않기(점수만 입력)</div>
+    <div class="tldr"><strong>30초 요약:</strong> ① <b>버니스명단·목표 행 순서 바꾸지 않기</b>(정렬·재배치 금지, 추가만) · ② 탈퇴는 <b>행 삭제 말고 상태만 '탈퇴'</b> · ③ <b>헤더(1행)·컬럼 순서 그대로</b> · ④ 새 회차 탭 이름은 <b><code style="color:inherit">YYYY-MM-DD</code></b> · ⑤ 서비스 계정 공유 <b>유지</b> · ⑥ 이름·종목명 칸은 <b>참조 수식</b>이라 손대지 않기(점수만 입력) · ⑦ 종목 종료도 <b>행 삭제 대신 종료 회차 기입</b>(재개는 비우기, 기준이 바뀌면 종료+추가)</div>
   </header>
 
   <!-- 1 -->
@@ -92,8 +92,8 @@
 
     <div class="rule">
       <div class="title">🔒 헤더(1행)와 컬럼 순서 고정</div>
-      각 탭의 첫 행 제목과 열 순서를 바꾸지 않는다. 열 추가/삭제/이동 금지.
-      <div class="why"><b>왜:</b> 사이트가 <b>열 제목·순서를 보고 데이터를 읽는다.</b> 바꾸면 값이 뒤섞이거나 안 읽힌다. (열을 추가하려면 사이트 코드도 같이 고쳐야 함 → 먼저 문의)</div>
+      각 탭의 첫 행 제목과 열 순서를 바꾸지 않는다. <span class="tabname">회차</span> 탭의 열은 <strong>여전히 직접 추가·삭제·이동하지 않는다</strong> — 새 회차 탭은 <span class="tabname" style="margin:0;">목표</span> 탭의 현역 종목을 자동으로 반영하므로 손댈 필요가 없다. <span class="tabname" style="margin:0;">목표</span> 탭은 <strong>행 추가</strong>(새 종목)와 <strong>E열 종료 회차 기입</strong>만 운영 입력 대상이다(자세한 절차는 <a href="#lifecycle" style="color:inherit; text-decoration:underline;">04</a>).
+      <div class="why"><b>왜:</b> 사이트가 <b>열 제목·순서를 보고 데이터를 읽는다.</b> 바꾸면 값이 뒤섞이거나 안 읽힌다. (그 외의 열을 추가하려면 사이트 코드도 같이 고쳐야 함 → 먼저 문의)</div>
     </div>
 
     <div class="rule">
@@ -158,8 +158,57 @@
   </section>
 
   <!-- 4 -->
+  <section id="lifecycle">
+    <h2><span class="num">04</span>자주 하는 작업 ③ — 종목 추가 / 종료 / 재개 / 기준 개편</h2>
+    <p class="muted" style="font-size:14px;">측정 종목도 팀원처럼 <strong>생애주기</strong>가 있다 — 사라질 수도, 새로 생길 수도 있다. <span class="tabname">목표</span> 탭에 <strong>종료 회차</strong> 열(E열)이 있는 이유다. 자세한 배경은 <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a> 참고.</p>
+
+    <h3>종목 추가</h3>
+    <ol class="steps">
+      <li><span class="tabname">목표</span> <strong>맨 아래</strong>에 새 행 추가 — 종목명·목표·만점·방향만 채우고 <strong>종료 회차는 빈칸</strong>으로 둔다</li>
+      <li><strong>과거 회차 탭은 손대지 않는다.</strong> 컬럼이 없는 과거 회차는 사이트가 자동으로 "그 회차 미측정"으로 처리한다</li>
+      <li>다음 기록지 만들기부터 새 종목이 자동으로 포함된다</li>
+    </ol>
+
+    <h3>종목 종료</h3>
+    <ol class="steps">
+      <li>행 삭제 금지(절대 규칙 유지) — <span class="tabname">목표</span>에서 그 종목 행의 <strong>종료 회차</strong> 칸에 <strong>마지막으로 측정한 회차 날짜</strong>(<code class="inline">YYYY-MM-DD</code>)를 기입한다</li>
+    </ol>
+    <div class="rule" style="border-left-color:var(--warn)">
+      <div class="title">⚠️ 오늘 측정까지 하고 접는 경우 — 순서 주의</div>
+      <strong>오늘 기록지를 먼저 만든 뒤</strong>에 종료 회차를 기입한다.
+      <div class="why"><b>왜:</b> 종료 회차를 먼저 기입하면 그 종목이 <b>오늘 기록지 만들기에서 제외</b>돼, 정작 오늘 측정할 기록지에 그 종목 칸이 없는 상태가 된다.</div>
+    </div>
+
+    <h3>종목 재개</h3>
+    <ol class="steps">
+      <li><span class="tabname">목표</span>에서 그 종목의 <strong>종료 회차 칸을 비운다</strong>(같은 행 유지 — 행을 새로 만들지 않는다)</li>
+      <li>끝. 다음 기록지 만들기부터 다시 포함되고, 이전 기록과의 추이가 그대로 이어진다</li>
+    </ol>
+
+    <h3>종목 기준 개편 (이름·목표치를 바꾸고 싶을 때)</h3>
+    <div class="rule">
+      <div class="title">🔒 기존 행을 다른 종목으로 바꿔치기 금지</div>
+      종목의 <strong>의미(이름·목표치·만점)가 바뀌는 개편</strong>은 기존 행을 제자리에서 고쳐 쓰지 않는다 — <strong>기존 종목 종료 + 새 종목 추가</strong>(위 두 절차)로 처리한다.
+      <div class="why"><b>왜:</b> 회차 탭 헤더가 <b>행 위치를 참조</b>하므로, 기존 행을 다른 종목으로 바꿔 쓰면 그 행을 참조하던 <b>과거 회차 기록이 전부 새 종목명·새 기준으로 뒤바뀐다.</b> 실제로 45도패스캐치를 "패스 - 체스트"로 제자리 교체했다가 과거 기록의 의미가 왜곡된 사고가 있었다.</div>
+    </div>
+
+    <div class="dodont">
+      <div class="do"><h4 class="good">✓ 이렇게</h4><ul>
+        <li>종목 종료 = 종료 회차 기입(행 삭제 X)</li>
+        <li>종목 재개 = 종료 회차 비우기(같은 행 유지)</li>
+        <li>기준이 바뀌는 개편 = 기존 종목 종료 + 새 종목을 맨 아래 행에 추가</li>
+      </ul></div>
+      <div class="dont"><h4 class="bad">✗ 이러지 말기</h4><ul>
+        <li>기존 종목 행에 새 이름·새 기준을 덮어쓰기(제자리 교체)</li>
+        <li>종목을 접으면서 행을 삭제</li>
+        <li>오늘 기록지를 만들기 전에 종료 회차부터 기입</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
   <section>
-    <h2><span class="num">04</span>셀 입력 형식</h2>
+    <h2><span class="num">05</span>셀 입력 형식</h2>
     <table>
       <thead><tr><th>항목</th><th class="mono">형식</th><th>예시</th></tr></thead>
       <tbody>
@@ -179,19 +228,19 @@
     </div>
   </section>
 
-  <!-- 5 -->
+  <!-- 6 -->
   <section>
-    <h2><span class="num">05</span>현재 시트 구조 (참고)</h2>
+    <h2><span class="num">06</span>현재 시트 구조 (참고)</h2>
     <p class="muted" style="font-size:14px;">탭 3종. 회차 탭만 3개월마다 늘어남.</p>
-    <div class="sheet"><span class="tabname">버니스명단</span>   <span class="h">이름 | 상태</span>                  ← 팀 명단 (행 위치=신원, 상태 드롭다운)
-<span class="tabname">목표</span>       <span class="h">종목 | 목표 | 만점 | 방향</span>       ← 종목 기준 (방향 드롭다운)
-<span class="tabname">2025-05-16</span> <span class="h">이름 | 드리블셔틀런 | 골밑슛 | 자유투 | 45도패스캐치</span>   ← 회차 기록 (참가자만)
+    <div class="sheet"><span class="tabname">버니스명단</span>   <span class="h">이름 | 상태</span>                              ← 팀 명단 (행 위치=신원, 상태 드롭다운)
+<span class="tabname">목표</span>       <span class="h">종목 | 목표 | 만점 | 방향 | 종료 회차</span>       ← 종목 기준 (방향 드롭다운, 종료 회차는 접은 종목만 기입)
+<span class="tabname">2026-07-23</span> <span class="h">이름 | 드리블셔틀런 | 골밑슛 | 자유투 | …</span>   ← 회차 기록 (참가자만, 그 회차 현역 종목만)
            <span class="note">(이름 = ='버니스명단'!A행 또는 직접 입력,  종목 헤더 = ='목표'!A행,  점수는 직접 입력)</span></div>
     <p class="muted" style="font-size:13px;">자세한 스키마·설계 근거는 <a href="sheet-integration.html" style="color:var(--accent-2)">시트 연동 확정안</a> 참고.</p>
   </section>
 
   <div class="footer">
-    시트 편집 규칙 · 운영 매뉴얼 · 최종 업데이트 2026-07-13 (탈퇴 = 사이트 전체 숨김 정책 반영) · 관련: <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a>
+    시트 편집 규칙 · 운영 매뉴얼 · 최종 업데이트 2026-07-27 (종목 생애주기 절차 반영 — 추가·종료·재개·기준 개편) · 관련: <a href="records-schema.html" style="color:var(--accent-2);">도메인 타입·API 계약</a> · <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a>
   </div>
 
 </div>
