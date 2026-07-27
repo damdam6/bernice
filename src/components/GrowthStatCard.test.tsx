@@ -72,4 +72,16 @@ describe('GrowthStatCard', () => {
     fireEvent.click(screen.getByRole('button'))
     expect(onToggle).toHaveBeenCalledTimes(1)
   })
+
+  // #125 — buildGrowthCards가 이미 ended:true 카드를 유효 기록 보유 선수에게만 내려주므로,
+  // 여기서는 카드가 렌더되면 종료 뱃지도 함께 렌더되는지만 확인한다.
+  it('ended:true 카드는 "종료" 뱃지를 렌더한다', () => {
+    render(<GrowthStatCard card={{ ...CARD, ended: true }} expanded={false} onToggle={() => {}} />)
+    expect(screen.getByText('종료')).toBeInTheDocument()
+  })
+
+  it('ended:false(현역) 카드는 종료 뱃지를 렌더하지 않는다', () => {
+    render(<GrowthStatCard card={CARD} expanded={false} onToggle={() => {}} />)
+    expect(screen.queryByText('종료')).not.toBeInTheDocument()
+  })
 })

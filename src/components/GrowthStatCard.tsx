@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { DeltaTone, GrowthCardDatum } from '../lib/profile-view'
+import { Pill } from './Pill'
 
 type GrowthStatCardProps = {
   card: GrowthCardDatum
@@ -17,8 +18,10 @@ const DELTA_TONE_CLASS: Record<DeltaTone, string> = {
   muted: 'text-ink-muted',
 }
 
-// 종목별 성장 카드 — §05: 종목명 + PB + 현재값 + 델타. 탭하면 primary 보더로 선택되고
-// 추이 차트(children)가 카드 안에서 확장된다(§05 "탭하면 카드가 primary 보더로 선택되고 추이 차트 확장").
+// 종목별 성장 카드 — §05: 종목명(+ 종료 종목이면 종료 뱃지) + PB + 현재값 + 델타. 탭하면 primary
+// 보더로 선택되고 추이 차트(children)가 카드 안에서 확장된다(§05 "탭하면 카드가 primary 보더로
+// 선택되고 추이 차트 확장"). 종료 뱃지는 §08 — buildGrowthCards가 이미 유효 기록 보유 선수에게만
+// ended:true 카드를 내려주므로 여기서는 렌더만 담당한다.
 export function GrowthStatCard({ card, expanded, onToggle, children }: GrowthStatCardProps) {
   return (
     <div
@@ -33,7 +36,14 @@ export function GrowthStatCard({ card, expanded, onToggle, children }: GrowthSta
         className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-ink">{card.label}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate font-bold text-ink">{card.label}</p>
+            {card.ended && (
+              <span className="shrink-0">
+                <Pill colorClassName="bg-neutral-tint text-neutral-strong">종료</Pill>
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-xs text-ink-sub">PB {card.pb}</p>
         </div>
         <div className="shrink-0 text-right">
