@@ -49,7 +49,7 @@ const EVENTS: EventDefinition[] = [
   { key: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록', endSessionDate: null },
   { key: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록', endSessionDate: null },
   { key: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: null },
-  { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null },
+  { key: '패스 - 체스트', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null },
 ]
 
 // satisfies로 Player[] 형태를 검증하되 status 리터럴('활동')은 넓히지 않는다 — 아래
@@ -255,21 +255,21 @@ describe('측정일 시나리오 (E2E 스모크)', () => {
     fireEvent.change(screen.getByLabelText('드리블셔틀런 초'), { target: { value: '05' } })
     fireEvent.change(screen.getByLabelText('골밑슛 개수'), { target: { value: '6' } })
     fireEvent.change(screen.getByLabelText('자유투 개수'), { target: { value: '4' } })
-    fireEvent.change(screen.getByLabelText('45도패스캐치 개수'), { target: { value: '6' } })
+    fireEvent.change(screen.getByLabelText('패스 - 체스트 개수'), { target: { value: '6' } })
     fireEvent.click(screen.getByRole('button', { name: '저장' }))
 
     await screen.findByRole('heading', { name: '참가자 목록' })
     expect(await screen.findByText(/선수1 저장됨/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /선수1.*완료/ })).toBeInTheDocument()
 
-    // 5. 선수2 — 면제 가능 종목(45도패스캐치)만 면제 토글 사용
+    // 5. 선수2 — 면제 가능 종목(패스 - 체스트)만 면제 토글 사용
     fireEvent.click(screen.getByRole('button', { name: /^선수2/ }))
     await screen.findByText('선수2')
     fireEvent.change(screen.getByLabelText('드리블셔틀런 분'), { target: { value: '0' } })
     fireEvent.change(screen.getByLabelText('드리블셔틀런 초'), { target: { value: '55' } })
     fireEvent.change(screen.getByLabelText('골밑슛 개수'), { target: { value: '8' } })
     fireEvent.change(screen.getByLabelText('자유투 개수'), { target: { value: '2' } })
-    fireEvent.click(screen.getByRole('switch', { name: '45도패스캐치 면제' }))
+    fireEvent.click(screen.getByRole('switch', { name: '패스 - 체스트 면제' }))
     fireEvent.click(screen.getByRole('button', { name: '저장' }))
 
     await screen.findByRole('heading', { name: '참가자 목록' })
@@ -282,7 +282,7 @@ describe('측정일 시나리오 (E2E 스모크)', () => {
     fireEvent.change(screen.getByLabelText('드리블셔틀런 초'), { target: { value: '15' } })
     fireEvent.change(screen.getByLabelText('골밑슛 개수'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('자유투 개수'), { target: { value: '5' } })
-    fireEvent.change(screen.getByLabelText('45도패스캐치 개수'), { target: { value: '3' } })
+    fireEvent.change(screen.getByLabelText('패스 - 체스트 개수'), { target: { value: '3' } })
     fireEvent.click(screen.getByRole('button', { name: '저장' }))
 
     await screen.findByRole('heading', { name: '참가자 목록' })
@@ -314,7 +314,7 @@ describe('측정일 시나리오 (E2E 스모크)', () => {
     expect(screen.getByText('2위').closest('div')).toHaveTextContent('선수2')
     expect(screen.getByText('3위').closest('div')).toHaveTextContent('선수3')
 
-    fireEvent.click(screen.getByRole('button', { name: '45도패스캐치' }))
+    fireEvent.click(screen.getByRole('button', { name: '패스 - 체스트' }))
     await screen.findByText('선수2')
     expect(screen.getByText('선수2').closest('div')).toHaveTextContent('면제')
 
