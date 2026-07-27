@@ -31,6 +31,22 @@ describe('fetchRecords', () => {
     await expect(fetchRecords()).resolves.toEqual(RECORDS_BODY)
   })
 
+  it("cache 모드를 넘기면 fetch에 그대로 전달된다 — 'reload'가 브라우저 HTTP 캐시를 우회한다(#151)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchRecords(undefined, 'reload')).resolves.toEqual(RECORDS_BODY)
+    expect(fetchMock).toHaveBeenCalledWith('/api/records', { signal: undefined, cache: 'reload' })
+  })
+
+  it('cache 모드를 안 넘기면 기존과 동일하게 cache 미지정으로 호출한다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchRecords()
+    expect(fetchMock).toHaveBeenCalledWith('/api/records', { signal: undefined, cache: undefined })
+  })
+
   it('401 응답이면 UnauthorizedError를 던진다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(401, { error: 'unauthorized' })))
 
