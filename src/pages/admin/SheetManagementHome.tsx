@@ -1,16 +1,31 @@
 // 시트 관리 홈(#67) — docs/prd-design.html §05: 버튼 3개 세로 스택(기록 입력 강조·참가자
 // 추가·기록지 만들기) + 로그아웃 텍스트 버튼 + 안내 박스.
+// #151: 시트를 직접 편집했을 때의 탈출구로 "데이터 새로 고침" 버튼 추가 — 엣지·브라우저
+// 캐시를 모두 뚫고 최신 데이터를 반영한다(흐름은 useRefreshRecords 참고).
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Card } from '../../components/Card'
+import { Toast } from '../../components/common/Toast'
 import { RECORDS_QUERY_KEY } from '../../hooks/useRecords'
+import { useRefreshRecords } from '../../hooks/useRefreshRecords'
+import { useToast } from '../../hooks/useToast'
 import { logout } from '../../lib/logout-api'
 
 export default function SheetManagementHome() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [loggingOut, setLoggingOut] = useState(false)
+  const { refreshing, refresh } = useRefreshRecords()
+  const { message: toastMessage, show: showToast } = useToast()
+  const [refreshError, setRefreshError] = useState<string | null>(null)
+
+  async function handleRefresh() {
+    setRefreshError(null)
+    const result = await refresh()
+    if (result.ok) showToast('최신 데이터를 불러왔어요')
+    else setRefreshError(result.message)
+  }
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -51,7 +66,21 @@ export default function SheetManagementHome() {
           >
             기록지 만들기
           </button>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {refreshing ? '새로 고침 중…' : '데이터 새로 고침'}
+          </button>
         </div>
+
+        {refreshError && (
+          <p role="alert" className="text-center text-sm text-bad">
+            {refreshError}
+          </p>
+        )}
 
         <button
           type="button"
@@ -68,6 +97,8 @@ export default function SheetManagementHome() {
           </p>
         </Card>
       </div>
+
+      <Toast message={toastMessage} />
     </div>
   )
 }

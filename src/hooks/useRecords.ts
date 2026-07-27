@@ -4,10 +4,13 @@ import { isPlainObject } from '../../shared/is-plain-object'
 import { ApiError, UnauthorizedError } from '../lib/api-error'
 import { parseRecordsResponse } from '../lib/parse-records-response'
 
-export async function fetchRecords(signal?: AbortSignal): Promise<RecordsResponse> {
+// cache는 새로 고침 버튼(#151)이 'reload'를 넘겨 브라우저 HTTP 캐시를 우회하기 위한 것 —
+// 'reload'는 캐시를 건너뛰고 네트워크로 가며, 받은 응답으로 기존 캐시 엔트리를 교체한다.
+// 미지정이면 기존과 동일한 기본 캐시 동작이다.
+export async function fetchRecords(signal?: AbortSignal, cache?: RequestCache): Promise<RecordsResponse> {
   let res: Response
   try {
-    res = await fetch('/api/records', { signal })
+    res = await fetch('/api/records', { signal, cache })
   } catch (cause) {
     // 취소(abort)는 실패가 아니므로 래핑하지 않고 그대로 전파한다 — TanStack Query가 자체 처리한다.
     if (signal?.aborted) throw cause
