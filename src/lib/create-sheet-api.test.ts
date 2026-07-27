@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createSheet } from './create-sheet-api'
+import { jsonResponse } from '../test/json-response'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 describe('createSheet', () => {
   it('201이면 sessionDate·participantCount를 담아 ok:true를 반환한다', async () => {

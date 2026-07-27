@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { loginWithPasscode } from './login-api'
+import { jsonResponse } from '../test/json-response'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 describe('loginWithPasscode', () => {
   it('200이면 ok:true와 서버가 준 role을 반환한다', async () => {

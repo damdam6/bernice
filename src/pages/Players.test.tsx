@@ -6,15 +6,12 @@ import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { RecordsResponse } from '../../shared/domain'
 import Players from './Players'
+import { jsonResponse } from '../test/json-response'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 function createWrapper() {
   const client = new QueryClient()

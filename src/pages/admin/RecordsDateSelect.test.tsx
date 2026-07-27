@@ -6,15 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { EventDefinition, RecordsResponse, SessionEntry } from '../../../shared/domain'
 import RecordsDateSelect from './RecordsDateSelect'
+import { jsonResponse } from '../../test/json-response'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 const EVENTS: EventDefinition[] = [
   { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },

@@ -6,15 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { PlayerSummary, RecordsResponse, SessionEntry } from '../../../shared/domain'
 import AddPlayers from './AddPlayers'
+import { jsonResponse } from '../../test/json-response'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 function player(id: number, name: string, status: PlayerSummary['status'] = '활동'): PlayerSummary {
   return { id, name, status, trends: [], personalBests: [] }
