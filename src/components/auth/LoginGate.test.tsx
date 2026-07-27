@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { RecordsResponse } from '../../../shared/domain'
 import { LoginGate } from './LoginGate'
+import { jsonResponse } from '../../test/json-response'
 
 afterEach(() => {
   cleanup()
@@ -19,10 +20,6 @@ const RECORDS_BODY: RecordsResponse = {
   sessions: [],
   rankings: [],
   home: { latestSession: null, achievementRates: [] },
-}
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
 }
 
 function renderGate() {

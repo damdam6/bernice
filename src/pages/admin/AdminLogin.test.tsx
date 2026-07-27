@@ -5,15 +5,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import AdminLogin from './AdminLogin'
+import { jsonResponse } from '../../test/json-response'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 function renderPage() {
   const client = new QueryClient({

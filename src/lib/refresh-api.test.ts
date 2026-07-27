@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { refreshRecordsCache } from './refresh-api'
+import { jsonResponse } from '../test/json-response'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 describe('refreshRecordsCache', () => {
   it('200이면 ok:true를 반환한다', async () => {

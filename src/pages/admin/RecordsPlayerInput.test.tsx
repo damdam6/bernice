@@ -6,15 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { EventDefinition, EventScore, RecordsResponse, Session, SessionEntry } from '../../../shared/domain'
 import RecordsPlayerInput from './RecordsPlayerInput'
+import { jsonResponse } from '../../test/json-response'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 function event(
   key: string,

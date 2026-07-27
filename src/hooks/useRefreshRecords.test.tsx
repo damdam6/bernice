@@ -6,14 +6,11 @@ import type { ReactNode } from 'react'
 import type { RecordsResponse } from '../../shared/domain'
 import { RECORDS_QUERY_KEY } from './useRecords'
 import { useRefreshRecords, type RefreshRecordsResult } from './useRefreshRecords'
+import { jsonResponse } from '../test/json-response'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 const RECORDS_BODY: RecordsResponse = {
   generatedAt: '2026-07-28T00:00:00.000Z',

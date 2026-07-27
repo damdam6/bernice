@@ -37,6 +37,7 @@ import { buildEventScore } from '../shared/build-event-score'
 import { compareKorean } from './lib/korean-sort'
 import { formatSeoulDate } from './lib/seoul-date'
 import App from './App'
+import { jsonResponse } from './test/json-response'
 
 afterEach(() => {
   cleanup()
@@ -60,10 +61,6 @@ const PLAYERS = [
   { id: 2, name: '선수2', status: '활동' },
   { id: 3, name: '선수3', status: '활동' },
 ] satisfies Player[]
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 function makeEntry(player: Player): SessionEntry {
   return {

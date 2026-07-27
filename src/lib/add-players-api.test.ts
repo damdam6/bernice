@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { addPlayers } from './add-players-api'
+import { jsonResponse } from '../test/json-response'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
-
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status })
-}
 
 describe('addPlayers', () => {
   it('200이면 sessionDate·added를 담아 ok:true를 반환한다', async () => {
