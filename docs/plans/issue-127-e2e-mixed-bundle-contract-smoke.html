@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#127 P7 — E2E: 혼재 번들 계약 스모크 (4종목 과거 + 7종목 신규 + 종료 종목) — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .done-list li.done::before { content: "✓"; background: var(--ok); color: #fff; font-size: 11px; line-height: 13px; text-align: center; }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/127">#127</a></span><span class="type-chip">기능 개선 (테스트)</span>
+    <h1>P7 — E2E: 혼재 번들 계약 스모크 (4종목 과거 + 7종목 신규 + 종료 종목)</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/127-e2e-mixed-bundle-contract-smoke</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>#113·#114·#120이 각각 랭킹·추이·조립 단계에서 종목 생애주기(V4·V6, eventKeys 좁힘)를 구현·단위테스트했지만, 실시트 마이그레이션 후 실제로 벌어지는 상태 — 목표 탭 8행(현역 7 + 종료 1) · 과거 회차 4종목(기록 있음) · 신규 회차 7종목(빈 점수)이 한 번에 섞인 번들 — 을 <code>GET /api/records</code> 라우트 레벨에서 한 번에 검증하는 테스트는 아직 없다. 이 이슈는 <code>docs/prd-event-lifecycle.html</code> §04·§10의 실제 예시 데이터를 그대로 픽스처로 써서 <code>onRequestGet</code> 전 구간(파서→조립→랭킹→추이→홈)의 계약을 한 파일로 못박고, V4·V6 위반 시 500 에러 경로도 같은 라우트에서 함께 검증한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>기존 커버리지의 공백</b> — <code>functions/lib/build-records-response.test.ts:126-160</code>의 "혼재 번들" 테스트는 종목 2개(골밑슛·45도패스캐치)짜리 축소 픽스처로 <code>buildRecordsResponse</code> 함수 하나만 검증한다. <code>functions/api/records.test.ts</code>는 라우트 레벨(캐시·에러 매핑)을 다루지만 종목 1개짜리 최소 픽스처뿐이라 rankings·trends·home이 실제로 어떻게 조립되는지는 보여주지 않는다. 프론트 E2E(<code>src/App.e2e.test.tsx</code>)는 UI 플로우 검증이 목적이라 목 백엔드가 <code>functions/</code>를 아예 import하지 않는다(주석 8-9행) — 실제 파서·조립 코드가 전혀 걸리지 않는다.</li>
+      <li><b>목표 데이터 형태</b> — <code>docs/prd-event-lifecycle.html:159-167</code> §04가 마이그레이션 후 목표 탭의 정확한 5열 8행을 예시로 못박아 뒀다: 드리블셔틀런·골밑슛·자유투·패스-체스트·패스-바운드·패스-원핸드·볼 캐치(현역 7) + 45도패스캐치(종료 회차 <code>2025-05-16</code>).</li>
+      <li><b>회차 데이터 형태</b> — 같은 문서 <code>docs/prd-event-lifecycle.html:356-383</code> §10이 실제 회차 두 개의 상태를 진단한다: <code>2025-05-16</code>은 드리블셔틀런·골밑슛·자유투·45도패스캐치 4열(기록 있음, 45도패스캐치는 값 6·7·면제 혼재), <code>2026-07-23</code>은 신규 7종목 헤더에 참가자 행은 있지만 점수가 전부 빈칸. <code>scripts/seed-sheet.mjs:44-53</code>의 <code>SESSION_SCORES</code>가 바로 이 2025-05-16 실데이터(선수1~6, 45도패스캐치 값 6·7·7·5·면제·6)라 그대로 재사용 가능하다.</li>
+      <li><b>조립 파이프라인</b> — <code>functions/api/records.ts:15-34</code>의 <code>onRequestGet</code>이 <code>fetchSheetBundle</code>(모킹 대상) → <code>buildRecordsResponse</code>(<code>functions/lib/build-records-response.ts:55-89</code>, 명단·목표 파싱 → 회차별 <code>parseSession</code> → <code>computeSessionRankings</code> → <code>computePlayerSummaries</code> → <code>computeHomeSummary</code>) → JSON 직렬화까지 한 번에 탄다. 이 체인 전체를 도는 것이 라우트 테스트의 장점이고, <code>fetchSheetBundle</code> 모킹 패턴은 <code>functions/api/records.test.ts:5-13</code>에 이미 있다.</li>
+      <li><b>검증 매트릭스 위치</b> — V4(회차 헤더에 종료 종목이 종료일 초과해 존재)는 <code>functions/lib/parse-session.ts:169-179</code> <code>mapHeaderToEvents</code>가, V6(종료 회차가 실존 회차 탭 이름과 불일치)는 <code>functions/lib/build-records-response.ts:36-45</code> <code>validateEndSessionDates</code>가 각각 평범한 <code>Error</code>를 던진다. <code>functions/api/records.ts:46-48</code>의 <code>errorResponse</code>는 <code>RecordsAssemblyError</code>가 아닌 일반 <code>Error</code>를 전부 <code>sheet_data_invalid</code> + 500으로 매핑하므로, 두 위반은 API 계약상 같은 모양(상태 코드·에러 코드)으로 나오지만 원인이 다른 검증 단계라 메시지 내용으로 구분해야 한다(<code>functions/api/records.test.ts:124-136</code>에 이미 한 예시가 있음 — 헤더 불일치).</li>
+      <li><b>eventKeys=0 레코드 상태의 계약</b> — <code>functions/lib/compute-rankings.ts:71-80</code> <code>computeSessionRankings</code>는 <code>session.eventKeys</code>에 있는 종목만큼 <code>SessionRankings.events</code> 항목을 만든다(그 종목에 기록이 하나도 없어도 <code>entries: []</code>로 항목 자체는 유지). <code>functions/lib/compute-home-summary.ts:23-32</code> <code>achievementRates</code>도 같은 규칙을 그대로 물려받아 <code>eligibleCount</code> 0이면 <code>rate</code> 0으로 채운다. 신규 회차가 "빈 점수"인 시나리오는 바로 이 두 규칙이 실제로 맞물리는지 보여주는 지점이다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>테스트 레벨: 라우트(<code>onRequestGet</code>) — 단위 함수 아님.</b> 이유: 이슈가 요구하는 "<code>/api/records</code> 전 구간" 계약은 <code>buildRecordsResponse</code> 하나가 아니라 <code>fetchSheetBundle</code>부터 JSON 직렬화·에러 매핑까지 실제로 라우트가 도는 경로다. <code>functions/api/records.test.ts</code>와 같은 모킹 패턴(<code>vi.mock('../lib/sheetsApi', ...)</code>)을 그대로 쓴다.</li>
+      <li><b>새 파일: <code>functions/api/records.e2e.test.ts</code>.</b> 기존 <code>functions/api/records.test.ts</code>에 케이스를 추가하는 대신 분리한다 — 그 파일은 캐시·에러 매핑처럼 작은 단위 픽스처로 충분한 라우트 관심사를 다루고, 이 이슈는 실시트 규모의 큰 픽스처로 전 계약 필드(events·eventKeys·rankings·trends·home)를 훑는 별도 관심사다. 프론트의 <code>src/App.e2e.test.tsx</code>와 같은 <code>*.e2e.test.ts</code> 명명 관례를 백엔드 쪽에도 맞춘다.</li>
+      <li><b>픽스처는 실제 마이그레이션 데이터를 그대로 재사용, 새로 창작하지 않는다.</b> 목표 탭은 <code>docs/prd-event-lifecycle.html</code> §04 예시 그대로(8행), 2025-05-16 회차는 <code>scripts/seed-sheet.mjs</code>의 <code>SESSION_SCORES</code> 그대로(선수1~6, 면제 1건 포함) — 문서·시딩 스크립트·테스트 세 곳이 같은 숫자를 가리키게 해서 "실시트 마이그레이션 후 상태와 동일한 시나리오"라는 이슈 요구를 문자 그대로 만족시킨다. 2026-07-23 회차는 같은 6명을 참가자로 두되 7개 헤더 전부 빈칸(§10 진단 그대로) — 정상 경로의 "빈 점수" 분기가 실제로 걸리게 한다.</li>
+      <li><b>정상 경로 검증 범위는 대표값 위주, 전수 검산은 하지 않는다.</b> 랭킹 동점 처리·달성 판정의 전 분기는 이미 <code>compute-rankings.test.ts</code>·<code>compute-home-summary.test.ts</code>·<code>player-summary.test.ts</code>가 단위 레벨에서 촘촘히 덮는다. 이 스모크가 새로 증명해야 하는 것은 "그 계산들이 실제 라우트 안에서 올바른 입력을 받아 올바른 자리에 꽂히는가"이므로, 각 계약 필드(<code>events[]</code> 순서·개수, 회차별 <code>eventKeys</code>, 종료 종목의 면제자 랭킹 제외, 신규 7종목 각각의 빈 <code>entries: []</code>, 추이의 스파스 규칙, <code>personalBests</code>가 신규 종목엔 아예 없음, <code>home.latestSession.participantCount === 0</code>·<code>achievementRates</code> 전부 rate 0)마다 대표 assertion 하나씩만 둔다.</li>
+      <li><b>V4·V6은 같은 라우트에서 별개 케이스로, 메시지로 구분한다.</b> 둘 다 500 + <code>sheet_data_invalid</code>로 같은 모양이 나오므로 상태 코드만 보면 두 검증을 구분한 게 증명되지 않는다 — 각 케이스에서 에러 메시지가 원인 종목명·날짜를 담고 있는지까지 assert해서 "어느 검증 단계가 잡았는지"를 실제로 구분한다.
+        <ul>
+          <li>V4 픽스처: 목표·구 회차는 정상 경로와 동일하게 두고, 신규 회차(2026-07-23, 종료일 2025-05-16 초과) 헤더에 45도패스캐치 컬럼을 잘못 추가.</li>
+          <li>V6 픽스처: 회차 탭은 정상 경로와 동일하게 두고(2025-05-16·2026-07-23 둘 다 실존), 목표 탭의 45도패스캐치 종료 회차만 존재하지 않는 날짜(예: <code>2025-05-01</code>)로 바꿔치기.</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps done-all">
+      <li class="done">공용 픽스처 작성 — 목표 탭 8행(§04 예시 그대로), 명단 6행(선수1~6, 전원 활동), 2025-05-16 회차(4열, seed-sheet.mjs <code>SESSION_SCORES</code> 재사용, 면제 1건 포함), 2026-07-23 회차(7열, 전원 빈칸). <code>functions/api/records.test.ts</code>의 <code>vi.mock('../lib/sheetsApi', ...)</code> + <code>fetchSheetBundleMock</code> + <code>makeFakeCache</code>/<code>makeContext</code> 패턴을 그대로 가져와 새 파일 상단에 둔다.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done">정상 경로 — <code>events[]</code> 8개가 목표 탭 순서대로(45도패스캐치가 마지막, <code>endSessionDate: '2025-05-16'</code>) 나오는지, <code>sessions[]</code> 두 회차의 <code>eventKeys</code>가 각각 4개·7개인지 assert.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done">정상 경로 — <code>rankings[0]</code>(2025-05-16)의 45도패스캐치 랭킹에 면제자(선수5)가 빠져 있고 나머지 5명이 랭킹에 포함되는지, <code>rankings[1]</code>(2026-07-23)의 7개 종목 전부가 <code>entries: []</code>로 항목은 존재하되 비어 있는지 assert — "빈 점수라도 그 회차 측정 종목 슬롯은 사라지지 않는다"는 계약의 핵심 지점.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done">정상 경로 — <code>players[]</code>에서 대표 선수 1~2명의 <code>trends</code>가 8개 종목 전부에 대해 존재하는지(신규 종목은 <code>points: []</code>), 면제자의 45도패스캐치 <code>trends</code>가 <code>points: []</code>인지, <code>personalBests</code>에 신규 7종목 중 하나(예: 볼 캐치)가 아예 등장하지 않는지(스파스 규칙) assert.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done">정상 경로 — <code>home.latestSession</code>이 2026-07-23·<code>participantCount: 0</code>(전원 미측정 → 미참여)인지, <code>home.achievementRates</code>가 신규 7종목 각각 <code>eligibleCount: 0, achievedCount: 0, rate: 0</code>인지 assert.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done">V4 위반 경로 — 신규 회차 헤더에 종료된 45도패스캐치 컬럼을 얹은 번들로 <code>onRequestGet</code> 호출 → 500 + <code>error: 'sheet_data_invalid'</code> + 메시지에 "45도패스캐치"·종료 회차 날짜 포함 assert.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done">V6 위반 경로 — 목표 탭 45도패스캐치의 종료 회차를 실존하지 않는 날짜로 바꾼 번들로 <code>onRequestGet</code> 호출 → 500 + <code>error: 'sheet_data_invalid'</code> + 메시지에 "45도패스캐치"·그 잘못된 날짜 포함 assert.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+      </li>
+      <li class="done"><code>npm test</code> 전체 그린 확인, 신규 파일만 <code>npx vitest run functions/api/records.e2e.test.ts</code>로 별도 확인.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>픽스처가 실제 파서 규칙(정규화 NFKC, "-"·빈칸=null 관례 등)과 미묘하게 어긋나면 조용히 다른 값이 조립돼 assertion이 우연히 통과할 위험</td><td>거짓 양성 — 계약이 실제로 안 지켜져도 그린</td><td>모든 원시값을 §04·§10·seed-sheet.mjs 원문 그대로 옮기고, 파생값(초 단위·랭킹 순위 등)은 <code>functions/lib/normalize-score.ts</code>·<code>compute-rankings.ts</code> 로직을 직접 손으로 재검산해 주석으로 남긴다</td></tr>
+        <tr><td>V4·V6 둘 다 <code>sheet_data_invalid</code>/500으로 응답 모양이 같아 한쪽만 통과해도 다른 쪽이 우연히 그린이 될 수 있음</td><td>검증 공백 은폐</td><td>메시지 내용(종목명·날짜)까지 assert해 두 케이스가 서로 다른 코드 경로(<code>parse-session.ts</code> vs <code>build-records-response.ts</code>)에서 터졌음을 구분</td></tr>
+        <tr><td>새 파일이 기존 <code>functions/api/records.test.ts</code>와 목적이 겹쳐 보여 리뷰에서 중복 지적 가능</td><td>사소 — 리뷰 왕복</td><td>플랜 §3에 분리 이유(작은 단위 픽스처 vs 실시트 규모 계약 스모크) 명시, PR 본문에도 동일 설명</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li class="done"><code>npx vitest run functions/api/records.e2e.test.ts</code> — 신규 스모크 8개 케이스(정상 경로 6개 관점 + V4·V6 각 1개) 전부 그린. (실행 결과: 8 passed)</li>
+      <li class="done"><code>npm test</code> — 레포 전체 84개 테스트 파일·741개 테스트 전부 그린(회귀 없음).</li>
+      <li class="done"><code>npm run typecheck</code>(<code>tsc -b</code>) — 새 픽스처·헬퍼 타입 오류 없음.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="done">혼재 번들(목표 탭 8행 = 현역 7 + 종료 1, 과거 회차 4종목·기록 있음 + 신규 회차 7종목·빈 점수) E2E 스모크가 <code>/api/records</code> 라우트 레벨에서 <code>events[]</code>·<code>eventKeys</code>·<code>rankings</code>·<code>trends</code>·<code>home</code> 전 계약을 검증하며 §10 "마이그레이션 후 기대 화면" 시나리오와 일치</li>
+      <li class="done">V4(종료 종목이 종료 회차 초과 헤더에 존재) 위반이 500 에러 응답으로 계약 테스트됨</li>
+      <li class="done">V6(종료 회차가 실존하지 않는 회차 탭을 가리킴) 위반이 500 에러 응답으로 계약 테스트됨</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/127">#127</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
