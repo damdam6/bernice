@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#149 신규 종목 추가 후 회차 탭에 컬럼이 없으면 앱 전체가 에러로 죽음 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  .tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 700; border-radius: 5px;
+    padding: 1px 7px; margin-right: 6px; vertical-align: 1px;
+  }
+  .tag.code { color: var(--accent); background: var(--accent-soft); }
+  .tag.ops { color: var(--warn); border: 1px solid var(--warn); }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/149">#149</a></span><span class="type-chip">버그 수정</span>
+    <h1>신규 종목 추가 후 회차 탭에 컬럼이 없으면 앱 전체가 "문제가 발생했어요" 에러로 죽음</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/149-missing-event-columns-crash</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>관측된 크래시의 코드 원인(구 파서의 "목표 탭 종목 전체 = 회차 탭 헤더" 완전일치 강제)은 P7 종목 생애주기 시리즈(#133 V3 완화 외 #132~#148)로 <b>이미 main에서 해소·테스트 완료</b>됐고, 실시트도 PRD §10 정합화(목표 탭 5열 + 45도패스캐치 복원·종료 마킹)가 <b>이미 실행된 상태</b>임을 읽기 전용 Sheets API 진단으로 실측 확인했다. 남은 결함은 단 하나 — <b>프로덕션 배포가 최신 main을 반영하지 못한 스테일 상태</b>다(배포 번들 <code>index-KYUvzGPv.js</code> ≠ 최신 main 로컬 빌드 <code>index-BKMpyhsl.js</code> 실측). 따라서 이 이슈는 ① 이슈가 기술한 원상태("신규 종목이 어느 회차 탭에도 없음")를 조립 단계 E2E 회귀로 고정하는 코드 작업과 ② CF Pages 배포 정상화·검증(PRD §10 절차 4)으로 완료된다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>에러 메시지의 출처</b> — 이슈의 "회차 탭 헤더에 다음 종목 컬럼이 없습니다: …"는 구 코드 <code>functions/lib/parse-session.ts:161</code>(<code>dd96916</code> 이전)의 V3 완전일치 검증 메시지와 정확히 일치한다. 현행 main에는 이 검사가 존재하지 않는다 — V3 완화로 제거됐고 그 사실이 <code>functions/lib/parse-session.ts:185-187</code> 주석에 명시돼 있다.</li>
+      <li><b>타임라인</b> — V3 완화(#133, <code>dd96916</code>)는 07-27 06:53 KST 머지, P7 마지막 커밋(#148, <code>124ce77</code>)은 20:26 KST, 이슈 생성은 20:54 KST. 즉 관측 시점의 프로덕션은 06:53 이전 코드를 실행 중이었다.</li>
+      <li><b>실측 1 — 배포 스테일 확정</b>: 프로덕션(<code>bernice-a5v.pages.dev</code>)의 번들은 <code>assets/index-KYUvzGPv.js</code>, 최신 main을 로컬 빌드하면 <code>index-BKMpyhsl.js</code>. Vite 해시는 내용 기반이라 불일치 = 스테일. <code>/api/health</code>는 200(서비스 자체는 동작), <code>/api/records</code>는 익명 401(미들웨어 정상).</li>
+      <li><b>실측 2 — 실시트는 이미 정합화 완료</b> (Sheets API 읽기 전용 진단): 목표 탭 헤더 5열(<code>종목|목표|만점|방향|종료 회차</code>), 9행에 <code>45도패스캐치|5|7|높을수록|2025-05-16</code> 복원, <code>2025-05-16</code> 탭 헤더 = 45도패스캐치 포함 4종목, <code>2026-07-23</code> 탭 헤더 = 신규 7종목. PRD §10 절차 1~3이 전부 실행된 상태로, E2E 스모크(<code>functions/api/records.e2e.test.ts</code>, #147)의 픽스처와 동일하다.</li>
+      <li><b>구 코드 × 현행 시트 = 이슈 재현</b> — 구 코드는 목표 탭에서 8종목을 읽고 <code>2025-05-16</code> 헤더(4종목)에서 신규 4종목(패스 - 체스트·바운드·원핸드, 볼 캐치)을 찾지 못해 정확히 이슈의 메시지로 throw한다. 신규 코드는 같은 입력을 200으로 처리한다(#147 E2E가 동일 픽스처로 전 구간 증명).</li>
+      <li><b>에러가 캐시로 고착될 가능성 없음</b> — <code>functions/api/records.ts:25-30</code>은 200 응답만 <code>cache.put</code>한다. 500은 캐시되지 않으므로 배포만 정상화되면 즉시 복구된다.</li>
+      <li><b>이슈 완료 조건 3(파서 테스트)은 기충족</b> — <code>functions/lib/parse-session.test.ts:193</code>("목표 탭에 있어도 회차 헤더에 없는 종목은 에러가 아니라 '그 회차 미측정'") 및 302~358행 "회차별 종목 서브셋(V3 완화)" 블록이 #133에서 추가됐다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+    <ul>
+      <li><b>근본 원인(코드, 기해소)</b> — 구 <code>mapHeaderToEvents</code>의 V3 완전일치 강제: 종목을 하나만 추가해도 그 컬럼이 없는 모든 과거 회차 탭이 에러가 되어 <code>/api/records</code> 전체가 500 → 프론트 전면 에러 화면. PRD <code>docs/prd-event-lifecycle.html</code> §01 문제 1의 실제 발생 사례이며, §10 진단표는 이 전면 에러 상태와 "신규 코드 배포로만 복구된다"까지 이미 문서화했다.</li>
+      <li><b>현재 잔존 원인(운영)</b> — CF Pages GitHub 연동 자동 빌드가 최신 main을 배포하지 못하고 있다(실패·중단·미트리거 여부는 대시보드에서 확인 필요). 수동 <code>wrangler pages deploy</code>는 스테일 <code>dist/</code>를 덮는 split-brain 사고 이력이 있어 금지 — 복구는 GUI 재빌드가 정석.</li>
+      <li><b>⚠ 작업 중 정정 (구현 세션 실측)</b> — 위 항목의 "자동 빌드 미동작" 가설은 <b>틀렸다</b>. <code>wrangler pages deployment list</code>(읽기 전용) 결과 CF 연동은 main 푸시마다 정상 빌드·배포 중이며, 최신 main(<code>124ce77</code>)의 정상 배포 <code>e6ff5fd6</code>(번들 <code>index-BKMpyhsl.js</code> = 로컬 최신 빌드와 일치)가 실존한다. 실제 원인: 그 <b>약 13분 뒤</b> 옛 main 커밋 <code>0a353de</code>(#109 PRD 문서 시점, P7 코드 이전) 기준으로 빌드된 새 Production 배포 <code>97d7522d</code>(번들 <code>index-KYUvzGPv.js</code>)가 올라와 프로덕션 별칭을 덮었다 — 대시보드에서 옛 배포를 Retry했거나 옛 체크아웃에서 수동 배포된 것으로 추정. 복구는 최신 main의 새 배포 1회(이 PR 머지가 자동 트리거) 또는 GUI에서 <code>e6ff5fd6</code> 재지정. <b>옛 배포의 Retry는 금지</b>(같은 사고 재발).</li>
+      <li><b>기각한 가설</b> — ⓐ "실시트 미마이그레이션이라 새 코드도 V5(<code>functions/lib/parse-goals.ts:55-61</code> 5열 엄격 일치)로 죽는다" → 실측으로 기각(이미 5열). ⓑ "새 코드에 잔존 크래시 경로가 있다" → #147 E2E가 실시트와 동일한 목표·헤더 픽스처로 200 증명, 데이터 행은 사고 전부터 파싱되던 그대로. ⓒ "에러 응답이 캐시에 남는다" → 200만 캐시됨.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ <span class="tag ops">운영</span>CF Pages 대시보드에서 최근 main 커밋들의 빌드 이력 확인 — 실패면 로그로 원인 파악, 미트리거·중단이면 최신 main 재빌드를 트리거한다(사용자 GUI 조율). 수동 배포는 최후수단으로만, 반드시 <code>npm run build && npx wrangler pages deploy</code> 세트로.
+        <span class="files">Cloudflare Pages GUI (bernice-a5v) — 코드 변경 아님, PR과 독립적으로 즉시 진행 가능</span>
+        <span class="files"><b>결과(진단 완료·원인 정정)</b>: 읽기 전용 <code>wrangler pages deployment list</code>로 규명 — CF 연동은 정상, 옛 커밋 <code>0a353de</code> 기준 배포 <code>97d7522d</code>가 최신 정상 배포 <code>e6ff5fd6</code>(124ce77)를 덮은 것이 원인(원인 분석 ⚠ 정정 항목 참고). 남은 액션은 "PR 머지 → 자동 배포" 하나로 축소됨</span>
+      </li>
+      <li>✅ <span class="tag code">코드</span>이슈 원상태 회귀 E2E 추가 — "신규 종목이 목표 탭에만 있고 <b>어떤 회차 탭 헤더에도 없는</b>" 번들(목표 8종목 + 회차는 <code>2025-05-16</code> 하나뿐): 200 응답, <code>events[]</code> 8종목 유지, <code>sessions[0].eventKeys</code> 4종목으로 좁힘, 신규 4종목 trends <code>points: []</code>·personalBests 부재, <code>home.achievementRates</code>는 최신 회차 측정 종목만. 종목 추가 직후·새 기록지 생성 전이라는 정상 운영 구간(PRD §11 "과거 회차 탭은 손대지 않는다")의 조립 단계 계약을 고정한다.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+        <span class="files"><b>결과</b>: describe "신규 종목이 목표 탭에만 있고 어떤 회차 탭에도 없음 (#149)" 4케이스 추가 — 계획한 어서션 전부 포함</span>
+      </li>
+      <li>✅ <span class="tag code">코드</span>전체 테스트 그린 확인 — 신규 케이스 포함 vitest 전체 통과, 기존 스위트 회귀 없음.
+        <span class="files"><code>npm test</code></span>
+        <span class="files"><b>결과</b>: 84파일 765테스트 전부 통과 + <code>npm run build</code>(타입체크 포함) 그린</span>
+      </li>
+      <li>⏳ <span class="tag ops">검증</span>배포 후 프로덕션 검증 — ⓐ 배포 번들 해시가 로컬 main 빌드와 일치, ⓑ 앱 정상 렌더(에러 화면 없음), ⓒ PRD §10 기대 화면: 랭킹 <code>2025-05-16</code>은 45도패스캐치 포함 4종목 칩·최신 회차는 신규 7종목 칩·홈 게이지 7종목·프로필 1차 참가자에게 45도패스캐치 종료 뱃지 카드.
+        <span class="files"><code>https://bernice-a5v.pages.dev</code> — 프리뷰 환경은 시크릿 부재로 검증 불가, 프로덕션에서만</span>
+        <span class="files"><b>상태</b>: PR 머지 → 자동 배포 후 수행 (머지가 곧 복구 트리거)</span>
+      </li>
+      <li>⏳ <span class="tag ops">운영</span>(조건부) 검증 과정에서 시트를 추가 편집한 경우에만 <code>/api/refresh</code>(로그인 필요)로 6시간 캐시를 무효화한다.
+        <span class="files"><code>functions/lib/records-cache.ts</code> — TTL 6h, 200만 캐시</span>
+      </li>
+      <li>✅ <span class="tag code">코드</span>PR 생성 — 회귀 E2E + 최종 플랜 문서 커밋, <code>Closes #149</code>. 코드 원인은 이미 main에 있으므로 이 PR은 "재발 방지 계약 고정"이 본체다.
+        <span class="files"><code>docs/plans/issue-149-missing-event-columns-crash.html</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>CF Pages 빌드 실패 원인이 환경(노드 버전·환경변수 등)이면 재트리거로 안 풀림</td><td>배포 지연 — 앱 다운 지속</td><td>빌드 로그 우선 확인(로컬 빌드는 성공하므로 코드보다 설정 의심). 최후수단: <code>npm run build && npx wrangler pages deploy</code> 세트(단독 deploy 절대 금지 — split-brain 사고 이력)</td></tr>
+        <tr><td>번들 해시 비교의 위양성(빌드 환경 차이)</td><td>스테일 오판</td><td>배포 완료 후 같은 커밋 기준으로 재대조하고, CF GUI에서 배포 커밋 SHA를 직접 확인해 이중 검증</td></tr>
+        <tr><td>실시트 데이터 행에 별개의 fail-loud 요인(명단 불일치 등)이 숨어 있을 가능성</td><td>배포 후에도 다른 메시지로 500</td><td>가능성 낮음(데이터 행은 사고 전부터 파싱되던 그대로). 필요시 배포 전 읽기 전용 실데이터 스모크(시트 fetch → 최신 <code>buildRecordsResponse</code> 로컬 실행)로 선검증</td></tr>
+        <tr><td>프리뷰 배포로 검증을 시도</td><td>프리뷰는 시크릿 부재로 <code>/api/records</code> 1101 — 코드 문제로 오판</td><td>검증은 main 머지 후 프로덕션에서만 수행 (기지 사항)</td></tr>
+        <tr><td>운영자가 검증 중 시트를 편집하면 6시간 캐시가 옛 200을 유지</td><td>수정이 화면에 반영 안 됨</td><td>편집 후 <code>/api/refresh</code> 호출을 검증 절차에 포함(작업 단계 5)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>회귀(신규)</b> — 작업 단계 2의 E2E 케이스: 신규 종목이 어느 회차 탭에도 없는 번들이 200으로 조립되고 eventKeys·trends·home이 PRD대로 좁혀지는지. 이슈 재현 상태가 다시는 에러가 되지 않음을 조립 단계에서 고정.</li>
+      <li><b>기존 동작</b> — vitest 전체 스위트 그린: parse-session V3/V4 단위(<code>parse-session.test.ts:193, 302-430</code>), 혼재 번들 E2E 6케이스 + V4·V6 위반 2케이스(<code>records.e2e.test.ts</code>), 프론트 파생·화면 테스트 전부.</li>
+      <li><b>프로덕션 수동 검증</b> — 작업 단계 4의 체크리스트(§10 절차 4 + 기대 화면). 완료 판정의 최종 근거.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>프로덕션에서 에러 화면 없이 앱이 정상 렌더링된다 — 신규 종목 컬럼이 없는 과거 회차 포함 (이슈 완료 조건 1; 배포 정상화 + 프로덕션 검증으로 확인)</li>
+      <li>컬럼 없는 회차의 신규 종목이 "그 회차 미측정"으로 처리되고 화면(랭킹 칩·홈 게이지·프로필)이 PRD <code>docs/prd-event-lifecycle.html</code> §10 기대 화면과 일치한다 (이슈 완료 조건 2)</li>
+      <li>"종목 목록에만 있고 회차 탭에 없는 종목" 케이스가 파서 단위(기존 <code>parse-session.test.ts:193</code>)와 조립 E2E(신규) 양쪽에서 검증된다 (이슈 완료 조건 3)</li>
+      <li>프로덕션 배포 번들 해시가 최신 main 로컬 빌드와 일치한다 (스테일 배포 해소의 실측 근거)</li>
+      <li>PR이 <code>Closes #149</code>로 머지된다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/149">#149</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
