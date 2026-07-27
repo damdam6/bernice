@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#123 P7 — 랭킹 화면: 선택 회차 측정 종목 칩 + 폴백 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps li.done { color: var(--muted); }
+  .steps li .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/123">#123</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — 랭킹 화면: 선택 회차 측정 종목 칩 + 폴백</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/123-ranking-screen-event-chips-fallback</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>랭킹 화면의 종목 칩이 지금은 전역 <code>events[]</code> 전체를 렌더해, 선택한 회차에서 측정하지 않은 종목을 눌러도 "표시할 기록이 없습니다"만 뜨는 막다른 화면이 생긴다. 종목 칩을 선택 회차의 <code>Session.eventKeys</code>(헤더 순서)만으로 좁히고, 회차를 전환했을 때 선택 중인 종목이 새 회차에 없으면 그 회차의 첫 종목으로 자동 폴백하도록 <code>src/pages/Rankings.tsx</code>의 파생 순서를 바꾼다. 이미 회차별 종목 파생이 끝난 <code>ranking-view.ts</code>·<code>Session.eventKeys</code> 계약(#116) 위에 얇게 얹는 작업이라 디자인·서버 변경은 없다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>src/pages/Rankings.tsx:52-70</code>(수정 전)의 파생 순서:</p>
+    <ol>
+      <li><code>event = events.find(e =&gt; e.key === selectedEventKey) ?? events[0]</code> — 선택 회차와 무관하게 <b>전역 종목 목록</b>에서 찾는다.</li>
+      <li><code>sessionDate</code>를 구하고 <code>session</code>은 그 아래에서 별도로 찾는다.</li>
+      <li>종목 칩도 <code>events.map(...)</code>로 <b>전역 7종목(마이그레이션 후 기준) 전부</b>를 그린다.</li>
+    </ol>
+    <p>결과: 최신 회차(7종목)에서 종목을 고른 뒤 과거 회차(예: 4종목만 측정)로 전환해도 칩은 여전히 7개가 보이고, 방금 고른 종목이 그 회차에 없으면 <code>rows</code>가 빈 배열이 되어 <code>EmptyState</code>("표시할 기록이 없습니다")만 남는다 — 종목이 실제로 없는 게 아니라 <b>화면이 잘못된 종목을 붙들고 있는 것</b>이라 사용자 입장에서 오해를 준다.</p>
+    <p>이미 있는 재료:</p>
+    <ul>
+      <li><code>shared/domain.ts:72</code> — <code>Session.eventKeys: string[]</code>, "그 회차 탭 헤더의 측정 종목 key 목록(헤더 순서)". 참가자 0명 회차에도 항상 명시된다는 계약이라 <code>entries</code>에서 유추할 필요가 없다.</li>
+      <li><code>src/lib/ranking-view.ts</code>의 <code>buildRankingRows</code>(#116에서 <code>score</code> undefined 가드 추가)·<code>findTiedRanks</code>·<code>buildEventGuidance</code> — 전부 "이미 선택된 종목 하나"를 받는 순수 함수라 이번 변경과 무관, 그대로 재사용.</li>
+      <li><code>src/lib/entry-status.ts:15</code> — 같은 <code>eventKeys</code> 계약을 판정 분모로 쓰는 선례(#117). 이번 작업의 "칩 목록 = eventKeys" 패턴과 결이 같다.</li>
+    </ul>
+    <p>PRD 근거: <code>docs/prd-event-lifecycle.html</code> §08 "🏆 랭킹" — "종목 칩 = 선택 회차의 측정 종목만(<code>eventKeys</code> 순서). 회차를 전환해 선택 중인 종목이 새 회차에 없으면 첫 종목으로 폴백한다. … 7종목 칩은 기존 가로 스크롤 UI로 수용(디자인 변경 없음)."</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>선택한 접근 — <code>ranking-view.ts</code>에 <code>deriveSessionEvents(events, session)</code> 순수 함수 추가 + <code>Rankings.tsx</code> 파생 순서만 재배열.</b></p>
+    <ul>
+      <li><code>deriveSessionEvents(events: EventDefinition[], session: Session): EventDefinition[]</code> — <code>session.eventKeys</code> 순서대로 <code>events</code>에서 찾아 담고, 매치되지 않는 키(계약 위반 데이터)는 크래시 대신 건너뛴다. <code>buildRankingRows</code>의 "undefined 방어는 유지"(PRD §08) 기조와 동일한 방어 스타일.</li>
+      <li><code>RankingsContent</code>에서 <code>session</code>을 먼저 구하고, 그 다음 <code>sessionEvents = deriveSessionEvents(events, session)</code>, 그 다음 <code>event = sessionEvents.find(...) ?? sessionEvents[0]</code> 순서로 바꾼다. <b>폴백은 이 한 줄이 회차가 바뀔 때마다 자동으로 재평가하며 처리</b> — 별도의 "회차 전환 시 종목 리셋" 이펙트나 상태 동기화 코드가 필요 없다(리렌더마다 순수 파생이라 useEffect 불필요).</li>
+      <li>종목 칩 렌더를 <code>events.map</code> → <code>sessionEvents.map</code>으로 교체. <code>FilterChip</code>·<code>overflow-x-auto</code> 가로 스크롤 컨테이너는 그대로 재사용(디자인 변경 없음, PRD §08 명시).</li>
+    </ul>
+    <p><b>기각한 대안 — <code>useEffect</code>로 회차 변경 감지 후 <code>setSelectedEventKey</code> 직접 리셋:</b> 상태 동기화 버그(이펙트 실행 타이밍, 초기 마운트 케이스)를 만들 뿐 아니라 기존 컴포넌트가 이미 "파생값이 상태보다 우선"하는 패턴(<code>event = events.find(...) ?? events[0]</code> 자체가 그 예)을 쓰고 있어 일관성이 깨진다. <code>sessionEvents</code> 기반 파생 하나로 렌더마다 자동 정합되므로 이펙트가 아예 불필요하다.</p>
+    <p><b>기각한 대안 — <code>events</code> 전체 대신 <code>rankings[].events</code>(그 회차 랭킹이 실제로 존재하는 종목)를 칩 기준으로 사용:</b> <code>SessionRankings.events</code>는 "미측정 종목×회차 조합은 항목 자체가 없다"는 계약이라 <code>eventKeys</code>와 결과적으로 같은 집합이지만, 참가자 전원이 면제/미측정이라 <code>EventRanking.entries</code>가 0건인 회차·종목 조합에서도 <code>rankings[].events</code> 항목 자체는 존재해야 정확한데 이 경로는 그 보장이 이번 작업 범위 밖(§07 백엔드 계약)이라 직접 근거로 쓰기엔 간접적이다. <code>Session.eventKeys</code>가 "그 회차에 무엇을 측정했나"의 1차 출처(PRD §06 콜아웃)이므로 이걸 직접 쓴다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><code>deriveSessionEvents(events, session)</code> 추가 — <code>session.eventKeys</code> 순서대로 <code>events</code>에서 정의를 찾아 배열로 반환, 매치 실패 키는 필터링
+        <span class="files"><code>src/lib/ranking-view.ts</code></span>
+      </li>
+      <li class="done"><code>deriveSessionEvents</code> 단위 테스트 — eventKeys 순서 보존(events[] 선언 순서 무시), 부분집합(혼재 회차), 매치 실패 키 방어
+        <span class="files"><code>src/lib/ranking-view.test.ts</code></span>
+      </li>
+      <li class="done"><code>RankingsContent</code> 파생 순서 재배열 — <code>session</code>을 먼저 구하고 <code>sessionEvents</code> → <code>event</code>(폴백 포함) 순으로, 종목 칩 렌더를 <code>sessionEvents</code> 기준으로 교체
+        <span class="files"><code>src/pages/Rankings.tsx</code></span>
+      </li>
+      <li class="done">화면 단위 회귀 테스트 — (a) 회차 전환 시 칩 목록 갱신 + 선택 종목이 새 회차에 없으면 첫 종목 폴백, (b) 혼재 픽스처(1차 4종목 칩 · 최신 7종목 칩) 렌더
+        <span class="files"><code>src/pages/Rankings.test.tsx</code></span>
+      </li>
+      <li class="done"><code>npm run typecheck</code> · <code>npm run test</code> 전체 통과 확인 (기존 <code>Rankings.test.tsx</code> 회귀 없음 포함)
+        <span class="note">추가로 <code>npm run build</code>(CI 동일 단계)도 통과 확인</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td><code>sessionEvents</code>가 빈 배열이 되는 경우(회차에 측정 종목 0개)</td><td><code>sessionEvents[0]</code>이 <code>undefined</code>가 되어 <code>event.key</code> 접근 시 런타임 에러</td><td>계약상 발생 불가(§06 콜아웃 — 참가자 0명 회차도 <code>eventKeys</code>는 항상 명시). 기존 코드도 <code>events[0]</code>을 동일하게 무가드로 썼으므로 이 작업이 새 리스크를 만들지 않음 — 별도 방어 코드 추가하지 않음</td></tr>
+        <tr><td>기존 <code>Rankings.test.tsx</code> 회귀</td><td>두 회차가 같은 eventKeys를 쓰는 기존 픽스처는 동작 변화가 없어야 함</td><td>기존 테스트 그대로 유지(수정 없음)하고 전체 통과 확인 — 변경은 신규 테스트로만 커버</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run test src/lib/ranking-view.test.ts</code> — <code>deriveSessionEvents</code>가 eventKeys 순서·부분집합·방어 3가지를 만족하는지</li>
+      <li><code>npm run test src/pages/Rankings.test.tsx</code> — 기존 4개 테스트(로딩·에러·빈 상태·기본 선택+칩 전환) 회귀 없음</li>
+      <li>신규: 회차 전환 시 선택 종목이 새 회차에 없으면 칩 목록이 그 회차 종목으로 바뀌고 선택이 첫 종목으로 폴백</li>
+      <li>신규: 혼재 픽스처 — 1차(4종목)는 칩 4개, 최신 회차(7종목)는 칩 7개가 각각 정확히 렌더</li>
+      <li><code>npm run typecheck</code> — 0 에러</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>회차 전환 → 칩 목록 변경·폴백 테스트 통과</li>
+      <li>혼재 픽스처 렌더 테스트(1차 4종목 칩 · 최신 7종목 칩) 통과</li>
+      <li>7종목 칩 가로 스크롤 기존 UI 회귀 없음(디자인 변경 없음) — 기존 <code>Rankings.test.tsx</code> 전체 통과로 확인</li>
+      <li><code>npm run typecheck</code>·<code>npm run test</code> 전체 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/123">#123</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
