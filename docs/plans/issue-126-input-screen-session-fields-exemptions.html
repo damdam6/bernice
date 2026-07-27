@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#126 P7 — 기록 입력 화면: 회차별 입력 필드 + 면제 토글 상수 갱신 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/126">#126</a></span><span class="type-chip">기능 개선</span>
+    <h1>P7 — 기록 입력 화면: 회차별 입력 필드 + 면제 토글 상수 갱신</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/126-input-screen-session-fields-exemptions</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>선수별 입력 화면(<code>RecordsPlayerInput</code>)이 전역 종목 목록 <code>events[]</code> 전체를 렌더해, 과거 회차에 없는(또는 미래에 추가된) 종목 필드까지 노출되는 버그를 고친다. 그 회차 <code>Session.eventKeys</code>만 헤더 순서대로 렌더하도록 바꾸고, 날짜 선택·참가자 목록 화면이 이미 회차 기준 분모로 배선돼 있는지(#117) 확인한다. 마지막으로 면제 토글 노출 종목 상수를 45도패스캐치(종료)에서 후속 종목인 패스 3종(체스트·바운드·원핸드)으로 갱신한다(PRD §09 기본값 제안 채택).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><b>버그 재현 경로</b> — <code>src/pages/admin/RecordsPlayerInput.tsx:68</code>에서 <code>PlayerInputContent</code>에 <code>events={data.events}</code>(전역 목표 탭 행 순서, 종료 종목 포함)를 그대로 넘기고, <code>:120</code>의 <code>events.map(...)</code>이 그 배열 전체를 카드로 렌더한다. <code>shared/domain.ts:45-46</code> 계약대로 <code>events[]</code>는 종료 종목까지 포함한 전체 목록이고, 회차별 실측 종목은 <code>Session.eventKeys</code>(<code>shared/domain.ts:72</code>, 헤더 순서)로 별도 존재한다 — 지금 코드는 이 둘을 구분하지 않는다.</p>
+    <p>결과적으로 과거 4종목 회차(<code>eventKeys</code> = 드리블셔틀런·골밑슛·자유투·45도패스캐치)를 열어도, 전역 <code>events[]</code>에 신규 7종목이 추가된 뒤라면 화면엔 존재하지 않는 종목 카드가 나타난다. 반대로 신규 7종목 회차를 열었을 때 <code>events[]</code> 순서가 회차 헤더 순서와 다르면 카드 배열도 어긋난다.</p>
+    <p><b>같은 문제를 이미 올바르게 푼 선례</b> — <code>src/lib/profile-view.ts:33-37</code>(<code>buildRadarAxes</code>)와 <code>functions/lib/compute-rankings.ts:72-76</code>가 동일 패턴을 쓴다: <code>events[]</code>를 <code>Map&lt;key, EventDefinition&gt;</code>으로 색인한 뒤, <code>session.eventKeys</code>를 순회하며 그 Map에서 찾아 없는 건 걸러낸다(<code>filter(event is EventDefinition =&gt; ...)</code>). <code>RecordsPlayerInput</code>도 이 "eventKeys 기준 순회" 패턴을 그대로 재사용한다.</p>
+    <p><b>#117(entry-status) 배선 현황</b> — 이미 완료돼 있다. <code>src/lib/entry-status.ts:15-25</code>는 <code>deriveEntryStatus(entry, eventKeys)</code>·<code>countCompleted(entries, eventKeys)</code> 둘 다 분모를 <code>eventKeys</code>로 받고, <code>src/pages/admin/RecordsDateSelect.tsx:68</code>(완료 n/N)과 <code>src/pages/admin/RecordsParticipants.tsx:122</code>(참가자 뱃지) 모두 <code>session.eventKeys</code>를 그대로 넘긴다. <code>src/lib/entry-status.test.ts:46-90</code>이 "회차별 분모 판정"·"종목 추가 후 과거 회차 상태 불변" 시나리오를 단위 테스트로 이미 못박아 뒀다(커밋 00bd333, #138). 이 이슈에서 새로 배선할 게 없고, 회귀 테스트만 한 겹 더 얹는다.</p>
+    <p><b>면제 토글 상수</b> — <code>src/lib/exemptable-events.ts:5</code>의 <code>EXEMPTABLE_EVENT_KEYS</code>는 현재 <code>Set(['45도패스캐치'])</code> 하나뿐이다. <code>docs/prd-event-lifecycle.html:352</code> 열린 항목이 "패스 3종(체스트·바운드·원핸드)에 노출"을 기본값으로 제안했고, 이슈 본문도 이 값을 그대로 채택했다(운영상 이견 없으면 확정). <code>isExemptable</code>을 소비하는 <code>src/lib/player-input-field.ts:25,45-47</code>는 이미 "면제 불가 종목에 exempt가 이미 저장된 경우"(시트 직접 편집이든, 상수 변경으로 새로 면제 불가가 된 종목이든 동일 코드 경로)를 <code>initialFieldNotice</code> 안내로 처리해 두고 있어 — 45도패스캐치가 면제 불가로 바뀌어도 과거 면제 기록이 있는 회차를 열면 값 입력부 대신 안내 문구가 뜨는 것으로 이미 안전하다. 이 부분은 코드 변경이 필요 없고, 상수 값 교체만 하면 된다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>채택</b> — <code>RecordsPlayerInput</code>의 최상위 함수(<code>data</code>·<code>session</code>이 함께 스코프에 있는 지점)에서 <code>eventsByKey</code> Map을 만들고 <code>session.eventKeys.map(...).filter(...)</code>로 걸러진 배열을 <code>PlayerInputContent</code>에 <code>events</code> prop으로 넘긴다. <code>PlayerInputContent</code> 내부 로직(필드 초기화·저장 payload 조립)은 이미 <code>events</code> prop을 순회하는 구조라 변경이 필요 없다 — 입력 자체가 이미 회차 종목만 담고 있으면 나머지는 그대로 올바르다.</li>
+      <li><b>기각 — <code>PlayerInputContent</code> 내부에서 필터링</b>: <code>session</code>은 이미 prop으로 전달되고 있어 내부에서도 가능하지만, profile-view.ts·compute-rankings.ts와 동일하게 "소비 직전에 한 번 걸러서 넘긴다" 위치를 맞추는 쪽이 리포 전역의 관용구와 더 잘 맞고, <code>PlayerInputContent</code>의 <code>events</code> prop 타입 계약("이 화면이 그릴 종목")이 더 명확해진다.</li>
+      <li><b>순서 기준은 <code>events[]</code>가 아니라 <code>eventKeys</code></b>: <code>shared/domain.ts:72</code> 주석이 <code>eventKeys</code>를 "헤더 순서"의 정본으로 못박고 있어, Map 조회 순서를 <code>eventKeys.map(...)</code>으로 둔다(목표 탭 행 순서인 <code>events[]</code> 자체 순서를 쓰지 않음).</li>
+      <li><b>exemptable-events 상수</b>: <code>45도패스캐치</code> 단일 키를 <code>패스 - 체스트</code>·<code>패스 - 바운드</code>·<code>패스 - 원핸드</code> 3키로 교체(추가가 아니라 교체 — 45도패스캐치는 종료 종목이라 신규 입력 자체가 없다). 문자열은 <code>docs/prd-event-lifecycle.html:163-165</code>의 표기(<code>"패스 - 체스트"</code> 등, 하이픈 양옆 공백)를 그대로 따른다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">
+        <code>RecordsPlayerInput.tsx</code>의 <code>RecordsPlayerInput</code> 함수에서 <code>eventsByKey</code> Map + <code>session.eventKeys</code> 기준 필터링을 추가하고, <code>PlayerInputContent</code>에 <code>events={data.events}</code> 대신 이 필터링된 배열을 넘긴다.
+        <span class="files"><code>src/pages/admin/RecordsPlayerInput.tsx</code></span>
+      </li>
+      <li class="done">
+        <code>RecordsPlayerInput.test.tsx</code> 픽스처를 갱신 — <code>makeSession</code>이 고정된 전체 이벤트 키 대신 <code>eventKeys</code>를 인자로 받게 하고, (a) 과거 회차(<code>eventKeys</code>가 <code>data.events</code>의 부분집합)에서 목록 밖 종목 카드가 렌더되지 않음, (b) 신규 회차(<code>eventKeys</code>가 <code>data.events</code> 전체, 순서까지)에서 모든 카드가 헤더 순서대로 렌더됨을 검증하는 테스트를 추가한다. 기존 "면제 가능 종목" 관련 테스트의 이벤트 키를 <code>45도패스캐치</code>에서 새 상수(<code>패스 - 체스트</code>)로 갱신한다.
+        <span class="files"><code>src/pages/admin/RecordsPlayerInput.test.tsx</code></span>
+      </li>
+      <li class="done">
+        <code>exemptable-events.ts</code>의 <code>EXEMPTABLE_EVENT_KEYS</code>를 <code>Set(['패스 - 체스트', '패스 - 바운드', '패스 - 원핸드'])</code>로 교체하고 주석을 갱신한다(45도패스캐치는 종료 종목이라 더 이상 신규 입력 대상이 아님을 명시).
+        <span class="files"><code>src/lib/exemptable-events.ts</code></span>
+      </li>
+      <li class="done">
+        <code>exemptable-events.test.ts</code>를 새 상수에 맞게 갱신 — 패스 3종은 <code>true</code>, 45도패스캐치·볼 캐치·그 외 기존 종목은 <code>false</code>, NFD 정규화 케이스도 새 키 중 하나로 유지.
+        <span class="files"><code>src/lib/exemptable-events.test.ts</code></span>
+      </li>
+      <li class="done">
+        <code>player-input-field.test.ts</code>에서 "면제 가능 종목" 예시로 쓰인 <code>45도패스캐치</code> 키를 <code>패스 - 체스트</code>로 교체(<code>initFieldState</code>·<code>initialFieldNotice</code> 테스트 각 1곳). 나머지(드리블셔틀런·골밑슛을 "면제 불가" 예시로 쓰는 테스트)는 애초에 상수와 무관하므로 그대로 둔다.
+        <span class="note">실행 결과: 안내 문구 가드가 상수 교체에도 그대로 작동함을 명시적으로 굳히기 위해 "종료된 45도패스캐치가 과거 회차에 exempt로 남아 있어도 exempt는 항상 false" 테스트를 1건 추가했다(계획 대비 확장).</span>
+        <span class="files"><code>src/lib/player-input-field.test.ts</code></span>
+      </li>
+      <li class="done">
+        <code>App.e2e.test.tsx</code> 픽스처의 네 번째 종목 키를 <code>45도패스캐치</code>에서 <code>패스 - 체스트</code>로 바꾸고, 관련 <code>getByLabelText</code>/<code>getByRole</code> 문자열(입력·면제 토글·랭킹 칩 버튼) 전부를 동일하게 갱신한다 — 시나리오 자체(선수2만 면제 토글 사용)는 그대로.
+        <span class="files"><code>src/App.e2e.test.tsx</code></span>
+      </li>
+      <li class="done">
+        <code>RecordsDateSelect.test.tsx</code>에 회차마다 <code>eventKeys</code> 개수가 다른 케이스를 추가해, "완료 n/N"의 분모·분자가 그 회차 자신의 <code>eventKeys</code>만 보고 계산됨을 화면 레벨에서도 회귀 고정한다.
+        <span class="note">실행 결과: 계획의 "1차 2종목·2차 3종목" 대신 "1차 1종목·2차 2종목"으로 단순화 — 분모가 회차 자신의 종목 수만 따른다는 요지는 동일하고, 완료/일부 판정 대비가 더 선명하다.</span>
+        <span class="files"><code>src/pages/admin/RecordsDateSelect.test.tsx</code></span>
+      </li>
+      <li class="done">
+        <code>RecordsParticipants.test.tsx</code>에 <code>session.eventKeys</code>가 <code>data.events</code>의 부분집합인 케이스를 추가해, 전역에만 있고 그 회차엔 없는 종목이 뱃지 판정에 영향을 주지 않음을 검증한다.
+        <span class="files"><code>src/pages/admin/RecordsParticipants.test.tsx</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>필터링 위치를 <code>PlayerInputContent</code> 내부로 착각하고 <code>events</code> prop 타입/호출부를 이중으로 바꿀 여지</td><td>불필요한 diff 증가</td><td>필터링은 <code>RecordsPlayerInput</code>(상위) 한 곳에서만, <code>PlayerInputContent</code>는 prop 계약만 그대로 소비</td></tr>
+        <tr><td>테스트 픽스처 문자열(45도패스캐치 → 패스 - 체스트) 치환 누락 시 일부 테스트만 깨짐</td><td>CI 빨간불로 바로 드러남(은닉 위험 낮음)</td><td>grep으로 <code>45도패스캐치</code> 잔여 참조를 변경 대상 파일에서 재확인 후 커밋</td></tr>
+        <tr><td>실제 시트 마이그레이션(§10)은 이 이슈 범위 밖 — 코드는 신규 7종목 스키마를 받아들일 준비만 함</td><td>배포 시점에 시트가 아직 구 스키마면 기존처럼 500(현행과 동일, 이 PR로 악화되지 않음)</td><td>마이그레이션은 별도 절차(PRD §10)로 운영자가 수행 — 이 PR은 코드만 대비</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run test -- RecordsPlayerInput</code> — 과거 4종목 회차·신규 7종목 회차 각각 필드 렌더 범위 회귀 테스트 통과.</li>
+      <li><code>npm run test -- exemptable-events</code> — 패스 3종만 면제 가능, 나머지(45도패스캐치 포함) 불가.</li>
+      <li><code>npm run test -- player-input-field</code> — 면제 가능/불가 예시가 새 상수와 일치하는 채로 기존 동작(안내 문구·exempt 강제 false) 유지 확인.</li>
+      <li><code>npm run test -- App.e2e</code> — 전체 스모크(기록지 생성 → 입력 → 랭킹 반영)가 새 이벤트 키로도 그대로 통과.</li>
+      <li><code>npm run test -- RecordsDateSelect RecordsParticipants</code> — 회차별 다른 <code>eventKeys</code>에서도 완료 n/N·뱃지가 그 회차 자신의 분모로만 계산됨.</li>
+      <li><code>npm run test</code> 전체 스위트 + <code>npm run typecheck</code>(있다면) — 전역 회귀 없는지 최종 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>회차별 필드 렌더 테스트 통과 — 과거 4종목 회차·신규 7종목 회차 각각 그 회차 <code>eventKeys</code>만 렌더</li>
+      <li>완료 n/N·참가자 뱃지가 회차별 <code>eventKeys</code> 기준으로 계산됨을 화면 레벨 테스트로 고정(로직 자체는 #117에서 이미 구현·단위 테스트 완료)</li>
+      <li>면제 토글이 패스 3종(체스트·바운드·원핸드)에서만 노출되고, 45도패스캐치를 포함한 그 외 종목엔 노출되지 않음을 테스트로 검증</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/126">#126</a> · 2026-07-27</footer>
+</main>
+</body>
+</html>
