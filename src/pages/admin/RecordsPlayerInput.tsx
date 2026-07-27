@@ -60,12 +60,20 @@ export default function RecordsPlayerInput() {
 
   const roundLabel = data.sessions.findIndex((candidate) => candidate.date === session.date) + 1
 
+  // 그 회차 실측 종목만 렌더한다(이슈 #126) — data.events는 종료 종목까지 포함한 전역 목록이라
+  // Session.eventKeys(헤더 순서)로 걸러야 과거/미래 회차의 무관한 종목 필드가 새지 않는다.
+  // profile-view.ts의 buildRadarAxes·compute-rankings.ts와 동형의 eventKeys 기준 순회 패턴.
+  const eventsByKey = new Map(data.events.map((event) => [event.key, event]))
+  const sessionEvents = session.eventKeys
+    .map((key) => eventsByKey.get(key))
+    .filter((event): event is EventDefinition => event !== undefined)
+
   return (
     <PlayerInputContent
       key={`${session.date}:${entry.playerId}`}
       session={session}
       entry={entry}
-      events={data.events}
+      events={sessionEvents}
       roundLabel={roundLabel}
       onSaved={(toast) => navigate(`/admin/records/${session.date}`, { state: { toast } })}
     />
