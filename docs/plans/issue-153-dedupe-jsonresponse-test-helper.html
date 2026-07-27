@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#153 테스트 헬퍼 jsonResponse 중복 — src/test 공용 유틸로 일괄 이관 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/153">#153</a></span><span class="type-chip">리팩토링</span>
+    <h1>테스트 헬퍼 jsonResponse 중복 — src/test 공용 유틸로 일괄 이관</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/153-dedupe-jsonresponse-test-helper</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>한 줄짜리 테스트 헬퍼 <code>jsonResponse(status, body)</code>가 19개 테스트 파일에 로컬로 복붙돼 있다. 19곳 전부 본문이 바이트 단위로 동일함을 확인했으므로, 기존 공용 유틸 위치인 <code>src/test/</code>에 <code>json-response.ts</code>를 신설하고 로컬 정의 전부를 import로 일괄 교체한다. 동작 변경이 없는 순수 기계적 리팩토링이며, 기준선(테스트 파일 86개 · 테스트 779개 전체 그린)이 그대로 유지돼야 한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>로컬 정의 19곳을 전수 확인한 결과, 본문이 전부 동일하다:</p>
+    <p><code>function jsonResponse(status: number, body: unknown): Response { return new Response(JSON.stringify(body), { status }) }</code></p>
+    <ul>
+      <li>분포 (디렉터리별): <code>src/App.e2e.test.tsx:64</code> 1곳 · <code>src/components/auth/</code> 2곳 (<code>AdminGate.test.tsx:24</code>, <code>LoginGate.test.tsx:24</code>) · <code>src/hooks/</code> 2곳 (<code>useRecords.test.tsx:14</code>, <code>useRefreshRecords.test.tsx:14</code>) · <code>src/lib/</code> 5곳 (<code>add-players-api.test.ts:8</code> 등 전부 8행) · <code>src/pages/</code> 3곳 (<code>Home.test.tsx:15</code>, <code>Players.test.tsx:15</code>, <code>Rankings.test.tsx:15</code>) · <code>src/pages/admin/</code> 6곳 (<code>AdminLogin.test.tsx:14</code>, <code>CreateSheet.test.tsx:15</code> 등)</li>
+      <li>공용 테스트 유틸 선례가 이미 있다: <code>src/test/html-utils.ts</code>는 named export 함수만 두는 평문 모듈이고, 사용처는 상대 경로로 import한다 (예: <code>src/components/AchievementBadge.test.tsx:4</code>의 <code>import { renderClassName, renderText } from '../test/html-utils'</code>)</li>
+      <li>경로 별칭 없음: <code>tsconfig</code>에 <code>paths</code>/<code>baseUrl</code> 설정이 없고 <code>vite.config.ts</code>/<code>vitest.config.ts</code>에도 <code>alias</code>가 없다 — 상대 경로 import가 이 레포의 유일한 관용구</li>
+      <li>vitest 설정은 <code>environment: 'node'</code> 단일이며(<code>vitest.config.ts:5</code>), 컴포넌트 테스트는 파일 상단 <code>// @vitest-environment jsdom</code> 프라그마를 쓴다. 두 환경 모두에서 <code>Response</code> 전역이 이미 로컬 정의로 사용되고 있으므로 이관해도 실행 환경 조건은 변하지 않는다</li>
+      <li>기준선: <code>npx vitest run</code> → 테스트 파일 86개 · 테스트 779개 전체 통과 (2026-07-28 워크트리에서 실측)</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <ul>
+      <li><b>파일명 <code>src/test/json-response.ts</code></b> (이슈 본문의 예시안 그대로): <code>html-utils.ts</code>처럼 단일 관심사 파일로 둔다. 리뷰 코멘트의 <code>test-utils.ts</code> 통합안은 기존 <code>html-utils.ts</code>와 역할이 겹치는 잡동사니 파일이 되므로 기각 — 이 레포의 선례는 유틸별 파일 분리다</li>
+      <li><b>export 형태</b>: <code>export function jsonResponse(status: number, body: unknown): Response</code> named export. 본문은 기존 19곳과 바이트 동일하게 유지해 동작 불변을 보장한다</li>
+      <li><b>import 경로</b>: 별칭이 없으므로 디렉터리 깊이별 상대 경로 3종 —
+        <code>./test/json-response</code> (src 루트 1곳) · <code>../test/json-response</code> (hooks·lib·pages 10곳) · <code>../../test/json-response</code> (components/auth·pages/admin 8곳)</li>
+      <li><b>import 위치</b>: 각 파일의 기존 import 블록 말미(상대 경로 import 군)에 추가 — <code>html-utils</code> 사용처와 같은 배치</li>
+      <li><b>vitest 수집 안전성</b>: vitest 기본 include는 <code>*.test.*</code>/<code>*.spec.*</code> 패턴이므로 <code>src/test/json-response.ts</code>가 테스트 파일로 오인 수집될 여지는 없다 (<code>html-utils.ts</code>가 동일 위치에서 이미 검증된 사실)</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ 공용 헬퍼 신설 — <code>jsonResponse</code>를 named export로 정의 (본문은 기존 로컬 정의와 동일)
+        <span class="files"><code>src/test/json-response.ts</code> (신규)</span>
+      </li>
+      <li>✅ src 루트 1곳 교체 — 로컬 정의 삭제, <code>import { jsonResponse } from './test/json-response'</code> 추가
+        <span class="files"><code>src/App.e2e.test.tsx</code></span>
+      </li>
+      <li>✅ 깊이 1 디렉터리 10곳 교체 — <code>from '../test/json-response'</code>
+        <span class="files"><code>src/hooks/useRecords.test.tsx</code>, <code>src/hooks/useRefreshRecords.test.tsx</code>, <code>src/lib/add-players-api.test.ts</code>, <code>src/lib/create-sheet-api.test.ts</code>, <code>src/lib/login-api.test.ts</code>, <code>src/lib/records-write-api.test.ts</code>, <code>src/lib/refresh-api.test.ts</code>, <code>src/pages/Home.test.tsx</code>, <code>src/pages/Players.test.tsx</code>, <code>src/pages/Rankings.test.tsx</code></span>
+      </li>
+      <li>✅ 깊이 2 디렉터리 8곳 교체 — <code>from '../../test/json-response'</code>
+        <span class="files"><code>src/components/auth/AdminGate.test.tsx</code>, <code>src/components/auth/LoginGate.test.tsx</code>, <code>src/pages/admin/AddPlayers.test.tsx</code>, <code>src/pages/admin/AdminLogin.test.tsx</code>, <code>src/pages/admin/CreateSheet.test.tsx</code>, <code>src/pages/admin/RecordsDateSelect.test.tsx</code>, <code>src/pages/admin/RecordsParticipants.test.tsx</code>, <code>src/pages/admin/RecordsPlayerInput.test.tsx</code></span>
+      </li>
+      <li>✅ 전수 검증 — <code>grep -rn 'function jsonResponse' src</code> 0건 · <code>npm run typecheck</code> 통과 · <code>npm test</code> 86파일/779개 전체 그린 (기준선과 수 일치 확인)
+        <span class="files">(검증만 — 파일 변경 없음) · 완료 노트: 리터럴 grep은 신설 헬퍼의 <code>export function</code> 자신 1건만 잡힘 — 로컬(비-export) 정의 기준 <code>grep -rn '^function jsonResponse' src</code> 0건 달성 · typecheck 0에러 · 86파일/779개 그린 (기준선 일치)</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>상대 경로 깊이 오기입 (19곳 × 3종 경로)</td><td>해당 파일 컴파일 실패</td><td>디렉터리별 일괄 처리(작업 단계 2–4의 그룹핑) 후 <code>npm run typecheck</code>가 즉시 잡음</td></tr>
+        <tr><td>교체 중 로컬 정의 잔존 또는 import 누락</td><td>중복 상태 지속 / 테스트 실패</td><td>완료 조건의 grep 0건 검증을 마지막 단계에 명시적으로 포함</td></tr>
+        <tr><td>테스트 수 변동(파일 오인 수집 등)</td><td>회귀 미탐지</td><td>실측 기준선 86파일/779개와 수치 비교 — 그린 여부만이 아니라 개수 일치까지 확인</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>grep -rn 'function jsonResponse' src</code> → 0건 (로컬 정의 전멸 확인)</li>
+      <li><code>grep -rln "from '.*test/json-response'" src</code> → 19파일 (교체 전 정의 파일 목록과 집합 일치)</li>
+      <li><code>npm run typecheck</code> (<code>tsc -b</code>) → 에러 0</li>
+      <li><code>npm test</code> (<code>vitest run</code>) → 테스트 파일 86개 · 테스트 779개 전체 통과, 기준선과 개수 동일 (동작 불변의 정의)</li>
+      <li>신규 테스트 추가 없음 — 동작 변경이 없는 이관이므로 기존 스위트 불변이 곧 회귀 검증</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>src/test/json-response.ts</code> 신설 — named export, 본문은 기존 로컬 정의와 동일</li>
+      <li>로컬 정의 19곳 전부 제거·import 교체 — <code>grep -rn 'function jsonResponse' src</code> 0건</li>
+      <li><code>npm run typecheck</code> 통과</li>
+      <li><code>npm test</code> 전체 그린 — 테스트 파일 86개 · 테스트 779개로 기준선과 수 불변</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/153">#153</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
