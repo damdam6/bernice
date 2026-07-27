@@ -107,6 +107,29 @@ describe('RecordsParticipants', () => {
     expect(rows[2]).toHaveTextContent('미입력')
   })
 
+  it('전역 종목이 이 회차 eventKeys보다 많아도 뱃지는 이 회차 자신의 eventKeys만으로 판정한다(이슈 #126 회귀)', async () => {
+    // 전역 events엔 드리블셔틀런·골밑슛 2종목이 있지만, 이 과거 회차는 드리블셔틀런 1종목만 측정했다.
+    const data = baseData({
+      sessions: [
+        {
+          date: '2025-05-16',
+          eventKeys: ['드리블셔틀런'],
+          entries: [
+            entryWith(1, '가은', { 드리블셔틀런: { status: 'recorded', value: 72, display: '1:12' } }),
+            entryWith(2, '나연', { 드리블셔틀런: { status: 'unmeasured', value: null, display: null } }),
+          ],
+        },
+      ],
+    })
+
+    renderPage('2025-05-16', data)
+
+    const rows = await screen.findAllByRole('button', { name: /가은|나연/ })
+    // 신규 종목 골밑슛이 이 회차 scores에 아예 없어도(계약상 당연) 완료/미입력 판정이 흔들리지 않는다.
+    expect(rows[0]).toHaveTextContent('완료')
+    expect(rows[1]).toHaveTextContent('미입력')
+  })
+
   it('참가자 행을 탭하면 선수별 입력 화면으로 이동한다', async () => {
     const data = baseData({
       sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],

@@ -54,8 +54,8 @@ describe('initFieldState', () => {
     })
   })
 
-  it('면제 가능 종목(45도패스캐치) exempt → 빈 필드 + exempt true', () => {
-    expect(initFieldState(ev('count', '45도패스캐치'), EXEMPT)).toEqual({
+  it('면제 가능 종목(패스 - 체스트) exempt → 빈 필드 + exempt true', () => {
+    expect(initFieldState(ev('count', '패스 - 체스트'), EXEMPT)).toEqual({
       valueKind: 'count',
       count: '',
       exempt: true,
@@ -70,6 +70,14 @@ describe('initFieldState', () => {
       exempt: false,
     })
     expect(initFieldState(ev('count', '골밑슛'), EXEMPT)).toEqual({
+      valueKind: 'count',
+      count: '',
+      exempt: false,
+    })
+  })
+
+  it('종료된 45도패스캐치가 과거 회차에 exempt로 기록돼 있어도(상수 교체 후) exempt는 항상 false', () => {
+    expect(initFieldState(ev('count', '45도패스캐치'), EXEMPT)).toEqual({
       valueKind: 'count',
       count: '',
       exempt: false,
@@ -94,7 +102,7 @@ describe('initialFieldNotice', () => {
   it('invalid도 아니고 면제 불가 종목의 exempt도 아니면 null', () => {
     expect(initialFieldNotice(ev('time'), RECORDED_TIME)).toBeNull()
     expect(initialFieldNotice(ev('time'), UNMEASURED)).toBeNull()
-    expect(initialFieldNotice(ev('count', '45도패스캐치'), EXEMPT)).toBeNull()
+    expect(initialFieldNotice(ev('count', '패스 - 체스트'), EXEMPT)).toBeNull()
   })
 
   it('invalid면 원본·사유를 보존', () => {
