@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { PlayerSummary, RecordsResponse, SessionEntry } from '../../../shared/domain'
 import AddPlayers from './AddPlayers'
 import { jsonResponse } from '../../test/json-response'
+import { expectFrameAlignedBottomBar } from '../../test/frame-aligned-bottom-bar'
 
 afterEach(() => {
   cleanup()
@@ -195,5 +196,17 @@ describe('AddPlayers', () => {
     renderPage()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('권한이 없습니다.')
+  })
+
+  it('하단 확인 바가 전폭이 아니라 프레임 폭에 중앙정렬된다(#156)', async () => {
+    const data = baseData({
+      players: [player(1, '가은')],
+      sessions: [{ date: '2025-05-16', entries: [], eventKeys: [] }],
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
+
+    renderPage()
+
+    expectFrameAlignedBottomBar(await screen.findByRole('button', { name: '0명 추가하기' }))
   })
 })

@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
+import { BottomActionBar } from '../../components/layout/BottomActionBar'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -110,7 +111,7 @@ export default function CreateSheet() {
         <SelectablePlayerList players={candidates} selected={selected} onToggle={toggle} />
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas via-canvas px-4 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <BottomActionBar>
         {conflictDate ? (
           <>
             <p role="alert" className="mb-3 text-center text-sm text-bad">
@@ -147,7 +148,7 @@ export default function CreateSheet() {
             </button>
           </>
         )}
-      </div>
+      </BottomActionBar>
     </div>
   )
 }

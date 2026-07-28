@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import type { EventDefinition, Session, SessionEntry } from '../../../shared/domain'
 import { buildEventScore } from '../../../shared/build-event-score'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
+import { BottomActionBar } from '../../components/layout/BottomActionBar'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -176,7 +177,7 @@ function PlayerInputContent({
         })}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas via-canvas px-4 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <BottomActionBar>
         {/* 실패 문구는 고정 바 내부에 — 종목 카드가 많으면 일반 플로우의 문구는 뷰포트 밖이다(#155). */}
         {submitError && (
           <p role="alert" className="mb-3 text-center text-sm text-bad">
@@ -191,7 +192,7 @@ function PlayerInputContent({
         >
           {submitting ? '저장하는 중…' : '저장'}
         </button>
-      </div>
+      </BottomActionBar>
     </div>
   )
 }

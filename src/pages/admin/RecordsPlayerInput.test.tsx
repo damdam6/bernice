@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { EventDefinition, EventScore, RecordsResponse, Session, SessionEntry } from '../../../shared/domain'
 import RecordsPlayerInput from './RecordsPlayerInput'
 import { jsonResponse } from '../../test/json-response'
+import { expectFrameAlignedBottomBar } from '../../test/frame-aligned-bottom-bar'
 
 afterEach(() => {
   cleanup()
@@ -274,5 +275,13 @@ describe('RecordsPlayerInput', () => {
     )
 
     expect(await screen.findByRole('alert')).toHaveTextContent('권한이 없습니다.')
+  })
+
+  it('하단 저장 바가 전폭이 아니라 프레임 폭에 중앙정렬된다(#156)', async () => {
+    const entry = makeEntry(scoresFor(NEW_EVENT_KEYS))
+    const data = baseData({ sessions: [makeSession('2025-08-16', [entry], NEW_EVENT_KEYS)] })
+    renderPage('/admin/records/2025-08-16/7', recordsFetchMock(data))
+
+    expectFrameAlignedBottomBar(await screen.findByRole('button', { name: '저장' }))
   })
 })
