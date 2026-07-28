@@ -3,8 +3,8 @@ import type { EventDefinition, Player } from '../../shared/domain'
 import { buildCreateSheetPlan } from './create-sheet'
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
+  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
 ]
 // 실제 목표 탭 행 번호(헤더 다음 A2부터) — EVENTS 순서와 1:1 대응(parseGoals 계약과 동형).
 const SHEET_ROW_BY_KEY = new Map([
@@ -126,7 +126,7 @@ describe('buildCreateSheetPlan', () => {
     // 골밑슛이 종료(2025-08-01) — 드리블셔틀런만 현역.
     const events: EventDefinition[] = [
       EVENTS[0],
-      { ...EVENTS[1], endSessionDate: '2025-08-01' },
+      { ...EVENTS[1], endSessionDate: '2025-08-01', exemptable: false },
     ]
     const result = buildCreateSheetPlan({ ...BASE, events, participantIds: [1, 2] })
 
@@ -144,9 +144,9 @@ describe('buildCreateSheetPlan', () => {
     // 목표 탭 실제 배치: 1행 드리블셔틀런(현역) · 2행 45도패스캐치(종료, 헤더에서 제외) · 3행 골밑슛(현역).
     // 인덱스 기반(index+2)이었다면 필터 후 골밑슛이 A3 대신 A2를 잘못 가리켰을 것 — sheetRowByKey로 방지.
     const events: EventDefinition[] = [
-      { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
-      { key: '45도패스캐치', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: '2025-08-01' },
-      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
+      { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+      { key: '45도패스캐치', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: '2025-08-01', exemptable: false },
+      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
     ]
     const sheetRowByKey = new Map([
       ['드리블셔틀런', 2],

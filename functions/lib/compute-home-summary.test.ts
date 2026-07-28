@@ -23,7 +23,7 @@ function entry(playerId: number, scores: Record<string, EventScore>, name = `선
 }
 
 function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'key' | 'direction' | 'targetValue'>): EventDefinition {
-  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, ...overrides }
+  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, exemptable: false, ...overrides }
 }
 
 function session(date: string, entries: SessionEntry[]): Session {
@@ -115,7 +115,7 @@ describe('computeHomeSummary', () => {
   it('종료 종목 — 과거 회차엔 있었으나 최신 회차 events에 없는 종목은 achievementRates에서 자연 소멸', () => {
     const players = [player(1, '활동')]
     const ongoing = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
-    const ended = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77, endSessionDate: '2025-05-01' })
+    const ended = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77, endSessionDate: '2025-05-01', exemptable: false })
     const past = session('2025-05-01', [entry(1, { 골밑슛: recorded(4), 셔틀런: recorded(70, '1:10') })])
     const latest = session('2025-05-16', [entry(1, { 골밑슛: recorded(6) })])
     const pastRankings = computeSessionRankings(past, [ongoing, ended], players)

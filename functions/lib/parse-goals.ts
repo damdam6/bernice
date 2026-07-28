@@ -1,6 +1,11 @@
-// 목표 탭 원시 2D 배열 → EventDefinition[]. 열 순서: 종목 | 목표 | 만점 | 방향 | 종료 회차 (헤더 1행).
-// 스키마 근거: docs/prd-event-lifecycle.html §04(5열 스키마) · docs/sheet-integration.html §02.
+// 목표 탭 원시 2D 배열 → EventDefinition[]. 열 순서: 종목 | 목표 | 만점 | 방향 | 종료 회차 | 면제 가능 (헤더 1행).
+// 스키마 근거: docs/sheet-integration.html §02(6열) · docs/prd-event-lifecycle.html §04(5열 시절 원형).
 // 값 정규화는 normalize-score.ts(이슈 #6)를 재사용.
+//
+// F열(면제 가능, #159)은 과도기 스키마다 — F1 헤더가 없는 5열 시트는 전 종목 exemptable=false로
+// 수용한다(신코드 배포가 실시트 열 추가보다 먼저여도 무중단). 단 F1 없이 F값만 있으면 의도 불명이라
+// fail-loud. G열 이후는 기존처럼 무시한다 — "배포 중인 코드가 모르는 열을 무시"하는 이 관례가
+// 시트 열 선(先)추가 → 코드 후(後)배포 순서를 안전하게 만들므로 미래 열 추가를 위해 보존한다.
 //
 // 목표 탭은 회차마다 바뀌지 않는 설정 시트(팀 운영자가 드물게 편집)라, 회차 점수 셀과 달리
 // EventDefinition에는 "이상값"을 실을 슬롯이 없다(EventScore.invalid와 대비). 그래서 행 파싱이
@@ -17,7 +22,9 @@ import { normalizeScore } from '../../shared/normalize-score'
 import { isValidRoundTabName } from './sheetTabs'
 
 const EXPECTED_HEADER = ['종목', '목표', '만점', '방향', '종료 회차']
-// 만점·종료 회차 두 열이 공유하는 "빈칸 또는 -" = null 관례(docs/prd-event-lifecycle.html §03 D1).
+const EXEMPTABLE_HEADER = '면제 가능'
+const EXEMPTABLE_LITERAL = '가능'
+// 만점·종료 회차·면제 가능 세 열이 공유하는 "빈칸 또는 -" = 없음 관례(docs/prd-event-lifecycle.html §03 D1).
 const NULL_LITERALS = new Set(['', '-'])
 const INTEGER_RE = /^\d+$/
 
@@ -29,7 +36,7 @@ export interface ParseGoalsResult {
 
 export function parseGoals(rows: string[][]): ParseGoalsResult {
   if (rows.length === 0) return { events: [], sheetRowByKey: new Map() }
-  validateHeader(rows[0])
+  const hasExemptableColumn = validateHeader(rows[0])
 
   const events: EventDefinition[] = []
   const sheetRowByKey = new Map<string, number>()
@@ -38,7 +45,7 @@ export function parseGoals(rows: string[][]): ParseGoalsResult {
     const sheetRow = index + 2 // 헤더(1행) 다음부터 시작 — 스킵된 행이 있어도 밀리지 않음
     if (row.every((cell) => (cell ?? '').trim() === '')) return
 
-    const event = parseGoalRow(row, sheetRow)
+    const event = parseGoalRow(row, sheetRow, hasExemptableColumn)
 
     const firstSeenRow = sheetRowByKey.get(event.key)
     if (firstSeenRow !== undefined) {
@@ -52,15 +59,25 @@ export function parseGoals(rows: string[][]): ParseGoalsResult {
   return { events, sheetRowByKey }
 }
 
-function validateHeader(header: string[]): void {
+// 반환값 = F열(면제 가능) 헤더 존재 여부. 앞 5열은 기존대로 prefix 강제, F1은 "없으면 5열
+// 과도기 / 있으면 정확히 '면제 가능'"의 셋 중 하나만 허용한다.
+function validateHeader(header: string[]): boolean {
   const cells = header.map((cell) => (cell ?? '').trim())
   const matches = EXPECTED_HEADER.every((expected, i) => cells[i] === expected)
   if (!matches) {
     throw new Error(`목표 탭 헤더가 예상과 다릅니다 — 기대 [${EXPECTED_HEADER.join(' | ')}], 실제 [${cells.join(' | ')}]`)
   }
+  const sixth = cells[5] ?? ''
+  if (sixth === '') return false
+  if (sixth !== EXEMPTABLE_HEADER) {
+    throw new Error(
+      `목표 탭 F1 헤더가 예상과 다릅니다 — 기대 "${EXEMPTABLE_HEADER}"(또는 빈칸 = 5열 스키마), 실제 "${sixth}"`,
+    )
+  }
+  return true
 }
 
-function parseGoalRow(row: string[], sheetRow: number): EventDefinition {
+function parseGoalRow(row: string[], sheetRow: number, hasExemptableColumn: boolean): EventDefinition {
   const name = (row[0] ?? '').trim()
   if (name === '') fail(sheetRow, name, '종목명이 비어 있음')
 
@@ -80,6 +97,7 @@ function parseGoalRow(row: string[], sheetRow: number): EventDefinition {
     maxScore: parseMaxScore(row[2] ?? '', sheetRow, name),
     direction: parseDirection(row[3] ?? '', sheetRow, name),
     endSessionDate: parseEndSessionDate(row[4] ?? '', sheetRow, name),
+    exemptable: parseExemptable(row[5] ?? '', sheetRow, name, hasExemptableColumn),
   }
 }
 
@@ -107,6 +125,24 @@ function parseEndSessionDate(raw: string, sheetRow: number, name: string): strin
     fail(sheetRow, name, `종료 회차 형식이 올바르지 않음 (YYYY-MM-DD 형식의 실존 날짜여야 함): "${raw}"`)
   }
   return trimmed
+}
+
+// 빈칸/- = 불가(false), '가능' = 면제 가능(true) — 만점·종료 회차와 같은 "없음" 관례.
+// F1 헤더가 없는 5열 과도기에는 전 종목 false지만, 값만 먼저 기입된 셀은 의도 불명(헤더 누락
+// 실수 가능성)이라 조용히 무시하지 않고 fail-loud로 헤더부터 추가하도록 안내한다.
+function parseExemptable(raw: string, sheetRow: number, name: string, hasExemptableColumn: boolean): boolean {
+  const trimmed = raw.trim().normalize('NFKC')
+  if (!hasExemptableColumn) {
+    if (trimmed !== '') {
+      fail(sheetRow, name, `면제 가능 값("${raw}")이 있는데 F1 헤더("${EXEMPTABLE_HEADER}")가 없음 — 헤더를 먼저 추가하세요`)
+    }
+    return false
+  }
+  if (NULL_LITERALS.has(trimmed)) return false
+  if (trimmed !== EXEMPTABLE_LITERAL) {
+    fail(sheetRow, name, `면제 가능 값이 올바르지 않음 ("${EXEMPTABLE_LITERAL}"·빈칸·"-"만 허용): "${raw}"`)
+  }
+  return true
 }
 
 function fail(sheetRow: number, name: string, reason: string): never {

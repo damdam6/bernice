@@ -10,6 +10,7 @@ const SHUTTLE: EventDefinition = {
   maxScore: null,
   direction: '낮을수록',
   endSessionDate: null,
+  exemptable: false,
 }
 const BASKET: EventDefinition = {
   key: '골밑슛',
@@ -19,6 +20,7 @@ const BASKET: EventDefinition = {
   maxScore: 10,
   direction: '높을수록',
   endSessionDate: null,
+  exemptable: false,
 }
 const EVENTS: EventDefinition[] = [SHUTTLE, BASKET]
 
@@ -210,6 +212,7 @@ describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
     maxScore: null,
     direction: '높을수록',
     endSessionDate: null,
+    exemptable: false,
   }
   const ENDED: EventDefinition = {
     key: '종료종목',
@@ -219,6 +222,7 @@ describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
     maxScore: null,
     direction: '낮을수록',
     endSessionDate: '2025-02-01',
+    exemptable: false,
   }
   const players: Player[] = [{ id: 1, name: '선수1', status: '활동' }]
   const sessions: Session[] = [

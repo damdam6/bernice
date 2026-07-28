@@ -45,6 +45,10 @@ export interface EventDefinition {
   endSessionDate: string | null // 종료 회차(YYYY-MM-DD) — null이면 현역. events[]는 종료 종목을 포함한
   // 전체를 목표 탭 행 순서대로 담는다(과거 회차 랭킹·추이가 종료 종목 정의를 필요로 함).
   // '종료 여부'는 소비자가 endSessionDate !== null로 파생한다.
+  exemptable: boolean // 면제 가능(목표 탭 F열 '면제 가능': '가능'=true, 빈칸/'-'=false) — 입력 화면
+  // 면제 토글 노출 기준(#159, 구 src/lib/exemptable-events.ts 하드코딩 대체). 서버·파서의 "면제"
+  // 리터럴 수용(시트 직접 편집 escape hatch)은 이 값과 무관하게 전 종목 유지 — UI 노출 기준일 뿐
+  // 면제 의미론은 바꾸지 않는다.
 }
 
 /** 회차 1건, 종목 1개의 점수 한 칸 — status로 분기하면 value/display를 null 체크 없이 쓸 수 있다.

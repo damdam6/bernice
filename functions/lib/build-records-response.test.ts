@@ -149,9 +149,9 @@ describe('buildRecordsResponse', () => {
 
     const result = buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')
 
-    expect(result.events.map((e) => ({ key: e.key, endSessionDate: e.endSessionDate }))).toEqual([
-      { key: '골밑슛', endSessionDate: null },
-      { key: '45도패스캐치', endSessionDate: '2025-05-16' },
+    expect(result.events.map((e) => ({ key: e.key, endSessionDate: e.endSessionDate, exemptable: e.exemptable }))).toEqual([
+      { key: '골밑슛', endSessionDate: null, exemptable: false },
+      { key: '45도패스캐치', endSessionDate: '2025-05-16', exemptable: false },
     ])
     expect(result.sessions.map((s) => ({ date: s.date, eventKeys: s.eventKeys }))).toEqual([
       { date: '2025-05-16', eventKeys: ['골밑슛', '45도패스캐치'] },
