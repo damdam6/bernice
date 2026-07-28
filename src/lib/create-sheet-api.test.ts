@@ -73,15 +73,14 @@ describe('createSheet', () => {
     })
   })
 
-  it('실패 바디의 sessionDate가 YYYY-MM-DD 형식이 아니면 싣지 않는다 — 라우팅 경로에 그대로 들어가는 값', async () => {
+  it.each([
+    ['형식 위반', '../../admin/records'],
+    ['캘린더 비실존 날짜', '2026-99-99'],
+  ])('실패 바디의 sessionDate가 유효한 날짜가 아니면(%s) 싣지 않는다 — 라우팅 경로에 그대로 들어가는 값', async (_label, sessionDate) => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
-        jsonResponse(409, {
-          error: 'sheet_already_exists',
-          message: '이미 있습니다.',
-          sessionDate: '../../admin/records',
-        }),
+        jsonResponse(409, { error: 'sheet_already_exists', message: '이미 있습니다.', sessionDate }),
       ),
     )
 
