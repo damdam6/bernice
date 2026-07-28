@@ -125,17 +125,17 @@
 … (총 21명)          <span class="note">← 탈퇴 시 행 삭제 X, 상태만 '탈퇴'로. 순서 변경 금지(추가만)</span></div>
     <p class="muted" style="font-size:13px;">※ <code class="inline">상태</code> 열은 <strong>드롭다운</strong>으로 <code class="inline">활동</code>/<code class="inline">탈퇴</code>/<code class="inline">비대상</code>/<code class="inline">휴식</code> 4값. 참가자 선택·랭킹은 기본 <code class="inline">활동</code> 대상. 이 탭의 <strong>행 위치가 곧 선수 신원</strong>이라 정렬·재배치 금지(맨 아래로 추가만).</p>
 
-    <h3><span class="tabname">목표</span> 종목별 목표치·만점·방향·종료 회차 (5열)</h3>
-    <div class="sheet"><span class="h">종목          | 목표  | 만점 | 방향     | 종료 회차</span>
-드리블셔틀런  | 1:17 |  -   | 낮을수록 |            <span class="note">← 빈칸 = 현역</span>
-골밑슛        |  5   |  10  | 높을수록 |
-자유투        |  2   |  5   | 높을수록 |
-패스 - 체스트 |  3   |  5   | 높을수록 |
-패스 - 바운드 |  3   |  5   | 높을수록 |
-패스 - 원핸드 |  3   |  5   | 높을수록 |
-볼 캐치       |  7   |  10  | 높을수록 |
-45도패스캐치  |  5   |  7   | 높을수록 | 2025-05-16 <span class="note">← 종료 종목(그 회차까지만 데이터 존재)</span></div>
-    <p class="muted" style="font-size:13px;">※ <code class="inline">만점</code>은 표시용 분모(예: 골밑슛 <code class="inline">6/10</code>). <code class="inline">방향</code>은 종목별 랭킹 정렬 기준(셔틀런만 낮을수록 상위). <code class="inline">종료 회차</code>는 <strong>빈칸(또는 <code class="inline">-</code>) = 현역</strong>, 값이 있으면 그 회차 탭 이름과 같은 <code class="inline">YYYY-MM-DD</code> — 종목의 추가·종료·재개 절차는 <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙 §04</a>, 배경은 <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a> 참고.</p>
+    <h3><span class="tabname">목표</span> 종목별 목표치·만점·방향·종료 회차·면제 가능 (6열)</h3>
+    <div class="sheet"><span class="h">종목          | 목표  | 만점 | 방향     | 종료 회차  | 면제 가능</span>
+드리블셔틀런  | 1:17 |  -   | 낮을수록 |            |            <span class="note">← 종료 회차 빈칸 = 현역</span>
+골밑슛        |  5   |  10  | 높을수록 |            |
+자유투        |  2   |  5   | 높을수록 |            |
+패스 - 체스트 |  3   |  5   | 높을수록 |            | 가능       <span class="note">← '가능' = 입력 화면에 면제 토글 노출</span>
+패스 - 바운드 |  3   |  5   | 높을수록 |            | 가능
+패스 - 원핸드 |  3   |  5   | 높을수록 |            | 가능
+볼 캐치       |  7   |  10  | 높을수록 |            |
+45도패스캐치  |  5   |  7   | 높을수록 | 2025-05-16 |            <span class="note">← 종료 종목(그 회차까지만 데이터 존재)</span></div>
+    <p class="muted" style="font-size:13px;">※ <code class="inline">만점</code>은 표시용 분모(예: 골밑슛 <code class="inline">6/10</code>). <code class="inline">방향</code>은 종목별 랭킹 정렬 기준(셔틀런만 낮을수록 상위). <code class="inline">종료 회차</code>는 <strong>빈칸(또는 <code class="inline">-</code>) = 현역</strong>, 값이 있으면 그 회차 탭 이름과 같은 <code class="inline">YYYY-MM-DD</code> — 종목의 추가·종료·재개 절차는 <a href="sheet-rules.html" style="color:var(--accent-2);">편집 규칙 §04</a>, 배경은 <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a> 참고. <code class="inline">면제 가능</code>(F열, #159)은 <strong><code class="inline">가능</code> = 입력 화면 면제 토글 노출</strong>, <strong>빈칸(또는 <code class="inline">-</code>) = 불가</strong>, 그 외 값은 파싱 에러(fail-loud). 이 열은 <strong>토글 노출 기준만</strong> 정한다 — 시트에 직접 <code class="inline">면제</code>를 입력하는 escape hatch는 모든 종목에서 그대로 동작한다. F1 헤더가 없는 5열 시트도 과도기로 수용(전 종목 불가 취급)하므로 열 추가·코드 배포 순서는 어느 쪽이 먼저여도 무중단이다 — 단 F1 헤더 없이 F열 값만 있으면 에러.</p>
 
     <h3><span class="tabname">2026-07-23</span> 회차 탭 — 참가자만 입력, 이름 매칭, 그 회차 현역 종목만</h3>
     <div class="sheet"><span class="h">이름          | 드리블셔틀런 | 골밑슛 | 자유투 | 패스 - 체스트 | 패스 - 바운드 | 패스 - 원핸드 | 볼 캐치</span>   <span class="note">← 헤더 종목명 = ='목표'!A2:A8 (연속 7행 — 45도패스캐치는 9행이라 자동 제외)</span>
@@ -233,7 +233,7 @@
   </section>
 
   <div class="footer">
-    구글 시트 연동 · 설계 확정안 (grill 결과) · 최종 업데이트 2026-07-27 (목표 탭 5열 스키마·신규 7종목 반영) · 관련: <a href="index.html" style="color:var(--accent-2);">설계 개요</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">시트 편집 규칙</a> · <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a>
+    구글 시트 연동 · 설계 확정안 (grill 결과) · 최종 업데이트 2026-07-28 (목표 탭 6열 — 면제 가능 열 추가 #159) · 관련: <a href="index.html" style="color:var(--accent-2);">설계 개요</a> · <a href="sheet-rules.html" style="color:var(--accent-2);">시트 편집 규칙</a> · <a href="prd-event-lifecycle.html" style="color:var(--accent-2);">PRD · 종목 생애주기</a>
   </div>
 
 </div>
