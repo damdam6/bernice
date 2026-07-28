@@ -11,7 +11,7 @@ import {
 
 // key·valueKind만 검증에 쓰이지만 타입 충족을 위해 나머지 필드도 채운다.
 function ev(key: string, valueKind: 'count' | 'time', direction: RankDirection = '높을수록'): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore: null, direction, endSessionDate: null }
+  return { key, valueKind, target: '0', targetValue: 0, maxScore: null, direction, endSessionDate: null, exemptable: false }
 }
 
 const EVENTS: EventDefinition[] = [
@@ -165,7 +165,7 @@ describe('mapHeaderToEvents 재사용 — 읽기 경로와 동일한 완화·검
 
   it('종료된 종목이 이후 회차 헤더에 있으면 쓰기 경로에서도 동일하게 Error를 던진다 (V4)', () => {
     const events = EVENTS.map((event) =>
-      event.key === '45도패스캐치' ? { ...event, endSessionDate: '2025-05-16' } : event,
+      event.key === '45도패스캐치' ? { ...event, endSessionDate: '2025-05-16', exemptable: false } : event,
     )
 
     expect(() => mapHeaderToEvents(HEADER, events, '2025-08-16')).toThrow(/45도패스캐치/)

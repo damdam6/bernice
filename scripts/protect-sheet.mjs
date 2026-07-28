@@ -21,7 +21,7 @@ const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 // 각 탭에서 잠글 범위. cols 는 헤더 폭.
 const LOCK = {
   '버니스명단': { headerCols: 2, nameCol: true },   // 헤더행 + 이름열(A)
-  '목표': { headerCols: 4, nameCol: false },       // 헤더행만
+  '목표': { headerCols: 6, nameCol: false },       // 헤더행만 (6열 — 종료 회차·면제 가능 포함, #159)
   '2025-05-16': { headerCols: 5, nameCol: true },  // 헤더행 + 이름열(A)
 };
 

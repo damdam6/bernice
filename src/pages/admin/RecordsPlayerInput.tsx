@@ -16,7 +16,6 @@ import { ExemptToggle } from '../../components/ExemptToggle'
 import { TimeScoreInput } from '../../components/TimeScoreInput'
 import { useRecords } from '../../hooks/useRecords'
 import { useSubmitMutation } from '../../hooks/useSubmitMutation'
-import { isExemptable } from '../../lib/exemptable-events'
 import { buildFieldRaw, initFieldState, initialFieldNotice, type FieldState } from '../../lib/player-input-field'
 import { saveRecord } from '../../lib/records-write-api'
 
@@ -136,7 +135,7 @@ function PlayerInputContent({
             <div key={event.key} className="rounded-card border border-line bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-ink">{event.key}</h2>
-                {isExemptable(event.key) && (
+                {event.exemptable && (
                   <ExemptToggle
                     label={event.key}
                     checked={field.exempt}

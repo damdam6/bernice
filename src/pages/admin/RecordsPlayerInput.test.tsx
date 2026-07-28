@@ -19,19 +19,21 @@ function event(
   valueKind: 'count' | 'time',
   maxScore: number | null = null,
   endSessionDate: string | null = null,
+  exemptable = false,
 ): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore, direction: '높을수록', endSessionDate }
+  return { key, valueKind, target: '0', targetValue: 0, maxScore, direction: '높을수록', endSessionDate, exemptable }
 }
 
 // 2026-07 종목 개편(#126) 시나리오 — 45도패스캐치(종료)를 패스 3종 + 볼 캐치가 이었다. events[]는
 // 종료 종목까지 포함한 전역 목록이라(shared/domain.ts:45-46), 종료 종목을 맨 뒤에 둔다(§10).
+// 패스 3종만 exemptable=true — 실시트 목표 탭 F열('면제 가능')과 같은 구성(#159).
 const ACTIVE_EVENTS: EventDefinition[] = [
   event('드리블셔틀런', 'time'),
   event('골밑슛', 'count', 10),
   event('자유투', 'count', 5),
-  event('패스 - 체스트', 'count', 5),
-  event('패스 - 바운드', 'count', 5),
-  event('패스 - 원핸드', 'count', 5),
+  event('패스 - 체스트', 'count', 5, null, true),
+  event('패스 - 바운드', 'count', 5, null, true),
+  event('패스 - 원핸드', 'count', 5, null, true),
   event('볼 캐치', 'count', 10),
 ]
 const ENDED_EVENT = event('45도패스캐치', 'count', 7, '2025-05-16')

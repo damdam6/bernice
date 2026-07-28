@@ -4,7 +4,10 @@ import { parseGoals } from './parse-goals'
 // docs/sheet-integration.html §02 예시 + docs/prd-event-lifecycle.html §04(5열 스키마)를 픽스처로 사용.
 // 기존 행들은 일부러 E열(종료 회차)을 안 채운 4칸 그대로 둔다 — Sheets API가 각 행의 trailing 빈
 // 셀을 생략해 돌려주는 실제 동작을 재현하며, row[4] ?? ''가 이를 "현역(null)"으로 처리함을 검증한다.
+// 5열 HEADER 픽스처는 #159 이후에도 그대로 둔다 — F1 없는 과도기 시트가 전 종목
+// exemptable=false로 수용되는 legacy 경로 회귀를 겸한다(F열 자체 검증은 아래 전용 describe).
 const HEADER = ['종목', '목표', '만점', '방향', '종료 회차']
+const HEADER6 = [...HEADER, '면제 가능']
 const SAMPLE_ROWS = [
   HEADER,
   ['드리블셔틀런', '1:17', '-', '낮을수록'],
@@ -16,10 +19,10 @@ const SAMPLE_ROWS = [
 describe('parseGoals', () => {
   it('문서 예시(양방향 · 시간형/개수형 목표치 · 만점 null/숫자 혼합)를 그대로 파싱한다', () => {
     expect(parseGoals(SAMPLE_ROWS).events).toEqual([
-      { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
-      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
-      { key: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null },
-      { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null },
+      { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+      { key: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
+      { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: false },
     ])
   })
 
@@ -89,6 +92,54 @@ describe('parseGoals', () => {
       expect(() => parseGoals([HEADER, ['45도패스캐치', '5', '7', '높을수록', '2025-02-30']])).toThrow(
         /종료 회차 형식이 올바르지 않음/,
       )
+    })
+  })
+
+  describe('면제 가능(F열) 파싱 — #159', () => {
+    it("'가능'이면 true, 빈칸·'-'면 false (만점·종료 회차와 같은 없음 관례)", () => {
+      const result = parseGoals([
+        HEADER6,
+        ['패스 - 체스트', '3', '5', '높을수록', '', '가능'],
+        ['골밑슛', '5', '10', '높을수록', '', ''],
+        ['자유투', '2', '5', '높을수록', '', '-'],
+      ])
+      expect(result.events.map((event) => event.exemptable)).toEqual([true, false, false])
+    })
+
+    it('Sheets API가 행의 trailing 빈 셀을 생략해 5칸 이하 행이 와도 false로 처리한다', () => {
+      const result = parseGoals([HEADER6, ['골밑슛', '5', '10', '높을수록']])
+      expect(result.events[0].exemptable).toBe(false)
+    })
+
+    it("'가능' 앞뒤 공백은 trim해서 인식한다", () => {
+      const result = parseGoals([HEADER6, ['패스 - 체스트', '3', '5', '높을수록', '', ' 가능 ']])
+      expect(result.events[0].exemptable).toBe(true)
+    })
+
+    it('허용 밖 값이면 에러 (행 번호·종목명 포함 fail-loud)', () => {
+      expect(() => parseGoals([HEADER6, ['골밑슛', '5', '10', '높을수록', '', '불가']])).toThrow(
+        /2행 "골밑슛".*면제 가능 값이 올바르지 않음/,
+      )
+    })
+
+    it('F1 헤더가 예상("면제 가능")과 다르면 에러', () => {
+      expect(() =>
+        parseGoals([[...HEADER, '면제가능'], ['골밑슛', '5', '10', '높을수록', '', '가능']]),
+      ).toThrow(/F1 헤더가 예상과 다릅니다/)
+    })
+
+    it('F1 헤더 없이(5열 스키마) F열 값만 있으면 에러 — 헤더 누락 실수를 조용히 무시하지 않는다', () => {
+      expect(() => parseGoals([HEADER, ['골밑슛', '5', '10', '높을수록', '', '가능']])).toThrow(
+        /F1 헤더\("면제 가능"\)가 없음/,
+      )
+    })
+
+    it('G열 이후는 헤더·값 모두 무시한다 — 미래 열 추가를 안전하게 만드는 관례 보존', () => {
+      const result = parseGoals([
+        [...HEADER6, '미래의 열'],
+        ['패스 - 체스트', '3', '5', '높을수록', '', '가능', '아무 값'],
+      ])
+      expect(result.events[0].exemptable).toBe(true)
     })
   })
 

@@ -13,6 +13,7 @@ function countEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
     maxScore: 10,
     direction: '높을수록',
     endSessionDate: null,
+    exemptable: false,
     ...overrides,
   }
 }
@@ -26,6 +27,7 @@ function timeEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
     maxScore: null,
     direction: '낮을수록',
     endSessionDate: null,
+    exemptable: false,
     ...overrides,
   }
 }

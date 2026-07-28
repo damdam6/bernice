@@ -25,7 +25,7 @@ function entry(playerId: number, scores: Record<string, EventScore>, name = `선
 }
 
 function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'key' | 'direction' | 'targetValue'>): EventDefinition {
-  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, ...overrides }
+  return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, exemptable: false, ...overrides }
 }
 
 describe('computeEventRanking', () => {

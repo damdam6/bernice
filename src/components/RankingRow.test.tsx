@@ -20,6 +20,7 @@ function countEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
     maxScore: 10,
     direction: '높을수록',
     endSessionDate: null,
+    exemptable: false,
     ...overrides,
   }
 }

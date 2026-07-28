@@ -41,6 +41,7 @@ describe('deriveSessionEvents', () => {
     maxScore: 10,
     direction: '높을수록',
     endSessionDate: null,
+    exemptable: false,
   }
   const shuttleRun: EventDefinition = {
     key: '셔틀런',
@@ -50,6 +51,7 @@ describe('deriveSessionEvents', () => {
     maxScore: null,
     direction: '낮을수록',
     endSessionDate: null,
+    exemptable: false,
   }
   const freeThrow: EventDefinition = {
     key: '자유투',
@@ -59,6 +61,7 @@ describe('deriveSessionEvents', () => {
     maxScore: 10,
     direction: '높을수록',
     endSessionDate: null,
+    exemptable: false,
   }
 
   it('session.eventKeys 순서대로 정의를 담는다(events[] 선언 순서 무시)', () => {
@@ -229,7 +232,7 @@ describe('findTiedRanks', () => {
 
 describe('buildEventGuidance', () => {
   function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'target' | 'targetValue' | 'direction'>): EventDefinition {
-    return { key: '종목', valueKind: 'count', maxScore: null, endSessionDate: null, ...overrides }
+    return { key: '종목', valueKind: 'count', maxScore: null, endSessionDate: null, exemptable: false, ...overrides }
   }
 
   it('개수 + 높을수록 + 만점 있음 — PRD §05 예시와 일치', () => {

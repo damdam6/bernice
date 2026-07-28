@@ -220,6 +220,9 @@ export interface EventDefinition {
   endSessionDate: string | null // 종료 회차(YYYY-MM-DD) — null이면 현역. events[]는 종료 종목을 포함한
   // 전체를 목표 탭 행 순서대로 담는다(과거 회차 랭킹·추이가 종료 종목 정의를 필요로 함).
   // '종료 여부'는 소비자가 endSessionDate !== null로 파생한다.
+  exemptable: boolean        // 면제 가능(목표 탭 F열 '가능'=true, 빈칸/'-'=false, #159) — 입력 화면
+  // 면제 토글 노출 기준. 시트 직접 편집의 "면제" 리터럴은 전 종목 여전히 수용(escape hatch) —
+  // 이 플래그는 UI 노출만 정하고 면제 의미론은 바꾸지 않는다.
 }
 
 /** 회차 1건, 종목 1개의 점수 한 칸 — status로 분기하면 null 체크 없이 쓸 수 있다.
@@ -333,9 +336,9 @@ export interface RecordsResponse {
   "generatedAt": "2026-07-13T09:00:00.000Z",
   "events": [
     { "key": "드리블셔틀런", "valueKind": "time", "target": "1:17",
-      "targetValue": 77, "maxScore": null, "direction": "낮을수록", "endSessionDate": null },
+      "targetValue": 77, "maxScore": null, "direction": "낮을수록", "endSessionDate": null, "exemptable": false },
     { "key": "골밑슛", "valueKind": "count", "target": "5",
-      "targetValue": 5, "maxScore": 10, "direction": "높을수록", "endSessionDate": null }
+      "targetValue": 5, "maxScore": 10, "direction": "높을수록", "endSessionDate": null, "exemptable": false }
   ],
   "players": [
     {

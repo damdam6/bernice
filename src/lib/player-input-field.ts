@@ -1,11 +1,10 @@
 // 선수별 입력 화면(#68)의 종목 카드 로컬 폼 상태 — EventDefinition.valueKind가 필드 모양을
 // 결정하므로 판별 유니언으로 둔다(시간=분·초 2필드, 개수=숫자 1필드). exempt는 valueKind와
-// 무관한 공통 플래그이지만, 토글은 면제 가능 종목에만 노출되므로(exemptable-events.ts) 그 외
-// 종목엔 항상 false로 초기화한다 — 그렇지 않으면 시트 직접 편집으로 이미 "면제"가 들어간
-// 비면제 종목의 입력부가 토글 없이 숨겨져버려(§02 결정 10의 "UI 노출만 제한"과 모순) 되돌릴
-// 방법이 없어진다.
+// 무관한 공통 플래그이지만, 토글은 면제 가능 종목(EventDefinition.exemptable — 목표 탭 F열,
+// #159)에만 노출되므로 그 외 종목엔 항상 false로 초기화한다 — 그렇지 않으면 시트 직접 편집으로
+// 이미 "면제"가 들어간 비면제 종목의 입력부가 토글 없이 숨겨져버려(§02 결정 10의 "UI 노출만
+// 제한"과 모순) 되돌릴 방법이 없어진다.
 import type { EventDefinition, EventScore } from '../../shared/domain'
-import { isExemptable } from './exemptable-events'
 
 export type FieldState =
   | { valueKind: 'time'; minutes: string; seconds: string; exempt: boolean }
@@ -22,7 +21,7 @@ export interface FieldNotice {
 // 숫자가 남아 있어도(normalize-score.ts가 원본 raw를 보존하는 필드라 가능) mm/ss 필드에
 // 반각으로 보인다.
 export function initFieldState(event: EventDefinition, score: EventScore): FieldState {
-  const exempt = isExemptable(event.key) && score.status === 'exempt'
+  const exempt = event.exemptable && score.status === 'exempt'
   const recordedDisplay = score.status === 'recorded' ? score.display.normalize('NFKC') : ''
 
   if (event.valueKind === 'time') {
@@ -42,7 +41,7 @@ export function initFieldState(event: EventDefinition, score: EventScore): Field
 // 표현하지 못해 필드를 비워야 하는 상황이라, 왜 비어 있는지 원본과 함께 알려준다.
 export function initialFieldNotice(event: EventDefinition, score: EventScore): FieldNotice | null {
   if (score.status === 'invalid') return { display: score.display, reason: score.reason }
-  if (score.status === 'exempt' && !isExemptable(event.key)) {
+  if (score.status === 'exempt' && !event.exemptable) {
     return { display: '면제', reason: '이 종목은 면제 토글이 없어요 — 값을 입력하거나, 빈 채로 저장하면 미측정으로 바뀝니다' }
   }
   return null
