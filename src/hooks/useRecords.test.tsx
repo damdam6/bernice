@@ -162,6 +162,16 @@ describe('useRecords', () => {
     expect(result.current.data).toEqual(RECORDS_BODY)
   })
 
+  it("항상 cache:'reload'로 fetch해 브라우저 HTTP 캐시를 우회한다(#163)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useRecords(), { wrapper: createWrapper() })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(fetchMock).toHaveBeenCalledWith('/api/records', expect.objectContaining({ cache: 'reload' }))
+  })
+
   it('401이면 UnauthorizedError를 반환하고 재시도하지 않는다', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(401, { error: 'unauthorized' }))
     vi.stubGlobal('fetch', fetchMock)
