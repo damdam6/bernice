@@ -2,6 +2,7 @@
 // (활동·가나다·기본 해제) + 하단 고정 확인 바 "N명으로 기록지 만들기"(0명이면 비활성).
 import { useNavigate } from 'react-router-dom'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
+import { BottomActionBar } from '../../components/layout/BottomActionBar'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -69,7 +70,7 @@ export default function CreateSheet() {
         </p>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas via-canvas px-4 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <BottomActionBar>
         <button
           type="button"
           disabled={selected.size === 0 || submitting}
@@ -78,7 +79,7 @@ export default function CreateSheet() {
         >
           {submitting ? '만드는 중…' : `${selected.size}명으로 기록지 만들기`}
         </button>
-      </div>
+      </BottomActionBar>
     </div>
   )
 }
