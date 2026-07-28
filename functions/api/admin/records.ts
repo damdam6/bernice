@@ -7,7 +7,7 @@
 // 파이프라인: 바디 형식 검증(400) → fetchSheetBundle 읽기 → 목표/명단 파싱·playerId 해석 →
 // 회차 탭 존재(404 session_not_found) → 헤더 매핑·대상 행 찾기(404 not_participant / 500) →
 // scores key 집합 검증(400, 그 회차 측정 종목 기준) → 값 검증(400·시트 미기록) →
-// updateValues(RAW·502) → RECORDS_CACHE_KEY 무효화(응답 전 await, PRD §09) →
+// updateValues(RAW·502) → purgeRecordsCache(응답 전 await, PRD §09) →
 // 정규화 결과(EventScore) 200.
 //
 // 판정 순서 = 요청 형식(400) → 자원 존재(404) → 값 유효성(400) → 쓰기(502). 검증·헤더 매핑·
@@ -19,7 +19,7 @@ import { updateValues } from '../../lib/sheetsWriteApi'
 import { parseGoals } from '../../lib/parse-goals'
 import { parseRoster } from '../../lib/roster'
 import { isValidRoundTabName } from '../../lib/sheetTabs'
-import { RECORDS_CACHE_KEY } from '../../lib/records-cache'
+import { purgeRecordsCache } from '../../lib/records-cache'
 import {
   SheetIntegrityError,
   buildWritePlan,
@@ -122,8 +122,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     await updateValues(env, env.SHEET_ID, plan.range, plan.values)
 
     // 10. 캐시 무효화 — 응답 전 await (waitUntil이면 저장 직후 refetch가 옛 캐시를 받을 수 있다, PRD §09).
-    // Cache.delete는 URL 문자열을 직접 받는다 — GET 경로가 put한 같은 키(RECORDS_CACHE_KEY)에 매칭된다.
-    await caches.default.delete(RECORDS_CACHE_KEY)
+    await purgeRecordsCache()
 
     return Response.json({ sessionDate, playerId, name: player.name, scores: scoreMap })
   } catch (err) {

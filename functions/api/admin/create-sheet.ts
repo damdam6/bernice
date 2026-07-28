@@ -21,7 +21,7 @@ import { parseRoster } from '../../lib/roster'
 import { parseGoals } from '../../lib/parse-goals'
 import { type BuildCreateSheetResult, buildCreateSheetPlan } from '../../lib/create-sheet'
 import { formatSeoulDate } from '../../lib/seoul-date'
-import { RECORDS_CACHE_KEY } from '../../lib/records-cache'
+import { purgeRecordsCache } from '../../lib/records-cache'
 
 interface Env extends SheetsEnv {
   SHEET_ID: string
@@ -88,8 +88,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     await batchUpdate(env, env.SHEET_ID, plan.requests)
 
     // 새 회차 탭(빈 점수여도)이 /api/records 응답에 새 세션으로 반영되므로 캐시를 비운다.
-    // 응답을 막지 않도록 waitUntil로 넘긴다(records.ts의 cache.put와 동일 패턴).
-    context.waitUntil(caches.default.delete(new Request(RECORDS_CACHE_KEY)))
+    // 응답 전 await — waitUntil로 미루면 201 직후 프론트 refetch가 옛 캐시를 받을 수 있다(PRD §09).
+    await purgeRecordsCache()
 
     return Response.json(
       { sessionDate: plan.sessionDate, participantCount: plan.participants.length, participants: plan.participants },
