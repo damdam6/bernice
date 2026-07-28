@@ -4,7 +4,7 @@ import { RECORDS_CACHE_KEY } from '../lib/records-cache'
 const { onRequestPost } = await import('./refresh')
 
 function makeContext(deleteResult: boolean) {
-  const deleteMock = vi.fn(async (_key: string) => deleteResult)
+  const deleteMock = vi.fn(async (_request: Request) => deleteResult)
   vi.stubGlobal('caches', { default: { delete: deleteMock } })
   const context = {} as Parameters<typeof onRequestPost>[0]
   return { context, deleteMock }
@@ -21,7 +21,7 @@ describe('onRequestPost /api/refresh', () => {
     const response = await onRequestPost(context)
 
     expect(response.status).toBe(200)
-    expect(deleteMock).toHaveBeenCalledWith(RECORDS_CACHE_KEY)
+    expect(deleteMock.mock.calls[0][0].url).toBe(RECORDS_CACHE_KEY)
     const body = (await response.json()) as { deleted: boolean }
     expect(body).toEqual({ deleted: true })
   })
@@ -32,7 +32,7 @@ describe('onRequestPost /api/refresh', () => {
     const response = await onRequestPost(context)
 
     expect(response.status).toBe(200)
-    expect(deleteMock).toHaveBeenCalledWith(RECORDS_CACHE_KEY)
+    expect(deleteMock.mock.calls[0][0].url).toBe(RECORDS_CACHE_KEY)
     const body = (await response.json()) as { deleted: boolean }
     expect(body).toEqual({ deleted: false })
   })

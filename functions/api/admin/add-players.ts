@@ -18,7 +18,7 @@ import { classifySheetTabs } from '../../lib/sheetTabs'
 import { parseRoster } from '../../lib/roster'
 import { updateValues } from '../../lib/sheetsWriteApi'
 import { AddPlayersError, buildAddPlayersPlan } from '../../lib/add-players'
-import { RECORDS_CACHE_KEY } from '../../lib/records-cache'
+import { purgeRecordsCache } from '../../lib/records-cache'
 
 interface Env extends SheetsEnv {
   SHEET_ID: string
@@ -84,8 +84,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const range = `${quoteSheetName(round.name)}!A${plan.startRow}:A${endRow}`
     await updateValues(env, env.SHEET_ID, range, plan.rows, 'USER_ENTERED')
 
-    // 쓰기 성공 → 다음 /api/records 조회가 미스→재조립되도록 같은 키를 삭제(records-cache.ts).
-    await caches.default.delete(new Request(RECORDS_CACHE_KEY))
+    // 쓰기 성공 → 다음 /api/records 조회가 미스→재조립되도록 캐시를 비운다(records-cache.ts).
+    await purgeRecordsCache()
 
     return Response.json({ sessionDate: round.name, added: plan.added })
   } catch (err) {

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#161 쓰기 후 캐시 무효화 통일 — create-sheet waitUntil→await + purgeRecordsCache 헬퍼 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px; background: var(--ok);
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/161">#161</a></span><span class="type-chip">버그 수정</span>
+    <h1>쓰기 후 캐시 무효화 통일 — create-sheet waitUntil→await + purgeRecordsCache 헬퍼</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/161-unify-cache-purge-await</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      <code>functions/api/admin/create-sheet.ts:92</code>가 records 엣지 캐시 삭제를
+      <code>context.waitUntil</code>로 미뤄, 201 응답 직후 프론트 refetch가 옛 엣지 캐시를 받을 수 있었다
+      — docs/prd-record-input.html §09 "무효화는 응답을 돌려주기 전에 await" 위반. 또한 캐시 삭제 호출이
+      4곳(쓰기 3곳 + <code>refresh.ts</code>)에 흩어져 있고 <code>caches.default.delete</code> 인자 표기도
+      문자열/<code>new Request(...)</code>로 혼재해 있었다. <code>functions/lib/records-cache.ts</code>에
+      <code>purgeRecordsCache()</code> 단일 헬퍼를 추가하고 4곳 모두 이를 거치도록 통일했다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>무효화 호출부 4곳의 기존 상태:</p>
+    <ul>
+      <li><code>functions/api/admin/create-sheet.ts:92</code> — <code>context.waitUntil(caches.default.delete(new Request(RECORDS_CACHE_KEY)))</code>. 응답을 막지 않으려 <code>waitUntil</code>로 넘겨, 삭제 완료 전에 201 응답이 먼저 나갈 수 있었다(PRD §09 위반의 유일한 지점).</li>
+      <li><code>functions/api/admin/records.ts:126</code> — 이미 <code>await caches.default.delete(RECORDS_CACHE_KEY)</code>(응답 전 await, 정상).</li>
+      <li><code>functions/api/admin/add-players.ts:88</code> — 이미 <code>await caches.default.delete(new Request(RECORDS_CACHE_KEY))</code>(응답 전 await, 정상).</li>
+      <li><code>functions/api/refresh.ts:8</code> — <code>const deleted = await caches.default.delete(RECORDS_CACHE_KEY)</code>, 결과 boolean을 응답 바디로 그대로 반환.</li>
+    </ul>
+    <p>
+      <code>functions/lib/records-cache.ts</code>는 그동안 <code>RECORDS_CACHE_KEY</code>·<code>RECORDS_CACHE_TTL_SECONDS</code>
+      상수만 export하고, 삭제 로직 자체(및 <code>new Request(...)</code> 래핑 여부)는 각 호출부가 개별 구현했다.
+      GET 경로(<code>functions/api/records.ts:29</code>)의 <code>context.waitUntil(cache.put(...))</code>는 캐시
+      "채우기"라 이번 이슈 범위 밖 — 응답을 막을 이유가 없는 정상 패턴이므로 그대로 뒀다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p>
+      <code>records-cache.ts</code>에 <code>export async function purgeRecordsCache(): Promise&lt;boolean&gt;</code>를
+      추가해 <code>caches.default.delete(new Request(RECORDS_CACHE_KEY))</code>를 캡슐화했다. <code>new Request(...)</code>
+      래핑 형태로 고정한 이유: <code>add-players.test.ts</code>·<code>create-sheet.test.ts</code>의 기존 캐시 목이
+      <code>delete(request: Request)</code> 시그니처(호출 인자의 <code>.url</code>을 읽음)를 전제하고 있어, 이 모양을
+      깨지 않는 쪽이 회귀가 가장 적다. <code>records.ts</code>·<code>refresh.ts</code>는 원래 문자열을 직접 넘겼지만
+      헬퍼 내부에서 항상 <code>new Request</code>로 감싸므로 동작(삭제 대상 키)은 동일하게 유지된다.
+    </p>
+    <p>
+      대안으로 "문자열 그대로 넘기는 버전"도 검토했으나, 그러면 <code>add-players.test.ts</code>·
+      <code>create-sheet.test.ts</code>의 기존 fake cache가 깨져(<code>request.url</code>이 <code>undefined</code>)
+      더 넓은 회귀를 만든다 — 기각.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">
+        <code>records-cache.ts</code>에 <code>purgeRecordsCache(): Promise&lt;boolean&gt;</code> 추가(
+        <code>caches.default.delete(new Request(RECORDS_CACHE_KEY))</code> 래핑), 헤더 주석을 4개 호출부 수렴
+        구조로 갱신.
+        <span class="files"><code>functions/lib/records-cache.ts</code></span>
+      </li>
+      <li class="done">
+        <code>create-sheet.ts:92</code> — <code>context.waitUntil(...)</code> 제거 →
+        <code>await purgeRecordsCache()</code>로 교체, 인접 주석(91행)을 "응답 전 await" 근거로 갱신.
+        <span class="files"><code>functions/api/admin/create-sheet.ts</code></span>
+      </li>
+      <li class="done">
+        <code>admin/records.ts:126</code> · <code>add-players.ts:88</code> · <code>refresh.ts:8</code>를 각각
+        <code>purgeRecordsCache()</code> 호출로 교체(동작 불변 — 세 곳 모두 이미 응답 전 await였으므로 순서는
+        그대로).
+        <span class="files"><code>functions/api/admin/records.ts</code>, <code>functions/api/admin/add-players.ts</code>, <code>functions/api/refresh.ts</code></span>
+      </li>
+      <li class="done">
+        <code>create-sheet.test.ts</code>: 삭제 어서션을 <code>flush()</code> 없이 <code>onRequestPost</code> 반환
+        직후로 옮겨 "응답 전 삭제 완료"를 직접 검증. 더는 쓰이지 않는 <code>waitUntilPromises</code>/<code>flush</code>
+        헬퍼를 <code>makeContext</code>에서 제거.
+        <span class="files"><code>functions/api/admin/create-sheet.test.ts</code></span>
+      </li>
+      <li class="done">
+        <code>refresh.test.ts</code>: <code>deleteMock</code>이 문자열이 아닌 <code>Request</code>를 받게 됐으므로
+        <code>toHaveBeenCalledWith(RECORDS_CACHE_KEY)</code> 대신 <code>.mock.calls[0][0].url</code> 비교로 수정
+        (계획에 없었지만 헬퍼 통일의 직접 결과 — 이슈 완료 조건엔 명시되지 않았으나 그린 유지에 필수).
+        <span class="files"><code>functions/api/refresh.test.ts</code></span>
+        <span class="note">이슈 원문 완료 조건에 없던 파일이지만, purgeRecordsCache 시그니처 통일의 필연적 파급 — 계획 대비 확장.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>create-sheet 응답이 캐시 삭제 완료를 기다리므로 201 지연폭이 늘어남</td>
+          <td>records.ts·add-players.ts는 이미 같은 await 패턴이라 실사용 지연 폭은 검증된 범위 — 무시 가능</td>
+          <td>변경 없음(의도된 동작, PRD §09가 요구하는 정합성 우선)</td>
+        </tr>
+        <tr>
+          <td>refresh.test.ts가 완료 조건에 없던 파일이라 리뷰에서 범위 이탈로 보일 수 있음</td>
+          <td>테스트만 변경, 프로덕션 동작(응답 바디 <code>{ deleted }</code>)은 불변</td>
+          <td>PR 본문에 왜 건드렸는지 명시</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run functions/api/admin/create-sheet.test.ts functions/api/admin/records.test.ts functions/api/admin/add-players.test.ts functions/api/refresh.test.ts</code> — 4개 호출부 전용 스위트 그린 확인(완료: 38/38 통과).</li>
+      <li><code>npm run test</code>(전체 vitest 스위트) — 회귀 없음 확인(완료: 86 files / 796 tests 통과).</li>
+      <li><code>npm run typecheck</code>(<code>tsc -b</code>) — import 정리(불필요해진 <code>RECORDS_CACHE_KEY</code> import 제거) 후 타입 에러 없음 확인(완료).</li>
+      <li>create-sheet 201 케이스에서 <code>cacheDelete</code>가 <code>flush()</code> 없이 <code>onRequestPost</code> 반환 직후 이미 호출돼 있음을 직접 검증(응답 전 await의 회귀 증거).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>records-cache.ts</code>에 <code>purgeRecordsCache(): Promise&lt;boolean&gt;</code> 추가(<code>caches.default.delete(RECORDS_CACHE_KEY)</code> 래핑) — 완료.</li>
+      <li><code>create-sheet.ts:92</code> waitUntil 제거 → 응답 전 <code>await purgeRecordsCache()</code>(91행 주석도 갱신) — 완료.</li>
+      <li><code>admin/records.ts:126</code> · <code>add-players.ts:88</code> · <code>refresh.ts:8</code> 헬퍼 호출로 교체(동작 불변) — 완료.</li>
+      <li><code>create-sheet.test.ts</code>: 삭제 어서션이 <code>flush()</code> 없이 성립하도록 수정 — 응답 반환 전 삭제 완료를 검증 — 완료.</li>
+      <li>기존 스위트 그린(<code>admin/records.test.ts:105·134</code>, <code>add-players.test.ts:103·117</code> 무변경 통과) — 완료.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/161">#161</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>

@@ -45,16 +45,13 @@ function makeContext(body: unknown, { raw = false }: { raw?: boolean } = {}) {
   const cacheDelete = vi.fn(async (_request: Request) => true)
   vi.stubGlobal('caches', { default: { delete: cacheDelete } })
 
-  const waitUntilPromises: Promise<unknown>[] = []
   const context = {
     request,
     env: { GOOGLE_SERVICE_ACCOUNT_KEY: '{}', SHEET_ID: 'sheet-under-test' },
-    waitUntil: (p: Promise<unknown>) => {
-      waitUntilPromises.push(p)
-    },
+    waitUntil: () => {},
   } as unknown as Parameters<typeof onRequestPost>[0]
 
-  return { context, cacheDelete, flush: () => Promise.all(waitUntilPromises) }
+  return { context, cacheDelete }
 }
 
 async function jsonOf(res: Response): Promise<Record<string, unknown>> {
@@ -83,10 +80,13 @@ afterEach(() => {
 
 describe('POST /api/admin/create-sheet', () => {
   it('201 — 참가자만·가나다·빈 점수 탭을 원자적 batchUpdate로 만들고 캐시를 무효화한다', async () => {
-    const { context, cacheDelete, flush } = makeContext({ participantIds: [4, 1] }) // 라온, 가은
+    const { context, cacheDelete } = makeContext({ participantIds: [4, 1] }) // 라온, 가은
 
     const res = await onRequestPost(context)
-    await flush()
+
+    // 응답이 이미 돌아온 시점에 삭제가 끝나 있어야 한다(waitUntil 없이 await) — flush() 불필요.
+    expect(cacheDelete).toHaveBeenCalledTimes(1)
+    expect(cacheDelete.mock.calls[0][0].url).toBe(RECORDS_CACHE_KEY)
 
     expect(res.status).toBe(201)
     expect(await res.json()).toEqual({
@@ -115,9 +115,6 @@ describe('POST /api/admin/create-sheet', () => {
     ])
     expect(rows[1].values[0]).toEqual({ userEnteredValue: { formulaValue: "='버니스명단'!A2" } }) // 가은 id1
     expect(rows[2].values[0]).toEqual({ userEnteredValue: { formulaValue: "='버니스명단'!A5" } }) // 라온 id4
-
-    expect(cacheDelete).toHaveBeenCalledTimes(1)
-    expect(cacheDelete.mock.calls[0][0].url).toBe(RECORDS_CACHE_KEY)
   })
 
   it('오늘 탭이 이미 있으면 409 sheet_already_exists — 값 조회·쓰기를 하지 않는다', async () => {
