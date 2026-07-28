@@ -370,6 +370,7 @@
       <li>무효화는 <b>응답을 돌려주기 전에 await</b> — 프론트가 저장 직후 refetch하므로, 삭제가 응답보다 늦으면(waitUntil) 오래된 캐시를 다시 받을 수 있다.</li>
       <li>프론트는 저장 성공 콜백에서 TanStack Query의 records 쿼리를 invalidate → 다음 조회가 시트를 재조립. 저장마다 전체 재조립이 일어나지만 팀 규모(약 21명 × 회차 수)에서 비용은 무시 가능.</li>
       <li>쓰기 실패(재시도 소진 포함) 시 캐시는 건드리지 않는다 — 실패했는데 무효화만 하면 불필요한 재조립만 생긴다.</li>
+      <li><b>캐시 계층 분리(#162):</b> <code class="inline">/api/records</code>가 클라이언트에 내려주는 응답은 미스·히트 모두 <code class="inline">Cache-Control: no-store</code> — 브라우저가 자체 캐시하면 저장 직후 무효화·refetch가 네트워크에 닿지 못한다. <code class="inline">max-age</code>는 엣지 Cache API 저장 사본 전용 TTL(<code class="inline">records-cache.ts</code> 상수)로만 남긴다.</li>
     </ul>
     <div class="callout"><b>알려진 한계 (기존 패턴 그대로 상속):</b> Cloudflare Cache API는 <b>데이터센터(콜로) 로컬</b>이라 <code class="inline">cache.delete</code>는 요청이 닿은 콜로에서만 지워진다. 팀 전원이 같은 지역(한국)에서 접속하는 실사용에선 문제가 안 되지만, 다른 콜로에 남은 캐시는 TTL(6시간)까지 살 수 있다. P2 <code class="inline">/api/refresh</code>와 공유하는 한계이며 이 PRD에서 새로 해결하지 않는다.</div>
   </section>
