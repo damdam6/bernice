@@ -24,6 +24,11 @@ import { createSheet } from '../../lib/create-sheet-api'
 import { compareKorean } from '../../lib/korean-sort'
 import { formatSeoulDate } from '../../lib/seoul-date'
 
+// 하단 바 기본 버튼 스타일 — conflict 분기의 [기록 입력으로 이동] CTA와 만들기 버튼이
+// 같은 자리를 번갈아 차지하므로 공유한다.
+const BAR_PRIMARY_BUTTON_CLASS =
+  'w-full rounded-[13px] bg-primary py-3.5 text-sm font-bold text-white transition-colors hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-neutral-strong disabled:opacity-60'
+
 export default function CreateSheet() {
   const navigate = useNavigate()
   const { data, isError, error, refetch } = useRecords()
@@ -126,7 +131,7 @@ export default function CreateSheet() {
               type="button"
               disabled={refreshing}
               onClick={() => goToConflictRecords(conflictDate)}
-              className="w-full rounded-[13px] bg-primary py-3.5 text-sm font-bold text-white transition-colors hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-neutral-strong disabled:opacity-60"
+              className={BAR_PRIMARY_BUTTON_CLASS}
             >
               {refreshing ? '최신 데이터 불러오는 중…' : '기록 입력으로 이동'}
             </button>
@@ -142,7 +147,7 @@ export default function CreateSheet() {
               type="button"
               disabled={selected.size === 0 || submitting}
               onClick={handleConfirm}
-              className="w-full rounded-[13px] bg-primary py-3.5 text-sm font-bold text-white transition-colors hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-neutral-strong disabled:opacity-60"
+              className={BAR_PRIMARY_BUTTON_CLASS}
             >
               {submitting ? '만드는 중…' : `${selected.size}명으로 기록지 만들기`}
             </button>
