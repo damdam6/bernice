@@ -47,10 +47,11 @@ afterEach(() => {
 const ADMIN_CODE = 'admin-secret-71'
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록', endSessionDate: null },
-  { key: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록', endSessionDate: null },
-  { key: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: null },
-  { key: '패스 - 체스트', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null },
+  { key: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+  { key: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { key: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
+  // 실시트 목표 탭 F열('면제 가능')과 동일하게 패스 종목만 면제 가능(#159) — 아래 면제 토글 시나리오가 이 플래그에 의존.
+  { key: '패스 - 체스트', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: true },
 ]
 
 // satisfies로 Player[] 형태를 검증하되 status 리터럴('활동')은 넓히지 않는다 — 아래

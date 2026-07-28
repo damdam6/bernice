@@ -43,8 +43,8 @@ const EMPTY_BODY: RecordsResponse = {
 const RECORDS_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
-    { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
+    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
   ],
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
   sessions: [
@@ -75,8 +75,9 @@ const ENDED_EVENT_BODY: RecordsResponse = {
       maxScore: 10,
       direction: '높을수록',
       endSessionDate: '2026-06-08',
+      exemptable: false,
     },
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
+    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
   ],
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
   sessions: [
@@ -104,6 +105,7 @@ const SEVEN_EVENTS_BODY: RecordsResponse = {
     maxScore: 10,
     direction: '높을수록' as const,
     endSessionDate: null,
+    exemptable: false,
   })),
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
   sessions: [{ date: '2026-06-15', entries: [], eventKeys: SEVEN_EVENTS }],

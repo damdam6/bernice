@@ -62,6 +62,7 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
   if (typeof raw.maxScore !== 'number' && raw.maxScore !== null) return null
   if (!isOneOf(raw.direction, RANK_DIRECTIONS)) return null
   if (typeof raw.endSessionDate !== 'string' && raw.endSessionDate !== null) return null
+  if (typeof raw.exemptable !== 'boolean') return null
   return {
     key: raw.key,
     valueKind: raw.valueKind,
@@ -70,6 +71,7 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
     maxScore: raw.maxScore,
     direction: raw.direction,
     endSessionDate: raw.endSessionDate,
+    exemptable: raw.exemptable,
   }
 }
 

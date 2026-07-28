@@ -11,7 +11,7 @@ function rate(event: string, achievedCount: number, eligibleCount: number, r: nu
 }
 
 function event(key: string): EventDefinition {
-  return { key, valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null }
+  return { key, valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false }
 }
 
 describe('latestSessionOrdinal', () => {

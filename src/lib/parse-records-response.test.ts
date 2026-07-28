@@ -7,8 +7,8 @@ import { parseEventScore, parseRecordsResponse } from './parse-records-response'
 const FULL_RESPONSE: RecordsResponse = {
   generatedAt: '2026-07-17T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
-    { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
+    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
   ],
   players: [
     {
@@ -177,6 +177,25 @@ describe('parseRecordsResponse', () => {
       ),
     ).toBeNull()
     expect(parseRecordsResponse(payload((d) => delete (d.events as Record<string, unknown>[])[0].endSessionDate))).toBeNull()
+  })
+
+  it('EventDefinition.exemptable는 boolean만 통과 — 누락(예: 캐시 버전 미범프 구응답)·타입 오류는 거부한다', () => {
+    const exemptableTrue = parseRecordsResponse(
+      payload((d) => {
+        const events = d.events as Record<string, unknown>[]
+        events[0].exemptable = true
+      }),
+    )
+    expect(exemptableTrue?.events[0].exemptable).toBe(true)
+    expect(
+      parseRecordsResponse(
+        payload((d) => {
+          const events = d.events as Record<string, unknown>[]
+          events[0].exemptable = '가능'
+        }),
+      ),
+    ).toBeNull()
+    expect(parseRecordsResponse(payload((d) => delete (d.events as Record<string, unknown>[])[0].exemptable))).toBeNull()
   })
 
   it('Session.eventKeys는 문자열 배열만 통과, 비배열·비문자열 원소는 거부한다', () => {

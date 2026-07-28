@@ -11,8 +11,8 @@ import {
 // 종목 2개(개수+만점 있음 높을수록 / 시간+만점 없음 낮을수록) × 회차 3개.
 // 회차별로 첫 기록·개선·동률·악화 델타가 모두 나오도록 값을 짰다.
 const EVENTS: EventDefinition[] = [
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null },
-  { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null },
+  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
 ]
 
 const PROFILE_SESSION_EVENT_KEYS = ['골밑슛', '셔틀런']
@@ -188,6 +188,7 @@ describe('buildRadarAxes', () => {
       maxScore: 10,
       direction: '높을수록',
       endSessionDate: null,
+      exemptable: false,
     }))
     const recordedScore = (value: number) => ({ status: 'recorded' as const, value, display: String(value) })
     const fourEventSession: Session = {
@@ -285,6 +286,7 @@ describe('buildGrowthCards', () => {
       maxScore: 10,
       direction: '높을수록',
       endSessionDate: '2026-06-08',
+      exemptable: false,
     }
     const eventsWithEnded = [...EVENTS, endedEvent]
     const withRecord: PlayerSummary = {
@@ -338,6 +340,7 @@ describe('buildTrendSeries', () => {
       maxScore: 10,
       direction: '높을수록',
       endSessionDate: '2026-06-08',
+      exemptable: false,
     }
     const player: PlayerSummary = {
       id: 20,

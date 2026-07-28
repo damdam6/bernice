@@ -6,8 +6,9 @@ function ev(
   valueKind: 'count' | 'time',
   key = '종목',
   direction: RankDirection = '높을수록',
+  exemptable = false,
 ): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction, endSessionDate: null }
+  return { key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction, endSessionDate: null, exemptable }
 }
 
 const RECORDED_TIME: EventScore = { status: 'recorded', value: 72, display: '1:12' }
@@ -54,15 +55,15 @@ describe('initFieldState', () => {
     })
   })
 
-  it('면제 가능 종목(패스 - 체스트) exempt → 빈 필드 + exempt true', () => {
-    expect(initFieldState(ev('count', '패스 - 체스트'), EXEMPT)).toEqual({
+  it('면제 가능 종목(exemptable=true, 목표 탭 F열 유래 #159) exempt → 빈 필드 + exempt true', () => {
+    expect(initFieldState(ev('count', '패스 - 체스트', '높을수록', true), EXEMPT)).toEqual({
       valueKind: 'count',
       count: '',
       exempt: true,
     })
   })
 
-  it('면제 불가 종목이 exempt여도(시트 직접 편집 유래) exempt는 항상 false — 토글 없이 숨겨지는 걸 막는다', () => {
+  it('면제 불가 종목(exemptable=false)이 exempt여도(시트 직접 편집 유래) exempt는 항상 false — 토글 없이 숨겨지는 걸 막는다', () => {
     expect(initFieldState(ev('time', '드리블셔틀런'), EXEMPT)).toEqual({
       valueKind: 'time',
       minutes: '',
@@ -76,7 +77,7 @@ describe('initFieldState', () => {
     })
   })
 
-  it('종료된 45도패스캐치가 과거 회차에 exempt로 기록돼 있어도(상수 교체 후) exempt는 항상 false', () => {
+  it('종료된 45도패스캐치가 과거 회차에 exempt로 기록돼 있어도(면제 불가 플래그) exempt는 항상 false', () => {
     expect(initFieldState(ev('count', '45도패스캐치'), EXEMPT)).toEqual({
       valueKind: 'count',
       count: '',
@@ -102,7 +103,7 @@ describe('initialFieldNotice', () => {
   it('invalid도 아니고 면제 불가 종목의 exempt도 아니면 null', () => {
     expect(initialFieldNotice(ev('time'), RECORDED_TIME)).toBeNull()
     expect(initialFieldNotice(ev('time'), UNMEASURED)).toBeNull()
-    expect(initialFieldNotice(ev('count', '패스 - 체스트'), EXEMPT)).toBeNull()
+    expect(initialFieldNotice(ev('count', '패스 - 체스트', '높을수록', true), EXEMPT)).toBeNull()
   })
 
   it('invalid면 원본·사유를 보존', () => {
@@ -112,7 +113,7 @@ describe('initialFieldNotice', () => {
     })
   })
 
-  it('면제 불가 종목이 exempt면 원본 "면제"와 사유를 안내', () => {
+  it('면제 불가 종목(exemptable=false)이 exempt면 원본 "면제"와 사유를 안내', () => {
     const notice = initialFieldNotice(ev('count', '골밑슛'), EXEMPT)
     expect(notice?.display).toBe('면제')
     expect(notice?.reason).toEqual(expect.any(String))
