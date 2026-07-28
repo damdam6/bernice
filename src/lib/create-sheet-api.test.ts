@@ -73,6 +73,25 @@ describe('createSheet', () => {
     })
   })
 
+  it('실패 바디의 sessionDate가 YYYY-MM-DD 형식이 아니면 싣지 않는다 — 라우팅 경로에 그대로 들어가는 값', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(409, {
+          error: 'sheet_already_exists',
+          message: '이미 있습니다.',
+          sessionDate: '../../admin/records',
+        }),
+      ),
+    )
+
+    await expect(createSheet([1])).resolves.toEqual({
+      ok: false,
+      error: 'sheet_already_exists',
+      message: '이미 있습니다.',
+    })
+  })
+
   it('400(참가자 미선택)이면 ok:false를 반환한다', async () => {
     vi.stubGlobal(
       'fetch',

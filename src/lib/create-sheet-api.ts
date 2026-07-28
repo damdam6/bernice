@@ -21,6 +21,11 @@ export interface CreateSheetFailure {
 
 export type CreateSheetResult = CreateSheetSuccess | CreateSheetFailure
 
+// 회차 탭 이름 규칙 YYYY-MM-DD(functions/lib/sheetTabs.ts ROUND_NAME_PATTERN과 동일 취지의
+// 프론트 사본) — sessionDate는 라우팅 경로에 그대로 들어가므로 형식에 맞는 값만 싣는다.
+// 어긋나면 필드를 생략해 호출부(CreateSheet)가 오늘 날짜로 폴백하게 한다.
+const SESSION_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
 export async function createSheet(participantIds: number[]): Promise<CreateSheetResult> {
   // fetch()는 HTTP 오류 상태(4xx/5xx)에는 정상 resolve하지만 네트워크 자체가 끊기면 reject한다
   // (records-write-api.ts의 saveRecord와 동일한 이유) — 이 함수의 타입 계약(Promise<CreateSheetResult>,
@@ -59,6 +64,8 @@ export async function createSheet(participantIds: number[]): Promise<CreateSheet
     error: typeof fields.error === 'string' ? fields.error : 'unknown_error',
     message:
       typeof fields.message === 'string' ? fields.message : '기록지 생성에 실패했어요. 다시 시도해주세요.',
-    ...(typeof fields.sessionDate === 'string' ? { sessionDate: fields.sessionDate } : {}),
+    ...(typeof fields.sessionDate === 'string' && SESSION_DATE_PATTERN.test(fields.sessionDate)
+      ? { sessionDate: fields.sessionDate }
+      : {}),
   }
 }
