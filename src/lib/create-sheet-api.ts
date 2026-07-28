@@ -14,9 +14,29 @@ export interface CreateSheetFailure {
   ok: false
   error: string
   message: string
+  // 409 sheet_already_exists 바디의 sessionDate — 호출부(CreateSheet)가 "기록 입력으로 이동"
+  // 동선을 만들 때 쓴다(#155). 다른 실패 코드에는 없으므로 옵셔널.
+  sessionDate?: string
 }
 
 export type CreateSheetResult = CreateSheetSuccess | CreateSheetFailure
+
+// 회차 탭 이름 규칙 YYYY-MM-DD + 캘린더 유효(functions/lib/sheetTabs.ts parseRoundDate와 동일
+// 취지의 프론트 사본) — sessionDate는 라우팅 경로에 그대로 들어가므로 실존 날짜만 싣는다.
+// 어긋나면 필드를 생략해 호출부(CreateSheet)가 오늘 날짜로 폴백하게 한다.
+const SESSION_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+
+function isValidSessionDate(value: string): boolean {
+  const match = SESSION_DATE_PATTERN.exec(value)
+  if (!match) return false
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  // 정규식만으로는 2026-99-99 같은 비실존 날짜를 못 거른다 — Date.UTC로 만든 뒤 연/월/일을
+  // 다시 읽는 왕복 검증(sheetTabs.ts 관용구, 오버플로우 시 다음 달로 밀려 불일치가 드러난다).
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
 
 export async function createSheet(participantIds: number[]): Promise<CreateSheetResult> {
   // fetch()는 HTTP 오류 상태(4xx/5xx)에는 정상 resolve하지만 네트워크 자체가 끊기면 reject한다
@@ -56,5 +76,8 @@ export async function createSheet(participantIds: number[]): Promise<CreateSheet
     error: typeof fields.error === 'string' ? fields.error : 'unknown_error',
     message:
       typeof fields.message === 'string' ? fields.message : '기록지 생성에 실패했어요. 다시 시도해주세요.',
+    ...(typeof fields.sessionDate === 'string' && isValidSessionDate(fields.sessionDate)
+      ? { sessionDate: fields.sessionDate }
+      : {}),
   }
 }

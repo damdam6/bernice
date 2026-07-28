@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#155 기록지 만들기 409 막다른 길 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/155">#155</a></span><span class="type-chip">버그 수정</span>
+    <h1>기록지 만들기가 동작하지 않음 — 409 sheet_already_exists인데 실패 사유가 화면에 안 보이고 다음 동선도 없음</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/155-create-sheet-409-dead-end</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>기록지 만들기에서 create-sheet가 409로 실패해도 에러 문구가 참가자 리스트(활동 선수 ~21명) <em>아래</em> 일반 플로우에 렌더돼 뷰포트 밖에 있고, 409 <code>sheet_already_exists</code>를 받아도 기록 입력으로 이어지는 동선이 없어 화면이 완전히 무반응처럼 보인다. 에러 표시를 스크롤과 무관하게 항상 보이는 하단 고정 바 내부로 옮기고, 409 수신 시 "오늘 기록지가 이미 있어요" 안내 + [기록 입력으로 이동] CTA(강제 새로 고침 후 이동)를 제공하며, records 캐시에 오늘 세션이 이미 있으면 사전 안내 배너를 띄운다. 같은 인라인 에러 패턴을 쓰는 AddPlayers·RecordsPlayerInput도 함께 고친다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>제출 실패 흐름은 세 화면이 공유하는 <code>src/hooks/useSubmitMutation.ts</code>가 담당한다 — 실패 시 <code>submitError</code>(message 문자열)만 세우고 화면에 머문다(<code>useSubmitMutation.ts:62-67</code>). 세 화면 모두 이 문구를 스크롤 콘텐츠와 하단 고정 바 <em>사이의 일반 플로우</em>에 렌더한다:</p>
+    <ul>
+      <li><code>src/pages/admin/CreateSheet.tsx:66-70</code> — 참가자 리스트 아래 <code>&lt;p role="alert"&gt;</code>. 확인 바는 <code>fixed bottom-0</code>(<code>CreateSheet.tsx:72</code>)이라 항상 보이지만, 에러 문구는 문서 흐름상 리스트 끝에 있어 스크롤이 위에 있으면 뷰포트 밖.</li>
+      <li><code>src/pages/admin/AddPlayers.tsx:105-109</code>, <code>src/pages/admin/RecordsPlayerInput.tsx:179-183</code> — 동일 패턴, 동일 결함.</li>
+      <li><code>SheetManagementHome.tsx:79-83</code>도 같은 마크업이지만 화면 콘텐츠가 짧아(버튼 4개) 스크롤 문제 없음 — 손대지 않는다.</li>
+    </ul>
+    <p>409의 정보는 이미 계층마다 존재하지만 소비되지 않는다:</p>
+    <ul>
+      <li>서버 <code>functions/api/admin/create-sheet.ts:51-56</code> — 오늘(KST) 이름의 탭이 실시트에 있으면(라이브 조회) <code>{ error: 'sheet_already_exists', message, sessionDate }</code> 409.</li>
+      <li>래퍼 <code>src/lib/create-sheet-api.ts:54-59</code> — <code>error</code>·<code>message</code>는 보존하지만 409 바디의 <code>sessionDate</code>는 버린다.</li>
+      <li>훅 <code>useSubmitMutation.ts:26-29</code> — 실패에서 <code>message</code>만 노출. 화면은 코드 분기·CTA 없이 텍스트만 렌더.</li>
+      <li>사전 감지 가능: <code>useRecords</code> 데이터의 <code>sessions[].date</code>(<code>shared/domain.ts:68-75</code>)와 <code>formatSeoulDate(new Date())</code>(<code>src/lib/seoul-date.ts</code>)를 비교하면 오늘 세션 존재를 렌더 시점에 알 수 있는데 CreateSheet는 <code>players</code>만 읽는다.</li>
+    </ul>
+    <p>409 후 <code>/admin/records/{date}</code>로 그냥 이동하면 안 되는 이유: 409가 난 상황은 대개 클라이언트 records 캐시(staleTime 5분 + 엣지 캐시)가 그 탭을 모르는 상태다. <code>RecordsParticipants.tsx:44-50</code>은 캐시된 <code>data.sessions</code>에서 날짜를 못 찾으면 "회차를 찾을 수 없습니다" — 또 다른 막다른 길에 착지한다. 엣지+브라우저 캐시를 모두 뚫는 <code>useRefreshRecords</code>(#151, <code>src/hooks/useRefreshRecords.ts</code>)가 이미 있으므로 CTA에서 재사용한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+    <ul>
+      <li><b>가시성 결함(직접 원인)</b> — 에러 문구가 항상 보이는 요소(fixed 바)가 아니라 스크롤 문서 흐름에 있다. 활동 선수 ~21명 리스트가 뷰포트보다 길어, 스크롤 상단에서 제출하면 문구가 화면 밖에 그려진다. 콘솔 409와 "화면 무반응"이 동시에 관찰된 것과 정확히 일치.</li>
+      <li><b>막다른 길(설계 공백)</b> — PRD(<code>docs/prd-record-input.html</code> §04)상 기록지 만들기는 "오늘 회차 탭 없으면"의 기능인데, 화면은 (a) 진입 시 오늘 세션 존재를 알리지 않고 (b) 409 후 다음 행동을 제시하지 않는다. 409 응답에 <code>sessionDate</code>가 있음에도 래퍼가 버리고 훅이 message만 남겨, 화면 계층에는 분기할 정보 자체가 도달하지 않는다.</li>
+      <li><b>배제한 대안</b> — ① 토스트로 에러 표시: <code>useToast</code>는 1.9초 자동 소멸(<code>useToast.ts:5</code>)이라 실패 사유·CTA를 담기에 부적합, 스타일도 성공 필(다크 필) 전용. ② 409 시 자동 리다이렉트: 사용자가 원인을 모른 채 화면이 바뀌어 혼란 — 안내+명시적 CTA가 이슈의 기대 동작. ③ <code>useSubmitMutation</code>을 실패 객체 전체를 노출하도록 확장: 세 화면·훅 계약 전부에 파급 — CreateSheet의 thunk에서 결과를 관찰해 로컬 상태로 남기는 편이 국소적이고 계약 변경이 없다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>API 래퍼가 409의 <code>sessionDate</code>를 보존하도록 <code>CreateSheetFailure</code>에 <code>sessionDate?: string</code> 추가(실패 바디에서 문자열일 때만 추출). 계약 주석 갱신.
+        <span class="files"><code>src/lib/create-sheet-api.ts</code>, <code>src/lib/create-sheet-api.test.ts</code></span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료</span></li>
+      <li>CreateSheet: <code>submitError</code> 렌더를 하단 고정 바 컨테이너 내부(버튼 위)로 이동 — 스크롤과 무관하게 항상 보인다.
+        <span class="files"><code>src/pages/admin/CreateSheet.tsx</code></span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료 — conflict 분기와 함께 바 내부로 이동</span></li>
+      <li>CreateSheet 409 분기: <code>handleConfirm</code>의 thunk에서 결과를 관찰해 <code>error === 'sheet_already_exists'</code>면 <code>conflictDate</code> 상태를 세운다(<code>result.sessionDate ?? formatSeoulDate(new Date())</code>, 제출 시작 시 해제). conflict 시 하단 바에 "오늘 기록지가 이미 있어요" 안내(role=alert)를 띄우고 기본 버튼을 [기록 입력으로 이동]으로 교체. CTA는 <code>useRefreshRecords.refresh()</code> 성공 후 <code>/admin/records/{conflictDate}</code>로 navigate — 실패하면 이동하지 않고 실패 메시지를 같은 자리에 보여 재시도 가능하게 한다(스테일 캐시로 "회차를 찾을 수 없습니다"에 착지하는 2차 막다른 길 방지).
+        <span class="files"><code>src/pages/admin/CreateSheet.tsx</code></span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료 — refresh 실패 시 미이동·문구 표시·재시도 유지</span></li>
+      <li>CreateSheet 사전 안내: <code>data.sessions</code>에 <code>formatSeoulDate(new Date())</code>와 같은 날짜가 있으면 헤더 아래 안내 배너("오늘 기록지가 이미 있어요") + [기록 입력으로 이동](캐시에 세션이 있으므로 바로 navigate)을 렌더. 만들기 플로우는 차단하지 않는다 — 스테일 캐시 가능성이 있어 보조 수단이고, 최종 커버는 409 처리(이슈 완료 조건 명시).
+        <span class="files"><code>src/pages/admin/CreateSheet.tsx</code></span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료 — 헤더 아래 카드 배너, 플로우 비차단</span></li>
+      <li>동일 가시성 결함 수정: AddPlayers·RecordsPlayerInput의 <code>submitError</code>도 각자 하단 고정 바 내부로 이동.
+        <span class="files"><code>src/pages/admin/AddPlayers.tsx</code>, <code>src/pages/admin/RecordsPlayerInput.tsx</code></span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료</span></li>
+      <li>테스트: ① 래퍼 — 실패 시 <code>sessionDate</code> 패스스루/부재 케이스. ② CreateSheet — 409 → 안내+CTA 노출·기존 화면 유지, CTA 클릭 → <code>/api/refresh</code> 호출 후 참가자 목록 스텁 착지, refresh 실패 → 이동 없이 실패 문구, 오늘 세션 포함 데이터 → 사전 배너, alert가 fixed 컨테이너 내부에 렌더되는지(placement 어서션). ③ AddPlayers·RecordsPlayerInput — 기존 실패 테스트에 placement 어서션 추가.
+        <span class="files"><code>src/lib/create-sheet-api.test.ts</code>, <code>src/pages/admin/CreateSheet.test.tsx</code>, <code>src/pages/admin/AddPlayers.test.tsx</code>, <code>src/pages/admin/RecordsPlayerInput.test.tsx</code></span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료 — 대상 4파일 35개 + 전체 784 테스트·tsc 그린</span></li>
+      <li>운영 확인(코드 밖): 실시트에 <code>2026-07-28</code> 탭 실존 확인 — 배포 API는 로그인 게이트(401)라 이 세션에서 직접 검증 불가. 이슈 코멘트로 확인 요청을 남기고, 탭이 없다면 가드 오탐이므로 별도 서버 이슈로 분리한다(이 PR 범위 밖).
+        <span class="files">이슈 <a href="https://github.com/damdam6/bernice/issues/155">#155</a> 코멘트</span>
+      
+        <span class="files" style="color:var(--ok)">✅ 완료 — <a href="https://github.com/damdam6/bernice/issues/155#issuecomment-5104214065">확인 요청 코멘트</a> 게시</span></li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>409 CTA의 강제 새로 고침 실패(네트워크·/api/refresh 오류)</td><td>이동했다면 "회차를 찾을 수 없습니다"라는 2차 막다른 길</td><td>refresh 실패 시 이동하지 않고 실패 문구 표시 + 재시도 가능 — CTA는 성공 시에만 navigate</td></tr>
+        <tr><td>사전 배너의 스테일 캐시(오늘 세션이 캐시에만 있고 실시트 탭은 삭제된 역방향 스테일)</td><td>배너가 오탐될 수 있음</td><td>배너는 안내만 하고 만들기 플로우를 차단하지 않음 — 진실은 서버 라이브 가드(409/201)가 판정</td></tr>
+        <tr><td>하단 바 내부에 에러/안내가 들어가며 바 높이 증가</td><td>본문 하단 여백(<code>pb-28</code>)과 겹쳐 리스트 끝 항목 가림 가능</td><td>문구는 1–2줄로 짧게 유지, 겹침 발생 시 컨테이너 그라데이션 배경이 이미 가림 방지 — 구현 중 실기기 뷰포트로 확인</td></tr>
+        <tr><td>useSubmitMutation 계약 변경 없음(thunk 관찰 방식)이지만 CreateSheet에 상태 하나 추가</td><td>conflict 상태가 제출·회차 전환과 어긋나면 잔상 안내</td><td>제출 시작 시 항상 <code>conflictDate</code> 해제 — 단일 화면·단일 제출 경로라 동기화 지점이 한 곳</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run src/lib/create-sheet-api.test.ts src/pages/admin/CreateSheet.test.tsx src/pages/admin/AddPlayers.test.tsx src/pages/admin/RecordsPlayerInput.test.tsx</code> — 신규·갱신 테스트 통과.</li>
+      <li>회귀: 기존 CreateSheet 테스트(성공 → 토스트 이동, 409 → 화면 유지) 그대로 통과 — 409 테스트는 안내+CTA 어서션으로 강화.</li>
+      <li>신규 회귀 테스트: 409 수신 → role=alert 안내가 fixed 하단 바 내부에 렌더(placement) + [기록 입력으로 이동] CTA → <code>/api/refresh</code> POST 후 <code>/admin/records/{date}</code> 착지 / refresh 실패 시 미이동·재시도 문구.</li>
+      <li>사전 배너: 오늘 날짜 세션이 포함된 records 데이터로 렌더 시 배너+CTA 노출, 미포함 시 미노출(테스트에서 <code>formatSeoulDate(new Date())</code>로 오늘 날짜 생성 — 페이크 타이머 불필요).</li>
+      <li>전체 스위트 <code>npx vitest run</code> + <code>npx tsc -b</code>(타입) 그린 확인 후 커밋.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>create-sheet 실패 시 사유가 스크롤 위치와 무관하게 보인다 — 하단 고정 바 내부 표시(토스트는 1.9초 소멸이라 배제).</li>
+      <li>409 <code>sheet_already_exists</code> 수신 시 "오늘 기록지가 이미 있어요" 안내와 함께 해당 날짜 기록 입력 화면으로 이동할 수 있다(강제 새로 고침 경유로 착지 화면이 세션을 확실히 찾는다).</li>
+      <li>records 데이터에 오늘 세션이 이미 있으면 기록지 만들기 화면이 사전 안내 배너를 보여준다(플로우 비차단 — 최종 커버는 409 처리).</li>
+      <li><code>AddPlayers</code>·<code>RecordsPlayerInput</code>의 인라인 에러도 하단 고정 바 내부로 이동해 동일 결함 해소.</li>
+      <li>실시트 <code>2026-07-28</code> 탭 존재 확인은 이슈 코멘트로 운영 확인 요청 — 없다면 가드 오탐으로 별도 서버 이슈 분리.</li>
+      <li>409 처리 회귀 테스트 추가, 전체 테스트·타입 체크 그린.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/155">#155</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>

@@ -260,7 +260,10 @@ describe('RecordsPlayerInput', () => {
     fireEvent.change(screen.getByLabelText('골밑슛 개수'), { target: { value: '6' } })
     fireEvent.click(screen.getByRole('button', { name: '저장' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sheets API 오류')
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Sheets API 오류')
+    // 스크롤 위치와 무관하게 보이도록 고정 바(fixed) 내부에 렌더돼야 한다(#155).
+    expect(alert.closest('.fixed')).not.toBeNull()
     expect(screen.getByLabelText('골밑슛 개수')).toHaveValue('6')
     expect(screen.queryByText(/참가자 목록 스텁/)).not.toBeInTheDocument()
   })

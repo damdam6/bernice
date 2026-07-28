@@ -183,7 +183,10 @@ describe('AddPlayers', () => {
     fireEvent.click(await screen.findByRole('button', { name: /가은/ }))
     fireEvent.click(screen.getByRole('button', { name: '1명 추가하기' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('이미 참가자인 선수가 있습니다.')
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('이미 참가자인 선수가 있습니다.')
+    // 스크롤 위치와 무관하게 보이도록 고정 바(fixed) 내부에 렌더돼야 한다(#155).
+    expect(alert.closest('.fixed')).not.toBeNull()
     expect(screen.queryByText(/참가자 목록 스텁/)).not.toBeInTheDocument()
   })
 
