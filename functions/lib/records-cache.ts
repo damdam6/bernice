@@ -8,9 +8,11 @@
 // 이 값을 바꿔도 갱신할 곳은 여기 하나뿐이다.
 export const RECORDS_CACHE_KEY = 'https://bernice-cache.internal/records/v2'
 
-// "긴 캐시" 기본값 — 무효화는 쓰기 경로(purgeRecordsCache)와 P2 /api/refresh(로그인 필요)가
-// 담당하므로 길게 잡는다. 필요하면 이 상수만 조정하면 된다.
-export const RECORDS_CACHE_TTL_SECONDS = 60 * 60 * 6 // 6시간
+// 콜로 로컬 한계의 안전망 TTL — cache.delete는 요청이 닿은 콜로에서만 지워지므로,
+// 무효화가 닿지 않은 콜로는 이 값까지 스테일을 서빙할 수 있다(#164). 짧게 잡아 그
+// 최악 상한을 줄인다; 무효화 자체는 여전히 쓰기 경로(purgeRecordsCache)와 P2
+// /api/refresh(로그인 필요)가 담당한다.
+export const RECORDS_CACHE_TTL_SECONDS = 60 * 15 // 15분
 
 // records 엣지 캐시 삭제 단일 창구. 항상 응답을 돌려주기 전에 await해야 한다(PRD §09) —
 // waitUntil로 미루면 삭제가 끝나기 전에 다음 GET refetch가 옛 캐시를 받을 수 있다.
