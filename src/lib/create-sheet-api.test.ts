@@ -38,7 +38,7 @@ describe('createSheet', () => {
     })
   })
 
-  it('409(오늘 이미 생성됨)이면 ok:false와 서버 메시지를 반환한다', async () => {
+  it('409(오늘 이미 생성됨)이면 ok:false와 서버 메시지·sessionDate를 반환한다', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -54,6 +54,22 @@ describe('createSheet', () => {
       ok: false,
       error: 'sheet_already_exists',
       message: '오늘(2026-07-19) 회차 탭이 이미 있습니다.',
+      sessionDate: '2026-07-19',
+    })
+  })
+
+  it('실패 바디의 sessionDate가 문자열이 아니면 싣지 않는다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(409, { error: 'sheet_already_exists', message: '이미 있습니다.', sessionDate: 20260719 }),
+      ),
+    )
+
+    await expect(createSheet([1])).resolves.toEqual({
+      ok: false,
+      error: 'sheet_already_exists',
+      message: '이미 있습니다.',
     })
   })
 

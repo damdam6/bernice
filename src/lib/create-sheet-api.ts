@@ -14,6 +14,9 @@ export interface CreateSheetFailure {
   ok: false
   error: string
   message: string
+  // 409 sheet_already_exists 바디의 sessionDate — 호출부(CreateSheet)가 "기록 입력으로 이동"
+  // 동선을 만들 때 쓴다(#155). 다른 실패 코드에는 없으므로 옵셔널.
+  sessionDate?: string
 }
 
 export type CreateSheetResult = CreateSheetSuccess | CreateSheetFailure
@@ -56,5 +59,6 @@ export async function createSheet(participantIds: number[]): Promise<CreateSheet
     error: typeof fields.error === 'string' ? fields.error : 'unknown_error',
     message:
       typeof fields.message === 'string' ? fields.message : '기록지 생성에 실패했어요. 다시 시도해주세요.',
+    ...(typeof fields.sessionDate === 'string' ? { sessionDate: fields.sessionDate } : {}),
   }
 }
