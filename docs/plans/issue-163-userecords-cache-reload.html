@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#163 useRecords refetch 브라우저 캐시 우회 — queryFn cache:'reload' — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/163">#163</a></span><span class="type-chip">버그 수정</span>
+    <h1>useRecords refetch 브라우저 캐시 우회 — queryFn cache:'reload'</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/163-userecords-cache-reload</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>useRecords.ts:63</code>의 queryFn이 cache 옵션 없이 <code>fetchRecords</code>를 호출해, 브라우저 HTTP 캐시가 응답을 가로챌 수 있다. #151은 새로 고침 버튼(<code>useRefreshRecords.ts</code>)에만 <code>cache:'reload'</code> 우회를 적용했고, 그 외 모든 (재)조회 — 초기 마운트, staleTime 만료, invalidateQueries 후 자동 refetch — 는 여전히 기본 캐시 동작이라 관리자 액션 후에도 최대 6시간(<code>RECORDS_CACHE_TTL_SECONDS</code>) 묵은 브라우저 캐시 응답을 볼 수 있다. queryFn이 항상 <code>cache:'reload'</code>로 호출하도록 바꿔 모든 records 조회가 네트워크(엣지)까지 가게 한다. 서버가 추후 no-store로 전환되면 기능적 no-op이라 비용 없다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><code>useRecords.ts:60-67</code>의 <code>useQuery</code>는 <code>queryFn: ({ signal }) => fetchRecords(signal)</code>로 cache 옵션을 넘기지 않는다. <code>fetchRecords</code>(<code>useRecords.ts:10-13</code>)는 받은 <code>cache</code>를 그대로 <code>fetch('/api/records', { signal, cache })</code>에 전달하므로, 여기서는 <code>cache: undefined</code> → 브라우저 기본 HTTP 캐시 동작이 적용된다.</p>
+    <p>서버(<code>functions/api/records.ts:25-27</code>)는 200 응답에 <code>Cache-Control: public, max-age=${RECORDS_CACHE_TTL_SECONDS}</code>를 붙이고, <code>RECORDS_CACHE_TTL_SECONDS</code>(<code>functions/lib/records-cache.ts:12</code>)는 <code>60*60*6</code> = 21600초(6시간)다. 즉 한 번 200을 받으면 최대 6시간 동안 브라우저가 네트워크를 타지 않고 자체 캐시로 응답할 수 있다.</p>
+    <p>#151(커밋 cbab02b)이 도입한 <code>useRefreshRecords.ts:27</code>는 <code>fetchRecords(undefined, 'reload')</code>로 명시적으로 우회를 넘기는 유일한 호출자다 — 순서는 ① <code>/api/refresh</code> POST로 엣지 캐시 퍼지 → ② <code>cache:'reload'</code> refetch → ③ <code>setQueryData</code>. 반면 <code>useRecords()</code> 자체의 queryFn은 그대로다.</p>
+    <p>결과: 관리자 액션이 <code>RECORDS_QUERY_KEY</code>를 invalidate해도(예: 로그인 성공 후 <code>LoginGate</code>의 invalidateQueries, 또는 기록 저장 후 다른 화면의 invalidate) 그 자동 refetch는 <code>useRecords()</code>의 queryFn을 타므로 여전히 cache 미지정 — 브라우저 HTTP 캐시가 최대 6시간 묵은 응답으로 응답해 무효화 자체가 무력화될 수 있다. 이는 링크된 캐시 무효화 설계 T3(관리자 액션 후 스테일 데이터)의 프론트 측 방어 공백이다.</p>
+    <p>추가로, 서버가 향후 <code>no-store</code>로 전환되더라도(관련 이슈, 이 작업 범위 밖) 전환 배포 시점 이전에 이미 각 브라우저에 저장된 <code>max-age=21600</code> 엔트리는 HTTP 캐시 규약상 자기 만료 시점까지 유효하다 — 서버 헤더가 바뀐 걸 그 엔트리는 모른다. queryFn이 항상 <code>'reload'</code>를 넘기면 서버 헤더 값과 무관하게 이 전환기 문제도 함께 해소된다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+    <p><b>근본 원인</b>: <code>useRecords</code>의 queryFn이 #151에서 새로 고침 버튼에만 국한해 넣은 <code>cache:'reload'</code> 우회를, records 쿼리의 일반 (재)조회 경로에는 적용하지 않았다 — 우회가 "명시적으로 새로고침을 누른 경우"로 좁게 스코프됐고, invalidate 기반 자동 refetch는 고려 대상이 아니었다.</p>
+    <p><b>수정</b>: <code>useRecords.ts:63</code>의 queryFn을 <code>({ signal }) => fetchRecords(signal, 'reload')</code>로 바꿔, 이 쿼리의 모든 조회(초기·재조회·invalidate 후 refetch 전부)가 항상 브라우저 HTTP 캐시를 건너뛰게 한다.</p>
+    <p><b>기각한 대안</b></p>
+    <ul>
+      <li><i>staleTime을 낮춰 더 자주 refetch</i> — React Query 캐시 재검증 빈도만 올릴 뿐, fetch 자체가 여전히 cache 미지정이라 브라우저 HTTP 캐시가 그 refetch에도 응답할 수 있다. 근본 원인(HTTP 캐시 우회 부재)을 건드리지 않는다.</li>
+      <li><i>커스텀 <code>Cache-Control: no-cache</code> 요청 헤더 추가</i> — fetch의 표준 <code>cache</code> 옵션이 이미 이 코드베이스의 관례(#151)이고 목적에 정확히 맞는다. 별도 메커니즘을 새로 들이는 것은 불필요한 중복이다.</li>
+    </ul>
+    <p>서버가 no-store로 전환되면(범위 밖) <code>cache:'reload'</code> 지정은 이미 네트워크로 가는 요청에 아무 영향이 없는 기능적 no-op이 되어 유지 비용이 없다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">queryFn이 항상 <code>cache:'reload'</code>로 <code>fetchRecords</code>를 호출하도록 변경
+        <span class="files"><code>src/hooks/useRecords.ts:63</code></span>
+      </li>
+      <li class="done"><code>fetchRecords</code> 상단 주석(7-9행)을 "새로 고침 버튼 전용 우회"에서 "records 쿼리 전체가 상시 <code>cache:'reload'</code>로 호출되며, 서버 no-store 전환 후엔 no-op"이라는 실제 정책으로 갱신
+        <span class="files"><code>src/hooks/useRecords.ts:7-9</code></span>
+      </li>
+      <li class="done"><code>useRefreshRecords.ts</code> 상단 주석(1-6행)의 "cache:'reload'로 브라우저 HTTP 캐시를 우회한 refetch(응답이 브라우저 캐시 엔트리를 교체하고…)" 서술을, 이 동작이 이제 <code>useRecords</code> 전체의 기본값임을 반영해 갱신. 퍼지-먼저 순서 근거(①이 실패하면 ②로 가지 않음 — 엣지의 옛 응답을 브라우저에 다시 심지 않기 위함)는 그대로 유지
+        <span class="files"><code>src/hooks/useRefreshRecords.ts:1-6</code></span>
+      </li>
+      <li class="done"><code>useRecords</code> describe 블록에 신규 테스트 추가: fetch가 <code>{ cache: 'reload' }</code>를 포함해 호출됨을 어서션 (기존 <code>fetchRecords</code> 레벨 테스트는 cache 파라미터 전달을 이미 커버하지만, <code>useRecords()</code> 훅 자신이 실제로 <code>'reload'</code>를 넘기는지는 아직 미검증)
+        <span class="files"><code>src/hooks/useRecords.test.tsx</code></span>
+      </li>
+      <li class="done">회귀 확인: <code>useRefreshRecords.test.tsx</code>의 기존 두 번째 fetch 호출 어서션(<code>{ signal: undefined, cache: 'reload' }</code>)이 변경 없이 계속 통과하는지 실행으로 확인 — 동작 자체는 그대로이므로 코드 수정은 없음
+        <span class="files"><code>src/hooks/useRefreshRecords.test.tsx</code></span>
+        <span class="note">확인 완료 — 21/21 통과, 전체 스위트 797/797 통과, tsc -b 클린</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>모든 records 조회가 네트워크(엣지)로 강제됨</td>
+          <td>서버 Cache-Control이 아직 <code>max-age=21600</code>인 상태에서는 브라우저가 매번 왕복하지만, Cloudflare 엣지(<code>caches.default</code>, TTL 6시간)가 이미 응답을 캐싱하므로 실제 시트 API 호출 증가는 없음 — 왕복 지연만 소폭 증가</td>
+          <td>서버 no-store 전환(별도 이슈) 완료 시 완전 no-op; 그 전에도 엣지 캐시가 비용을 흡수</td>
+        </tr>
+        <tr>
+          <td>주석 갱신 범위</td>
+          <td>issue가 지목한 두 주석 블록 외에 유사 서술이 남아있으면 실제 동작과 문서가 어긋날 수 있음</td>
+          <td>2·3단계에서 두 파일 모두 확인 후 정확히 갱신</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li>신규: <code>useRecords.test.tsx</code>의 <code>useRecords</code> describe에 fetch 호출 인자가 <code>{ cache: 'reload' }</code>를 포함함을 어서션하는 테스트 추가 후 통과 확인</li>
+      <li>회귀: 전체 vitest 스위트 실행 — 특히 <code>useRecords.test.tsx</code>, <code>useRefreshRecords.test.tsx</code> green 유지 확인</li>
+      <li>정적 검토: 갱신한 주석(<code>useRecords.ts:7-9</code>, <code>useRefreshRecords.ts:1-6</code>)이 실제 코드 동작(모든 경로가 상시 reload)과 일치하는지 재확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>useRecords.ts</code> queryFn → <code>fetchRecords(signal, 'reload')</code></li>
+      <li><code>useRecords.test.tsx</code>: fetch가 <code>{ cache: 'reload' }</code>로 호출됨을 어서션</li>
+      <li><code>useRecords.ts:7-9</code> · <code>useRefreshRecords.ts</code> 상단 주석의 "받은 응답으로 브라우저 캐시 엔트리를 교체" 서술을 새 정책(no-store·상시 우회)에 맞게 갱신</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/163">#163</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
