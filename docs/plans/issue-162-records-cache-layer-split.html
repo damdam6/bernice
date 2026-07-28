@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#162 /api/records 캐시 계층 분리 — 브라우저 no-store, 엣지 사본만 max-age — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/162">#162</a></span><span class="type-chip">버그 수정</span>
+    <h1>/api/records 캐시 계층 분리 — 브라우저 no-store, 엣지 사본만 max-age</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/162-records-cache-layer-split</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p><code>functions/api/records.ts</code>는 지금 <b>하나의 응답</b>을 엣지 Cache API 저장 사본과 클라이언트 응답 양쪽에 그대로 쓴다. 그래서 엣지 TTL 용도로 붙인 <code>Cache-Control: public, max-age=21600</code>이 브라우저까지 흘러가 <code>/api/records</code>를 6시간 동안 브라우저가 자체 캐시한다. 관리자 저장 성공 후 <code>useSubmitMutation</code>이 invalidate refetch를 걸어도 그 요청이 네트워크에 닿지 않고 브라우저 HTTP 캐시에서 옛 응답을 재사용하는 것이 스테일 증상의 주원인이다.</p>
+    <p>수정은 <b>헤더 계층을 분리</b>하는 것뿐이다 — 엣지에 <code>cache.put</code>하는 사본은 <code>public, max-age=TTL</code>을 유지하고(그래야 Cache API가 저장·TTL 계산을 한다), 클라이언트로 나가는 응답은 미스·히트 두 경로 모두 <code>no-store</code>로 교체한다. 캐시 키·TTL 상수, 무효화 경로(<code>/api/refresh</code>, 관리자 쓰기)는 건드리지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><b>미스 경로</b> — <code>functions/api/records.ts:25-30</code>: <code>Response.json(body, { headers: { 'Cache-Control': `public, max-age=${RECORDS_CACHE_TTL_SECONDS}` } })</code>로 응답 하나를 만들어 <code>cache.put(cacheKey, response.clone())</code>로 저장하고 <b>같은 객체를 그대로 return</b>한다. 저장 사본과 클라이언트 응답의 헤더가 동일할 수밖에 없는 구조다.</li>
+      <li><b>히트 경로</b> — <code>functions/api/records.ts:19-20</code>: <code>cache.match</code>가 돌려준 응답을 <code>return cached</code>로 무가공 반환한다. 저장 시점에 박힌 <code>max-age</code>가 그대로 브라우저로 나간다.</li>
+      <li><b>TTL 상수</b> — <code>functions/lib/records-cache.ts:12</code>: <code>RECORDS_CACHE_TTL_SECONDS = 60 * 60 * 6</code>(6시간). 주석에도 이 값의 의도가 "무효화는 <code>/api/refresh</code>가 담당하므로 길게 잡는 <b>엣지</b> 캐시 수명"이라고 적혀 있다 — 브라우저 수명으로 의도된 값이 아니다.</li>
+      <li><b>프론트 무효화</b> — <code>src/hooks/useSubmitMutation.ts:77</code>이 저장 성공 직후 <code>invalidateQueries({ queryKey: RECORDS_QUERY_KEY, exact: true })</code>를 await한다. TanStack Query는 refetch를 <b>일으키지만</b>, 실제 <code>fetch('/api/records')</code>(<code>src/hooks/useRecords.ts:12</code>, 기본 <code>cache</code> 모드)는 브라우저 HTTP 캐시에서 신선한(max-age 이내) 엔트리를 발견하면 네트워크로 나가지 않는다. 서버가 엣지 캐시를 지웠는지와 무관하게 화면이 옛 데이터를 본다.</li>
+      <li><b>서버측 무효화는 이미 정상</b> — <code>functions/api/refresh.ts:8</code>과 관리자 쓰기 경로가 같은 <code>RECORDS_CACHE_KEY</code>로 <code>cache.delete</code>를 호출한다. 즉 <b>엣지</b>는 이미 즉시 무효화되는데 <b>브라우저</b> 계층만 손댈 방법이 없는 상태다.</li>
+      <li><b>우회로가 이미 존재한다는 방증</b> — #151의 "데이터 새로 고침" 버튼은 <code>fetchRecords(signal, 'reload')</code>(<code>src/hooks/useRecords.ts:9-14</code>)로 <b>브라우저 HTTP 캐시를 명시적으로 우회</b>해야만 했다. 응답이 애초에 <code>no-store</code>였다면 필요 없었을 우회다(버튼 자체는 엣지 캐시 갱신 목적도 있어 유지).</li>
+      <li><b>테스트 현황</b> — <code>functions/api/records.test.ts:77</code>이 <b>클라이언트 응답</b>의 <code>Cache-Control</code>에 <code>/max-age=\d+/</code>를 어서션한다. 저장 사본(<code>put.mock.calls[0][1]</code>)에 대한 어서션은 없고, 히트 경로 테스트(<code>:87-100</code>)도 헤더를 보지 않는다. 즉 지금 계약을 고정하는 어서션이 정확히 뒤집어야 할 그 한 줄이다.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+    <p><b>근본 원인:</b> "엣지 저장 사본의 TTL"과 "클라이언트에게 알리는 캐시 정책"이 <b>같은 <code>Cache-Control</code> 헤더 하나</b>로 표현돼 있다. Cache API는 저장할 응답의 <code>Cache-Control</code>로 TTL을 정하므로 저장 사본에는 <code>max-age</code>가 <b>반드시</b> 필요하고(<code>no-store</code> 사본은 저장이 거부된다), 브라우저는 같은 헤더를 자기 캐시 지시로 읽는다. 하나의 응답 객체를 두 소비자가 공유하는 한 이 충돌은 피할 수 없다.</p>
+    <p><b>설계 — 응답을 두 갈래로 나눈다.</b> 저장용 응답은 지금 그대로 <code>public, max-age=TTL</code>, 반환용 응답은 그 사본의 <code>Cache-Control</code>만 <code>no-store</code>로 바꾼 복제본. 히트 경로도 같은 변환을 태워 <b>클라이언트가 보는 헤더는 두 경로에서 동일</b>하게 만든다.</p>
+    <pre>// 클라이언트로 나가는 응답은 미스·히트 모두 no-store — 엣지 저장 사본(max-age)과 분리한다.
+// cache.match가 돌려준 응답은 헤더가 immutable이라 new Response(body, init)로 복제해야 교체할 수 있다.
+function withNoStore(response: Response): Response {
+  const copy = new Response(response.body, response)
+  copy.headers.set('Cache-Control', 'no-store')
+  return copy
+}
+
+// 히트
+const cached = await cache.match(cacheKey)
+if (cached) return withNoStore(cached)
+
+// 미스
+const response = Response.json(body, {
+  headers: { 'Cache-Control': `public, max-age=${RECORDS_CACHE_TTL_SECONDS}` },
+})
+context.waitUntil(cache.put(cacheKey, response.clone()))  // 저장 사본: max-age 유지
+return withNoStore(response)                              // 클라이언트: no-store</pre>
+    <ul>
+      <li><b>왜 <code>new Response(response.body, response)</code>인가</b> — Cache API가 돌려준 응답의 헤더는 immutable 가드라 <code>headers.set</code>이 던진다. 이 이디엄이 status·statusText·헤더를 그대로 복사하면서 헤더만 mutable로 만드는 표준 방식이다. 미스 경로도 같은 헬퍼를 태워 경로별 분기 없이 한 곳에서 계약을 보장한다(<code>clone()</code>을 먼저 뜬 뒤 감싸므로 본문 스트림 충돌 없음).</li>
+      <li><b>기각 1 — 반환용 응답을 <code>Response.json(body, …)</code>으로 한 번 더 만들기:</b> 같은 페이로드를 두 번 직렬화하고, 히트 경로에서는 어차피 쓸 수 없어(본문만 있고 body 객체가 없다) 경로별로 다른 코드가 된다.</li>
+      <li><b>기각 2 — TTL 상수를 0/짧게 줄이기:</b> 엣지 캐시의 존재 이유(시트 API 호출 절감)를 없앤다. 문제는 TTL 값이 아니라 그 값이 브라우저에까지 적용되는 것.</li>
+      <li><b>기각 3 — 프론트에서 <code>cache: 'no-store'</code>로 항상 우회:</b> 증상은 가려지지만 서버가 여전히 "6시간 캐시해도 된다"고 <b>거짓 계약</b>을 내보낸다. 다른 소비자(직접 호출·프리페치·프록시)에 그대로 남는 문제라 서버에서 고치는 게 맞다.</li>
+      <li><b>스코프 밖(그대로 둔다):</b> <code>RECORDS_CACHE_KEY</code>/<code>TTL</code> 상수, <code>/api/refresh</code>와 관리자 쓰기의 <code>cache.delete</code>, #151 새로 고침 버튼의 <code>'reload'</code>(엣지 갱신 목적으로 여전히 유효), 콜로 로컬 무효화 한계.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done"><b><code>withNoStore</code> 헬퍼 추가 + 히트 경로 교체.</b> <code>cached</code>를 무가공 반환하던 <code>:19-20</code>을 <code>return withNoStore(cached)</code>로 바꾸고, 헬퍼에 "엣지 사본과 클라이언트 응답의 계층 분리 · immutable 헤더 때문에 복제" 의도 주석을 단다.
+        <span class="files"><code>functions/api/records.ts</code></span>
+      </li>
+      <li class="done"><b>미스 경로 분리.</b> <code>cache.put</code>에는 <code>max-age</code>를 유지한 <code>response.clone()</code>을 그대로 넘기고(순서 유지: clone → put → wrap), return만 <code>withNoStore(response)</code>로 바꾼다. 헤더의 두 용도를 설명하는 주석을 갱신한다.
+        <span class="files"><code>functions/api/records.ts</code></span>
+      </li>
+      <li class="done"><b>단위 테스트 갱신.</b> 미스 테스트: <code>:77</code>의 <code>max-age</code> 어서션을 <code>no-store</code>로 바꾸고, 저장 사본 <code>cache.put.mock.calls[0][1].headers</code>에 <code>public, max-age=${RECORDS_CACHE_TTL_SECONDS}</code> 어서션을 추가한다(TTL 상수를 import해 하드코딩 회피). 히트 테스트: 응답 <code>Cache-Control</code>이 <code>no-store</code>이고 본문(events)이 미스 때와 동일하게 읽히는지(복제가 본문을 깨지 않는지) 어서션을 추가한다. 테스트 제목도 계층 분리를 드러내게 손본다.
+        <span class="files"><code>functions/api/records.test.ts</code></span>
+      </li>
+      <li class="done"><b>전체 테스트·타입체크.</b> <code>npm run test</code>, <code>npm run typecheck</code>. 특히 <code>records.e2e.test.ts</code>가 <code>response.clone().json()</code>으로 본문을 읽으므로(<code>:113-117</code>) 복제 후에도 본문 파이프가 온전한지 여기서 함께 확인된다.
+        <span class="files"><code>functions/api/records.e2e.test.ts</code></span>
+        <span class="note">✓ <code>npm run test</code> 86파일 796테스트 그린 · <code>npm run typecheck</code> 무오류. e2e 스모크도 복제 후 <code>clone().json()</code> 경로 이상 없음.</span>
+      </li>
+      <li class="done"><b>PRD §09에 계층 분리 한 줄 추가.</b> "브라우저는 <code>no-store</code>(응답 캐시 금지) · <code>max-age</code>는 엣지 저장 사본 전용 TTL"을 캐시 무효화 절 목록에 넣어, 무효화 설계와 헤더 계약이 한 화면에서 읽히게 한다.
+        <span class="files"><code>docs/prd-record-input.html</code> (§09 <code>#cache</code>)</span>
+      </li>
+      <li class="done"><b>커밋 → 푸시 → PR.</b> 레포 스타일(한국어 제목 + <code>(#162)</code>)대로 파일 단위 커밋, 마지막에 체크오프된 플랜 HTML 커밋, <code>Closes #162</code>를 포함한 PR 생성.
+        <span class="files"><code>docs/plans/issue-162-records-cache-layer-split.html</code></span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>no-store</code>가 저장 사본에 섞여 들어가면 Cache API가 저장을 거부</td>
+          <td>엣지 캐시가 사실상 무력화 → 매 요청 시트 API 호출(할당량·지연)</td>
+          <td>순서를 고정한다: <code>clone()</code> → <code>cache.put</code> → 그 <b>다음에</b> 반환용 복제본만 헤더 교체. 저장 사본 헤더를 <code>put.mock.calls[0][1]</code>로 직접 어서션해 회귀를 테스트로 못 박는다</td>
+        </tr>
+        <tr>
+          <td><code>new Response(res.body, res)</code>가 본문 스트림을 소모/잠글 가능성</td>
+          <td>히트 경로 응답 본문이 비거나 <code>json()</code>이 던짐</td>
+          <td>미스 경로는 <code>clone()</code>을 먼저 떠서 독립 스트림을 확보. 히트·미스 양쪽에서 본문(events)을 읽는 어서션을 두고, e2e 스모크가 <code>clone().json()</code>으로 한 번 더 검증</td>
+        </tr>
+        <tr>
+          <td>브라우저 캐시가 사라져 매 진입마다 <code>/api/records</code> 왕복</td>
+          <td>네트워크 요청 증가</td>
+          <td>의도된 변경. 엣지 캐시가 그대로라 원본(시트) 호출은 늘지 않고, 프론트는 TanStack Query <code>staleTime: 5분</code>(<code>src/hooks/useRecords.ts</code>)이 세션 내 재조회를 이미 억제한다</td>
+        </tr>
+        <tr>
+          <td>이미 <code>max-age</code> 응답을 받아 둔 브라우저는 배포 후에도 최대 6시간 스테일</td>
+          <td>배포 직후 일부 사용자에게 증상이 남아 "안 고쳐졌다"로 보임</td>
+          <td>새 응답을 한 번 받으면 항구적으로 해소. 그 사이엔 #151 "데이터 새로 고침" 버튼(<code>cache: 'reload'</code>)이 즉시 우회로가 된다 — PR 본문에 명시</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>미스 경로 (회귀):</b> <code>functions/api/records.test.ts</code> — 반환 응답 <code>Cache-Control === 'no-store'</code>, 동시에 <code>cache.put</code>에 넘긴 사본은 <code>public, max-age=21600</code>. 두 어서션이 한 테스트에 있어야 "분리"가 실제로 검증된다.</li>
+      <li><b>히트 경로 (회귀):</b> <code>cache.match</code>가 <code>max-age</code> 사본을 돌려줘도 반환 응답은 <code>no-store</code>. 기존 "히트 시 <code>fetchSheetBundle</code>을 호출하지 않는다" 어서션은 유지.</li>
+      <li><b>본문 무결성:</b> 히트 응답의 <code>events</code>가 미스 응답과 동일 — <code>new Response(body, init)</code> 복제가 페이로드를 손상시키지 않음을 확인.</li>
+      <li><b>기존 동작 유지:</b> 에러 매핑 3종(502 <code>sheets_api_error</code> · 500 <code>missing_roster_tab</code> · 500 <code>sheet_data_invalid</code>)은 캐시 헤더와 무관하게 그대로 통과.</li>
+      <li><b>계약 스모크:</b> <code>functions/api/records.e2e.test.ts</code>(#127 혼재 번들) 전부 그린 — 응답 복제 후에도 <code>clone().json()</code> 경로가 살아 있는지 실사용 형태로 확인.</li>
+      <li><b>전체:</b> <code>npm run test</code> 그린, <code>npm run typecheck</code> 무오류.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>미스 경로: <code>cache.put</code> 사본은 <code>public, max-age=TTL</code> 유지, return 응답은 <code>no-store</code></li>
+      <li>히트 경로: <code>new Response(cached.body, cached)</code>로 복제 후 <code>Cache-Control</code>을 <code>no-store</code>로 교체해 반환</li>
+      <li><code>records.test.ts</code>: 77행 <code>max-age</code> 어서션 → <code>no-store</code>로 갱신 · 저장 사본(<code>put.mock.calls[0][1]</code>) <code>max-age</code> 어서션 추가 · 히트 응답 <code>no-store</code> 어서션 추가</li>
+      <li><code>docs/prd-record-input.html</code> §09에 계층 분리 한 줄 추가 (브라우저 <code>no-store</code> / 엣지 전용 TTL)</li>
+      <li><code>npm run test</code> · <code>npm run typecheck</code> 그린, <code>Closes #162</code> PR 생성</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/162">#162</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
