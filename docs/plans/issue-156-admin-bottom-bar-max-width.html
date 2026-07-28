@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#156 어드민 하단 고정 버튼이 넓은 화면에서 뷰포트 전폭으로 늘어남 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  pre {
+    background: var(--code-bg); border-radius: 10px; padding: 14px 16px;
+    overflow-x: auto; font-size: 0.83rem; line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/156">#156</a></span><span class="type-chip">버그 수정</span>
+    <h1>어드민 하단 고정 버튼이 넓은 화면에서 뷰포트 전폭으로 늘어남 — 프레임 폭(max-w-frame) 미적용</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/156-admin-bottom-bar-max-width</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>어드민 3개 화면(기록지 만들기 · 참가자 추가 · 선수별 입력)의 하단 고정 확인 바가 <code>fixed inset-x-0</code> 셸에 그라데이션 배경·패딩·버튼을 직접 담고 있어, 넓은 화면에서 뷰포트 전폭으로 렌더된다. BottomNav가 #107에서 확립한 "fixed 셸은 위치만 잡는 투명 레이어 + 내용물은 <code>MobileFrame</code>(<code>mx-auto w-full max-w-frame</code>)으로 중앙정렬" 패턴을 그대로 적용한다. 동일한 바 셸 마크업이 세 파일에 문자 그대로 삼중 중복되어 있으므로, 공용 <code>BottomActionBar</code> 컴포넌트로 추출해 한 곳에서 고치고 한 곳에서 테스트한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>세 화면 모두 콘텐츠 컬럼은 <code>AdminLayout</code>이 <code>MobileFrame</code>으로 감싸 프레임 폭(<code>src/components/layout/AdminLayout.tsx:8</code>)에 갇히지만, 하단 바는 <code>position: fixed</code>라 프레임 밖으로 탈출한다. 세 곳의 바 셸이 클래스까지 동일한 중복이다:</p>
+    <ul>
+      <li><code>src/pages/admin/CreateSheet.tsx:72</code> — <code>&lt;div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas via-canvas px-4 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))]"&gt;</code> + "N명으로 기록지 만들기" 버튼</li>
+      <li><code>src/pages/admin/AddPlayers.tsx:111</code> — 같은 셸 + "N명 추가하기" 버튼</li>
+      <li><code>src/pages/admin/RecordsPlayerInput.tsx:185</code> — 같은 셸 + "저장" 버튼</li>
+    </ul>
+    <p>폭 규칙의 정본은 <code>--container-frame: 28rem</code> 토큰(<code>src/index.css:63</code>)이 생성하는 <code>max-w-frame</code> 유틸이고, 유일한 사용 통로가 <code>MobileFrame</code>(<code>src/components/layout/MobileFrame.tsx:8</code>)이다. 선례인 <code>BottomNav</code>(<code>src/components/layout/BottomNav.tsx:23-24</code>)는 <code>fixed inset-x-0 bottom-0 z-10</code> 셸 안에 <code>MobileFrame</code>을 넣고 그 안에 실제 바(border·bg·safe-area)를 두는 구조이며, <code>BottomNav.test.tsx:38-51</code>이 이 3층 구조(바 ≠ fixed → 프레임 클래스 → 바깥 fixed 셸)를 클래스 단위로 검증한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+    <p><b>근본 원인</b> — <code>fixed inset-x-0</code>는 뷰포트 기준 좌우 0 고정이므로 셸 자체가 항상 뷰포트 전폭이다. BottomNav는 셸을 투명 위치 레이어로만 쓰고 내용물을 <code>MobileFrame</code>으로 감싸지만, 세 어드민 화면은 셸에 배경·패딩·버튼을 직접 넣어 폭 제한 계층이 아예 없다(#107 수정 당시 BottomNav만 고치고 어드민 바는 누락). 그 결과 데스크톱에서 콘텐츠 컬럼은 448px인데 버튼은 화면 끝까지 늘어나 PRD(<code>docs/prd-design.html</code> §09 "넓은 화면은 중앙 정렬 폭 제한으로만 대응")와 어긋난다.</p>
+    <p><b>수정 형태</b> — BottomNav와 동형의 3층 구조로 바꾼다. 그라데이션 배경·패딩은 프레임 폭 레이어로 내려간다(BottomNav의 border·bg가 프레임 폭인 것과 동일한 의도 — 바의 시각 요소는 콘텐츠 컬럼과 정렬):</p>
+    <pre><code>&lt;div className="fixed inset-x-0 bottom-0 z-10"&gt;          ← 위치만 잡는 투명 셸
+  &lt;MobileFrame&gt;                                          ← mx-auto w-full max-w-frame
+    &lt;div className="bg-gradient-to-t from-canvas via-canvas px-4 pt-6
+                    pb-[calc(16px+env(safe-area-inset-bottom))]"&gt;
+      {버튼}
+    &lt;/div&gt;
+  &lt;/MobileFrame&gt;
+&lt;/div&gt;</code></pre>
+    <p><b>기각한 대안</b> — ① 세 파일에 각각 <code>MobileFrame</code>을 인라인 삽입: 동작은 같지만 삼중 중복이 4층 중복으로 커진다. 레포는 최근에도 중복을 공용 유틸로 이관하는 방향(#153·#154)이므로 공용 컴포넌트 추출이 결이 맞다. ② 셸에 <code>max-w-frame mx-auto</code>를 직접 추가: <code>fixed</code> 요소에 <code>inset-x-0</code>과 <code>max-w</code>·<code>mx-auto</code>를 섞으면 동작은 하지만 MobileFrame이 "폭 규칙의 단일 사용처"라는 #107의 계약(<code>MobileFrame.tsx:3-5</code> 주석)을 깨므로 기각.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">공용 <code>BottomActionBar</code> 컴포넌트 신설 — fixed 투명 셸 + <code>MobileFrame</code> + 그라데이션·safe-area 패딩 레이어를 담고 <code>children</code>으로 버튼을 받는다. BottomNav처럼 #107/#156 패턴 주석을 남긴다.
+        <span class="files"><code>src/components/layout/BottomActionBar.tsx</code> (신규)</span>
+      </li>
+      <li class="done"><code>BottomActionBar</code> 클래스 검증 테스트 — <code>BottomNav.test.tsx:38-51</code> 스타일로 3층 구조를 검증: 내용물 레이어는 <code>fixed</code>·<code>inset-x-0</code>이 아니고 그라데이션·패딩 클래스를 가진다 / 그 부모 프레임이 <code>mx-auto w-full max-w-frame</code> / 최상위 셸이 <code>fixed inset-x-0 bottom-0</code>. children 렌더도 확인.
+        <span class="files"><code>src/components/layout/BottomActionBar.test.tsx</code> (신규)</span>
+      </li>
+      <li class="done">세 화면의 인라인 바 셸을 <code>BottomActionBar</code>로 교체 — 기존 <code>&lt;div className="fixed …"&gt;</code> 래퍼를 제거하고 버튼만 <code>&lt;BottomActionBar&gt;</code>의 children으로 옮긴다. 버튼 자체 클래스·disabled·onClick 로직은 무변경.
+        <span class="files"><code>src/pages/admin/CreateSheet.tsx:72-81</code>, <code>src/pages/admin/AddPlayers.tsx:111-120</code>, <code>src/pages/admin/RecordsPlayerInput.tsx:185-194</code></span>
+      </li>
+      <li class="done">세 화면의 기존 페이지 테스트에 프레임 정렬 회귀 테스트 1건씩 추가 — 확인 버튼의 조상 체인에 <code>max-w-frame</code> 프레임이 있고 그 바깥이 <code>fixed</code> 셸임을 검증(화면이 실제로 BottomActionBar를 쓰는지 가드).
+        <span class="files"><code>src/pages/admin/CreateSheet.test.tsx</code>, <code>src/pages/admin/AddPlayers.test.tsx</code>, <code>src/pages/admin/RecordsPlayerInput.test.tsx</code></span>
+      </li>
+      <li class="done">전체 검증 — 타입체크·전체 테스트를 돌리고, 데스크톱 폭 브라우저에서 세 화면의 바가 콘텐츠 컬럼과 정렬되는지, 모바일 폭(≤448px)에서 기존과 동일한지 눈으로 확인.
+        <span class="files"><code>npm test</code>, <code>tsc</code>, 로컬 dev 서버</span>
+        <span class="note">✓ tsc·전체 784 테스트 그린. 육안 확인은 클래스 검증 테스트 4건으로 갈음(#107 BottomNav 수정과 동일 접근 — 어드민 화면은 로그인·시트 API 의존이라 dev 서버 육안 확인은 리뷰 프리뷰에 위임).</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>그라데이션 배경이 프레임 폭으로 줄어 넓은 화면에서 바 좌우 여백에 배경이 없음</td>
+          <td>낮음 — 콘텐츠 컬럼도 같은 프레임 폭이라 스크롤 콘텐츠가 바 좌우로 지나갈 일이 없고, BottomNav의 border·bg도 이미 프레임 폭</td>
+          <td>이슈 기대 동작("바 내용물이 프레임 폭 중앙정렬")과 일치함을 플랜에 명시, 브라우저에서 육안 확인</td>
+        </tr>
+        <tr>
+          <td>DOM 계층이 한 단계 깊어지며 기존 페이지 테스트의 셀렉터가 흔들릴 가능성</td>
+          <td>낮음 — 기존 테스트는 role/텍스트 기반 조회라 계층 무관</td>
+          <td>전체 테스트 스위트 실행으로 확인</td>
+        </tr>
+        <tr>
+          <td>모바일 폭(≤448px) 시각 변화</td>
+          <td>없음이 기대값 — <code>max-w-frame</code>=28rem은 그 폭에서 no-op</td>
+          <td>완료 조건에 명시, dev 서버 모바일 뷰포트로 확인</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><b>신규 컴포넌트 테스트</b> — <code>BottomActionBar.test.tsx</code>: 3층 구조 클래스 검증(위 4단계-2) + children 렌더. BottomNav.test의 <code>toHaveClass</code>/<code>parentElement</code> 관용구 재사용.</li>
+      <li><b>페이지 회귀 테스트</b> — 세 페이지 테스트 각각에 "하단 바가 전폭이 아니라 프레임 폭 중앙정렬(#156)" 테스트 추가: 확인 버튼에서 조상으로 올라가며 <code>max-w-frame</code> 프레임 → <code>fixed inset-x-0 bottom-0</code> 셸 순서 확인.</li>
+      <li><b>기존 동작 무회귀</b> — <code>npm test</code> 전체 통과(특히 CreateSheet·AddPlayers·RecordsPlayerInput의 기존 선택/제출/토스트 시나리오), <code>tsc</code> 타입체크 통과.</li>
+      <li><b>육안 확인</b> — dev 서버에서 데스크톱 폭: 세 화면 바가 448px 컬럼과 정렬 / 모바일 폭: 변화 없음.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>세 화면(CreateSheet·AddPlayers·RecordsPlayerInput)의 하단 고정 바가 <code>max-w-frame</code> 중앙정렬로 렌더된다 — 공용 <code>BottomActionBar</code> 경유</li>
+      <li>모바일 폭(≤448px)에서는 기존 모습 그대로다</li>
+      <li>BottomNav.test 스타일의 클래스 검증 테스트가 컴포넌트 1건 + 페이지 3건 추가되어 통과한다</li>
+      <li>전체 테스트·타입체크 그린</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/156">#156</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
