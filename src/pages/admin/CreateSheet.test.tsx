@@ -142,4 +142,17 @@ describe('CreateSheet', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('권한이 없습니다.')
   })
+
+  it('하단 확인 바가 전폭이 아니라 프레임 폭에 중앙정렬된다(#156)', async () => {
+    const data = baseData({ players: [player(1, '가은')] })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
+
+    renderPage()
+
+    // BottomActionBar 3층 구조: 버튼 → 바(그라데이션) → MobileFrame → fixed 셸.
+    const confirm = await screen.findByRole('button', { name: '0명으로 기록지 만들기' })
+    const frame = confirm.parentElement?.parentElement
+    expect(frame).toHaveClass('mx-auto', 'w-full', 'max-w-frame')
+    expect(frame?.parentElement).toHaveClass('fixed', 'inset-x-0', 'bottom-0')
+  })
 })

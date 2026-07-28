@@ -272,4 +272,16 @@ describe('RecordsPlayerInput', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('권한이 없습니다.')
   })
+
+  it('하단 저장 바가 전폭이 아니라 프레임 폭에 중앙정렬된다(#156)', async () => {
+    const entry = makeEntry(scoresFor(NEW_EVENT_KEYS))
+    const data = baseData({ sessions: [makeSession('2025-08-16', [entry], NEW_EVENT_KEYS)] })
+    renderPage('/admin/records/2025-08-16/7', recordsFetchMock(data))
+
+    // BottomActionBar 3층 구조: 버튼 → 바(그라데이션) → MobileFrame → fixed 셸.
+    const save = await screen.findByRole('button', { name: '저장' })
+    const frame = save.parentElement?.parentElement
+    expect(frame).toHaveClass('mx-auto', 'w-full', 'max-w-frame')
+    expect(frame?.parentElement).toHaveClass('fixed', 'inset-x-0', 'bottom-0')
+  })
 })

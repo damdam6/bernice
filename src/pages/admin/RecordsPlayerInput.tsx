@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import type { EventDefinition, Session, SessionEntry } from '../../../shared/domain'
 import { buildEventScore } from '../../../shared/build-event-score'
 import { CenteredPanel } from '../../components/common/CenteredPanel'
+import { BottomActionBar } from '../../components/layout/BottomActionBar'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ErrorPanel } from '../../components/common/ErrorPanel'
 import { Spinner } from '../../components/common/Spinner'
@@ -182,7 +183,7 @@ function PlayerInputContent({
         </p>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas via-canvas px-4 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <BottomActionBar>
         <button
           type="button"
           disabled={submitting || hasInvalid}
@@ -191,7 +192,7 @@ function PlayerInputContent({
         >
           {submitting ? '저장하는 중…' : '저장'}
         </button>
-      </div>
+      </BottomActionBar>
     </div>
   )
 }
