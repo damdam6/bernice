@@ -176,13 +176,13 @@ function PlayerInputContent({
         })}
       </div>
 
-      {submitError && (
-        <p role="alert" className="text-center text-sm text-bad">
-          {submitError}
-        </p>
-      )}
-
       <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas via-canvas px-4 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))]">
+        {/* 실패 문구는 고정 바 내부에 — 종목 카드가 많으면 일반 플로우의 문구는 뷰포트 밖이다(#155). */}
+        {submitError && (
+          <p role="alert" className="mb-3 text-center text-sm text-bad">
+            {submitError}
+          </p>
+        )}
         <button
           type="button"
           disabled={submitting || hasInvalid}
