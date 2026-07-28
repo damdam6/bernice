@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#164 records 엣지 캐시 TTL 6시간→15분 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps li.done { color: var(--muted); }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps .note { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/164">#164</a></span><span class="type-chip">기능 개선</span>
+    <h1>records 엣지 캐시 TTL 6시간→15분 — 콜로 로컬 스테일 상한 축소</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/164-records-cache-ttl-15min</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>Cloudflare Cache API의 <code>cache.delete</code>는 콜로(데이터센터) 로컬이라, 쓰기 무효화가 닿지 않은 콜로에 붙은 팀원은 엣지 저장 사본의 TTL이 지나야 새 데이터를 본다. 현재 <code>RECORDS_CACHE_TTL_SECONDS</code>가 6시간이라 최악의 경우 6시간 스테일이 발생할 수 있다. TTL을 15분으로 낮춰 이 구조적 한계의 피해 상한을 축소한다. Sheets API 부하 증가분은 콜로당 15분에 한 번(2콜)이라 무시 가능한 수준이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <ul>
+      <li><code>functions/api/records.ts:19-20</code> — <code>caches.default.match</code>로 콜로 로컬 저장 사본을 조회, 히트하면 그대로 반환.</li>
+      <li><code>functions/api/records.ts:22-34</code> — 미스 시 Sheets API로 재조립하고, 응답에 <code>Cache-Control: public, max-age=RECORDS_CACHE_TTL_SECONDS</code>를 실어 <code>context.waitUntil(cache.put(...))</code>로 엣지에 저장(#162 이후: 클라이언트로 나가는 사본은 <code>withNoStore</code>로 별도 처리, 저장 사본만 max-age 유지).</li>
+      <li><code>functions/lib/records-cache.ts:13</code> — <code>RECORDS_CACHE_TTL_SECONDS = 60 * 60 * 6</code>(6시간), 주석은 "긴 캐시" 기본값이라 명시.</li>
+      <li><code>functions/lib/records-cache.ts:17-19</code> — <code>purgeRecordsCache()</code>가 무효화 단일 창구. admin/records.ts·add-players.ts·create-sheet.ts·refresh.ts 등 쓰기 경로가 모두 이걸 거치지만, <code>cache.delete</code> 자체가 콜로 로컬이라 다른 콜로의 저장 사본은 지워지지 않고 TTL까지 산다(Cloudflare 공식 제약, 코드로 우회 불가).</li>
+      <li><code>docs/prd-record-input.html:375</code> — §09 "알려진 한계" callout이 "다른 콜로에 남은 캐시는 TTL(6시간)까지 살 수 있다"고 명시. 상수를 바꾸면 이 문구도 실제와 어긋난다.</li>
+      <li><code>functions/api/records.test.ts:83</code> — 저장 사본 <code>Cache-Control</code> 어서션이 <code>`public, max-age=${RECORDS_CACHE_TTL_SECONDS}`</code>로 상수를 직접 참조(하드코딩된 숫자 아님) → 상수만 바꾸면 테스트는 자동으로 새 값을 기대하게 되어 별도 수정 불필요, 실행으로만 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>선택한 설계:</b> <code>RECORDS_CACHE_TTL_SECONDS</code> 상수 값만 <code>60 * 60 * 6</code> → <code>60 * 15</code>로 축소하고, 주석을 "긴 캐시 기본값"에서 "콜로 로컬 한계의 안전망 TTL"로 갱신한다. 무효화 로직·캐시 키·호출부는 전혀 건드리지 않는다 — 이 이슈는 상수 하나와 그 상수를 설명하는 문서 두 곳의 정합성 문제다.</p>
+    <p><b>기각한 대안 — 엣지 저장 사본도 no-store로:</b> #162에서 이미 브라우저 응답은 no-store로 분리했다. 저장 사본까지 no-store로 만들면 캐시가 아예 무력화되어 모든 <code>/api/records</code> 요청마다 Sheets API를 호출하게 된다 → 부하가 무시 가능한 수준을 훨씬 넘어서 기각.</p>
+    <p><b>기각한 대안 — TTL을 0에 가깝게(예: 1분):</b> 콜로당 재조립 빈도가 커져 Sheets API rate limit에 더 가까워진다. 이슈의 완료 조건이 명시한 15분(콜로당 15분 1회, 2콜)이 "무시 가능한 부하"와 "합리적 스테일 상한"의 균형점이므로 그대로 채택.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">스텝 1: <code>RECORDS_CACHE_TTL_SECONDS</code>를 <code>60 * 60 * 6</code> → <code>60 * 15</code>로 변경하고, 바로 위 주석을 "긴 캐시 기본값"에서 콜로 로컬 한계의 안전망 TTL이라는 취지로 갱신
+        <span class="files"><code>functions/lib/records-cache.ts:11-13</code></span>
+      </li>
+      <li class="done">스텝 2: §09 콜로 callout의 "TTL(6시간)까지 살 수 있다" 문구를 "TTL(15분)까지 살 수 있다"로 갱신
+        <span class="files"><code>docs/prd-record-input.html:375</code></span>
+      </li>
+      <li class="done">스텝 3: <code>vitest run functions/api/records.test.ts</code>로 TTL 관련 어서션(<code>records.test.ts:83</code>) 영향 확인 — 상수 참조 방식이라 무변경으로 통과할 것으로 예상, 실제 실행으로 검증
+        <span class="files"><code>functions/api/records.test.ts</code></span>
+        <span class="note">확인 완료: 어서션 무변경, `vitest run functions/api/records.test.ts` 5개 테스트 통과 · 전체 `vitest run` 797개 통과 · `tsc -b` 클린</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>콜로당 Sheets API 재조립 빈도 증가(6시간→15분 주기)</td><td>Sheets API 호출량 소폭 증가</td><td>이슈 완료 조건에서 이미 "콜로당 15분 1회(2콜)로 무시 가능"으로 판단됨 — 실사용 팀 규모(소수 인원, 단일 지역 접속)에서 문제 없음</td></tr>
+        <tr><td>#162(캐시 계층 분리)와 파일이 겹침(<code>records.ts</code>·<code>records-cache.ts</code>)</td><td>동시 작업 시 병합 충돌 가능</td><td>#162는 이미 머지됨(커밋 4b64bfc) — 이 작업은 그 위에서 진행하므로 충돌 없음</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run functions/api/records.test.ts</code> — 저장 사본 <code>max-age</code>가 새 TTL(900)로 통과하는지 확인.</li>
+      <li><code>npx vitest run</code>(전체) — 다른 스위트에 하드코딩된 6시간 관련 회귀가 없는지 확인.</li>
+      <li><code>grep -rn "60 \* 60 \* 6\|TTL(6시간)"</code> — 레포 전체에서 이번에 갱신 안 된 잔존 6시간 문구가 없는지 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li><code>RECORDS_CACHE_TTL_SECONDS = 60 * 15</code> + 상수 주석 갱신("긴 캐시" → 콜로 로컬 한계의 안전망 TTL)</li>
+      <li><code>docs/prd-record-input.html</code> §09 콜로 callout(375행)의 "TTL(6시간)" 문구 갱신</li>
+      <li><code>records.test.ts</code> TTL 어서션 영향 확인(상수 참조라 무변경 예상, 실행으로 검증 완료)</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/164">#164</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
