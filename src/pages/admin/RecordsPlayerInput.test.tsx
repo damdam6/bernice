@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { EventDefinition, EventScore, RecordsResponse, Session, SessionEntry } from '../../../shared/domain'
 import RecordsPlayerInput from './RecordsPlayerInput'
 import { jsonResponse } from '../../test/json-response'
+import { expectFrameAlignedBottomBar } from '../../test/frame-aligned-bottom-bar'
 
 afterEach(() => {
   cleanup()
@@ -278,10 +279,6 @@ describe('RecordsPlayerInput', () => {
     const data = baseData({ sessions: [makeSession('2025-08-16', [entry], NEW_EVENT_KEYS)] })
     renderPage('/admin/records/2025-08-16/7', recordsFetchMock(data))
 
-    // BottomActionBar 3층 구조: 버튼 → 바(그라데이션) → MobileFrame → fixed 셸.
-    const save = await screen.findByRole('button', { name: '저장' })
-    const frame = save.parentElement?.parentElement
-    expect(frame).toHaveClass('mx-auto', 'w-full', 'max-w-frame')
-    expect(frame?.parentElement).toHaveClass('fixed', 'inset-x-0', 'bottom-0')
+    expectFrameAlignedBottomBar(await screen.findByRole('button', { name: '저장' }))
   })
 })

@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { PlayerSummary, RecordsResponse, SessionEntry } from '../../../shared/domain'
 import AddPlayers from './AddPlayers'
 import { jsonResponse } from '../../test/json-response'
+import { expectFrameAlignedBottomBar } from '../../test/frame-aligned-bottom-bar'
 
 afterEach(() => {
   cleanup()
@@ -203,10 +204,6 @@ describe('AddPlayers', () => {
 
     renderPage()
 
-    // BottomActionBar 3층 구조: 버튼 → 바(그라데이션) → MobileFrame → fixed 셸.
-    const confirm = await screen.findByRole('button', { name: '0명 추가하기' })
-    const frame = confirm.parentElement?.parentElement
-    expect(frame).toHaveClass('mx-auto', 'w-full', 'max-w-frame')
-    expect(frame?.parentElement).toHaveClass('fixed', 'inset-x-0', 'bottom-0')
+    expectFrameAlignedBottomBar(await screen.findByRole('button', { name: '0명 추가하기' }))
   })
 })
