@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#165 E2E — 관리자 쓰기 직후 GET /api/records 최신성 회귀망 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  .steps li.done::before { content: "✓"; background: var(--ok); color: #fff; }
+  .steps li.done { color: var(--muted); }
+  .steps li.done code { color: var(--ink); }
+  .note {
+    display: block; margin-top: 6px; font-size: 0.85rem; color: var(--warn);
+    border-left: 3px solid var(--warn); padding-left: 10px;
+  }
+  .done-list li.done::before { background: var(--ok); }
+  .done-list li.done::after {
+    content: "✓"; position: absolute; left: 5px; top: 3px;
+    color: #fff; font-size: 0.72rem; font-weight: 700;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/165">#165</a></span><span class="type-chip">기능 개선 (테스트 회귀망)</span>
+    <h1>E2E — 관리자 쓰기 직후 GET /api/records 최신성 회귀망</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/165-e2e-write-freshness</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-28</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>
+      쓰기 3종(<code>admin/records</code> · <code>create-sheet</code> · <code>add-players</code>)이 응답을 돌려준
+      <em>바로 그 순간</em> 같은 캐시를 공유하는 <code>GET /api/records</code>가 이미 최신 데이터를 반환하는지를
+      고정하는 통합 회귀망을 새로 만든다. 기존 <code>records.e2e.test.ts</code>는 GET 계약만 스모크하고,
+      각 핸들러 단위 테스트는 "<code>cache.delete</code>가 불렸다"까지만 본다 — 무효화가 실제로
+      <em>다음 조회의 데이터</em>를 바꾸는지는 아무도 검증하지 않아 #161(create-sheet <code>waitUntil</code>)
+      같은 회귀가 통과했다.
+    </p>
+    <p>
+      핵심 장치는 세 개다. ① 읽기·쓰기 핸들러가 <b>같은 가변 시트 스토어</b>를 공유하게 해 쓰기가 다음 읽기에
+      실제로 보이게 하고, ② <code>waitUntil</code>을 <b>지연 큐</b>로 만들어 쓰기 응답과 후속 GET 사이에
+      flush를 하지 않으며, ③ fake Cache가 <code>no-store</code> 응답 <code>put</code>을 실제 Workers Cache API처럼
+      거부해 헤더 계층 분리(#162)까지 같은 시나리오에서 어서션한다.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p><b>현재 캐시 파이프라인 (T1·T2 머지 후 상태)</b></p>
+    <ul>
+      <li>
+        <code>functions/lib/records-cache.ts:9</code> — 고정 합성 키 <code>https://bernice-cache.internal/records/v2</code>,
+        TTL <code>21600</code>초. <code>purgeRecordsCache()</code>(<code>records-cache.ts:17</code>)가
+        <code>caches.default.delete()</code>의 단일 창구다.
+      </li>
+      <li>
+        <code>functions/api/records.ts:19-34</code> — GET는 <code>cache.match</code> 히트면 그대로,
+        미스면 <code>fetchSheetBundle → buildRecordsResponse</code>로 조립한다. 저장 사본은
+        <code>public, max-age=21600</code>을 단 <b>clone</b>이고(<code>records.ts:33</code>),
+        클라이언트로 나가는 응답만 <code>withNoStore()</code>로 <code>no-store</code>가 된다(<code>records.ts:44-48</code>).
+        put은 <code>context.waitUntil</code>에 실린다.
+      </li>
+      <li>
+        쓰기 3종은 모두 <b>응답 전 <code>await purgeRecordsCache()</code></b>:
+        <code>functions/api/admin/records.ts:125</code> · <code>create-sheet.ts:92</code> ·
+        <code>add-players.ts:88</code>. #161에서 create-sheet만 <code>waitUntil</code>이었던 것을 <code>await</code>로 통일했다.
+      </li>
+    </ul>
+    <p><b>현재 테스트가 덮는 범위와 구멍</b></p>
+    <ul>
+      <li>
+        <code>functions/api/records.e2e.test.ts</code> — GET 전 구간 계약 스모크. <code>makeFakeCache()</code>는
+        <code>match/put</code>만 있고 <code>delete</code>가 없으며(<code>:87-98</code>),
+        <code>makeContext()</code>의 <code>waitUntil</code>은 <b>no-op</b>이라 put이 아예 유실된다(<code>:103</code>).
+        매 요청마다 새 캐시를 만들어(<code>:114</code>) 캐시 히트 경로 자체가 실행되지 않는다.
+      </li>
+      <li>
+        핸들러 단위 테스트(<code>admin/create-sheet.test.ts:38-46</code>, <code>add-players.test.ts:41-58</code>)는
+        <code>caches.default</code>를 <code>{delete}</code>만 있는 스텁으로 세우고 "delete가 <code>RECORDS_CACHE_KEY</code>로
+        1회 호출됐다"를 본다. 삭제 <em>호출</em>은 잡지만, 삭제된 캐시가 다음 GET의 <em>데이터</em>를 바꾸는지는 못 잡는다.
+      </li>
+      <li>
+        결국 <b>쓰기 핸들러와 GET 핸들러가 한 테스트 안에서 같은 캐시·같은 시트를 공유한 적이 한 번도 없다</b> —
+        이슈가 요구하는 통합 시나리오가 정확히 이 빈칸이다.
+      </li>
+    </ul>
+    <p><b>핸들러별 I/O 경계 (fake가 만족시켜야 할 표면)</b></p>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>핸들러</th><th>읽기</th><th>쓰기</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>GET /api/records</code></td>
+          <td><code>fetchSheetBundle</code></td>
+          <td>— (<code>cache.put</code>만)</td>
+        </tr>
+        <tr>
+          <td><code>POST /api/admin/records</code></td>
+          <td><code>fetchSheetBundle</code></td>
+          <td><code>updateValues</code> (RAW, <code>'탭'!B7:E7</code> 꼴)</td>
+        </tr>
+        <tr>
+          <td><code>POST /api/admin/create-sheet</code></td>
+          <td><code>getSpreadsheetSheets</code>, <code>batchGetValues</code></td>
+          <td><code>batchUpdate</code> (<code>addSheet</code> + <code>updateCells</code>)</td>
+        </tr>
+        <tr>
+          <td><code>POST /api/admin/add-players</code></td>
+          <td><code>getSpreadsheetTabTitles</code>, <code>batchGetValues</code></td>
+          <td><code>updateValues</code> (USER_ENTERED, A열 이름 참조 수식)</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p><b>새 파일 1개</b> — <code>functions/api/records-invalidation.e2e.test.ts</code>(이슈가 제안한 이름).
+    기존 <code>records.e2e.test.ts</code>는 GET 계약 스모크라는 역할이 뚜렷해 건드리지 않고, 인접 신규 파일로 둔다.</p>
+
+    <p><b>① 가변 fake 시트 스토어 (이 설계의 핵심)</b></p>
+    <ul>
+      <li>
+        <code>Map&lt;탭이름, {sheetId, values: string[][]}&gt;</code> 하나를 세워, 읽기 목(<code>fetchSheetBundle</code> ·
+        <code>getSpreadsheetSheets</code> · <code>getSpreadsheetTabTitles</code> · <code>batchGetValues</code>)과
+        쓰기 목(<code>updateValues</code> · <code>batchUpdate</code>)이 <b>같은 스토어</b>를 보게 한다.
+        쓰기가 스토어를 실제로 바꾸므로 다음 읽기가 새 데이터를 본다 — "쓰기→조회 최신성"을 검증하려면
+        이 가변성이 없으면 안 된다.
+      </li>
+      <li>
+        <b>수식 해석</b>: add-players는 A열에 <code>='버니스명단'!A7</code>, create-sheet는 헤더에
+        <code>=목표!A3</code>을 쓴다. 실제 API는 <code>FORMATTED_VALUE</code>로 <em>평가된</em> 값을 돌려주므로,
+        fake도 읽기 시점에 단일 셀 참조(<code>='탭'!A{행}</code>)를 스토어에서 해석한다. 그래야 새 참가자 이름이
+        <code>parse-session</code>의 이름 매칭에 걸린다.
+      </li>
+      <li>
+        <b>모킹 층위</b>: <code>fetchSheetBundle</code>은 <code>getSpreadsheetTabTitles</code>/<code>batchGetValues</code>를
+        모듈 내부 로컬 바인딩으로 호출하므로, 그 둘만 목킹해도 가로채이지 않는다 → <code>fetchSheetBundle</code>도
+        직접 목으로 대체하되 실제 <code>classifySheetTabs</code>를 재사용해 조립 규칙이 갈라지지 않게 한다.
+        (대안: <code>fetch</code>+<code>googleAuth</code>까지 내려가 진짜 HTTP 백엔드를 흉내내기 — JWT 서명·URL 파싱까지
+        떠안아야 해 이 레포의 확립된 "I/O 경계만 목킹" 관용구(<code>create-sheet.test.ts:3</code>)에서 벗어난다. 기각.)
+      </li>
+    </ul>
+
+    <p><b>② 지연 <code>waitUntil</code> 큐 — 회귀를 물게 만드는 장치</b></p>
+    <ul>
+      <li>
+        <code>makeContext()</code>의 <code>waitUntil</code>은 no-op도, 즉시 await도 아닌 <b>큐에 담고 <code>flush()</code>에서만
+        await</b>한다. 시나리오는 ① GET → <code>flush()</code>(캐시 적재) → ② 쓰기 POST → <b>flush 없이</b> ③ GET.
+      </li>
+      <li>
+        누군가 <code>await purgeRecordsCache()</code>를 <code>waitUntil(purgeRecordsCache())</code>로 되돌리면(=#161 회귀)
+        무효화가 큐에 남은 채 ③이 실행돼 <b>옛 캐시가 히트</b>하고, 테스트는 옛 데이터로 실패한다.
+        no-op <code>waitUntil</code>이었다면 이 회귀가 오히려 조용히 통과해버린다 — 지연 큐가 필수인 이유.
+      </li>
+      <li>
+        <b>단, 지연 큐만으로는 부족하다</b>(구현 중 확인). fake Cache의 <code>delete</code>가 효과를 호출 즉시 적용하면
+        — <code>async</code> 함수 본문은 첫 <code>await</code> 전까지 동기 실행되므로 — 무효화가 큐에 실려 있든 아니든
+        이미 삭제가 끝나 있어 두 경우가 구분되지 않는다. 그래서 <code>put</code>·<code>delete</code>의 효과를
+        <b>다음 매크로태스크</b>로 미룬다(<code>afterIo()</code>): 실제 Cache API처럼 호출한 틱 안에 끝나지 않으므로,
+        <code>await</code>한 핸들러만 응답 전에 반영되고 <code>waitUntil</code>에만 실은 핸들러는 반영되지 않는다.
+      </li>
+    </ul>
+
+    <p><b>③ 헤더 계층 분리(#162) 어서션을 같은 시나리오에 합류</b></p>
+    <ul>
+      <li>
+        fake Cache의 <code>put</code>이 <code>Cache-Control: no-store</code> 응답을 <b>거부</b>한다(실제 Workers Cache API 동작).
+        <code>records.ts</code>가 clone/no-store 순서를 뒤집으면 저장이 거부돼 캐시 히트 경로가 사라지고,
+        "두 번째 GET는 시트를 다시 읽지 않는다" 어서션이 깨진다.
+      </li>
+      <li>
+        직접 어서션: 클라이언트 응답은 <b>미스·히트 모두</b> <code>no-store</code>, <code>put</code>에 넘어간 사본은
+        <code>public, max-age=21600</code>(<code>RECORDS_CACHE_TTL_SECONDS</code> 상수에서 도출 — 하드코딩 금지).
+      </li>
+    </ul>
+
+    <p><b>픽스처</b>: 이 파일은 전 계약이 아니라 <em>최신성</em>을 보므로, <code>records.e2e.test.ts</code>의 8종목 실시트
+    픽스처를 복제하지 않고 명단 7명 · 목표 3종목 · 회차 1개짜리 최소 픽스처를 새로 세운다. 대신 쓰기 결과가
+    응답 어느 필드에 나타나는지를 정확히 짚는다(<code>sessions[].entries[].scores</code> · <code>rankings</code> ·
+    <code>sessions[].date</code>).</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li class="done">가변 fake 시트 스토어 작성 — 탭 Map + 읽기 4종 목 + 단일 셀 참조 수식 해석. 실제 <code>classifySheetTabs</code>로 번들 조립.
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code></span>
+      </li>
+      <li class="done">쓰기 적용기 작성 — <code>updateValues</code>의 A1 범위 파싱(<code>'탭'!B7:E7</code>)과 <code>batchUpdate</code>의 <code>addSheet</code>/<code>updateCells</code> 적용.
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code></span>
+      </li>
+      <li class="done">공유 하네스 — <code>match/put/delete</code>를 갖고 <code>no-store</code> put을 거부하는 fake Cache, 지연 <code>waitUntil</code> 큐를 가진 <code>makeContext()</code>, <code>getRecords()</code> 헬퍼.
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code></span>
+        <span class="note"><b>설계 보강</b>(단계 8에서 발견): 지연 <code>waitUntil</code> 큐만으로는 회귀가 잡히지 않았다.
+          fake Cache의 <code>put</code>·<code>delete</code>가 효과를 <b>호출 즉시</b> 적용하면(<code>async</code> 함수 본문은
+          첫 await 전까지 동기 실행된다) <code>await purgeRecordsCache()</code>와 <code>waitUntil(purgeRecordsCache())</code>가
+          구분되지 않는다. 두 작업의 효과를 <b>다음 매크로태스크</b>로 미루는 <code>afterIo()</code>를 추가해 await한 핸들러만
+          응답 전에 반영되게 했다. <code>match</code>는 일부러 미루지 않는다 — 밀려 있던 <code>delete</code>가 그 틈에 실행돼
+          오히려 회귀를 가린다.</span>
+      </li>
+      <li class="done">시나리오 A — <code>POST /api/admin/records</code>: GET로 캐시 적재 → 점수 저장 → flush 없이 GET가 바뀐 점수를 반환.
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code>, <code>functions/api/admin/records.ts</code></span>
+        <span class="note">계약 관통 테스트를 하나 더 붙였다 — 바뀐 점수가 <code>rankings</code>(골밑슛 1위가 다현→가은으로 교체)·<code>trends</code>·<code>home</code>까지 흐르는지.</span>
+      </li>
+      <li class="done">시나리오 B — <code>POST /api/admin/create-sheet</code>: 캐시 적재 → 오늘 회차 생성(201) → flush 없이 GET에 새 세션이 등장(<code>eventKeys</code>·참가자 포함). 날짜는 fake timer로 고정.
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code>, <code>functions/api/admin/create-sheet.ts</code></span>
+        <span class="note">fake timer는 <code>toFake: ['Date']</code>로 <b>Date만</b> 가짜로 돌린다 — <code>setTimeout</code>까지 멈추면 위
+          <code>afterIo</code>가 영영 끝나지 않아 <code>await purgeRecordsCache()</code>가 교착에 빠진다. 새 탭 셀이 참조 수식으로
+          쓰였는지(명단·목표 편집이 회차 탭에 자동 반영되는 운영 포맷) 확인하는 테스트도 추가.</span>
+      </li>
+      <li class="done">시나리오 C — <code>POST /api/admin/add-players</code>: 캐시 적재 → 참가자 추가 → flush 없이 GET의 <code>sessions[].entries</code>에 새 이름 등장(수식 해석 경유).
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code>, <code>functions/api/admin/add-players.ts</code></span>
+      </li>
+      <li class="done">헤더 계약 어서션 — 미스·히트 응답 <code>no-store</code>, 저장 사본 <code>public, max-age=21600</code>, 히트 시 시트 재조회 없음.
+        <span class="files"><code>functions/api/records-invalidation.e2e.test.ts</code>, <code>functions/lib/records-cache.ts</code></span>
+      </li>
+      <li class="done">회귀망 자체 검증 — 회귀 4종을 차례로 주입해 <b>빨간불</b>을 확인하고 전부 원복(커밋하지 않음).
+        <span class="files"><code>functions/api/admin/records.ts</code>, <code>functions/api/admin/create-sheet.ts</code>, <code>functions/api/admin/add-players.ts</code>, <code>functions/api/records.ts</code></span>
+        <span class="note">결과: create-sheet <code>waitUntil</code> → 시나리오 B 2건 실패("2026-07-23 회차가 응답에 없습니다") ·
+          admin/records <code>waitUntil</code> → 시나리오 A 2건 실패(랭킹 1위가 옛 데이터인 다현으로 남음) ·
+          add-players <code>waitUntil</code> → 시나리오 C 실패 · <code>records.ts</code>의 no-store/clone 순서 뒤집기 → <b>7건 전부</b> 실패
+          (fake Cache가 no-store 사본 저장을 거절). 첫 시도에서 아무것도 빨개지지 않은 것이 위 <code>afterIo</code> 보강의 계기였다.</span>
+      </li>
+      <li class="done">전체 테스트 · 타입체크 실행 후 커밋 · 푸시 · PR.
+        <span class="files"><code>package.json</code></span>
+        <span class="note"><code>npm test</code> 87파일 804테스트 그린 · <code>npm run typecheck</code>(<code>tsc -b --force</code> 포함) 그린.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>fake 시트가 실제 Sheets API 동작(수식 평가·범위 의미)과 어긋남</td>
+          <td>테스트는 통과하는데 실제로는 깨지는 위양성</td>
+          <td>수식은 실제로 쓰이는 단일 셀 참조만 해석하고 그 외 <code>=</code> 시작 값은 리터럴로 둔다. 범위 파싱은 핸들러가 실제로 만드는 형태(<code>buildWritePlan</code>·add-players A열)만 지원하고, 벗어나면 <b>throw</b>해 조용한 오작동 대신 시끄러운 실패로 만든다</td>
+        </tr>
+        <tr>
+          <td><code>fetchSheetBundle</code> 조립 로직을 테스트가 복제 → 본체 변경 시 드리프트</td>
+          <td>번들 조립 규칙이 갈라져도 테스트가 못 잡음</td>
+          <td>실제 <code>classifySheetTabs</code>를 그대로 재사용하고, fake는 "분류 결과 → 스토어 값" 매핑만 담당. 복제 사실과 이유를 파일 주석에 명시</td>
+        </tr>
+        <tr>
+          <td>create-sheet가 <code>formatSeoulDate(new Date())</code>로 오늘 탭을 만듦 — 실행 날짜에 따라 픽스처와 충돌(409)</td>
+          <td>날짜에 따라 간헐 실패</td>
+          <td><code>vi.useFakeTimers()</code> + <code>setSystemTime</code>으로 KST 기준 날짜 고정(<code>create-sheet.test.ts:63-65</code>와 동일 관용구)</td>
+        </tr>
+        <tr>
+          <td>지연 <code>waitUntil</code> 큐를 flush하지 않고 테스트가 끝나 미처리 Promise가 남음</td>
+          <td>unhandled rejection 경고 / 테스트 간 누수</td>
+          <td><code>afterEach</code>에서 남은 큐를 flush하고 스토어·목을 리셋</td>
+        </tr>
+        <tr>
+          <td>회귀망이 실제로 회귀를 잡는지 미검증</td>
+          <td>"통과하지만 아무것도 지키지 않는" 테스트</td>
+          <td>단계 8에서 <code>waitUntil</code> 회귀를 일부러 주입해 <b>빨간불</b>을 확인하고 원복</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npx vitest run functions/api/records-invalidation.e2e.test.ts</code> — 새 시나리오 3종 + 헤더 계약 전부 통과.</li>
+      <li><b>회귀 확인(빨간불 검증)</b>: <code>create-sheet.ts:92</code>의 <code>await purgeRecordsCache()</code> → <code>context.waitUntil(purgeRecordsCache())</code>로 임시 변경 → 시나리오 B가 <b>실패</b>해야 한다(옛 캐시 히트). 확인 후 원복.</li>
+      <li><b>회귀 확인 2</b>: <code>records.ts:29-34</code>에서 <code>withNoStore</code>를 put 이전에 적용하도록 임시 변경 → fake Cache가 저장을 거부해 헤더/히트 테스트가 <b>실패</b>해야 한다. 확인 후 원복.</li>
+      <li><code>npm test</code> — 기존 <code>records.e2e.test.ts</code>·핸들러 단위 테스트 포함 전체 스위트 그린(신규 파일이 <code>caches</code> 전역 스텁을 누수시키지 않는지 확인).</li>
+      <li><code>npm run typecheck</code> — <code>as</code> 단언 없이(#93 기조) 타입 통과.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li class="done">쓰기 3종 각각에 "응답 직후 GET 최신" 시나리오가 있고, ②와 ③ 사이에 <code>waitUntil</code> flush 없이 통과한다.</li>
+      <li class="done">같은 파일에서 헤더 계약을 어서션한다 — 클라이언트 응답 <code>no-store</code>(미스·히트 모두), 엣지 저장 사본 <code>public, max-age=21600</code>.</li>
+      <li class="done">기존 e2e 구조(<code>makeFakeCache</code>/<code>makeContext</code> 관용구)를 이어받은 인접 신규 파일 <code>functions/api/records-invalidation.e2e.test.ts</code>로 들어간다.</li>
+      <li class="done">회귀 주입 시 실제로 빨간불이 뜨는 것을 확인했다(단계 8 — 회귀 4종 전부).</li>
+      <li class="done"><code>npm test</code>(87파일 804테스트) · <code>npm run typecheck</code> 전체 그린.</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/165">#165</a> · 2026-07-28</footer>
+</main>
+</body>
+</html>
