@@ -1,9 +1,9 @@
 // 데이터 새로 고침 오케스트레이션(#151) — 시트 관리 홈의 "데이터 새로 고침" 버튼이 쓴다.
-// ① POST /api/refresh로 엣지 캐시 퍼지 → ② cache:'reload'로 브라우저 HTTP 캐시를 우회한
-// refetch(응답이 브라우저 캐시 엔트리를 교체하고, records.ts의 cache.put이 엣지 캐시를
-// 재적재해 팀원도 최신을 본다) → ③ setQueryData로 쿼리 캐시 즉시 갱신.
-// 순서가 핵심이다 — 퍼지 전에 refetch하면 엣지의 옛 응답을 받아 브라우저 캐시에 다시
-// 심으므로, ①이 실패하면 ②로 가지 않는다.
+// ① POST /api/refresh로 엣지 캐시 퍼지 → ② fetchRecords(reload) refetch(useRecords()의
+// 모든 조회와 동일하게 상시 'reload'라 브라우저 HTTP 캐시를 건너뛰고, records.ts의
+// cache.put이 엣지 캐시를 재적재해 팀원도 최신을 본다) → ③ setQueryData로 쿼리 캐시
+// 즉시 갱신. 순서가 핵심이다 — 퍼지 전에 refetch하면 엣지의 옛 응답을 받으므로,
+// ①이 실패하면 ②로 가지 않는다.
 import { useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { RecordsResponse } from '../../shared/domain'
