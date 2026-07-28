@@ -4,9 +4,10 @@ import { isPlainObject } from '../../shared/is-plain-object'
 import { ApiError, UnauthorizedError } from '../lib/api-error'
 import { parseRecordsResponse } from '../lib/parse-records-response'
 
-// cache는 새로 고침 버튼(#151)이 'reload'를 넘겨 브라우저 HTTP 캐시를 우회하기 위한 것 —
-// 'reload'는 캐시를 건너뛰고 네트워크로 가며, 받은 응답으로 기존 캐시 엔트리를 교체한다.
-// 미지정이면 기존과 동일한 기본 캐시 동작이다.
+// cache 파라미터는 fetch()에 그대로 전달된다 — 'reload'는 브라우저 HTTP 캐시를 건너뛰고
+// 항상 네트워크(엣지)로 가며, 받은 응답으로 기존 캐시 엔트리를 교체한다. useRecords()는
+// 모든 (재)조회에 상시 'reload'를 넘긴다(#163) — 서버가 no-store로 전환되면 요청이 이미
+// 항상 네트워크로 가므로 기능적 no-op이라 유지 비용이 없다.
 export async function fetchRecords(signal?: AbortSignal, cache?: RequestCache): Promise<RecordsResponse> {
   let res: Response
   try {
@@ -60,7 +61,7 @@ export const RECORDS_QUERY_KEY = ['records'] as const
 export function useRecords() {
   return useQuery<RecordsResponse, ApiError>({
     queryKey: RECORDS_QUERY_KEY,
-    queryFn: ({ signal }) => fetchRecords(signal),
+    queryFn: ({ signal }) => fetchRecords(signal, 'reload'),
     staleTime: 5 * 60 * 1000,
     retry: shouldRetryRecordsQuery,
   })
