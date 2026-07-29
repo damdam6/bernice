@@ -18,6 +18,7 @@
 //      records.ts가 clone/no-store 순서를 뒤집으면(#162 회귀) 엣지 캐시가 통째로 죽고 히트 경로가 사라진다.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { isPlainObject } from '../../shared/is-plain-object'
 import type { RecordsResponse } from '../../shared/domain'
 import type { SheetMeta, SheetRawBundle, ValueRange } from '../lib/sheetsApi'
 import { classifySheetTabs } from '../lib/sheetTabs'
@@ -249,11 +250,10 @@ function makeFakeSheet(initial: { title: string; sheetId: number; values: string
   }
 }
 
-// batchUpdate requests는 unknown[] 계약이라(create-sheet.ts) 목킹 쪽에서 좁혀 읽는다 — as 단언 없이.
+// batchUpdate requests는 unknown[] 계약이라(create-sheet.ts) 목킹 쪽에서 좁혀 읽는다.
+// 좁히기는 핸들러들이 바디 파싱에 쓰는 것과 같은 isPlainObject(#93)를 재사용한다 — as 단언 없이.
 function pick(source: unknown, key: string): unknown {
-  return typeof source === 'object' && source !== null && key in source
-    ? (source as Record<string, unknown>)[key]
-    : undefined
+  return isPlainObject(source) ? source[key] : undefined
 }
 
 // ── 공유 하네스(캐시 · 지연 waitUntil) ───────────────────────────────────
@@ -370,13 +370,8 @@ afterEach(async () => {
   // 남은 waitUntil 작업까지 정리해 테스트 간 누수·미처리 rejection을 막는다.
   await harness.flush()
   vi.unstubAllGlobals()
-  vi.restoreAllMocks()
-  fetchSheetBundleMock.mockReset()
-  getSheetsMock.mockReset()
-  getTabTitlesMock.mockReset()
-  batchGetMock.mockReset()
-  updateValuesMock.mockReset()
-  batchUpdateMock.mockReset()
+  // 목 구현은 beforeEach가 매번 다시 세우므로 개별 mockReset 대신 일괄 초기화면 충분하다.
+  vi.resetAllMocks()
 })
 
 function entryOf(body: RecordsResponse, sessionDate: string, name: string) {
@@ -387,7 +382,7 @@ function entryOf(body: RecordsResponse, sessionDate: string, name: string) {
 
 describe('쓰기 → 조회 최신성 (#165)', () => {
   describe('POST /api/admin/records — 점수 저장 직후', () => {
-    it('응답 직후의 GET가 flush 없이 바뀐 점수를 반환한다', async () => {
+    it('응답 직후의 GET 요청이 flush 없이 바뀐 점수를 반환한다', async () => {
       // ① 캐시 적재 — 저장 전 값 확인
       const before = await harness.primeCache()
       expect(entryOf(before, OLD_ROUND, '가은')!.scores['골밑슛']).toEqual({
@@ -458,7 +453,7 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
       vi.useRealTimers()
     })
 
-    it('201 응답 직후의 GET가 flush 없이 새 회차를 포함한다', async () => {
+    it('201 응답 직후의 GET 요청이 flush 없이 새 회차를 포함한다', async () => {
       // ① 캐시 적재 — 아직 회차는 하나뿐
       const before = await harness.primeCache()
       expect(before.sessions.map((session) => session.date)).toEqual([OLD_ROUND])
@@ -494,7 +489,7 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
   })
 
   describe('POST /api/admin/add-players — 참가자 추가 직후', () => {
-    it('응답 직후의 GET가 flush 없이 새 참가자를 포함한다', async () => {
+    it('응답 직후의 GET 요청이 flush 없이 새 참가자를 포함한다', async () => {
       // ① 캐시 적재 — 라온은 아직 그 회차 참가자가 아니다
       const before = await harness.primeCache()
       expect(entryOf(before, OLD_ROUND, '라온')).toBeUndefined()
