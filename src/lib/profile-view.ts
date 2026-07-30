@@ -2,8 +2,9 @@
 // Rankings가 ranking-view.ts에 파생을 두는 것과 같은 분리: 화면(Players.tsx)은 배선만,
 // 값 계산은 여기 순수 함수가 담당해 DOM 없이 단위 테스트한다.
 //
-// 정규화는 랭킹과 동일한 buildPerformanceScale(events, sessions) 인스턴스를 주입받아 쓴다(§07) —
-// 레이더·추이·랭킹 미니바의 값이 정의상 일치한다. 델타는 계약값(trends[].points[].deltaFromPrevious/
+// 레이더는 랭킹과 동일한 buildPerformanceScale(events, sessions) 인스턴스를 주입받아 정규화한다(§07) —
+// 레이더·랭킹 미니바의 값이 정의상 일치한다. 추이 차트는 원값 축이라 scale을 쓰지 않는다(#172).
+// 델타는 계약값(trends[].points[].deltaFromPrevious/
 // improved, "직전 유효 기록 대비")을 그대로 신뢰한다(§05 · §01 콜아웃) — 화면에서 재계산하지 않는다.
 import type {
   EventDefinition,
@@ -113,29 +114,29 @@ export function buildGrowthCards(
 }
 
 export interface TrendSeries {
-  /** 본인 라인 — 유효 기록 회차만(희소) */
+  /** 본인 라인 — 유효 기록 회차만(희소). value는 종목 원값 */
   highlight: TrendPointDatum[]
   /** 본인 제외 전체 선수 배경 라인들 — 빈 시리즈는 제외 */
   background: TrendPointDatum[][]
-  /** 정규화 목표선 0~1 */
+  /** 목표선 원값 — EventDefinition.targetValue 그대로 */
   goal: number
 }
 
 /** 한 종목의 확장 추이 차트 데이터 — 본인 하이라이트 + 전체 배경 + 목표선(§07).
- *  각 trends[].points[]의 sessionDate를 회차 인덱스로 매핑하고, 원값을 공유 scale로 정규화한다. */
+ *  각 trends[].points[]의 sessionDate를 회차 인덱스로 매핑하고, y값은 원값을 그대로 넘긴다(#172) —
+ *  추이 차트는 정규화 성능을 쓰지 않으므로 scale이 필요 없고, 축 범위 계산은 차트(trendDomain) 책임이다. */
 export function buildTrendSeries(
   event: EventDefinition,
   sessions: Session[],
   players: PlayerSummary[],
   currentPlayerId: number,
-  scale: PerformanceScale,
 ): TrendSeries {
   const indexByDate = new Map(sessions.map((s, i) => [s.date, i]))
   const seriesFor = (trend: PlayerEventTrend | undefined): TrendPointDatum[] =>
     (trend?.points ?? [])
       .map((point) => ({
         sessionIndex: indexByDate.get(point.sessionDate) ?? -1,
-        value: scale.normalize(event.key, point.value),
+        value: point.value,
       }))
       .filter((datum) => datum.sessionIndex >= 0)
 
@@ -148,5 +149,5 @@ export function buildTrendSeries(
     .map((p) => seriesFor(trendOf(p)))
     .filter((series) => series.length > 0)
 
-  return { highlight, background, goal: scale.normalize(event.key, event.targetValue) }
+  return { highlight, background, goal: event.targetValue }
 }

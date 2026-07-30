@@ -308,26 +308,36 @@ describe('buildGrowthCards', () => {
 })
 
 describe('buildTrendSeries', () => {
-  it('본인은 highlight, 나머지는 background(본인 제외) — 회차 인덱스로 매핑·정규화', () => {
-    const series = buildTrendSeries(EVENTS[0], SESSIONS, PLAYERS, 1, scale)
+  it('본인은 highlight, 나머지는 background(본인 제외) — 회차 인덱스로 매핑, y값은 원값(#172)', () => {
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, PLAYERS, 1)
     expect(series.highlight).toEqual([
-      { sessionIndex: 0, value: 0.6 }, // 6/10
-      { sessionIndex: 1, value: 0.8 },
-      { sessionIndex: 2, value: 0.8 },
+      { sessionIndex: 0, value: 6 }, // 정규화(0.6)가 아니라 원값 6개
+      { sessionIndex: 1, value: 8 },
+      { sessionIndex: 2, value: 8 },
     ])
     // 배경은 선수2의 골밑슛 1점(1차)만 — 본인(선수1) 제외
-    expect(series.background).toEqual([[{ sessionIndex: 0, value: 0.4 }]])
-    expect(series.goal).toBe(0.5) // 목표 5/10
+    expect(series.background).toEqual([[{ sessionIndex: 0, value: 4 }]])
+    expect(series.goal).toBe(EVENTS[0].targetValue) // 목표도 원값 5개
+  })
+
+  it('시간 종목도 원값(초) 그대로 — 기록이 늘면 값이 커진다(반전 없음)', () => {
+    const series = buildTrendSeries(EVENTS[1], SESSIONS, PLAYERS, 1)
+    expect(series.highlight).toEqual([
+      { sessionIndex: 0, value: 90 }, // 1:30
+      { sessionIndex: 1, value: 80 }, // 1:20 — 개선인데 값은 작아진다
+      { sessionIndex: 2, value: 85 }, // 1:25
+    ])
+    expect(series.goal).toBe(77) // 1:17
   })
 
   it('유효 기록이 없는 선수의 배경 시리즈는 제외한다', () => {
     const empty: PlayerSummary = { id: 3, name: '선수3', status: '활동', trends: [], personalBests: [] }
-    const series = buildTrendSeries(EVENTS[0], SESSIONS, [PLAYER1, empty], 1, scale)
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, [PLAYER1, empty], 1)
     expect(series.background).toEqual([]) // 선수3은 골밑슛 point 0개 → 제외
   })
 
   it('본인이 목록에 없으면 highlight는 빈 배열', () => {
-    const series = buildTrendSeries(EVENTS[0], SESSIONS, PLAYERS, 999, scale)
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, PLAYERS, 999)
     expect(series.highlight).toEqual([])
   })
 
@@ -357,11 +367,10 @@ describe('buildTrendSeries', () => {
       ],
       personalBests: [{ event: '종료종목', value: 6, display: '6', sessionDate: '2026-06-08', achieved: true }],
     }
-    const endedScale = buildPerformanceScale([endedEvent], SESSIONS)
-    const series = buildTrendSeries(endedEvent, SESSIONS, [player], 20, endedScale)
+    const series = buildTrendSeries(endedEvent, SESSIONS, [player], 20)
     expect(series.highlight).toEqual([
-      { sessionIndex: 0, value: 0.4 },
-      { sessionIndex: 1, value: 0.6 },
+      { sessionIndex: 0, value: 4 },
+      { sessionIndex: 1, value: 6 },
     ])
     expect(series.highlight.some((p) => p.sessionIndex === 2)).toBe(false) // 3차(종료 이후)엔 점 없음
   })
@@ -383,10 +392,10 @@ describe('buildTrendSeries', () => {
       ],
       personalBests: [{ event: '골밑슛', value: 7, display: '7', sessionDate: '2026-06-15', achieved: true }],
     }
-    const series = buildTrendSeries(EVENTS[0], SESSIONS, [player], 21, scale)
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, [player], 21)
     expect(series.highlight).toEqual([
-      { sessionIndex: 0, value: 0.5 },
-      { sessionIndex: 2, value: 0.7 },
+      { sessionIndex: 0, value: 5 },
+      { sessionIndex: 2, value: 7 },
     ])
   })
 
@@ -400,7 +409,7 @@ describe('buildTrendSeries', () => {
       ],
       personalBests: [],
     }
-    const series = buildTrendSeries(EVENTS[0], SESSIONS, [player], 22, scale)
+    const series = buildTrendSeries(EVENTS[0], SESSIONS, [player], 22)
     expect(series.highlight).toEqual([])
   })
 })

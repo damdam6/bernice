@@ -202,7 +202,7 @@
         <tr><td>회차 칩</td><td>레이더·현재값의 기준 회차 선택</td><td><code class="inline">sessions[]</code></td></tr>
         <tr><td>레이더 차트</td><td>4종목 축, 선택 회차의 정규화 성능(§07)</td><td><code class="inline">sessions[].entries[].scores</code></td></tr>
         <tr><td>종목별 성장 카드 ×4</td><td>종목명 + PB / 현재값 + 전회차 대비 델타(▲▼, 시간은 "n초", 동률 "─ 0" 회색). 탭하면 카드가 primary 보더로 선택되고 <b>추이 차트 확장</b></td><td><code class="inline">personalBests[]</code> · 현재값 = 선택 회차 <code class="inline">scores</code> · 델타/개선 = <code class="inline">trends[].points[].deltaFromPrevious/improved</code> (직전 유효 기록 대비 — 계약 의미론 우선, §01 콜아웃)</td></tr>
-        <tr><td>확장 추이 차트</td><td>x=회차, y=정규화 성능. <b>전체 선수 배경 라인(primary-soft 1.6px) + 본인 하이라이트(primary 3.2px+점) + 목표선(green 점선)</b></td><td>본인 <code class="inline">trends[]</code> + 전체 <code class="inline">players[].trends[]</code> · 목표 = <code class="inline">targetValue</code></td></tr>
+        <tr><td>확장 추이 차트</td><td>x=회차, <b>y=종목 원값</b>(정규화·축 반전 없음, #172 — 축 범위는 본인 기록 ∪ 목표값). <b>전체 선수 배경 라인(primary-soft 1.6px, 범위 밖 클립) + 본인 하이라이트(primary 3.2px+점) + 목표선(green 점선)</b></td><td>본인 <code class="inline">trends[]</code> + 전체 <code class="inline">players[].trends[]</code> · 목표 = <code class="inline">targetValue</code></td></tr>
       </tbody>
     </table>
 
@@ -256,11 +256,11 @@
       <tbody>
         <tr><td>달성률 게이지 (홈)</td><td>8px 트랙(#eef0f4) + 채움 바. 전원 달성 primary / 미만 primary-soft. width 트랜지션 .5s</td></tr>
         <tr><td>레이더 (개인)</td><td>4축(종목 short 라벨), 링 4개(#e7e9ee) + 채움 폴리곤(primary 14% 투명) + 꼭짓점 도트. 값 = 정규화 성능(아래)</td></tr>
-        <tr><td>종목 추이 라인 (개인, 카드 확장)</td><td>x = 회차(n차 라벨) · y = 정규화 성능. 전체 선수 배경 라인(primary-soft, 1.6px) → 본인(primary, 3.2px + 도트 3.6px) 순서로 위에. 목표선 = green 1.5px 점선(4 4)</td></tr>
+        <tr><td>종목 추이 라인 (개인, 카드 확장)</td><td>x = 회차(n차 라벨) · <b>y = 종목 원값</b>(시간=초, 개수=개 — 정규화·축 반전 없음, #172). 축 범위 = 본인 recorded 점 ∪ 목표값 + 패딩. 전체 선수 배경 라인(primary-soft, 1.6px) → 본인(primary, 3.2px + 도트 3.6px) 순서로 위에. 목표선 = green 1.5px 점선(4 4). 축 눈금·값 라벨 없음(수치는 카드 헤더 담당)</td></tr>
         <tr><td>랭킹 행 성능 바</td><td>5px 미니 바 — 달성자 green, 미달 #c3ccdb. 값 = 동일 정규화</td></tr>
       </tbody>
     </table>
-    <div class="callout"><b>⚠️ 정규화 규칙은 열린 항목.</b> 목업은 개수 = <code class="inline">value / maxScore</code>, 시간 = 고정 범위 상수((90−v)/(90−64))를 썼다 — 상수는 데모값이다. 구현 제안: <b>개수 종목 = value/maxScore</b>(만점 있음), <b>시간 종목 = 전체 데이터(전 회차·전 선수)의 min~max 범위 스케일</b>(만점 없음). 레이더·추이·랭킹 바가 같은 함수를 공유해야 함. 확정은 구현 이슈에서(§09).</div>
+    <div class="callout"><b>✅ 정규화 규칙 확정</b> (#69, 추이 차트 예외는 #172로 개정). <b>개수 종목(만점 있음 + 높을수록) = value/maxScore</b>, <b>그 외(시간 종목 · 만점 없음 · 낮을수록 개수) = 전 회차·전 선수 recorded의 min~max 범위 스케일</b>(낮을수록는 반전해 1 = 좋음) — <code class="inline">src/lib/performance-scale.ts</code>. 공유 대상은 <b>레이더와 랭킹 행 성능 바</b>뿐이다.<br><b>종목 추이 차트는 정규화를 쓰지 않는다(#172):</b> y = 원값, 축 반전 없음(낮을수록 종목은 개선 시 하강 — 좋고 나쁨은 헤더 델타 색·목표선이 전달), 축 범위 = 본인 recorded ∪ 목표값 + 패딩(팀 배경 라인은 범위 계산 제외 + 범위 밖 구간 클립). "기록이 늘었는데 선이 떨어지는" 반직관과 타인 극단값이 본인 점 위치를 재배치하는 부작용을 없애기 위한 결정이다.</div>
   </section>
 
   <!-- 8 -->
@@ -287,7 +287,7 @@
       <thead><tr><th>항목</th><th>내용 · 권장안</th></tr></thead>
       <tbody>
         <tr><td>팀 패스코드 게이트 화면</td><td>유지 확정인데 목업에 없음 — 관리자 로그인 화면과 같은 레이아웃 문법(아이콘 블록+입력+버튼)으로 1화면 추가 설계. 게이트 통과 후 홈</td></tr>
-        <tr><td>정규화 성능 함수</td><td>§07 콜아웃 — 개수 = value/maxScore, 시간 = 전체 범위 스케일 권장. 레이더·추이·랭킹 바 공유</td></tr>
+        <tr><td>정규화 성능 함수</td><td>§07 콜아웃 확정(#69) — 개수 = value/maxScore, 그 외 = 전체 범위 스케일. <b>레이더·랭킹 바만</b> 공유(추이 차트는 #172로 원값 축)</td></tr>
         <tr><td>면제 가능 종목 플래그</td><td>목업은 패스캐치만 면제 토글. 권장: <b>프론트 종목 상수로 시작</b>(시트 스키마 변경 없음). 목표 탭 열 추가·<code class="inline">EventDefinition</code> 확장은 필요해질 때 별도 이슈</td></tr>
         <tr><td>회차 라벨 "n차"</td><td>파생 규칙: sessions 날짜 오름차순 인덱스+1. 표기 "1차 · 2025-05-16"</td></tr>
         <tr><td>이상값(invalid) 표시</td><td>목업에 없음 — 랭킹 하단 노출 시 원본 표기 + 이상값 뱃지(neutral 계열), 입력 화면 프리필 시엔 비움 + 안내. 기존 계약(<code class="inline">display</code>/<code class="inline">reason</code>) 활용</td></tr>
