@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#172 종목 추이 차트 Y축을 정규화 성능 → 원값으로 전환 — 시간 종목의 "값은 늘었는데 선이 떨어지는" 반직관 해소 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/172">#172</a></span><span class="type-chip">기능 개선</span>
+    <h1>종목 추이 차트 Y축을 정규화 성능 → 원값으로 전환 — 시간 종목의 "값은 늘었는데 선이 떨어지는" 반직관 해소</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/172-trend-chart-raw-value-axis</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-07-30</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>개인 프로필 성장 카드의 확장 추이 차트만 정규화 성능(0~1) 공간에서 <b>원값 공간</b>으로 옮긴다. 점의 y는 종목 원값(시간=초, 개수=개)이고 축은 반전하지 않아 값이 크면 항상 위 — 즉 시간 종목은 기록이 늘면 선이 올라가고, 좋고 나쁨은 카드 헤더의 델타 색과 목표선이 전달한다(D1). 축 범위는 <b>본인 recorded 점 ∪ 목표값 + 패딩</b>이며 팀 배경 라인은 범위 계산에서 빠지고 범위를 벗어난 구간은 클립된다(D3). 축 눈금·값 라벨은 계속 없다(D2). <code>performance-scale.ts</code>는 레이더·랭킹 바 전용으로 한 줄도 건드리지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+    <p>추이 차트는 데이터 결합 → 좌표 계산 → 렌더의 3층이고, 세 층 모두 "정규화 성능 0~1"을 전제로 쓰여 있다.</p>
+<ul>
+  <li><b>결합</b> — <code>src/pages/Players.tsx:58</code>이 <code>buildPerformanceScale(events, sessions)</code> 인스턴스 하나를 만들어 레이더·추이가 공유하고(§07),
+      <code>src/pages/Players.tsx:106</code>이 확장된 카드에 대해서만 <code>buildTrendSeries(event, sessions, players, player.id, scale)</code>를 호출한다.</li>
+  <li><code>src/lib/profile-view.ts:134-151</code> — 각 점을 <code>scale.normalize(event.key, point.value)</code>로 0~1로 바꾸고,
+      목표선도 <code>scale.normalize(event.key, event.targetValue)</code>로 같은 공간에 넣는다. <code>TrendSeries.goal</code>은 "정규화 목표선 0~1"로 문서화돼 있다(<code>src/lib/profile-view.ts:115-122</code>).</li>
+  <li><b>좌표</b> — <code>src/components/charts/trend-math.ts:31-34</code>의 <code>trendY(value, layout)</code>가 <code>clamp01(value)</code> 후 <code>1 - value</code>로 <b>반전</b>한다("위가 좋음").
+      <code>TrendPointDatum.value</code> 주석도 "정규화 성능 0~1"(<code>src/components/charts/trend-math.ts:16</code>).</li>
+  <li><b>렌더</b> — <code>src/components/charts/trend-chart.tsx:40</code>이 <code>trendY(clamp01(goal), layout)</code>로 목표선 y를 잡고,
+      배경(primary-soft 1.6px) → 목표선(good 1.5px 점선) → 본인 라인(primary 3.2px) → 도트(r3.6) → x축 회차 라벨 순서로 그린다(<code>src/components/charts/trend-chart.tsx:44-94</code>). 축 눈금·값 라벨은 원래 없다.</li>
+</ul>
+<p>반직관의 출처는 정규화 함수 자체다. <code>src/lib/performance-scale.ts:73-76</code>은 만점 없는 종목(시간 종목 전부)을
+<b>전 회차·전 선수 recorded의 min~max 상대 스케일</b>로 깔고, <code>direction === '낮을수록'</code>이면 <code>1 - ratio</code>로 뒤집는다. 그래서</p>
+<ul>
+  <li>기록이 1:16 → 13:22로 <b>늘어나면</b> 정규화 값은 <b>떨어지고</b>, 반전까지 겹쳐 선이 내려간다 — 축 라벨도 값 표기도 없으니 읽을 방법이 없다.</li>
+  <li>스케일 분모가 <b>전 선수 공통</b>이라 타인의 극단값 1건(13:22 오입력)이 본인 과거 점의 y까지 재배치한다(<code>src/lib/performance-scale.ts:41-55</code>의 ranges 집계 범위).</li>
+</ul>
+<p>영향 범위는 좁다. <code>performance-scale</code>의 다른 소비자는 레이더(<code>src/components/charts/radar-chart.tsx</code>, <code>buildRadarAxes</code>)와
+랭킹 미니바(<code>src/components/charts/performance-bar.tsx</code>)뿐이고 둘 다 정규화를 유지한다(이슈의 전 차트 점검 결과).
+<code>src/pages/Players.test.tsx:190-239</code>는 추이 차트를 <code>aria-label</code> 존재로만 검증하므로 값 변경에 영향받지 않는다.
+좌표·렌더 테스트는 <code>src/components/charts/trend-math.test.ts</code>·<code>src/components/charts/trend-chart.test.tsx</code>가 0~1 값을 하드코딩하고 있어 이번에 갱신 대상이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+    <p>확정 결정 D1~D3을 코드로 옮기는 설계다. 핵심은 <b>축 도메인이라는 개념을 새로 도입</b>하고, y 매핑에서 반전과 클램프를 동시에 제거하는 것.</p>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">D1 · 원값 축, 반전 없음</h3>
+<ul>
+  <li><code>trendY(value, domain, layout)</code>로 서명을 바꾸고 <code>y = padTop + (1 - (value - domain.min) / (domain.max - domain.min)) * inner</code>로 선형 매핑한다.
+      값이 크면 위 — 수학 좌표 그대로다.</li>
+  <li>결과적으로 <b>direction 분기 코드가 한 줄도 없다</b>: 낮을수록 종목은 개선(값 감소) 시 자연히 하강하고, 높을수록 종목은 개선 시 상승한다.
+      "방향 필드 기반 · 종목 하드코딩 금지"를 분기로 만족시키는 게 아니라 <b>분기를 없애서</b> 만족시킨다 — 종목명이 코드에 등장할 여지가 원천 차단된다.</li>
+  <li>좋고 나쁨은 기존 경로가 이미 담당한다: 카드 헤더 델타의 ▲▼·색은 <code>src/lib/profile-view.ts</code>의 <code>buildDelta</code>가 계약의 <code>improved</code>(상류에서 direction 반영)로 계산하고, 목표선은 원값 위치에 그려진다.</li>
+</ul>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">D3 · 도메인 = 본인 recorded ∪ 목표 + 패딩</h3>
+<ul>
+  <li><code>trend-math.ts</code>에 순수 함수 <code>trendDomain(highlight, goal, background?)</code>와 <code>TrendDomain {min, max}</code>를 추가한다. DOM 없이 단위 테스트한다는 이 파일의 기존 원칙(파일 헤더 주석) 그대로.</li>
+  <li>범위는 <b>본인 점 ∪ 목표값</b>으로만 잡고 <b>배경은 제외</b> → 목표선은 항상 밴드 안에 보인다.</li>
+  <li>패딩은 span의 8%를 위아래로. <code>min === max</code>(본인 점 1개 또는 전부 동률, 목표까지 같은 값)면 <code>±max(|v| × 0.1, 1)</code>로 잡아 점이 <b>중앙</b>에 오는 폴백.</li>
+  <li>본인 점도 목표도 없는 degenerate 케이스(prop 수준에서만 가능)에서는 배경 extent로 폴백하고, 그것도 없으면 <code>0~1</code> — 차트가 통째로 빈 화면이 되는 것만 막는 최후 방어선이다.</li>
+  <li><b>클립</b>: 배경 폴리라인을 <code>&lt;g clip-path&gt;</code>로 감싸고 <code>&lt;clipPath&gt;&lt;rect&gt;</code>를 플롯 밴드(<code>padX … width-padX</code> × <code>padTop … height-padBottom</code>)에 맞춘다.
+      값 왜곡을 낳는 가장자리 클램프는 쓰지 않는다(<code>trendY</code>에서 <code>clamp01</code> 제거가 곧 이 조건). id는 <code>useId()</code>로 인스턴스 고유하게 만들어 같은 페이지 다중 차트에서 충돌하지 않게 한다.</li>
+  <li>본인 라인·도트와 x축 라벨은 클립하지 <b>않는다</b>: 본인 점은 도메인상 항상 밴드 안이고, r3.6 도트가 밴드 경계에서 반쪽만 그려지는 부작용을 피한다. x 라벨은 애초에 밴드 밖(<code>height - 8</code>)이다.</li>
+</ul>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">D2 · 축 눈금·값 라벨 없음</h3>
+<p>현행 그대로 x축 회차 라벨만 유지한다 — 추가 텍스트 요소를 넣지 않는 것이 작업 내용이다. 수치는 카드 헤더(현재값·PB·델타)가 담당.</p>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">경계면 정리</h3>
+<ul>
+  <li><code>buildTrendSeries</code>는 <code>scale</code> 파라미터를 <b>제거</b>한다 — 값이 원값이 되면 쓰이지 않고, <code>noUnusedParameters: true</code>(<code>tsconfig.app.json:19</code>)라 남겨둘 수도 없다. <code>Players.tsx</code>의 <code>scale</code>은 레이더용으로 계속 필요하다.</li>
+  <li><code>src/lib/performance-scale.ts</code>는 <b>무변경</b>. 단, 파일 헤더의 "레이더·종목 추이·랭킹 미니바가 공유" 서술은 사실과 달라지므로 주석만 정정한다(동작 변경 없음).</li>
+  <li><code>trend-chart.tsx</code>·<code>trend-math.ts</code>의 <code>clamp01</code> import는 제거된다(<code>noUnusedLocals</code>).</li>
+  <li><code>docs/prd-design.html</code>의 §05 확장 추이 차트 행(<code>:205</code>)·§07 차트 표(<code>:259</code>)·정규화 콜아웃(<code>:263</code>)에 "추이 차트만 원값 축(#172)" 예외를 기록한다 — 이슈가 명시한 PRD 개정.</li>
+  <li>#171(섹션 범례)은 아직 코드가 없다(PR 없음). 범례는 "연보라 = 다른 선수"를 설명하므로 축 전환과 무관하게 유효 — 이번 변경에서 문구 충돌이 생기지 않는지 확인만 하고 코드는 손대지 않는다.</li>
+</ul>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">기각한 대안</h3>
+<ul>
+  <li><b>낮을수록 종목에서 축 반전(위 = 좋음 유지)</b> — D1이 명시적으로 금지. 종목마다 "위"의 의미가 뒤집혀 배경 라인·목표선 해석이 더 어려워진다.</li>
+  <li><b>배경 라인을 축 가장자리로 클램프</b> — D3가 금지. 실제로 없는 값처럼 보이는 왜곡을 만든다.</li>
+  <li><b>도메인을 <code>buildTrendSeries</code>에서 계산해 prop으로 넘기기</b> — 도메인 입력(본인 점·목표)이 이미 차트 props에 전부 있어 중복 전달이 된다. 축 규칙은 "어떻게 그리는가"이므로 차트 쪽(<code>trend-math</code>)이 소유하는 편이 응집도가 높고, 순수 함수라 테스트 비용도 같다.</li>
+  <li><b>공유 <code>scale</code>에 "원값 통과" 모드를 추가</b> — 레이더·랭킹과 공유하는 함수에 분기를 심는 셈이라 §07 "같은 함수를 공유해 값이 정의상 일치" 계약을 흐린다. 추이만 scale에서 <b>빠지는</b> 게 정확한 표현.</li>
+</ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+      <li>✅ 좌표 계층을 원값 기반으로 전환 — <code>TrendPointDatum.value</code> 의미를 원값으로 정정, <code>TrendDomain</code> 타입과 <code>trendDomain(highlight, goal, background?)</code> 순수 함수 추가(패딩 8% · min==max 폴백 · degenerate 폴백), <code>trendY(value, domain, layout)</code>로 서명 변경(반전 유지, <code>clamp01</code> 제거), <code>polylinePoints</code>에 domain 전달, 사용하지 않게 된 <code>clamp01</code> import 제거
+  <span class="files"><code>src/components/charts/trend-math.ts</code></span>
+</li>
+<li>✅ 좌표 단위 테스트 갱신 — <code>trendY</code> 원값 선형 매핑(값↑ = 위, 클램프 없이 밴드 밖 좌표 허용), <code>trendDomain</code>의 목표 포함·패딩·<code>min==max</code> 중앙 폴백·배경 폴백, 희소/범위 밖 인덱스 기존 케이스 유지
+  <span class="files"><code>src/components/charts/trend-math.test.ts</code></span>
+</li>
+<li>✅ 렌더 계층 전환 — <code>goal</code> prop을 원값으로(JSDoc 갱신), <code>trendDomain</code>으로 도메인 계산, 목표선 y에서 <code>clamp01</code> 제거, 배경 폴리라인을 <code>useId()</code> 기반 <code>clipPath</code> 그룹으로 감싸 플롯 밴드 밖을 잘라내고 본인 라인·도트·x라벨은 클립 대상에서 제외, 헤더 주석의 "y = 정규화 성능" 정정
+  <span class="files"><code>src/components/charts/trend-chart.tsx</code></span><span class="files"><b>노트</b> — 클립 <code>rect</code>는 계획의 <code>padX … width-padX</code>가 아니라 <b>viewBox 전폭(x=0, width=320) × 값 밴드(y=padTop … height-padBottom)</b>으로 잡았다. D3가 요구하는 건 <b>값 범위</b> 클립인데, x까지 좁히면 첫·마지막 배경 점에서 1.6px 선의 좌우 끝이 반쪽 잘리는 부작용이 생긴다(기존 렌더 대비 회귀). 테스트도 전폭 기준으로 검증한다.</span>
+</li>
+<li>✅ 렌더 테스트 갱신 — 원값 시리즈로 재작성 + 높을수록(개수) 개선 시 y 감소 / 낮을수록(시간) 개선 시 y 증가를 같은 코드 경로로 검증, 배경 <code>clip-path</code> 참조와 <code>clipPath rect</code>가 플롯 밴드와 일치, 목표선이 항상 밴드 안, <code>min==max</code> 폴백 시 중앙 배치, 기존 스타일·도트·라벨·접근성 케이스 유지
+  <span class="files"><code>src/components/charts/trend-chart.test.tsx</code></span>
+</li>
+<li>✅ 결합 계층 전환 — <code>TrendSeries.goal</code>을 원값으로, <code>buildTrendSeries</code>에서 <code>scale</code> 파라미터 제거하고 <code>point.value</code>·<code>event.targetValue</code>를 그대로 내보내도록 수정, JSDoc·주석 갱신
+  <span class="files"><code>src/lib/profile-view.ts</code></span>
+</li>
+<li>✅ 결합 테스트 갱신 — <code>buildTrendSeries</code> 기대값을 원값으로(<code>goal === event.targetValue</code>), 호출부 <code>scale</code> 인자 제거. 레이더(<code>buildRadarAxes</code>) 케이스는 정규화 유지 확인용으로 그대로 둔다
+  <span class="files"><code>src/lib/profile-view.test.ts</code></span>
+</li>
+<li>✅ 화면 배선 — <code>buildTrendSeries</code> 호출에서 <code>scale</code> 인자 제거(레이더용 <code>scale</code>과 공유 주석은 유지·정정)
+  <span class="files"><code>src/pages/Players.tsx</code></span>
+</li>
+<li>✅ 회귀 확인 — <code>npm run typecheck</code> + <code>npm test</code> 전체 green, <code>performance-scale.test.ts</code>·레이더·랭킹 바·<code>Players.test.tsx</code>가 무변경으로 통과함을 확인. <code>performance-scale.ts</code>는 헤더 주석의 소비자 서술만 정정(동작 무변경)
+  <span class="files"><code>src/lib/performance-scale.ts</code>, <code>src/lib/performance-scale.test.ts</code></span><span class="files"><b>결과</b> — <code>npm run typecheck</code> 통과, <code>npm test</code> 87파일 823테스트 전부 통과. <code>performance-scale.ts</code>는 헤더 주석 2곳만 정정(소비자 목록·목표 정규화 서술), 로직·테스트 무변경.</span>
+</li>
+<li>✅ 문서 정합 — 디자인 PRD의 확장 추이 차트 서술(§05)·차트 스펙 표(§07)·정규화 콜아웃에 "추이 차트만 원값 축, 범위 = 본인 ∪ 목표(#172)" 예외 반영. #171 범례 문구와의 충돌 여부 확인(코드 없음 → 확인만)
+  <span class="files"><code>docs/prd-design.html</code></span>
+</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+        <tr><td>도메인이 목표값을 항상 포함 — 목표가 극단이면 본인 점들이 좁은 띠로 눌린다</td><td>추이 모양 가독성 저하</td><td>D3 확정 사항으로 수용. 목표는 목표 탭에서 관리되는 값이라 회차 기록 오입력과 유입 경로가 다르다</td></tr>
+<tr><td>본인 범위가 좁으면 배경 라인이 거의 다 클립되어 사라져 보인다</td><td>팀 비교 맥락 상실</td><td>의도된 동작("자신의 추이만 보는" 차트). 배경의 의미는 #171 범례가 설명하고, 팀 비교는 랭킹 화면이 담당</td></tr>
+<tr><td><code>clipPath</code> id 충돌 — 한 페이지에 추이 차트가 둘 이상 렌더될 때</td><td>엉뚱한 영역으로 클립</td><td><code>useId()</code>로 인스턴스 고유 id 생성. 현재 화면은 한 번에 한 카드만 확장하지만 방어적으로 적용</td></tr>
+<tr><td>시간 종목에서 "선이 내려가면 개선"이 처음엔 낯설다</td><td>사용자 재학습 비용</td><td>D1의 명시적 결정. 판정은 헤더 델타 ▲▼ 색과 목표선이 전달하고, 축은 "값의 크기"만 표현한다</td></tr>
+<tr><td>정규화 함수에서 추이가 빠지며 레이더·랭킹 회귀 우려</td><td>세 차트 값 정의 불일치</td><td><code>performance-scale.ts</code> 로직 무변경 + 기존 <code>performance-scale.test.ts</code>·레이더·랭킹 바 테스트를 손대지 않고 통과시켜 확인</td></tr>
+<tr><td><code>trendY</code>·<code>buildTrendSeries</code> 서명 변경이 다른 호출부를 깬다</td><td>타입 에러</td><td>호출부는 <code>trend-chart.tsx</code>·<code>Players.tsx</code>와 각 테스트로 한정됨을 grep으로 확인. <code>npm run typecheck</code>가 잔여 호출부를 잡는다</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+      <li><code>npm run typecheck</code> · <code>npm test</code> — 전체 green (변경 파일 외 회귀 없음)</li>
+<li><b>trend-math</b> — <code>trendY</code>가 도메인 min을 하단(<code>height - padBottom</code>), max를 상단(<code>padTop</code>)에 놓고 중간값은 선형 보간. 도메인 밖 값은 <b>클램프되지 않고</b> 밴드 밖 좌표를 낸다(클립 전제)</li>
+<li><b>trend-math</b> — <code>trendDomain</code>: 본인 점 min~max에 8% 패딩, 목표값이 본인 범위 밖이면 도메인이 목표까지 확장, 배경 점은 도메인에 <b>영향 없음</b>, 본인 점 1개/전부 동률이면 <code>min &lt; v &lt; max</code>인 중앙 배치 폴백, 본인·목표 모두 없으면 배경 extent 폴백</li>
+<li><b>trend-chart(방향)</b> — 높을수록 종목 값 <code>[6, 8]</code>(개선 = 증가)은 뒤 점의 y가 더 <b>작다</b>(상승), 낮을수록 종목 값 <code>[90, 76]</code>(개선 = 감소)은 뒤 점의 y가 더 <b>크다</b>(하강). 두 케이스가 같은 코드 경로를 타고 direction 인자가 아예 없음을 함께 확인</li>
+<li><b>trend-chart(클립)</b> — 배경 <code>polyline</code>을 감싼 <code>g</code>가 <code>clip-path="url(#…)"</code>를 갖고, <code>clipPath &gt; rect</code>가 플롯 밴드(<code>x=padX, y=padTop, width=W-2·padX, height=H-padTop-padBottom</code>)와 일치. 본인 <code>polyline</code>·<code>circle</code>·<code>text</code>는 그 그룹 밖</li>
+<li><b>trend-chart(목표선)</b> — 목표가 본인 점 범위 밖(위·아래 양쪽)이어도 목표선 y가 <code>[padTop, height - padBottom]</code> 안에 있다</li>
+<li><b>trend-chart(기존 유지)</b> — 배경(1.6px primary-soft)이 본인 라인(3.2px primary)보다 먼저, 도트 r3.6, 목표선 good 1.5px 점선(4 4), x축 회차 라벨, <code>aria-label</code>, 회차 0개면 렌더 없음</li>
+<li><b>profile-view</b> — <code>buildTrendSeries</code>의 highlight·background 값이 <b>원값</b>(예: 셔틀런 90·100초, 골밑슛 6·8개), <code>goal === event.targetValue</code>, 희소 회차·종료 종목·본인 부재·빈 배경 제외 케이스는 기존 그대로</li>
+<li><b>미측정·면제 희소 점</b> — 계약상 <code>trends[].points[]</code>에 유효 기록만 담기므로 처리 규칙 무변경. 중간 회차 결손 시 <code>sessionIndex</code>가 밀리지 않는 기존 테스트로 재확인</li>
+<li><b>정규화 회귀</b> — <code>performance-scale.test.ts</code>, <code>radar-chart.test.tsx</code>, <code>radar-math.test.ts</code>, <code>performance-bar.test.tsx</code>, <code>achievement-gauge.test.tsx</code>, <code>Players.test.tsx</code>를 수정 없이 통과</li>
+<li><b>시각 확인</b> — <code>npm run dev</code> → 개인 프로필에서 시간 종목(셔틀런) 카드 확장: 기록이 늘어난 구간이 <b>상승</b>선으로 보이고 목표선 <b>아래</b>가 달성, 개수 종목은 상승 = 개선이고 목표선 <b>위</b>가 달성. 배경 라인이 본인 범위 밖에서 잘리는지 확인<br><b>수행</b> — <code>/api/records</code>(시트 연동·시크릿 필요)를 띄우지 않고, 실제 값으로 컴포넌트를 렌더한 SVG 덤프를 브라우저에서 눈으로 확인했다. 셔틀런 1:30→1:20(하강=개선)→1:25(상승=악화)→1:16(목표선 아래=달성), 골밑슛 6→8→8→9(상승=개선, 목표선 위=달성), 타인 13:22·12개 구간은 밴드 경계에서 잘려 보임. 축 눈금·값 라벨 없음도 함께 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+      <li>trend-chart가 원값 기반으로 렌더되고 축 반전이 없다 — 낮을수록 종목은 개선 시 하강, 높을수록 종목은 개선 시 상승. direction 분기·종목 하드코딩이 코드에 존재하지 않는다</li>
+<li>축 범위 = 본인 recorded ∪ 목표값 + 패딩 · 팀 배경 라인은 범위 계산 제외 + <code>clipPath</code>로 클립(가장자리 클램프 없음) · <code>min==max</code> 중앙 배치 폴백</li>
+<li>축 눈금·값 라벨 없음 유지 (x축 회차 라벨만)</li>
+<li>목표선이 원값 위치에 항상 보인다 — 방향별로 "선 아래/위 = 달성"이 달라지는 것을 시각 확인</li>
+<li>미측정·면제 희소 점 처리 기존 규칙 유지 (<code>sessionIndex</code> 매핑·빈 시리즈 제외 무변경)</li>
+<li><code>performance-scale</code>은 레이더·랭킹 바 용도로 동작 불변 — 기존 테스트 무수정 통과 (주석 정정만)</li>
+<li>trend-chart / trend-math 테스트 갱신 — 높을수록·낮을수록 각 방향, 배경 라인 클립, 목표 포함 범위, <code>min==max</code> 폴백 케이스</li>
+<li>#171(섹션 범례)과 문구·표현 정합 확인 — 범례 의미는 축 전환과 무관하게 유효 (#171 코드 미구현이므로 확인만)</li>
+<li><code>npm run typecheck</code> · <code>npm test</code> green, PRD §05/§07 정규화 규칙에 추이 차트 원값 예외 기록</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/172">#172</a> · 2026-07-30</footer>
+</main>
+</body>
+</html>
