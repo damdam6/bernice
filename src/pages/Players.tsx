@@ -54,7 +54,8 @@ export default function Players() {
 
 function ProfileContent({ data }: { data: RecordsResponse }) {
   const { events, sessions, players } = data
-  // 랭킹·레이더·추이가 같은 인스턴스를 공유해 정규화 값이 정의상 일치한다(§07).
+  // 랭킹·레이더가 같은 인스턴스를 공유해 정규화 값이 정의상 일치한다(§07).
+  // 추이 차트는 원값 축이라 scale을 받지 않는다(#172).
   const scale = useMemo(() => buildPerformanceScale(events, sessions), [events, sessions])
   const sessionLabels = useMemo(() => buildSessionLabels(sessions), [sessions])
 
@@ -103,7 +104,7 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
           const card = cardByEvent.get(event.key)
           if (!card) return null
           const expanded = event.key === selectedEventKey
-          const series = expanded ? buildTrendSeries(event, sessions, players, player.id, scale) : null
+          const series = expanded ? buildTrendSeries(event, sessions, players, player.id) : null
           return (
             <GrowthStatCard
               key={event.key}
