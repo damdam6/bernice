@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#174 기록이 희소한 선수의 추이 차트가 깨져 보임 — 좁은 도메인 + 배경 라인 클립 세로 막대 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .steps li.done::before { background: var(--ok); color: #fff; content: "✓"; }
+  .done-list li.done::before { background: var(--ok); border-color: var(--ok); }
+  .done-list li.done::after {
+    content: "✓"; position: absolute; left: 5px; top: 4px; color: #fff;
+    font-size: 0.72rem; font-weight: 700; line-height: 1;
+  }
+  .note {
+    display: block; margin-top: 6px; font-size: 0.85rem; color: var(--warn);
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/174">#174</a></span><span class="type-chip">버그 수정</span>
+    <h1>기록이 희소한 선수의 추이 차트가 깨져 보임 — 좁은 도메인 + 배경 라인 클립 세로 막대</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>fix/174-sparse-trend-chart-domain</code></b> ← <code>main</code></span>
+      <span>라벨 <b>bug</b></span>
+      <span>2026-07-30</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>기록이 희소한 선수(본인 점 1개 + 목표)의 추이 차트가 "절벽 + 좌측 세로 막대"로 깨져 보인다. 원인은 둘 다 #172에서 도입한 원값 도메인의 엣지 미처리다 — <code>trendDomain</code>이 폭 2.3초짜리 범위를 카드 높이로 늘리고, 그 좁은 창을 즉시 벗어나는 팀원 배경 라인이 <code>clipPath</code>에 잘려 거의 수직인 토막만 남는다. 고치는 방향은 (1) 도메인 <b>최소 폭 보장</b>을 값 대비 비율로 일반화(현행 <code>min === max</code> 폴백을 이 규칙의 특수 케이스로 흡수), (2) 도메인과 교차하는 구간이 없는 배경 시리즈는 <b>렌더 자체를 생략</b>, (3) 본인 recorded 0건이면 빈 좌표축 대신 <b>빈 상태 문구</b>. #172의 D1~D3(원값 축 · 반전 없음 · 클램프 금지 · 목표 항상 포함)은 한 줄도 건드리지 않는다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+        
+<p>추이 차트는 <b>결합 → 도메인 → 좌표 → 렌더</b> 4층이고, 이번 버그는 도메인 계산과 렌더 사이의 엣지에서만 발생한다. 데이터 결합층은 이번 변경 대상이 아니다.</p>
+<ul>
+  <li><b>결합</b> — <code>src/pages/Players.tsx:107</code>이 확장된 카드에 대해서만 <code>buildTrendSeries(event, sessions, players, player.id)</code>를 부르고, <code>src/lib/profile-view.ts:145-152</code>가 본인 <code>highlight</code>(recorded 점만, 희소 허용) · 타인 <code>background</code>(빈 시리즈는 이미 제외) · <code>goal = event.targetValue</code>를 원값 그대로 넘긴다.</li>
+  <li><b>도메인</b> — <code>src/components/charts/trend-math.ts:52-76</code>의 <code>trendDomain(highlight, goal, background)</code>이 <code>본인 recorded 값 ∪ 목표값</code>의 min~max에 <code>PAD_RATIO = 0.08</code>을 붙인다. 배경 값은 <b>범위 계산에서 제외</b>된다(#172 D3, <code>src/components/charts/trend-math.ts:60-66</code>은 본인 점도 목표도 없을 때만 배경 extent로 폴백).</li>
+  <li><b>좌표</b> — <code>src/components/charts/trend-math.ts:81-86</code>의 <code>trendY</code>는 도메인 선형 매핑이고 <b>범위 밖 값을 클램프하지 않는다</b>(#172 D3 — 가장자리 클램프는 값 왜곡). 밴드 밖 좌표를 그대로 내고 잘라내는 책임은 호출자에게 있다.</li>
+  <li><b>렌더</b> — <code>src/components/charts/trend-chart.tsx:51-66</code>이 플롯 밴드(<code>y = padTop … padTop + bandHeight</code>) 크기의 <code>clipPath</code>를 만들어 <b>배경 라인 <code>&lt;g&gt;</code>에만</b> 걸고, <code>background.map</code>으로 <b>받은 시리즈를 전부</b> <code>&lt;polyline&gt;</code>으로 그린다. 가시성 판정은 없다 — 클립이 알아서 지워줄 것이라는 가정이다.</li>
+  <li><b>엣지 처리 현황</b> — <code>trendDomain</code>에는 <code>min === max</code> 폴백 하나뿐이다(<code>src/components/charts/trend-math.ts:70-73</code>, <code>FLAT_HALF_RATIO = 0.1</code> · 최소 반경 1). <code>TrendChart</code>의 조기 반환도 <code>sessionLabels.length === 0</code> 하나뿐이다(<code>src/components/charts/trend-chart.tsx:39</code>) — <b>본인 점 0개</b>는 어디에도 걸리지 않아 도트도 선도 없는 좌표축이 그려진다.</li>
+  <li><b>테스트 현황</b> — <code>src/components/charts/trend-math.test.ts</code>(도메인·좌표·폴리라인) · <code>src/components/charts/trend-chart.test.tsx</code>(렌더·클립·목표선)가 #172에서 갱신됐다. <code>src/pages/Players.test.tsx:192</code>는 <code>role="img"</code> 존재만 보고 값은 보지 않으며, 픽스처의 두 선수 모두 확장 종목에 recorded 점이 있어 빈 상태 경로를 타지 않는다.</li>
+</ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>원인 분석</h2>
+        
+<p>재현 사례(드리블셔틀런 PB 1:15 = 75초, 목표 1:17 = 77초, 2차 미측정)를 현재 코드에 그대로 넣으면 두 증상이 <b>같은 하나의 값</b>에서 파생된다.</p>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">원인 1 · 도메인 폭 2.32초가 카드 높이로 확대</h3>
+<ul>
+  <li><code>trendDomain([{75}], 77)</code> → <code>min 75 · max 77</code> → <code>pad = 2 × 0.08 = 0.16</code> → <b><code>{74.84, 77.16}</code> (폭 2.32초)</b>. 이 2.32초가 밴드 122px에 매핑되므로 <b>1초 ≈ 53px</b>이다. 2초 차이가 절벽처럼 보이는 이유.</li>
+  <li><code>min === max</code> 폴백이 <b>발동하지 않는 것이 핵심</b>이다 — 목표값 77이 값 배열에 들어가 <code>min ≠ max</code>가 되기 때문(<code>src/components/charts/trend-math.ts:58</code>, <code>:70</code>). 즉 "본인 점 1개 + 목표" 조합은 현재 <b>어떤 엣지 분기에도 걸리지 않는</b> 사각지대다.</li>
+</ul>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">원인 2 · 클립이 남긴 거의 수직인 토막</h3>
+<ul>
+  <li>팀원 값(예: 90·95·110초)은 그 2.32초 창을 한참 벗어난다. <code>trendY</code>가 클램프하지 않으므로 좌표는 밴드 위로 수백 px 튀고(<code>src/components/charts/trend-math.ts:85</code>), <code>clipPath</code>는 밴드와 겹치는 부분만 남긴다.</li>
+  <li>1차 점만 밴드에 가까운 시리즈들이 겹치면 <b>x = 1차 근방의 짧은 수직 선분 여러 개</b>가 남아 <span style="color:var(--warn)">연보라 세로 막대</span>로 읽힌다. 데이터상 "팀원은 화면 밖"인데 화면에는 렌더 버그로 보인다.</li>
+  <li>진짜 결함은 <b>"가시 구간이 없는 시리즈도 무조건 <code>&lt;polyline&gt;</code>을 낸다"</b>는 점이다(<code>src/components/charts/trend-chart.tsx:57-65</code>). 클립은 <i>부분적으로</i> 보이는 선을 자르는 도구이고, <i>전혀</i> 보이지 않아야 하는 선을 지우는 도구가 아니다.</li>
+</ul>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">설계 결정</h3>
+<ul>
+  <li><b>E1 · 최소 도메인 폭</b> — <code>FLAT_HALF_RATIO(0.1) + 최소 1</code>을 <code>MIN_SPAN_RATIO(0.2) + MIN_SPAN_ABS(2)</code>로 이름·의미를 바꾸고, 분기 조건을 <code>min === max</code>에서 <code>span &lt; minSpan</code>으로 <b>넓힌다</b>(중앙 기준 대칭 배치). 비율 기반이라 초/개 단위에 무관하다.
+  <br>수치가 <b>정확히 하위 호환</b>이라는 점이 이 상수 선택의 근거다: 폭 0일 때 <code>2 × (0.1 × |v|)</code> = <code>0.2 × |v|</code>, 절대 하한도 <code>2 × 1</code> = <code>2</code>로 같다. 기존 폴백은 새 규칙의 특수 케이스로 흡수되고, 기존 도메인 테스트 기대값(<code>{72, 88}</code> · <code>{-1, 1}</code> · <code>{56.8, 103.2}</code> …)이 한 줄도 바뀌지 않는다. 재현 사례는 <code>{68.4, 83.6}</code>(폭 15.2초)이 되어 도트 y≈81 · 목표선 y≈65로 자연스럽게 벌어진다.</li>
+  <li><b>E2 · 가시 구간 판정</b> — <code>hasVisibleSegment(points, count, domain)</code>을 <code>trend-math.ts</code>에 순수 함수로 추가한다. 점 하나라도 도메인 안이면 가시, 인접한 두 점이 위/아래로 <b>도메인을 가로지르면</b> 밴드 안에 선분이 남으므로 가시, <b>전부 위 또는 전부 아래</b>면 비가시. 비가시 시리즈는 <code>TrendChart</code>가 렌더에서 제외한다 — 클램프는 여전히 쓰지 않으므로 #172 D3 불변.</li>
+  <li><b>E3 · 본인 0건 = 빈 상태</b> — 판정 기준을 <code>highlight.length</code>가 아니라 <b>렌더 가능한 점 수</b>(<code>0 ≤ sessionIndex &lt; count</code>)로 둔다. 그래야 "그려질 게 없다"와 문구 노출이 정확히 일치한다. 문구는 <code>TrendChart</code>가 직접 반환해 호출자(<code>Players.tsx</code>)를 건드리지 않고 모든 호출자에 일관되게 적용한다. 카드 헤더(PB·현재값·델타)는 <code>GrowthStatCard</code> 소관이라 자동으로 그대로다.</li>
+</ul>
+<h3 style="font-size:0.95rem;margin:16px 0 6px">배제한 대안</h3>
+<ul>
+  <li><b>배경 값을 도메인에 포함</b> — 타인 극단값 1건이 본인 점 위치를 재배치하는 #172의 원래 버그로 되돌아간다.</li>
+  <li><b>범위 밖 배경 값 클램프(가장자리 붙이기)</b> — 이슈가 명시적으로 금지(#172 D3, 값 왜곡).</li>
+  <li><b>절대 최소 폭 상수만 사용</b>(예: "최소 5초") — 개수 종목(5개 만점)에서 전 범위를 덮어버린다. 종목 단위 무관 요구와 충돌.</li>
+  <li><b>본인 점 1개도 빈 상태로</b> — 목표 대비 위치라는 정보가 있으므로 이슈가 도트 + 목표선 유지를 요구.</li>
+  <li><b><code>clipPath</code> 제거하고 세그먼트 클리핑 직접 구현</b> — 부분 가시 구간의 정확한 절단은 지금도 <code>clipPath</code>가 올바르게 하고 있다. 판정만 추가하는 게 최소 변경.</li>
+</ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+            
+<li class="done"><b>최소 도메인 폭 일반화</b> — <code>FLAT_HALF_RATIO</code>를 <code>MIN_SPAN_RATIO = 0.2</code> · <code>MIN_SPAN_ABS = 2</code>로 대체하고, <code>trendDomain</code>의 <code>min === max</code> 분기를 <code>span &lt; minSpan</code>(중앙 기준 대칭)으로 넓힌다. 주석에 "기존 동률 폴백을 흡수한 규칙 · 비율 기반이라 단위 무관"과 수치 하위 호환 근거를 남긴다.
+  <span class="files"><code>src/components/charts/trend-math.ts</code></span>
+</li>
+<li class="done"><b><code>hasVisibleSegment</code> 추가</b><span class="note">↳ 계획보다 한 걸음 더 — 공용 필터를 <code>renderablePoints</code>로 <b>export</b>해 <code>TrendChart</code>의 도트 렌더에 있던 같은 필터 중복까지 제거했다.</span> — 도메인 대비 각 점의 위치(위/안/아래)를 훑어 <i>안</i>이 하나라도 있거나 인접 점이 위↔아래로 교차하면 <code>true</code>. 렌더 인덱스 필터(<code>0 ≤ sessionIndex &lt; count</code>)는 <code>polylinePoints</code>와 공용 헬퍼로 뽑아 판정과 렌더가 <b>같은 점 집합</b>을 보게 한다. 비유한 값은 <code>trendY</code>가 밴드 중앙에 두므로 가시로 취급(판정이 실제 렌더보다 더 많이 숨기지 않도록 보수적으로).
+  <span class="files"><code>src/components/charts/trend-math.ts</code></span>
+</li>
+<li class="done"><b>배경 라인 가시성 필터</b> — <code>TrendChart</code>가 <code>background</code>를 <code>hasVisibleSegment</code>로 걸러 렌더한다. <code>clipPath</code>·그리기 순서·스트로크 스펙은 그대로(§07).
+  <span class="files"><code>src/components/charts/trend-chart.tsx</code></span>
+</li>
+<li class="done"><b>본인 0건 빈 상태</b><span class="note">↳ 문구 확정 — <code>&lt;p class="py-8 text-center text-sm text-ink-sub"&gt;아직 기록이 없습니다&lt;/p&gt;</code>. 덧붙여 <code>trendDomain</code>에도 인덱스 필터를 통과한 점만 넘겨 도메인·폴리라인·도트·빈 상태가 같은 점 집합을 본다.</span> — 렌더 가능한 <code>highlight</code> 점이 0개면 <code>&lt;svg&gt;</code> 대신 짧은 문구를 반환한다. 레포의 인라인 보조 텍스트 톤(<code>text-sm text-ink-sub</code> 중앙 정렬)을 따르고, 무거운 <code>EmptyState</code> 카드는 카드 안에 중첩되므로 쓰지 않는다.
+  <span class="files"><code>src/components/charts/trend-chart.tsx</code></span>
+</li>
+<li class="done"><b><code>trend-math</code> 테스트 추가</b> — ① 1점 + 목표 도메인이 최소 폭까지 벌어지고 두 값이 중앙에 대칭 배치, ② 넓은 범위는 기존 8% 패딩 그대로(회귀), ③ 가시 구간 판정 4케이스(전부 위 / 전부 아래 / 일부 도메인 안 / 위↔아래 교차), ④ 렌더 인덱스 밖 점만 있는 시리즈는 비가시, ⑤ 개수 종목(작은 값)에서도 절대 하한이 동작.
+  <span class="files"><code>src/components/charts/trend-math.test.ts</code></span>
+</li>
+<li class="done"><b><code>trend-chart</code> 테스트 갱신 + 추가</b><span class="note">↳ 가시 배경 개수를 <code>VISIBLE_BACKGROUND_COUNT</code> 상수로 뽑아 기대값을 한곳에서 관리. 클램프 금지 회귀는 802초 단일 점(이제 미렌더) 대신 <b>95초→88초 가시 시리즈</b>의 첫 점 y로 검증한다.</span> — 비가시 배경 시리즈가 빠지면서 폴리라인 개수를 세는 기존 두 테스트(<code>§07 그리기 순서</code> · <code>클립 대상</code>)를 갱신하고, <b>클램프 금지 회귀 테스트를 가시 구간이 있는 시리즈로 교체</b>해 #172 D3 커버리지를 유지한다(범위 밖 점의 y가 밴드 밖 좌표로 남는지). 추가: 전부 밖인 배경 시리즈 미렌더 · 본인 0건 문구(+<code>svg</code> 없음) · 본인 1건 도트+목표선 유지 · 1건일 때 도트와 목표선이 밴드 안에서 과도하게 벌어지지 않음.
+  <span class="files"><code>src/components/charts/trend-chart.test.tsx</code></span>
+</li>
+<li class="done"><b>디자인 PRD 개정</b> — §05 확장 추이 차트 행과 §07 추이 라인 행/콜아웃에 최소 도메인 폭 · 배경 가시 구간 판정 · 0건 빈 상태를 #174로 기록한다(#172 문장과 같은 형식).
+  <span class="files"><code>docs/prd-design.html</code></span>
+</li>
+<li class="done"><b>전체 테스트·빌드 + 실제 데이터 시각 확인</b><span class="note">↳ <b>계획 대비 변경</b> — 이 워크트리에 <code>.dev.vars</code>가 없어(예시 파일만 존재) 라이브 시트 데이터를 띄울 수 없었다. 대신 ① 실제 <code>TrendChart</code>를 <code>react-dom/server</code>로 <b>수정 전(HEAD)/후</b> 렌더해 나란히 비교하고 ② 클립 후 밴드에 실제로 남는 구간을 픽셀로 측정했다. 재현 케이스에서 팀원 선분의 보이는 구간이 <code>Δx 1.4~47px</code>(거의 수직인 토막 = 세로 막대)에서 <code>Δx 57~188px</code>(읽히는 사선)으로 바뀌고, 전부 창 밖인 시리즈는 <code>&lt;polyline&gt;</code>조차 생성되지 않는다. <b>라이브 데이터 확인은 배포 후 남는 항목.</b></span> — <code>npm test</code> · <code>npm run build</code> 후 개발 서버에서 2차 미측정·1점 선수의 해당 종목 카드를 펼쳐 세로 막대 소멸과 도메인 모양을 눈으로 확인한다.
+  <span class="files"><code>package.json</code> 스크립트</span>
+</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+                
+<tr><td>최소 폭 상수 0.2가 넓은 범위 차트의 모양을 바꾼다</td><td>기존 정상 차트가 눌려 보일 수 있다</td><td>분기가 <code>span &lt; minSpan</code>일 때만 발동하므로 넓은 범위는 <b>기존 8% 패딩 경로 그대로</b>다. 기존 도메인 테스트 기대값이 전부 그대로 통과하는 것으로 검증(수치 하위 호환은 상수 선택 근거이기도 하다).</td></tr>
+<tr><td>가시성 필터가 <b>보여야 할</b> 배경 라인을 숨긴다</td><td>#172의 "범위 밖 구간은 잘려 보인다" 의도가 훼손된다</td><td>판정 기준을 "도메인과 교차하는 구간이 하나도 없음"으로 좁게 두고, 위↔아래 교차 시리즈는 <b>가시로 유지</b>한다. 비유한 값도 보수적으로 가시 처리. 4케이스 단위 테스트로 고정.</td></tr>
+<tr><td>도메인이 넓어지면 이전엔 밖이던 배경 라인이 새로 보인다</td><td>희소 케이스에서 팀원 라인이 등장한다</td><td>버그가 아니라 개선이다 — 값이 실제로 새 범위 안이면 보이는 게 옳다. 세로 막대가 문제였고 그건 E2가 제거한다.</td></tr>
+<tr><td><code>TrendChart</code>가 <code>svg</code>가 아닌 것을 반환</td><td><code>role="img"</code>·<code>aria-label</code>로 차트를 찾는 테스트가 깨질 수 있다</td><td><code>src/pages/Players.test.tsx</code> 픽스처의 두 선수 모두 확장 종목에 recorded 점이 있어 빈 상태 경로를 타지 않는다(값 무관·존재만 검증). 전체 테스트로 확인.</td></tr>
+<tr><td>헤더 <code>—</code>(미측정) 표시를 건드림</td><td>정상 동작 회귀</td><td><code>GrowthStatCard</code>·<code>buildGrowthCards</code>·<code>profile-view.ts</code>는 <b>변경 대상에서 제외</b>한다. 이번 변경은 <code>charts/</code> 2파일 + 테스트 + PRD뿐.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+            
+<li><code>npm test</code> — 전체 스위트 그린. 특히 <code>trend-math.test.ts</code>의 기존 도메인 기대값(<code>{72, 88}</code> · <code>{-1, 1}</code> · <code>{56.8, 103.2}</code> · 목표 포함 · 배경 제외)이 <b>수정 없이</b> 통과해야 한다 — 통과하지 않으면 상수 선택이 하위 호환이 아니라는 신호다.</li>
+<li><b>도메인 최소 폭</b> — <code>trendDomain([{75}], 77)</code>의 폭이 <code>max(0.2 × 76, 2) = 15.2</code>이고 75·77이 중앙 대칭으로 놓인다. <code>trendY</code>로 두 y가 밴드 안이고 간격이 밴드 높이의 20% 미만(절벽 아님)임을 확인.</li>
+<li><b>개수 종목 절대 하한</b> — 작은 값(예: <code>[{3}], 4</code>)에서 비율 폭(1.4)이 아니라 절대 하한 2가 적용된다.</li>
+<li><b>가시 구간 판정</b> — 도메인 <code>{70, 90}</code> 기준: <code>[95, 100]</code>(전부 위) → <code>false</code>, <code>[60, 65]</code>(전부 아래) → <code>false</code>, <code>[95, 80]</code>(일부 안) → <code>true</code>, <code>[95, 60]</code>(위→아래 교차) → <code>true</code>, <code>[]</code> → <code>false</code>, 렌더 인덱스 밖 점만 → <code>false</code>.</li>
+<li><b>세로 막대 회귀(렌더)</b> — 재현 조건 그대로 <code>highlight=[{0, 75}]</code> · <code>goal=77</code> · <code>background=[[{0,90},{1,95}], [{0,110}]]</code>로 렌더해 <b>배경 <code>polyline</code>이 0개</b>임을 확인(막대 소멸). 본인 도트 1개와 목표선은 존재.</li>
+<li><b>클램프 금지 유지(#172 D3)</b> — 가시 구간이 있는 배경 시리즈에서 범위 밖 점의 y가 밴드 밖 좌표로 남는지(클램프되지 않음) 확인.</li>
+<li><b>본인 0건</b> — <code>highlight=[]</code>면 <code>svg</code>가 없고 빈 상태 문구가 보인다. <code>sessionLabels=[]</code>의 기존 <code>null</code> 반환도 유지.</li>
+<li><b>본인 1건</b> — 도트 1개 + 목표선 1개가 모두 밴드 안에 렌더된다.</li>
+<li><code>npm run build</code>(<code>tsc -b</code> 포함) — 타입 그린. <code>hasVisibleSegment</code> 시그니처 변경이 다른 호출자에 없음을 컴파일러로 확인.</li>
+<li><b>실제 데이터 시각 확인</b> — 개발 서버에서 2차 미측정 + 1점 선수(드리블셔틀런)의 카드를 펼쳐 ① 좌측 세로 막대 없음 ② 도트·목표선이 카드 중앙부에 자연스럽게 배치 ③ 헤더 현재값·델타 <code>—</code> 그대로임을 확인.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+            
+<li class="done">도메인 안에 보이는 구간이 없는 배경 시리즈는 <code>&lt;polyline&gt;</code>이 생성되지 않는다 — 세로 막대 아티팩트 소멸</li>
+<li class="done">최소 도메인 폭 보장(값 대비 비율 <code>0.2</code> + 절대 하한 <code>2</code>, 중앙 대칭) — 본인 1점 + 목표만 있어도 절벽처럼 보이지 않고 종목 단위(초/개)에 무관하게 동작</li>
+<li class="done">본인 recorded 0건(렌더 가능한 점 0개)이면 차트 대신 짧은 빈 상태 문구, 카드 헤더는 그대로</li>
+<li class="done">본인 recorded 1건이면 도트 + 목표선 유지</li>
+<li class="done">#172 D1~D3 불변 — 원값 축 · 축 반전 없음 · 배경 클램프 금지 · 목표값 항상 도메인 포함. 헤더 <code>—</code>(미측정) 표시와 <code>performance-scale</code>·<code>profile-view</code>는 무변경</li>
+<li class="done"><code>trend-math</code> 테스트 추가 — 1점+목표 도메인 폭, 절대 하한, 가시 구간 판정(전부 밖/일부 교차/가로지름), 0건 처리</li>
+<li class="done">기존 도메인 테스트 기대값이 수정 없이 통과(하위 호환 검증) + <code>npm test</code> · <code>npm run build</code> 그린</li>
+<li class="done">재현 케이스 시각 확인 완료 — 실제 <code>TrendChart</code>의 수정 전/후 렌더 비교 + 클립 후 보이는 구간 픽셀 측정(라이브 시트 데이터는 <code>.dev.vars</code> 부재로 배포 후 확인)</li>
+<li class="done">디자인 PRD §05·§07에 최소 도메인 폭 · 배경 가시 구간 판정 · 0건 빈 상태가 #174로 기록됨</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/174">#174</a> · 2026-07-30</footer>
+</main>
+</body>
+</html>

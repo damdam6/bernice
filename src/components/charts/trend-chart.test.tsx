@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { TrendChart } from './trend-chart'
 
@@ -17,12 +17,15 @@ const TIME_HIGHLIGHT = [
   { sessionIndex: 2, value: 76 },
 ]
 const BACKGROUND = [
+  // 95초는 본인 범위 위로 벗어나고 88초는 안 — 벗어난 구간만 클립된다
   [
     { sessionIndex: 0, value: 95 },
     { sessionIndex: 1, value: 88 },
   ],
-  [{ sessionIndex: 1, value: 802 }], // 13:22 오입력 같은 극단값 — 본인 범위 밖이라 클립된다
+  // 13:22 오입력 같은 극단값 — 도메인과 교차하는 구간이 전혀 없어 렌더에서 빠진다(#174)
+  [{ sessionIndex: 1, value: 802 }],
 ]
+const VISIBLE_BACKGROUND_COUNT = 1
 
 // 컴포넌트 레이아웃 상수(padTop 12 · padBottom 26 · 기본 height 160)에서 파생한 플롯 밴드.
 const BAND_TOP = 12
@@ -38,10 +41,10 @@ describe('TrendChart', () => {
       <TrendChart sessionLabels={LABELS} highlight={TIME_HIGHLIGHT} background={BACKGROUND} />,
     )
     const polylines = [...container.querySelectorAll('polyline')]
-    expect(polylines).toHaveLength(3)
+    expect(polylines).toHaveLength(VISIBLE_BACKGROUND_COUNT + 1)
     expect(polylines[0].getAttribute('class')).toContain('stroke-primary-soft')
     expect(polylines[0]).toHaveAttribute('stroke-width', '1.6')
-    const own = polylines[2]
+    const own = polylines[polylines.length - 1]
     expect(own.getAttribute('class')).toContain('stroke-primary')
     expect(own.getAttribute('class')).not.toContain('stroke-primary-soft')
     expect(own).toHaveAttribute('stroke-width', '3.2')
@@ -108,18 +111,71 @@ describe('TrendChart', () => {
 
     // 클립 대상은 배경 라인뿐 — 본인 라인·도트·회차 라벨은 밴드 경계에서 잘리지 않는다
     const clipped = [...(group?.querySelectorAll('polyline') ?? [])]
-    expect(clipped).toHaveLength(BACKGROUND.length)
+    expect(clipped).toHaveLength(VISIBLE_BACKGROUND_COUNT)
     for (const line of clipped) expect(line.getAttribute('class')).toContain('stroke-primary-soft')
     expect(group?.querySelectorAll('circle, text')).toHaveLength(0)
   })
 
-  it('배경 라인 좌표는 클램프되지 않는다 — 범위 밖 극단값은 밴드 밖 좌표로 남는다', () => {
+  it('배경 라인 좌표는 클램프되지 않는다 — 가시 시리즈의 범위 밖 점은 밴드 밖 좌표로 남는다', () => {
     const { container } = render(
       <TrendChart sessionLabels={LABELS} highlight={TIME_HIGHLIGHT} background={BACKGROUND} />,
     )
-    const outlier = [...container.querySelectorAll('polyline')][1] // 802초 1점 시리즈
-    const y = Number(outlier.getAttribute('points')?.split(',')[1])
-    expect(y).toBeLessThan(BAND_TOP)
+    // 95초 → 88초 시리즈: 88초는 도메인 안이라 렌더되고, 95초 점은 밴드 위로 벗어난 채 남는다
+    const visible = container.querySelector('g[clip-path] polyline')
+    const firstY = Number(visible?.getAttribute('points')?.split(' ')[0].split(',')[1])
+    expect(firstY).toBeLessThan(BAND_TOP)
+  })
+
+  it('도메인과 교차하는 구간이 없는 배경 시리즈는 렌더되지 않는다 — 세로 막대 아티팩트 (#174)', () => {
+    // 재현 조건: 본인 1:15(75초) 1점 + 목표 1:17(77초), 팀원은 1:30~1:50로 전부 도메인 밖
+    const { container } = render(
+      <TrendChart
+        sessionLabels={LABELS}
+        highlight={[{ sessionIndex: 0, value: 75 }]}
+        goal={77}
+        background={[
+          [
+            { sessionIndex: 0, value: 90 },
+            { sessionIndex: 1, value: 95 },
+          ],
+          [{ sessionIndex: 0, value: 110 }],
+        ]}
+      />,
+    )
+    expect(container.querySelectorAll('g[clip-path] polyline')).toHaveLength(0)
+    // 본인 도트와 목표선은 그대로 남는다
+    expect(container.querySelectorAll('circle')).toHaveLength(1)
+    expect(container.querySelector('line')).not.toBeNull()
+  })
+
+  it('본인 1점 + 목표는 최소 도메인 폭 덕에 절벽처럼 벌어지지 않는다 (#174)', () => {
+    const { container } = render(
+      <TrendChart sessionLabels={LABELS} highlight={[{ sessionIndex: 0, value: 75 }]} goal={77} />,
+    )
+    const [dotY] = dotCenters(container)
+    const goalY = Number(container.querySelector('line')?.getAttribute('y1'))
+    for (const y of [dotY, goalY]) {
+      expect(y).toBeGreaterThan(BAND_TOP)
+      expect(y).toBeLessThan(BAND_BOTTOM)
+    }
+    // 2초 차이가 밴드를 가로지르지 않는다 — 값 차이만큼만 벌어진다
+    expect(Math.abs(dotY - goalY)).toBeLessThan(BAND_HEIGHT * 0.2)
+  })
+
+  it('본인 기록이 0건이면 차트 대신 빈 상태 문구 — 빈 좌표축을 그리지 않는다 (#174)', () => {
+    const { container } = render(
+      <TrendChart sessionLabels={LABELS} highlight={[]} goal={77} background={BACKGROUND} />,
+    )
+    expect(container.querySelector('svg')).toBeNull()
+    expect(screen.getByText('아직 기록이 없습니다')).toBeInTheDocument()
+  })
+
+  it('라벨 범위 밖 점만 있으면 그릴 게 없으므로 빈 상태 문구 (#174)', () => {
+    const { container } = render(
+      <TrendChart sessionLabels={LABELS} highlight={[{ sessionIndex: 9, value: 80 }]} />,
+    )
+    expect(container.querySelector('svg')).toBeNull()
+    expect(screen.getByText('아직 기록이 없습니다')).toBeInTheDocument()
   })
 
   it('목표선은 good 1.5px 점선(4 4)', () => {
