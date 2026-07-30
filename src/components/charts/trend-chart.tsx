@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import type { TrendDomain, TrendLayout, TrendPointDatum } from './trend-math'
-import { polylinePoints, trendDomain, trendX, trendY } from './trend-math'
+import { hasVisibleSegment, polylinePoints, renderablePoints, trendDomain, trendX, trendY } from './trend-math'
 
 export type { TrendPointDatum } from './trend-math'
 
@@ -26,6 +26,8 @@ const HIGHLIGHT_DOT_RADIUS = 3.6
 // 개인 카드 확장 추이 — §07: 전체 선수 배경 라인(primary-soft 1.6px) 위에 본인 하이라이트
 // (primary 3.2px + 도트 r3.6), 목표선은 good 1.5px 점선(4 4). x = 회차, y = 종목 원값(#172).
 // 축 눈금·값 라벨은 두지 않는다 — 수치는 카드 헤더(현재값·PB·델타)가 담당하고 차트는 모양만 맡는다.
+// 희소 기록 처리(#174): 본인 점이 0개면 빈 좌표축 대신 문구, 도메인은 최소 폭이 보장되고,
+// 도메인과 교차하는 구간이 없는 배경 시리즈는 렌더에서 빠진다.
 export function TrendChart({
   sessionLabels,
   highlight,
@@ -40,10 +42,19 @@ export function TrendChart({
 
   const layout: TrendLayout = { width: VIEW_WIDTH, height, padX: 18, padTop: 12, padBottom: 26 }
   const count = sessionLabels.length
-  // 축 범위는 본인 점 ∪ 목표값 — 배경 라인은 제외된다(#172).
-  const domain: TrendDomain = trendDomain(highlight, goal, background)
+  const points = renderablePoints(highlight, count)
+  // 본인 기록이 없으면 점도 선도 없는 빈 좌표축이 그려진다 — 차트 대신 문구를 낸다(#174).
+  // 카드 헤더(PB·현재값·델타)는 GrowthStatCard 소관이라 그대로 남는다.
+  if (points.length === 0) {
+    return <p className="py-8 text-center text-sm text-ink-sub">아직 기록이 없습니다</p>
+  }
+
+  // 축 범위는 본인 점 ∪ 목표값 — 배경 라인은 제외된다(#172). 좁은 범위는 최소 폭까지 넓혀진다(#174).
+  const domain: TrendDomain = trendDomain(points, goal, background)
   const goalY = goal === undefined ? null : trendY(goal, domain, layout)
   const bandHeight = height - layout.padTop - layout.padBottom
+  // 도메인과 교차하는 구간이 없는 배경 시리즈는 클립되면 세로 막대 토막만 남으므로 아예 뺀다(#174).
+  const visibleBackground = background.filter((series) => hasVisibleSegment(series, count, domain))
 
   return (
     <svg viewBox={`0 0 ${VIEW_WIDTH} ${height}`} width="100%" role="img" aria-label={label}>
@@ -54,7 +65,7 @@ export function TrendChart({
         </clipPath>
       </defs>
       <g clipPath={`url(#${clipId})`}>
-        {background.map((series, i) => (
+        {visibleBackground.map((series, i) => (
           <polyline
             key={i}
             points={polylinePoints(series, count, layout, domain)}
@@ -76,24 +87,22 @@ export function TrendChart({
         />
       )}
       <polyline
-        points={polylinePoints(highlight, count, layout, domain)}
+        points={polylinePoints(points, count, layout, domain)}
         fill="none"
         strokeWidth={3.2}
         strokeLinecap="round"
         strokeLinejoin="round"
         className="stroke-primary"
       />
-      {highlight
-        .filter((point) => point.sessionIndex >= 0 && point.sessionIndex < count)
-        .map((point) => (
-          <circle
-            key={point.sessionIndex}
-            cx={trendX(point.sessionIndex, count, layout)}
-            cy={trendY(point.value, domain, layout)}
-            r={HIGHLIGHT_DOT_RADIUS}
-            className="fill-primary"
-          />
-        ))}
+      {points.map((point) => (
+        <circle
+          key={point.sessionIndex}
+          cx={trendX(point.sessionIndex, count, layout)}
+          cy={trendY(point.value, domain, layout)}
+          r={HIGHLIGHT_DOT_RADIUS}
+          className="fill-primary"
+        />
+      ))}
       {sessionLabels.map((sessionLabel, i) => (
         <text
           key={i}
