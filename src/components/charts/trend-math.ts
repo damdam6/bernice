@@ -27,8 +27,10 @@ export interface TrendDomain {
 
 /** 축 여백 — 값 범위 대비 위아래 비율. */
 const PAD_RATIO = 0.08
-/** 값이 하나뿐이거나 전부 동률일 때의 폴백 반경(값 대비 비율, 최소 1). */
-const FLAT_HALF_RATIO = 0.1
+/** 도메인 최소 폭 — 중앙값 대비 비율. 비율이라 종목 단위(초/개)에 무관하게 동작한다(#174). */
+const MIN_SPAN_RATIO = 0.2
+/** 최소 폭의 절대 하한 — 값이 0 근처여도 폭이 0으로 붕괴하지 않게 한다(#174). */
+const MIN_SPAN_ABS = 2
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100
@@ -46,9 +48,14 @@ export function trendX(index: number, count: number, layout: TrendLayout): numbe
  *  클립한다(가장자리 클램프는 값 왜곡이라 쓰지 않는다). 목표값은 항상 포함되므로 목표선은
  *  언제나 보인다.
  *
- *  엣지: 본인 점이 1개거나 전부 동률(min == max)이면 값 기준 폴백 패딩으로 중앙 배치한다.
- *  본인 점도 목표도 없는 경우(prop 수준에서만 가능)에만 배경 extent로 폴백해 차트가 통째로
- *  비는 것을 막고, 그것도 없으면 0~1. */
+ *  엣지: 값 범위가 최소 폭(중앙값의 20%, 절대 하한 2)보다 좁으면 그 폭까지 넓혀 중앙에
+ *  배치한다(#174). 본인 점 1개 + 목표만 있는 경우가 대표적 — 75초와 목표 77초로 만든 폭
+ *  2.3초짜리 범위가 카드 높이로 늘어나 2초 차이가 절벽처럼 보였다. 전부 동률(min == max)은
+ *  폭 0이라 이 규칙의 특수 케이스로 흡수된다(옛 폴백 반경과 수치도 동일).
+ *
+ *  본인 점도 목표도 없는 경우(값이 전부 비유한일 때만 남는 경로)에만 배경 extent로 폴백해
+ *  차트가 통째로 비는 것을 막고, 그것도 없으면 0~1. 본인 점이 아예 0개면 TrendChart가
+ *  차트 대신 빈 상태 문구를 내므로 이 폴백까지 오지 않는다(#174). */
 export function trendDomain(
   highlight: TrendPointDatum[],
   goal?: number,
@@ -67,9 +74,11 @@ export function trendDomain(
 
   const min = Math.min(...values)
   const max = Math.max(...values)
-  if (min === max) {
-    const half = Math.max(Math.abs(min) * FLAT_HALF_RATIO, 1)
-    return { min: min - half, max: max + half }
+  const center = (min + max) / 2
+  const minSpan = Math.max(Math.abs(center) * MIN_SPAN_RATIO, MIN_SPAN_ABS)
+  if (max - min < minSpan) {
+    const half = minSpan / 2
+    return { min: center - half, max: center + half }
   }
   const pad = (max - min) * PAD_RATIO
   return { min: min - pad, max: max + pad }
@@ -85,6 +94,43 @@ export function trendY(value: number, domain: TrendDomain, layout: TrendLayout):
   return round2(layout.padTop + (1 - (value - domain.min) / span) * inner)
 }
 
+/** 라벨 범위 안의 점만 남긴다 — 범위 밖 인덱스는 x 좌표를 낼 수 없어 방어적으로 버린다.
+ *  도메인 판정·폴리라인·도트·빈 상태 판정이 모두 같은 점 집합을 보게 하려고 한곳에 둔다(#174). */
+export function renderablePoints(points: TrendPointDatum[], count: number): TrendPointDatum[] {
+  return points.filter((point) => point.sessionIndex >= 0 && point.sessionIndex < count)
+}
+
+/** 값의 도메인 기준 위치 — -1 아래, 0 안, 1 위. 비유한 값은 trendY가 밴드 중앙에 두므로
+ *  0(안)으로 본다 — 판정이 실제로 렌더되는 것보다 더 많이 숨기지 않게 하는 보수적 선택. */
+function domainSide(value: number, domain: TrendDomain): -1 | 0 | 1 {
+  if (!Number.isFinite(value)) return 0
+  if (value < domain.min) return -1
+  if (value > domain.max) return 1
+  return 0
+}
+
+/** 시리즈가 도메인 밴드 안에 실제로 보이는 구간을 갖는지(#174). 배경 라인은 밴드로 클립되는데,
+ *  도메인이 좁으면 전부 밴드 위(또는 아래)인 팀원 시리즈에서 인접 점 사이의 거의 수직인 토막만
+ *  남아 세로 막대처럼 보였다 — 그런 시리즈는 호출자가 렌더에서 뺀다.
+ *
+ *  판정: 점 하나라도 도메인 안이면 보이고, 인접한 두 점이 위↔아래로 도메인을 가로지르면 그
+ *  선분이 밴드를 관통하므로 보인다. 전부 위이거나 전부 아래일 때만 비가시다. 범위 밖 값을
+ *  가장자리로 클램프하지 않는다는 원칙은 그대로다(#172) — 그리지 않을 뿐 왜곡하지 않는다. */
+export function hasVisibleSegment(
+  points: TrendPointDatum[],
+  count: number,
+  domain: TrendDomain,
+): boolean {
+  let previousSide: -1 | 0 | 1 | null = null
+  for (const point of renderablePoints(points, count)) {
+    const side = domainSide(point.value, domain)
+    if (side === 0) return true
+    if (previousSide !== null && previousSide !== side) return true
+    previousSide = side
+  }
+  return false
+}
+
 /** 시리즈 → SVG polyline points 문자열. 라벨 범위 밖 인덱스는 방어적으로 버린다. */
 export function polylinePoints(
   points: TrendPointDatum[],
@@ -92,8 +138,7 @@ export function polylinePoints(
   layout: TrendLayout,
   domain: TrendDomain,
 ): string {
-  return points
-    .filter((point) => point.sessionIndex >= 0 && point.sessionIndex < count)
+  return renderablePoints(points, count)
     .map((point) => `${trendX(point.sessionIndex, count, layout)},${trendY(point.value, domain, layout)}`)
     .join(' ')
 }

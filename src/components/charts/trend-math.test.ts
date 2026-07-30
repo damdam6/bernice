@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TrendDomain, TrendLayout } from './trend-math'
-import { polylinePoints, trendDomain, trendX, trendY } from './trend-math'
+import { hasVisibleSegment, polylinePoints, renderablePoints, trendDomain, trendX, trendY } from './trend-math'
 
 const LAYOUT: TrendLayout = { width: 320, height: 160, padX: 20, padTop: 10, padBottom: 30 }
 // 밴드: y = 10(상단) … 130(하단), 높이 120
@@ -60,6 +60,32 @@ describe('trendDomain', () => {
     const domain = trendDomain([{ sessionIndex: 0, value: 80 }])
     expect(domain).toEqual({ min: 72, max: 88 })
     expect(trendY(80, domain, LAYOUT)).toBe(70) // 밴드 중앙
+  })
+
+  it('1점 + 목표만 있어 범위가 좁으면 최소 폭까지 넓혀 중앙 배치 — 2초 차이가 절벽이 되지 않는다 (#174)', () => {
+    // 재현 사례: 드리블셔틀런 PB 1:15(75초) 1점 + 목표 1:17(77초) → 원래 폭 2.32초
+    const domain = trendDomain([{ sessionIndex: 0, value: 75 }], 77)
+    expect(domain.max - domain.min).toBeCloseTo(15.2) // max(|76| * 0.2, 2)
+    expect((domain.min + domain.max) / 2).toBeCloseTo(76) // 두 값의 중앙에 대칭 배치
+    // 도트와 목표선 간격이 밴드 높이의 20% 미만 — 값 차이만큼만 벌어진다
+    const gap = Math.abs(trendY(75, domain, LAYOUT) - trendY(77, domain, LAYOUT))
+    expect(gap).toBeGreaterThan(0)
+    expect(gap).toBeLessThan(120 * 0.2)
+  })
+
+  it('작은 값(개수 종목)은 비율 폭보다 절대 하한 2가 커서 그쪽이 적용된다 (#174)', () => {
+    const domain = trendDomain([{ sessionIndex: 0, value: 3 }], 4) // 비율 폭 0.7 < 2
+    expect(domain.max - domain.min).toBeCloseTo(2)
+    expect((domain.min + domain.max) / 2).toBeCloseTo(3.5)
+  })
+
+  it('최소 폭보다 넓은 범위는 기존 8% 패딩 경로 그대로 (#174 회귀)', () => {
+    const domain = trendDomain([
+      { sessionIndex: 0, value: 76 },
+      { sessionIndex: 1, value: 120 },
+    ])
+    expect(domain.min).toBeCloseTo(72.48)
+    expect(domain.max).toBeCloseTo(123.52)
   })
 
   it('본인 점이 전부 동률이고 목표까지 같은 값이면(min == max) 중앙 배치 폴백', () => {
@@ -132,6 +158,75 @@ describe('trendY', () => {
   it('비정상 값·폭 0 도메인은 방어적으로 중앙', () => {
     expect(trendY(Number.NaN, DOMAIN, LAYOUT)).toBe(70)
     expect(trendY(5, { min: 5, max: 5 }, LAYOUT)).toBe(70)
+  })
+})
+
+describe('renderablePoints', () => {
+  it('라벨 범위 안의 점만 남긴다 — 도메인·폴리라인·도트·빈 상태 판정이 공유하는 필터', () => {
+    const points = [
+      { sessionIndex: -1, value: 50 },
+      { sessionIndex: 1, value: 60 },
+      { sessionIndex: 9, value: 70 },
+    ]
+    expect(renderablePoints(points, 3)).toEqual([{ sessionIndex: 1, value: 60 }])
+    expect(renderablePoints([], 3)).toEqual([])
+  })
+})
+
+describe('hasVisibleSegment', () => {
+  const NARROW: TrendDomain = { min: 70, max: 90 }
+
+  it('전부 도메인 위인 시리즈는 비가시 — 클립하면 세로 막대 토막만 남는다 (#174)', () => {
+    const series = [
+      { sessionIndex: 0, value: 95 },
+      { sessionIndex: 1, value: 100 },
+    ]
+    expect(hasVisibleSegment(series, 3, NARROW)).toBe(false)
+  })
+
+  it('전부 도메인 아래인 시리즈도 비가시', () => {
+    const series = [
+      { sessionIndex: 0, value: 60 },
+      { sessionIndex: 1, value: 65 },
+    ]
+    expect(hasVisibleSegment(series, 3, NARROW)).toBe(false)
+  })
+
+  it('점 하나라도 도메인 안이면 가시 — 벗어난 구간은 클립이 잘라내는 몫', () => {
+    const series = [
+      { sessionIndex: 0, value: 95 },
+      { sessionIndex: 1, value: 80 },
+    ]
+    expect(hasVisibleSegment(series, 3, NARROW)).toBe(true)
+  })
+
+  it('위↔아래로 도메인을 가로지르는 선분은 밴드를 관통하므로 가시', () => {
+    const series = [
+      { sessionIndex: 0, value: 95 },
+      { sessionIndex: 1, value: 60 },
+    ]
+    expect(hasVisibleSegment(series, 3, NARROW)).toBe(true)
+    // 연속하지 않아도 인접 렌더 점끼리 교차하면 가시
+    const later = [
+      { sessionIndex: 0, value: 95 },
+      { sessionIndex: 1, value: 100 },
+      { sessionIndex: 2, value: 60 },
+    ]
+    expect(hasVisibleSegment(later, 3, NARROW)).toBe(true)
+  })
+
+  it('도메인 경계값(min·max)은 안으로 본다', () => {
+    expect(hasVisibleSegment([{ sessionIndex: 0, value: 70 }], 3, NARROW)).toBe(true)
+    expect(hasVisibleSegment([{ sessionIndex: 0, value: 90 }], 3, NARROW)).toBe(true)
+  })
+
+  it('빈 시리즈·라벨 범위 밖 점만 있는 시리즈는 비가시', () => {
+    expect(hasVisibleSegment([], 3, NARROW)).toBe(false)
+    expect(hasVisibleSegment([{ sessionIndex: 9, value: 80 }], 3, NARROW)).toBe(false)
+  })
+
+  it('비유한 값은 trendY가 밴드 중앙에 두므로 가시로 본다 (판정이 렌더보다 더 숨기지 않게)', () => {
+    expect(hasVisibleSegment([{ sessionIndex: 0, value: Number.NaN }], 3, NARROW)).toBe(true)
   })
 })
 
