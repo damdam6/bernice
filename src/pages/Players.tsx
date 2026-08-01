@@ -4,7 +4,7 @@ import { Card } from '../components/Card'
 import { FilterChip } from '../components/FilterChip'
 import { GrowthStatCard } from '../components/GrowthStatCard'
 import { PlayerSelect } from '../components/PlayerSelect'
-import { RadarChart, TrendChart } from '../components/charts'
+import { RadarChart, TrendChart, TrendLegend } from '../components/charts'
 import { CenteredPanel } from '../components/common/CenteredPanel'
 import { EmptyState } from '../components/common/EmptyState'
 import { ErrorPanel } from '../components/common/ErrorPanel'
@@ -94,9 +94,14 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
         <RadarChart axes={radarAxes} />
       </Card>
 
-      <div className="mt-1 flex items-center justify-between px-0.5">
-        <h2 className="text-sm font-bold text-ink">종목별 성장</h2>
-        <span className="text-xs text-ink-sub">PB : Personal Best</span>
+      {/* 범례는 섹션 레벨 상시 노출 — 카드 확장 여부와 무관하다(#171). 우측 그룹은 wrap 허용,
+          항목 자체는 nowrap이라 좁은 폭에서도 항목 경계에서만 줄이 바뀐다. */}
+      <div className="mt-1 flex items-start justify-between gap-x-3 px-0.5">
+        <h2 className="shrink-0 text-sm font-bold text-ink">종목별 성장</h2>
+        <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
+          <TrendLegend />
+          <span className="whitespace-nowrap text-xs text-ink-sub">PB : Personal Best</span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">

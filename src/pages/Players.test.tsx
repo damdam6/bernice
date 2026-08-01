@@ -238,4 +238,38 @@ describe('Players', () => {
     expect(screen.getByRole('img', { name: '셔틀런 추이' })).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: '골밑슛 추이' })).not.toBeInTheDocument()
   })
+
+  it('"종목별 성장" 헤더에 범례 3항목이 PB 설명과 함께 렌더된다 (#171)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY)))
+
+    const { container } = renderPlayers()
+    await waitFor(() => expect(screen.getByText('종목별 성장')).toBeInTheDocument())
+
+    const legend = container.querySelector('[aria-label="추이 차트 범례"]') as HTMLElement
+    expect(legend).toBeInTheDocument()
+    // 범례와 PB 설명은 같은 헤더 줄(같은 부모)에 있다 — 카드 안이 아니라 섹션 레벨
+    expect(legend.parentElement).toHaveTextContent('PB : Personal Best')
+    for (const label of ['본인', '팀원', '목표']) {
+      expect(screen.getByText(label)).toBeInTheDocument()
+    }
+
+    // 마커 색이 차트 실제 stroke 클래스와 같은지 — 화면 배선 후에도 토큰이 유지되는지 본다
+    expect(legend.querySelector('.stroke-primary')).toBeInTheDocument()
+    expect(legend.querySelector('.stroke-primary-soft')).toBeInTheDocument()
+    expect(legend.querySelector('.stroke-good')).toBeInTheDocument()
+  })
+
+  it('카드를 모두 접어 차트가 사라져도 범례는 남는다 (#171)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY)))
+
+    const { container } = renderPlayers()
+    await waitFor(() => expect(screen.getByRole('img', { name: '골밑슛 추이' })).toBeInTheDocument())
+
+    // 확장돼 있던 첫 카드를 다시 탭 → 전부 접힘
+    fireEvent.click(screen.getByRole('button', { name: /골밑슛/ }))
+
+    expect(screen.queryByRole('img', { name: /추이$/ })).not.toBeInTheDocument()
+    expect(container.querySelector('[aria-label="추이 차트 범례"]')).toBeInTheDocument()
+    expect(screen.getByText('팀원')).toBeInTheDocument()
+  })
 })
