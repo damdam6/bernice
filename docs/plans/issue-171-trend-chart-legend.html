@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#171 프로필 추이 차트에 범례가 없어 연보라 배경 라인의 의미를 알 수 없음 — '종목별 성장' 섹션 헤더의 PB 설명 옆 소형 범례 추가 — 작업 플랜</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --card: #ffffff; --ink: #1c1c1e; --muted: #6e6e73;
+    --line: #e3e3e6; --accent: #3b6ef5; --accent-soft: #e8eefe;
+    --ok: #2e8b57; --warn: #b25e09; --code-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #202024; --ink: #ececf0; --muted: #98989f;
+      --line: #333338; --accent: #7a9bff; --accent-soft: #26304a;
+      --ok: #58c088; --warn: #e0a35c; --code-bg: #2a2a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.86em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  header { margin-bottom: 28px; }
+  .issue-chip {
+    display: inline-block; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: 3px 14px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .type-chip {
+    display: inline-block; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.8rem; margin-left: 8px; vertical-align: 2px;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 14px; letter-spacing: -0.02em; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    color: var(--muted); font-size: 0.87rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 28px; margin-top: 18px;
+  }
+  h2 {
+    font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .no {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid var(--accent); border-radius: 6px; padding: 0 6px;
+  }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 10px 0 10px 44px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .files { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  .done-list { list-style: none; padding: 0; }
+  .done-list li { padding-left: 30px; position: relative; }
+  .done-list li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 15px; height: 15px;
+    border: 2px solid var(--ok); border-radius: 5px;
+  }
+  .steps li.done::before { background: var(--ok); color: #fff; content: "✓"; }
+  .done-list li.done::before { background: var(--ok); border-color: var(--ok); }
+  .done-list li.done::after {
+    content: "✓"; position: absolute; left: 5px; top: 4px; color: #fff;
+    font-size: 0.72rem; font-weight: 700; line-height: 1;
+  }
+  .note {
+    display: block; margin-top: 6px; font-size: 0.85rem; color: var(--warn);
+  }
+  .scroll-x { overflow-x: auto; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="issue-chip"><a href="https://github.com/damdam6/bernice/issues/171">#171</a></span><span class="type-chip">기능 개선</span>
+    <h1>프로필 추이 차트에 범례가 없어 연보라 배경 라인의 의미를 알 수 없음 — '종목별 성장' 섹션 헤더의 PB 설명 옆 소형 범례 추가</h1>
+    <div class="meta">
+      <span><b>damdam6/bernice</b></span>
+      <span>브랜치 <b><code>feat/171-trend-chart-legend</code></b> ← <code>main</code></span>
+      <span>라벨 <b>enhancement</b></span>
+      <span>2026-08-02</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="no">1</span>요약</h2>
+    <p>확장 추이 차트는 팀원 배경 라인(primary-soft)·본인 하이라이트(primary)·목표선(good 점선) 세 마크를 축 라벨 없이 겹쳐 그리는데, 화면 어디에도 이를 설명하는 텍스트가 없어 연보라 선의 의미가 전달되지 않는다. 차트와 동일한 Tailwind 색 클래스를 쓰는 소형 SVG 범례 컴포넌트(TrendLegend)를 charts/ 폴더에 새로 만들고, '종목별 성장' 섹션 헤더의 PB 설명 옆에 wrap 허용 그룹으로 붙여 카드 확장 여부와 무관하게 상시 노출한다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">2</span>현황 분석</h2>
+        <p>개인 프로필의 확장 추이 차트는 세 종류의 마크를 겹쳐 그린다. <code>src/components/charts/trend-chart.tsx</code> 기준:</p>
+<ul>
+  <li><b>팀원 배경 라인</b> — <code>trend-chart.tsx:70-77</code>, <code>polyline</code> + <code>className="stroke-primary-soft"</code> + <code>strokeWidth={1.6}</code>. 본인을 제외한 전 선수의 추이가 여러 줄 깔린다.</li>
+  <li><b>목표선</b> — <code>trend-chart.tsx:80-90</code>, <code>line</code> + <code>className="stroke-good"</code> + <code>strokeWidth={1.5}</code> + <code>strokeDasharray="4 4"</code>.</li>
+  <li><b>본인 하이라이트</b> — <code>trend-chart.tsx:91-99</code>(<code>polyline</code>, <code>stroke-primary</code>, 3.2px)와 <code>trend-chart.tsx:100-109</code>(<code>circle</code>, <code>fill-primary</code>, r 3.6).</li>
+</ul>
+<p>차트에는 축 눈금도 값 라벨도 없다(수치는 카드 헤더가 담당) — 즉 <b>화면 안에 이 세 마크를 설명하는 텍스트가 단 하나도 없다</b>. 사용자가 연보라 선을 "내 다른 종목인가?"로 오해할 여지가 그대로 남는다.</p>
+<p>현재 섹션 헤더는 <code>src/pages/Players.tsx:96-99</code> 한 줄뿐이다:</p>
+<ul>
+  <li><code>&lt;div className="mt-1 flex items-center justify-between px-0.5"&gt;</code> 안에 좌측 <code>&lt;h2 className="text-sm font-bold text-ink"&gt;종목별 성장&lt;/h2&gt;</code>, 우측 <code>&lt;span className="text-xs text-ink-sub"&gt;PB : Personal Best&lt;/span&gt;</code>.</li>
+  <li>이 헤더는 카드 확장 상태와 무관하게 항상 렌더된다 — 이슈가 요구하는 "상시 노출" 자리로 이미 적합하다.</li>
+</ul>
+<p>토큰 실측값(<code>src/index.css</code>): <code>--color-primary #3f51b5</code> · <code>--color-primary-soft #c5cae9</code> · <code>--color-good #3f9e6b</code>. 디자인 PRD <code>docs/prd-design.html:205,259</code>의 차트 스펙과 일치하며, 범례는 이 <b>동일한 Tailwind 클래스</b>를 재사용해야 색이 갈라지지 않는다.</p>
+<p>기존 범례 컴포넌트는 레포에 없다(<code>src/</code> 전역 검색 결과 0건). <code>docs/plans/issue-172-*.html</code>·<code>issue-174-*.html</code>이 "#171 범례가 배경 라인의 의미를 설명한다"를 전제로 남겨둔 상태라, 이번 작업이 그 공백을 메운다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>설계</h2>
+        <p><b>컴포넌트 위치 — <code>src/components/charts/trend-legend.tsx</code>.</b> 범례가 설명하는 대상이 <code>TrendChart</code>의 세 마크이므로 차트 폴더에 같이 두고 <code>charts/index.ts</code>로 내보낸다. 폴더 관례(kebab-case 파일 / PascalCase export, 예: <code>achievement-gauge.tsx</code> → <code>AchievementGauge</code>)를 그대로 따른다. 화면 전용 조각으로 <code>Players.tsx</code>에 인라인하지 않는 이유는, 마커 색·굵기·점선이 <b>차트 렌더와 한 몸으로 바뀌어야 하는 값</b>이기 때문이다 — 같은 폴더에 있어야 한쪽만 바뀌는 사고를 막는다.</p>
+<p><b>마커는 텍스트 글리프가 아니라 SVG.</b> <code>●</code>는 무난하지만 점선 글리프(<code>┅</code> U+2505)는 Pretendard 폴백에 따라 깨질 수 있고, 굵기·점선 간격을 차트와 맞출 수단이 없다. 각 항목을 14×8 <code>viewBox</code>의 소형 SVG로 그리고 <b>차트와 완전히 같은 클래스</b>를 쓴다:</p>
+<ul>
+  <li>본인 — <code>line stroke-primary</code> (2.4px) + <code>circle fill-primary</code> (r 2.4) → 차트의 "굵은 선 + 도트"를 축소 재현</li>
+  <li>팀원 — <code>line stroke-primary-soft</code> (1.6px) → 차트 배경 라인과 굵기까지 동일</li>
+  <li>목표 — <code>line stroke-good</code> (1.5px) + <code>strokeDasharray="3 2"</code> → 14px 폭에서 점선이 최소 3칸 보이도록 4 4 대신 3 2로 축소(점선임이 드러나는 것이 목적)</li>
+</ul>
+<p>마커 SVG는 <code>aria-hidden="true"</code>로 두고 의미는 옆의 한글 텍스트가 전달한다. 범례 전체는 <code>role="list"</code> / <code>role="listitem"</code> 대신 평범한 <code>span</code> 조합으로 두되, 컨테이너에 <code>aria-label="추이 차트 범례"</code>를 주어 스크린리더가 묶음으로 읽게 한다.</p>
+<p><b>배치 — 헤더 라인 우측 그룹에 합류시키되 wrap을 허용한다.</b> 모바일 프레임 폭은 <code>--container-frame: 28rem</code>(448px)이고 <code>Players</code>는 <code>px-4</code>라 내용 폭 ≈ 416px. 좌측 <code>h2</code>("종목별 성장", text-sm bold) ≈ 62px를 빼면 우측에 ≈ 345px가 남고, 범례 3항목(마커 14px + 한글 2자 ≈ 24px + 간격) ≈ 150px + <code>PB : Personal Best</code> ≈ 105px + gap ≈ 30px = <b>≈ 285px</b> — 한 줄에 들어간다. 그래도 폰트·언어 설정으로 넘칠 수 있으므로 우측 그룹을 <code>flex flex-wrap justify-end gap-x-2 gap-y-1</code>로 두고, 각 항목은 <code>whitespace-nowrap</code>으로 <b>항목 중간에서 끊기지 않게</b> 한다. 넘치면 항목 단위로 우측 정렬 보조 줄에 내려앉으므로 이슈가 금지한 "겹침·어색한 줄바꿈"이 구조적으로 불가능하다. 컨테이너는 <code>items-center</code> → <code>items-start</code>로 바꿔 wrap 시 <code>h2</code>가 세로 가운데로 밀리지 않게 한다.</p>
+<p><b>개별 카드 UI는 손대지 않는다</b> — <code>GrowthStatCard</code>·<code>TrendChart</code>의 렌더는 무변화, 이번 변경은 섹션 헤더 한 줄과 신규 컴포넌트뿐이다.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">4</span>작업 단계</h2>
+    <ol class="steps">
+            <li class="done"><b><code>TrendLegend</code> 컴포넌트 신설</b> — 마커 SVG 3종(본인 <code>stroke-primary</code>+<code>fill-primary</code> / 팀원 <code>stroke-primary-soft</code> / 목표 <code>stroke-good</code> 점선) + 한글 라벨. 항목 배열을 모듈 상수로 두고 map 렌더, 각 항목 <code>whitespace-nowrap</code>. 컨테이너에 <code>aria-label="추이 차트 범례"</code>. 차트 스펙 근거(§07)를 주석으로 남긴다.
+  <span class="files"><code>src/components/charts/trend-legend.tsx</code></span>
+</li>
+<li class="done"><b>charts 배럴에 export 추가</b><span class="note">↳ 계획의 "알파벳 순서" 표현은 부정확했다 — 배럴은 컴포넌트 그룹별로 <code>export</code> + <code>export type</code>을 묶는 형식이라 <code>TrendChart</code> 블록 바로 뒤에 붙였다. <code>TrendLegend</code>는 props가 없어 타입 export 없음.</span> — 기존 알파벳 순서 유지(<code>RadarChart</code> 다음, <code>TrendChart</code> 앞/뒤 관례에 맞춰).
+  <span class="files"><code>src/components/charts/index.ts</code></span>
+</li>
+<li class="done"><b>섹션 헤더에 배치</b> — <code>Players.tsx:96-99</code>의 헤더 <code>div</code>를 <code>items-center</code> → <code>items-start</code>, <code>h2</code>에 <code>shrink-0</code>, 우측을 <code>&lt;div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1"&gt;</code>로 감싸 <code>&lt;TrendLegend /&gt;</code>와 기존 <code>PB : Personal Best</code> span을 나란히 둔다. 카드 확장 여부와 무관한 상시 렌더.
+  <span class="files"><code>src/pages/Players.tsx</code></span>
+</li>
+<li class="done"><b>컴포넌트 유닛 테스트</b> — 3항목 텍스트 렌더, 마커별 색 클래스(<code>stroke-primary</code>/<code>stroke-primary-soft</code>/<code>stroke-good</code>) 일치, 목표 마커의 <code>stroke-dasharray</code> 존재, 마커 SVG의 <code>aria-hidden</code>.
+  <span class="files"><code>src/components/charts/trend-legend.test.tsx</code></span>
+</li>
+<li class="done"><b><code>Players</code> 통합 어서션 추가</b><span class="note">↳ 계획보다 하나 더 — 상시성 검증을 별도 <code>it</code>("카드를 모두 접어도 범례는 남는다")으로 분리했다. 한 케이스에 렌더·색·상시성을 몰아넣으면 실패 시 원인이 흐려진다. 총 2케이스 추가(기존 7 → 9).</span> — 기존 "기본 선택" 케이스와 별도 <code>it</code>로, 섹션 헤더에 범례 3항목이 <code>PB : Personal Best</code>와 함께 렌더되고 <b>카드를 모두 접어도(첫 카드 재탭) 범례는 남는다</b>는 상시성까지 검증.
+  <span class="files"><code>src/pages/Players.test.tsx</code></span>
+</li>
+<li class="done"><b>디자인 PRD 정합</b> — §05 개인 화면 표의 "확장 추이 차트" 행과 §07 차트 스펙 표에 섹션 헤더 범례(#171)를 한 줄로 반영. 색·점선 표기가 실제 토큰과 어긋나지 않게.
+  <span class="files"><code>docs/prd-design.html</code></span>
+</li>
+<li class="done"><b>전체 검증</b><span class="note">↳ 계획의 수동 확인(dev 서버 448px 육안)은 <b>대체 수행</b>했다 — 이 워크트리에 <code>.dev.vars</code>가 없어 라이브 시트 데이터를 띄울 수 없다(#174와 동일 제약). 대신 실제 <code>TrendLegend</code>를 <code>react-dom/server</code>로 SSR하고 <b>빌드 산출 CSS</b>를 물려 헤드리스 Chrome으로 448 / 360 / 320px 폭을 스크린샷했다: 448·360px는 한 줄에 수용, 320px에서만 <code>PB : Personal Best</code>가 항목 경계에서 우측 정렬 보조 줄로 내려간다(겹침·중간 끊김 없음). 임시 하네스 파일은 측정 후 삭제.</span> — <code>npm run test</code>, <code>npm run typecheck</code>, <code>npm run build</code> 그린 확인.
+  <span class="files">—</span>
+</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">5</span>리스크</h2>
+    <div class="scroll-x">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>완화책</th></tr></thead>
+      <tbody>
+                <tr><td>범례가 길어져 모바일 프레임에서 헤더가 두 줄이 된다</td><td>세로 공간 4px 남짓 증가 — 기능 영향 없음</td><td>실측상 ≈285px로 416px 안에 들어간다. 넘치더라도 <code>flex-wrap</code> + 항목 <code>whitespace-nowrap</code>이라 항목 단위로만 내려가 겹침·중간 끊김은 발생하지 않는다(이슈의 금지 조건은 충족)</td></tr>
+<tr><td>범례 색과 차트 실제 stroke가 시간이 지나며 갈라진다</td><td>범례가 거짓을 말함</td><td>범례가 Tailwind 색 클래스를 <b>차트와 동일한 이름으로</b> 쓰고, 두 파일을 같은 <code>charts/</code> 폴더에 둔다. 테스트가 클래스명을 직접 어서션하므로 한쪽만 바뀌면 실패한다</td></tr>
+<tr><td>점선 마커가 14px 폭에서 실선처럼 보인다</td><td>"목표는 점선" 전달 실패</td><td>차트의 <code>4 4</code> 대신 <code>3 2</code>로 축소해 14px 안에 최소 3칸을 확보. 축소는 표현 목적이며 차트 자체 대시는 그대로 둔다</td></tr>
+<tr><td>"팀원" 표현이 부정확(배경 라인 = 본인 제외 전체 선수)</td><td>사소한 의미 오차</td><td>이슈 본문이 지정한 문구를 그대로 쓴다. 실제로도 본인 제외 전 선수이므로 "팀원"이 맞다(<code>buildTrendSeries</code>가 본인을 <code>highlight</code>로 분리)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">6</span>테스트 계획</h2>
+    <ul>
+            <li><code>npm run test -- src/components/charts/trend-legend.test.tsx</code> — 신규 유닛 4케이스 통과(텍스트 3항목 · 색 클래스 3종 · 목표 점선 · 마커 <code>aria-hidden</code>)</li>
+<li><code>npm run test -- src/pages/Players.test.tsx</code> — 기존 7케이스 무회귀 + 신규 범례 케이스 통과(상시 노출 포함)</li>
+<li><code>npm run test</code> — 전체 스위트 그린(차트·프로필 인접 테스트 회귀 없음)</li>
+<li><code>npm run typecheck</code> · <code>npm run build</code> — 타입/빌드 그린</li>
+<li>수동: <code>npm run dev</code> → 개인 프로필에서 (1) 헤더에 범례 3항목 + PB 설명이 한 줄에 겹침 없이 보이는지, (2) 첫 카드를 접어 차트를 숨겨도 범례가 남는지, (3) 범례 연보라가 차트 배경 라인 색과 같아 보이는지 448px 폭에서 확인</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">7</span>완료 조건</h2>
+    <ul class="done-list">
+            <li class="done">"종목별 성장" 섹션 헤더 라인(필요 시 우측 그룹의 보조 줄)에 <b>본인 · 팀원 · 목표</b> 3항목이 <code>PB : Personal Best</code>와 같은 <code>text-xs</code>/<code>text-ink-sub</code> 급으로 렌더된다</li>
+<li class="done">범례 마커가 차트와 동일한 클래스(<code>stroke-primary</code>+<code>fill-primary</code> / <code>stroke-primary-soft</code> / <code>stroke-good</code>)를 쓰고, 목표 마커에 <code>stroke-dasharray</code>가 적용되어 점선임이 드러난다</li>
+<li class="done">모바일 프레임 폭(448px, 내용 416px)에서 헤더 요소가 겹치지 않고, 줄바꿈이 생기더라도 항목 중간이 아닌 항목 경계에서만 일어난다</li>
+<li class="done">범례가 카드 확장 여부와 무관하게 항상 노출된다 — 개별 카드(<code>GrowthStatCard</code>)와 <code>TrendChart</code> 렌더는 무변경</li>
+<li class="done"><code>Players.test.tsx</code>에 범례 렌더·색 클래스 어서션이 추가되고, 신규 <code>trend-legend.test.tsx</code>와 함께 전체 테스트·타입체크·빌드가 그린</li>
+<li class="done">디자인 PRD(§05·§07)에 섹션 헤더 범례가 반영되어 문서와 구현이 일치한다</li>
+    </ul>
+  </section>
+
+  <footer>issue-plan · <a href="https://github.com/damdam6/bernice/issues/171">#171</a> · 2026-08-02</footer>
+</main>
+</body>
+</html>
