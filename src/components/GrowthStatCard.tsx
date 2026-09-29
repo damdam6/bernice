@@ -20,8 +20,8 @@ const DELTA_TONE_CLASS: Record<DeltaTone, string> = {
 
 // 종목별 성장 카드 — §05: 종목명(+ 종료 종목이면 종료 뱃지) + PB + 현재값 + 델타. 탭하면 primary
 // 보더로 선택되고 추이 차트(children)가 카드 안에서 확장된다(§05 "탭하면 카드가 primary 보더로
-// 선택되고 추이 차트 확장"). 종료 뱃지는 §08 — buildGrowthCards가 이미 유효 기록 보유 선수에게만
-// ended:true 카드를 내려주므로 여기서는 렌더만 담당한다.
+// 선택되고 추이 차트 확장"). 종료 뱃지는 선택 회차에 포함된 종목의 종료 상태를 나타낸다.
+// 종목 포함 여부는 buildGrowthCards가 회차 ID로 결정한다.
 export function GrowthStatCard({ card, expanded, onToggle, children }: GrowthStatCardProps) {
   return (
     <div

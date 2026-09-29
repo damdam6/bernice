@@ -230,6 +230,21 @@ describe('buildRadarAxes', () => {
 })
 
 describe('buildGrowthCards', () => {
+  it('전역의 신규 종목을 제외하고 같은 이름의 ID도 회차 순서로 구분한다', () => {
+    const events = [...EVENTS, { ...EVENTS[0], id: 'new-shot' }]
+    const session = { ...SESSIONS[0], eventIds: ['셔틀런', 'new-shot'] }
+    const before = structuredClone({ events, session, player: PLAYER1 })
+    const cards = buildGrowthCards(events, session, PLAYER1)
+    expect(cards.map((c) => c.eventKey)).toEqual(['셔틀런', 'new-shot'])
+    expect(cards[1]).toMatchObject({ pb: '—', value: '—' })
+    expect({ events, session, player: PLAYER1 }).toEqual(before)
+  })
+
+  it('선택 회차가 없거나 포함 종목이 비면 카드가 없다', () => {
+    expect(buildGrowthCards(EVENTS, undefined, PLAYER1)).toEqual([])
+    expect(buildGrowthCards(EVENTS, { ...SESSIONS[0], eventIds: [] }, PLAYER1)).toEqual([])
+  })
+
   it('PB·현재값·델타를 종목 순서대로 만든다', () => {
     const cards = buildGrowthCards(EVENTS, sessionByDate('2026-06-15'), PLAYER1)
     expect(cards.map((c) => c.eventKey)).toEqual(['골밑슛', '셔틀런'])
@@ -272,12 +287,12 @@ describe('buildGrowthCards', () => {
     expect(cards.map((c) => c.delta.text)).toEqual(['—', '—'])
   })
 
-  it('현역 종목은 항상 ended:false 카드로 노출된다', () => {
+  it('선택 회차의 현역 종목은 ended:false 카드로 노출된다', () => {
     const cards = buildGrowthCards(EVENTS, sessionByDate('2026-06-15'), PLAYER1)
     expect(cards.every((c) => c.ended === false)).toBe(true)
   })
 
-  it('종료 종목은 그 선수 유효 기록(PB)이 1건 이상일 때만 ended:true 카드로 노출되고, 없으면 카드 자체가 없다', () => {
+  it('종료 종목도 회차 포함 여부로만 노출하고 PB가 없어도 미측정 카드로 남긴다', () => {
     const endedEvent: EventDefinition = {
       id: '종료종목', name: '종료종목',
       valueKind: 'count',
@@ -298,12 +313,15 @@ describe('buildGrowthCards', () => {
     }
     const noRecord: PlayerSummary = { id: 11, name: '선수11', status: '활동', trends: [], personalBests: [] }
 
-    const withRecordCards = buildGrowthCards(eventsWithEnded, sessionByDate('2026-06-15'), withRecord)
+    const past = { ...sessionByDate('2026-06-01')!, eventIds: ['골밑슛', '셔틀런', '종료종목'] }
+    const withRecordCards = buildGrowthCards(eventsWithEnded, past, withRecord)
     expect(withRecordCards.map((c) => c.eventKey)).toEqual(['골밑슛', '셔틀런', '종료종목'])
     expect(withRecordCards.find((c) => c.eventKey === '종료종목')).toMatchObject({ ended: true, pb: '4' })
 
-    const noRecordCards = buildGrowthCards(eventsWithEnded, sessionByDate('2026-06-15'), noRecord)
-    expect(noRecordCards.map((c) => c.eventKey)).toEqual(['골밑슛', '셔틀런'])
+    const noRecordCards = buildGrowthCards(eventsWithEnded, past, noRecord)
+    expect(noRecordCards.find((c) => c.eventKey === '종료종목')).toMatchObject({ ended: true, pb: '—', value: '—' })
+    const later = buildGrowthCards(eventsWithEnded, sessionByDate('2026-06-15'), withRecord)
+    expect(later.map((c) => c.eventKey)).toEqual(['골밑슛', '셔틀런'])
   })
 })
 
