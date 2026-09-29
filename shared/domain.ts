@@ -32,11 +32,14 @@ export interface Player {
   status: PlayerStatus
 }
 
-/** 종목 정의 — 목표 탭 1행 = 종목 1개. key가 회차 점수 컬럼·랭킹·추이를 잇는 유일한 식별자.
+/** 종목 정의 — 목표 탭 1행 = 종목 1개. 불변 id가 회차 점수 컬럼·랭킹·추이를 잇는 유일한 식별자.
  *  달성 판정은 direction 기준 경계값 포함(같아도 달성) — 낮을수록는 value <= targetValue,
  *  높을수록는 value >= targetValue. */
 export interface EventDefinition {
-  key: string
+  id: string
+  name: string // 표시용 이름. ID 생성/연결에 사용하지 않는다.
+  /** Optional immutable name alias used only while legacy headers remain. */
+  legacyName?: string
   valueKind: EventValueKind
   target: string // 목표치 원본 표시값 ("1:17" | "5")
   targetValue: number // 정규화 목표치(시간=초, 개수=그대로) — 달성 판정 기준
@@ -63,7 +66,7 @@ export type EventScore =
 export interface SessionEntry {
   playerId: number
   name: string // 그 시점 이름(참조 수식이라 개명 시 항상 최신과 동일)
-  scores: Record<string, EventScore> // key = EventDefinition.key. 그 회차 Session.eventKeys 전체가
+  scores: Record<string, EventScore> // key = EventDefinition.id. 그 회차 Session.eventIds 전체가
   // 항상 존재, 그 외 key는 없음 — 소비자는 scores[key] 인덱싱 전에 그 회차 측정 여부를 전제해야 한다.
   participated: boolean // 전 종목이 unmeasured면 false. exempt·invalid는 "무언가 입력됨"으로 간주해 참여로 침
 }
@@ -73,7 +76,7 @@ export interface Session {
   date: string // YYYY-MM-DD, 탭 이름 원본
   entries: SessionEntry[] // 그 회차 탭에 실제로 존재하는 명단 행만
   // (이후 가입자는 과거 회차에 엔트리 자체가 없음)
-  eventKeys: string[] // 그 회차 탭 헤더의 측정 종목 key 목록(헤더 순서). 참가자가 0명인 회차에서도
+  eventIds: string[] // 그 회차 탭 헤더의 측정 종목 ID 목록(헤더 순서). 참가자가 0명인 회차에서도
   // 측정 종목을 알 수 있도록 entries에서 유추하지 않고 명시한다.
 }
 
@@ -89,14 +92,14 @@ export interface RankingEntry {
 }
 
 export interface EventRanking {
-  event: string // EventDefinition.key
+  event: string // EventDefinition.id
   entries: RankingEntry[] // rank 오름차순. 면제·미측정·이상값·활동 외 상태 제외
 }
 
 /** 회차 1개에 대한 종목별 랭킹 묶음 — 랭킹 화면의 "회차 선택 → 종목 탭" 흐름과 그대로 대응. */
 export interface SessionRankings {
   sessionDate: string
-  events: EventRanking[] // 그 회차 Session.eventKeys에 해당하는 종목만, 헤더 순서 — 미측정
+  events: EventRanking[] // 그 회차 Session.eventIds에 해당하는 종목만, 헤더 순서 — 미측정
   // 종목×회차 조합은 항목 자체가 없다(빈 종목도 entries: []로 개수 맞추던 규칙은 폐기).
 }
 

@@ -4,6 +4,8 @@ import { polygonPoints, radarLabelLayout, radarPoint, ringPoints } from './radar
 export interface RadarAxis {
   /** 종목 short 라벨 */
   label: string
+  /** Long duplicate-name identity labels are rendered below the chart, not clipped in SVG. */
+  detail?: string
   /** 정규화 성능 0~1 — performance-scale.normalize 결과 (§07) */
   value: number
 }
@@ -32,43 +34,50 @@ export function RadarChart({ axes, size = 240 }: RadarChartProps) {
     .join(', ')}`
 
   return (
-    <svg viewBox={`0 0 ${VIEW} ${VIEW}`} width={size} height={size} role="img" aria-label={ariaLabel}>
-      {Array.from({ length: RING_COUNT }, (_, i) => (
+    <div className="min-w-0">
+      <svg viewBox={`0 0 ${VIEW} ${VIEW}`} width={size} height={size} role="img" aria-label={ariaLabel}>
+        {Array.from({ length: RING_COUNT }, (_, i) => (
+          <polygon
+            key={i}
+            points={ringPoints(i + 1, RING_COUNT, axes.length, CENTER, RADIUS)}
+            fill="none"
+            strokeWidth={1}
+            className="stroke-chart-grid"
+          />
+        ))}
         <polygon
-          key={i}
-          points={ringPoints(i + 1, RING_COUNT, axes.length, CENTER, RADIUS)}
-          fill="none"
-          strokeWidth={1}
-          className="stroke-chart-grid"
+          points={polygonPoints(values, CENTER, RADIUS)}
+          fillOpacity={0.14}
+          strokeWidth={1.5}
+          className="fill-primary stroke-primary"
         />
-      ))}
-      <polygon
-        points={polygonPoints(values, CENTER, RADIUS)}
-        fillOpacity={0.14}
-        strokeWidth={1.5}
-        className="fill-primary stroke-primary"
-      />
-      {values.map((value, i) => {
-        const point = radarPoint(i, values.length, value, CENTER, RADIUS)
-        return <circle key={axes[i].label} cx={point.x} cy={point.y} r={DOT_RADIUS} className="fill-primary" />
-      })}
-      {axes.map((axis, i) => {
-        const point = radarPoint(i, axes.length, LABEL_DISTANCE, CENTER, RADIUS)
-        const { anchor, baseline } = radarLabelLayout(i, axes.length)
-        return (
-          <text
-            key={axis.label}
-            x={point.x}
-            y={point.y}
-            textAnchor={anchor}
-            dominantBaseline={baseline}
-            fontSize={11}
-            className="fill-ink-sub"
-          >
-            {axis.label}
-          </text>
-        )
-      })}
-    </svg>
+        {values.map((value, i) => {
+          const point = radarPoint(i, values.length, value, CENTER, RADIUS)
+          return <circle key={axes[i].label} cx={point.x} cy={point.y} r={DOT_RADIUS} className="fill-primary" />
+        })}
+        {axes.map((axis, i) => {
+          const point = radarPoint(i, axes.length, LABEL_DISTANCE, CENTER, RADIUS)
+          const { anchor, baseline } = radarLabelLayout(i, axes.length)
+          return (
+            <text
+              key={axis.label}
+              x={point.x}
+              y={point.y}
+              textAnchor={anchor}
+              dominantBaseline={baseline}
+              fontSize={11}
+              className="fill-ink-sub"
+            >
+              {axis.label}
+            </text>
+          )
+        })}
+      </svg>
+      {axes.some((axis) => axis.detail) && (
+        <ul className="mt-2 space-y-1 text-xs text-ink-sub">
+          {axes.filter((axis) => axis.detail).map((axis) => <li key={axis.label}>{axis.label}: {axis.detail}</li>)}
+        </ul>
+      )}
+    </div>
   )
 }

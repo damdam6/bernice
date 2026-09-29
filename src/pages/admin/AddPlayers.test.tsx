@@ -77,8 +77,8 @@ describe('AddPlayers', () => {
     const data = baseData({
       players: [player(1, '가은'), player(2, '나연')],
       sessions: [
-        { date: '2025-05-16', entries: [entry(1, '가은')], eventKeys: [] },
-        { date: '2025-05-23', entries: [entry(2, '나연')], eventKeys: [] },
+        { date: '2025-05-16', entries: [entry(1, '가은')], eventIds: [] },
+        { date: '2025-05-23', entries: [entry(2, '나연')], eventIds: [] },
       ],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
@@ -96,8 +96,8 @@ describe('AddPlayers', () => {
     const data = baseData({
       players: [player(1, '가은'), player(2, '나연')],
       sessions: [
-        { date: '2025-05-16', entries: [entry(1, '가은')], eventKeys: [] },
-        { date: '2025-05-23', entries: [entry(2, '나연')], eventKeys: [] },
+        { date: '2025-05-16', entries: [entry(1, '가은')], eventIds: [] },
+        { date: '2025-05-23', entries: [entry(2, '나연')], eventIds: [] },
       ],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
@@ -114,7 +114,7 @@ describe('AddPlayers', () => {
   it('비활동 상태 선수는 후보에서 제외된다', async () => {
     const data = baseData({
       players: [player(1, '가은'), player(2, '나연', '휴식')],
-      sessions: [{ date: '2025-05-16', entries: [], eventKeys: [] }],
+      sessions: [{ date: '2025-05-16', entries: [], eventIds: [] }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 
@@ -127,7 +127,7 @@ describe('AddPlayers', () => {
   it('선수를 선택하면 확인 바 카운트가 늘어난다', async () => {
     const data = baseData({
       players: [player(1, '가은')],
-      sessions: [{ date: '2025-05-16', entries: [], eventKeys: [] }],
+      sessions: [{ date: '2025-05-16', entries: [], eventIds: [] }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 
@@ -140,7 +140,7 @@ describe('AddPlayers', () => {
   it('추가 성공 → 참가자 목록으로 이동하며 토스트 메시지를 넘긴다', async () => {
     const recordsData = baseData({
       players: [player(1, '가은')],
-      sessions: [{ date: '2025-05-16', entries: [], eventKeys: [] }],
+      sessions: [{ date: '2025-05-16', entries: [], eventIds: [] }],
     })
     const fetchMock = vi.fn((input: RequestInfo | URL) => {
       const url = String(input)
@@ -165,7 +165,7 @@ describe('AddPlayers', () => {
   it('추가 실패(409) → 에러 메시지를 노출하고 화면에 머문다', async () => {
     const recordsData = baseData({
       players: [player(1, '가은')],
-      sessions: [{ date: '2025-05-16', entries: [], eventKeys: [] }],
+      sessions: [{ date: '2025-05-16', entries: [], eventIds: [] }],
     })
     const fetchMock = vi.fn((input: RequestInfo | URL) => {
       const url = String(input)
@@ -201,7 +201,7 @@ describe('AddPlayers', () => {
   it('하단 확인 바가 전폭이 아니라 프레임 폭에 중앙정렬된다(#156)', async () => {
     const data = baseData({
       players: [player(1, '가은')],
-      sessions: [{ date: '2025-05-16', entries: [], eventKeys: [] }],
+      sessions: [{ date: '2025-05-16', entries: [], eventIds: [] }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 

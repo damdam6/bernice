@@ -65,7 +65,7 @@ function DateSelectContent({ data, onSelect }: { data: RecordsResponse; onSelect
     .map((session, index) => ({
       session,
       roundLabel: index + 1,
-      completed: countCompleted(session.entries, session.eventKeys),
+      completed: countCompleted(session.entries, session.eventIds),
       total: session.entries.length,
     }))
     .slice()

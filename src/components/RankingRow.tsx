@@ -50,7 +50,7 @@ export function RankingRow({ row, event, scale, tiedRanks }: RankingRowProps) {
   const detail =
     row.status === 'recorded' ? (
       <div className="mt-2 flex items-center gap-3">
-        <PerformanceBar value={scale.normalize(event.key, row.value)} achieved={row.achieved} />
+        <PerformanceBar value={scale.normalize(event.id, row.value)} achieved={row.achieved} />
         <span className="shrink-0 text-sm tabular-nums text-ink-sub">
           {event.valueKind === 'count' && event.maxScore != null ? `${row.display} / ${event.maxScore}` : row.display}
         </span>

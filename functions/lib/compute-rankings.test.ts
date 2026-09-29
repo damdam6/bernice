@@ -24,13 +24,13 @@ function entry(playerId: number, scores: Record<string, EventScore>, name = `선
   return { playerId, name, scores, participated }
 }
 
-function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'key' | 'direction' | 'targetValue'>): EventDefinition {
+function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'id' | 'name' | 'direction' | 'targetValue'>): EventDefinition {
   return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, exemptable: false, ...overrides }
 }
 
 describe('computeEventRanking', () => {
   it('낮을수록 방향: 값이 작을수록 상위', () => {
-    const shuttleRun = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77 })
+    const shuttleRun = event({ id: '셔틀런', name: '셔틀런', direction: '낮을수록', targetValue: 77 })
     const players = [player(1, '활동'), player(2, '활동')]
     const entries = [entry(1, { 셔틀런: recorded(80, '1:20') }), entry(2, { 셔틀런: recorded(70, '1:10') })]
 
@@ -43,7 +43,7 @@ describe('computeEventRanking', () => {
   })
 
   it('높을수록 방향: 값이 클수록 상위', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동'), player(2, '활동')]
     const entries = [entry(1, { 골밑슛: recorded(3) }), entry(2, { 골밑슛: recorded(8) })]
 
@@ -56,7 +56,7 @@ describe('computeEventRanking', () => {
   })
 
   it('면제·빈칸(미측정)·이상값은 랭킹에서 제외', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동'), player(2, '활동'), player(3, '활동'), player(4, '활동')]
     const entries = [
       entry(1, { 골밑슛: recorded(6) }),
@@ -71,7 +71,7 @@ describe('computeEventRanking', () => {
   })
 
   it('상태 4종 혼합: 활동만 집계, 탈퇴·비대상·휴식은 제외', () => {
-    const shuttleRun = event({ key: '셔틀런', direction: '높을수록', targetValue: 10 })
+    const shuttleRun = event({ id: '셔틀런', name: '셔틀런', direction: '높을수록', targetValue: 10 })
     const players = [player(1, '활동'), player(2, '탈퇴'), player(3, '비대상'), player(4, '휴식')]
     const entries = [
       entry(1, { 셔틀런: recorded(50) }),
@@ -86,7 +86,7 @@ describe('computeEventRanking', () => {
   })
 
   it('동점 처리: 표준 공동순위(1,1,3) — 2명 동점이면 다음 등수는 2명만큼 건너뜀', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 0 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 0 })
     const players = [player(1, '활동'), player(2, '활동'), player(3, '활동')]
     const entries = [entry(1, { 골밑슛: recorded(100) }), entry(2, { 골밑슛: recorded(100) }), entry(3, { 골밑슛: recorded(80) })]
 
@@ -96,7 +96,7 @@ describe('computeEventRanking', () => {
   })
 
   it('동점 처리: 3명 동점이면 다음 등수는 4', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 0 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 0 })
     const players = [player(1, '활동'), player(2, '활동'), player(3, '활동'), player(4, '활동')]
     const entries = [
       entry(1, { 골밑슛: recorded(100) }),
@@ -111,7 +111,7 @@ describe('computeEventRanking', () => {
   })
 
   it('동점자는 입력(시트 행) 순서를 그대로 유지한다 (안정 정렬)', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 0 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 0 })
     const players = [player(3, '활동'), player(1, '활동'), player(2, '활동')]
     const entries = [
       entry(3, { 골밑슛: recorded(100) }),
@@ -125,7 +125,7 @@ describe('computeEventRanking', () => {
   })
 
   it('동점 판정은 정규화된 value 기준이지 display 문자열이 아니다', () => {
-    const shuttleRun = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77 })
+    const shuttleRun = event({ id: '셔틀런', name: '셔틀런', direction: '낮을수록', targetValue: 77 })
     const players = [player(1, '활동'), player(2, '활동')]
     // display 표기는 다르지만("1:15" vs "75") 정규화된 초 단위 value는 동일 → 동점
     const entries = [entry(1, { 셔틀런: recorded(75, '1:15') }), entry(2, { 셔틀런: recorded(75, '75') })]
@@ -136,7 +136,7 @@ describe('computeEventRanking', () => {
   })
 
   it('유효 엔트리가 없어도 이벤트 자체는 생략하지 않고 entries: []를 반환한다', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동')]
     const entries = [entry(1, { 골밑슛: unmeasured() })]
 
@@ -146,13 +146,13 @@ describe('computeEventRanking', () => {
   })
 
   it('entries·players가 모두 빈 배열이어도 entries: []를 반환한다', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
 
     expect(computeEventRanking(layup, [], [])).toEqual({ event: '골밑슛', entries: [] })
   })
 
   it('scores에 종목 key 자체가 없으면(계약 위반 방어) 크래시하지 않고 제외한다', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동')]
     const entries = [entry(1, {})] // 골밑슛 key가 아예 없는 방어적 케이스 — 파서(#27) 완성 전까지는 실제로 나올 수 있음
 
@@ -161,7 +161,7 @@ describe('computeEventRanking', () => {
   })
 
   it('players 목록에 없는 playerId의 엔트리는 제외된다', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동')]
     const entries = [entry(1, { 골밑슛: recorded(6) }), entry(99, { 골밑슛: recorded(100) })]
 
@@ -172,7 +172,7 @@ describe('computeEventRanking', () => {
 
   describe('달성(achieved) 판정 — 경계값 포함', () => {
     it('낮을수록: targetValue와 정확히 같으면 달성', () => {
-      const shuttleRun = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77 })
+      const shuttleRun = event({ id: '셔틀런', name: '셔틀런', direction: '낮을수록', targetValue: 77 })
       const players = [player(1, '활동')]
       const entries = [entry(1, { 셔틀런: recorded(77) })]
 
@@ -180,7 +180,7 @@ describe('computeEventRanking', () => {
     })
 
     it('낮을수록: targetValue보다 1 크면 미달성', () => {
-      const shuttleRun = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77 })
+      const shuttleRun = event({ id: '셔틀런', name: '셔틀런', direction: '낮을수록', targetValue: 77 })
       const players = [player(1, '활동')]
       const entries = [entry(1, { 셔틀런: recorded(78) })]
 
@@ -188,7 +188,7 @@ describe('computeEventRanking', () => {
     })
 
     it('높을수록: targetValue와 정확히 같으면 달성', () => {
-      const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+      const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
       const players = [player(1, '활동')]
       const entries = [entry(1, { 골밑슛: recorded(5) })]
 
@@ -196,7 +196,7 @@ describe('computeEventRanking', () => {
     })
 
     it('높을수록: targetValue보다 1 작으면 미달성', () => {
-      const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+      const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
       const players = [player(1, '활동')]
       const entries = [entry(1, { 골밑슛: recorded(4) })]
 
@@ -209,7 +209,7 @@ describe('computeSessionRankings', () => {
   it('docs/records-schema.html §06 예시 응답과 동일한 출력을 낸다', () => {
     // valueKind/target/maxScore도 문서 예시(§06)와 동일하게 맞춘다 — 랭킹 로직엔 영향 없지만 픽스처 충실도용.
     const shuttleRun = event({
-      key: '드리블셔틀런',
+      id: '드리블셔틀런', name: '드리블셔틀런',
       direction: '낮을수록',
       targetValue: 77,
       valueKind: 'time',
@@ -217,7 +217,7 @@ describe('computeSessionRankings', () => {
       maxScore: null,
     })
     const layup = event({
-      key: '골밑슛',
+      id: '골밑슛', name: '골밑슛',
       direction: '높을수록',
       targetValue: 5,
       valueKind: 'count',
@@ -240,7 +240,7 @@ describe('computeSessionRankings', () => {
         entry(5, { 드리블셔틀런: recorded(76, '1:16'), 골밑슛: exempt() }, '선수5'),
         entry(7, { 드리블셔틀런: unmeasured(), 골밑슛: unmeasured() }, '선수7'),
       ],
-      eventKeys: ['드리블셔틀런', '골밑슛'],
+      eventIds: ['드리블셔틀런', '골밑슛'],
     }
 
     const result = computeSessionRankings(session, events, players)
@@ -264,13 +264,13 @@ describe('computeSessionRankings', () => {
   })
 
   it('여러 종목이 있으면 각 종목이 events 배열 순서·개수 그대로 독립적으로 계산된다', () => {
-    const a = event({ key: 'A', direction: '높을수록', targetValue: 0 })
-    const b = event({ key: 'B', direction: '높을수록', targetValue: 0 })
+    const a = event({ id: 'A', name: 'A', direction: '높을수록', targetValue: 0 })
+    const b = event({ id: 'B', name: 'B', direction: '높을수록', targetValue: 0 })
     const players = [player(1, '활동')]
     const session: Session = {
       date: '2025-06-01',
       entries: [entry(1, { A: recorded(1), B: unmeasured() })],
-      eventKeys: ['A', 'B'],
+      eventIds: ['A', 'B'],
     }
 
     const result = computeSessionRankings(session, [a, b], players)
@@ -279,14 +279,14 @@ describe('computeSessionRankings', () => {
     expect(result.events[1].entries).toEqual([])
   })
 
-  it('회차마다 eventKeys가 달라도(4종목 회차 + 7종목 회차 혼재) 각자의 eventKeys에만 헤더 순서로 대응한다', () => {
-    const events = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => event({ key, direction: '높을수록', targetValue: 0 }))
+  it('회차마다 eventIds가 달라도(4종목 회차 + 7종목 회차 혼재) 각자의 eventIds에만 헤더 순서로 대응한다', () => {
+    const events = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => event({ id: key, name: key, direction: '높을수록', targetValue: 0 }))
     const players = [player(1, '활동')]
 
     const session4: Session = {
       date: '2025-05-01',
       entries: [entry(1, { A: recorded(1), B: recorded(2), C: unmeasured(), D: recorded(3) })],
-      eventKeys: ['A', 'B', 'C', 'D'],
+      eventIds: ['A', 'B', 'C', 'D'],
     }
     const session7: Session = {
       date: '2025-06-01',
@@ -301,7 +301,7 @@ describe('computeSessionRankings', () => {
           G: recorded(7),
         }),
       ],
-      eventKeys: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+      eventIds: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
     }
 
     const result4 = computeSessionRankings(session4, events, players)
@@ -311,15 +311,15 @@ describe('computeSessionRankings', () => {
     expect(result7.events.map((e) => e.event)).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
   })
 
-  it('그 회차 eventKeys에 없는 종목은 entries: []가 아니라 결과에서 항목 자체가 빠진다', () => {
-    const a = event({ key: 'A', direction: '높을수록', targetValue: 0 })
-    const b = event({ key: 'B', direction: '높을수록', targetValue: 0 })
-    const c = event({ key: 'C', direction: '높을수록', targetValue: 0 })
+  it('그 회차 eventIds에 없는 종목은 entries: []가 아니라 결과에서 항목 자체가 빠진다', () => {
+    const a = event({ id: 'A', name: 'A', direction: '높을수록', targetValue: 0 })
+    const b = event({ id: 'B', name: 'B', direction: '높을수록', targetValue: 0 })
+    const c = event({ id: 'C', name: 'C', direction: '높을수록', targetValue: 0 })
     const players = [player(1, '활동')]
     const session: Session = {
       date: '2025-07-01',
       entries: [entry(1, { A: recorded(1), B: recorded(2) })],
-      eventKeys: ['A', 'B'], // C는 이 회차에서 측정하지 않음 — scores에도 C 없음
+      eventIds: ['A', 'B'], // C는 이 회차에서 측정하지 않음 — scores에도 C 없음
     }
 
     const result = computeSessionRankings(session, [a, b, c], players)
@@ -328,13 +328,13 @@ describe('computeSessionRankings', () => {
     expect(result.events.find((e) => e.event === 'C')).toBeUndefined()
   })
 
-  it('eventKeys에 있는 key가 events(목표 탭)에 없으면 조용히 제외된다(파서 불변식 위반 방어)', () => {
-    const a = event({ key: 'A', direction: '높을수록', targetValue: 0 })
+  it('eventIds에 있는 key가 events(목표 탭)에 없으면 조용히 제외된다(파서 불변식 위반 방어)', () => {
+    const a = event({ id: 'A', name: 'A', direction: '높을수록', targetValue: 0 })
     const players = [player(1, '활동')]
     const session: Session = {
       date: '2025-08-01',
       entries: [entry(1, { A: recorded(1) })],
-      eventKeys: ['A', 'Z'], // 'Z'는 목표 탭(events)에 정의가 없는 종목
+      eventIds: ['A', 'Z'], // 'Z'는 목표 탭(events)에 정의가 없는 종목
     }
 
     const result = computeSessionRankings(session, [a], players)

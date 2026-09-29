@@ -1,3 +1,4 @@
+import { eventLabel } from '../../../shared/event-identity'
 // 기록 입력 · 선수별 입력(#68) — docs/prd-design.html §05 · docs/prd-record-input.html §05:
 // 종목 타입별 입력기(시간=분·초 2필드, 개수=스테퍼+직접입력, 면제=면제 가능 종목만 토글) +
 // 기존 값 프리필 + 인라인 검증 + 하단 고정 저장 바. 검증은 buildEventScore(shared/)를 그대로
@@ -61,10 +62,10 @@ export default function RecordsPlayerInput() {
   const roundLabel = data.sessions.findIndex((candidate) => candidate.date === session.date) + 1
 
   // 그 회차 실측 종목만 렌더한다(이슈 #126) — data.events는 종료 종목까지 포함한 전역 목록이라
-  // Session.eventKeys(헤더 순서)로 걸러야 과거/미래 회차의 무관한 종목 필드가 새지 않는다.
-  // profile-view.ts의 buildRadarAxes·compute-rankings.ts와 동형의 eventKeys 기준 순회 패턴.
-  const eventsByKey = new Map(data.events.map((event) => [event.key, event]))
-  const sessionEvents = session.eventKeys
+  // Session.eventIds(헤더 순서)로 걸러야 과거/미래 회차의 무관한 종목 필드가 새지 않는다.
+  // profile-view.ts의 buildRadarAxes·compute-rankings.ts와 동형의 eventIds 기준 순회 패턴.
+  const eventsByKey = new Map(data.events.map((event) => [event.id, event]))
+  const sessionEvents = session.eventIds
     .map((key) => eventsByKey.get(key))
     .filter((event): event is EventDefinition => event !== undefined)
 
@@ -74,6 +75,7 @@ export default function RecordsPlayerInput() {
       session={session}
       entry={entry}
       events={sessionEvents}
+      eventLabels={Object.fromEntries(data.events.map((event) => [event.id, eventLabel(event, data.events, data.sessions)]))}
       roundLabel={roundLabel}
       onSaved={(toast) => navigate(`/admin/records/${session.date}`, { state: { toast } })}
     />
@@ -85,16 +87,18 @@ function PlayerInputContent({
   entry,
   events,
   roundLabel,
+  eventLabels,
   onSaved,
 }: {
   session: Session
   entry: SessionEntry
   events: EventDefinition[]
+  eventLabels: Record<string, string>
   roundLabel: number
   onSaved: (toast: string) => void
 }) {
   const [fields, setFields] = useState<Record<string, FieldState>>(() =>
-    Object.fromEntries(events.map((event) => [event.key, initFieldState(event, entry.scores[event.key])])),
+    Object.fromEntries(events.map((event) => [event.id, initFieldState(event, entry.scores[event.id])])),
   )
   const { submitting, submitError, submit } = useSubmitMutation()
 
@@ -103,12 +107,12 @@ function PlayerInputContent({
   }
 
   const scores = Object.fromEntries(
-    events.map((event) => [event.key, buildEventScore(buildFieldRaw(fields[event.key]), event)]),
+    events.map((event) => [event.id, buildEventScore(buildFieldRaw(fields[event.id]), event)]),
   )
   const hasInvalid = Object.values(scores).some((score) => score.status === 'invalid')
 
   async function handleSave() {
-    const raw = Object.fromEntries(events.map((event) => [event.key, buildFieldRaw(fields[event.key])]))
+    const raw = Object.fromEntries(events.map((event) => [event.id, buildFieldRaw(fields[event.id])]))
     await submit(
       () => saveRecord(session.date, entry.playerId, raw),
       () => onSaved(`✓ ${entry.name} 저장됨 · 팀원 열람에 반영`),
@@ -126,20 +130,20 @@ function PlayerInputContent({
 
       <div className="flex flex-col gap-3">
         {events.map((event) => {
-          const field = fields[event.key]
-          const score = scores[event.key]
-          const notice = initialFieldNotice(event, entry.scores[event.key])
+          const field = fields[event.id]
+          const score = scores[event.id]
+          const notice = initialFieldNotice(event, entry.scores[event.id])
           const isBlank = buildFieldRaw(field) === ''
 
           return (
-            <div key={event.key} className="rounded-card border border-line bg-white p-5 shadow-sm">
+            <div key={event.id} className="rounded-card border border-line bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-ink">{event.key}</h2>
+                <h2 className="text-sm font-bold text-ink">{eventLabels[event.id]}</h2>
                 {event.exemptable && (
                   <ExemptToggle
-                    label={event.key}
+                    label={eventLabels[event.id]}
                     checked={field.exempt}
-                    onChange={(exempt) => updateField(event.key, { ...field, exempt })}
+                    onChange={(exempt) => updateField(event.id, { ...field, exempt })}
                   />
                 )}
               </div>
@@ -148,18 +152,18 @@ function PlayerInputContent({
                 <div className="mt-3">
                   {field.valueKind === 'time' ? (
                     <TimeScoreInput
-                      label={event.key}
+                      label={eventLabels[event.id]}
                       minutes={field.minutes}
                       seconds={field.seconds}
-                      onChange={({ minutes, seconds }) => updateField(event.key, { ...field, minutes, seconds })}
+                      onChange={({ minutes, seconds }) => updateField(event.id, { ...field, minutes, seconds })}
                       error={score.status === 'invalid' ? score.reason : null}
                     />
                   ) : (
                     <CountScoreInput
-                      label={event.key}
+                      label={eventLabels[event.id]}
                       value={field.count}
                       maxScore={event.maxScore}
-                      onChange={(count) => updateField(event.key, { ...field, count })}
+                      onChange={(count) => updateField(event.id, { ...field, count })}
                       error={score.status === 'invalid' ? score.reason : null}
                     />
                   )}

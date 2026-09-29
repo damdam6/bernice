@@ -3,7 +3,7 @@ import { computePlayerSummaries } from './player-summary'
 import type { EventDefinition, EventScore, Player, Session, SessionEntry } from '../../shared/domain'
 
 const SHUTTLE: EventDefinition = {
-  key: '드리블셔틀런',
+  id: '드리블셔틀런', name: '드리블셔틀런',
   valueKind: 'time',
   target: '1:17',
   targetValue: 77,
@@ -13,7 +13,7 @@ const SHUTTLE: EventDefinition = {
   exemptable: false,
 }
 const BASKET: EventDefinition = {
-  key: '골밑슛',
+  id: '골밑슛', name: '골밑슛',
   valueKind: 'count',
   target: '5',
   targetValue: 5,
@@ -56,42 +56,42 @@ const PLAYERS: Player[] = [
   { id: 6, name: '선수6', status: '활동' },
 ]
 
-const SESSION_EVENT_KEYS = [SHUTTLE.key, BASKET.key]
+const SESSION_EVENT_KEYS = [SHUTTLE.id, BASKET.id]
 
 const SESSIONS: Session[] = [
   {
     date: '2025-01-01',
     entries: [
-      entry(1, '선수1', { [SHUTTLE.key]: recorded(80, '1:20'), [BASKET.key]: recorded(5, '5') }),
-      entry(2, '선수2', { [SHUTTLE.key]: recorded(50, '0:50'), [BASKET.key]: recorded(5, '5') }),
-      entry(4, '선수4', { [SHUTTLE.key]: unmeasured(), [BASKET.key]: recorded(3, '3') }),
+      entry(1, '선수1', { [SHUTTLE.id]: recorded(80, '1:20'), [BASKET.id]: recorded(5, '5') }),
+      entry(2, '선수2', { [SHUTTLE.id]: recorded(50, '0:50'), [BASKET.id]: recorded(5, '5') }),
+      entry(4, '선수4', { [SHUTTLE.id]: unmeasured(), [BASKET.id]: recorded(3, '3') }),
     ],
-    eventKeys: SESSION_EVENT_KEYS,
+    eventIds: SESSION_EVENT_KEYS,
   },
   {
     date: '2025-02-01',
     entries: [
-      entry(1, '선수1', { [SHUTTLE.key]: exempt(), [BASKET.key]: invalid('6개', '개수 값이 올바르지 않음') }),
-      entry(3, '선수3', { [SHUTTLE.key]: recorded(70, '1:10'), [BASKET.key]: unmeasured() }),
-      entry(4, '선수4', { [SHUTTLE.key]: unmeasured(), [BASKET.key]: unmeasured() }),
+      entry(1, '선수1', { [SHUTTLE.id]: exempt(), [BASKET.id]: invalid('6개', '개수 값이 올바르지 않음') }),
+      entry(3, '선수3', { [SHUTTLE.id]: recorded(70, '1:10'), [BASKET.id]: unmeasured() }),
+      entry(4, '선수4', { [SHUTTLE.id]: unmeasured(), [BASKET.id]: unmeasured() }),
     ],
-    eventKeys: SESSION_EVENT_KEYS,
+    eventIds: SESSION_EVENT_KEYS,
   },
   {
     date: '2025-03-01',
     entries: [
-      entry(1, '선수1', { [SHUTTLE.key]: recorded(75, '1:15'), [BASKET.key]: recorded(6, '6') }),
-      entry(5, '선수5', { [SHUTTLE.key]: recorded(76, '1:16'), [BASKET.key]: unmeasured() }),
+      entry(1, '선수1', { [SHUTTLE.id]: recorded(75, '1:15'), [BASKET.id]: recorded(6, '6') }),
+      entry(5, '선수5', { [SHUTTLE.id]: recorded(76, '1:16'), [BASKET.id]: unmeasured() }),
     ],
-    eventKeys: SESSION_EVENT_KEYS,
+    eventIds: SESSION_EVENT_KEYS,
   },
   {
     date: '2025-04-01',
     entries: [
-      entry(1, '선수1', { [SHUTTLE.key]: recorded(75, '1:15'), [BASKET.key]: recorded(4, '4') }),
-      entry(5, '선수5', { [SHUTTLE.key]: recorded(74, '1:14'), [BASKET.key]: unmeasured() }),
+      entry(1, '선수1', { [SHUTTLE.id]: recorded(75, '1:15'), [BASKET.id]: recorded(4, '4') }),
+      entry(5, '선수5', { [SHUTTLE.id]: recorded(74, '1:14'), [BASKET.id]: unmeasured() }),
     ],
-    eventKeys: SESSION_EVENT_KEYS,
+    eventIds: SESSION_EVENT_KEYS,
   },
 ]
 
@@ -104,7 +104,7 @@ describe('computePlayerSummaries', () => {
 
   it('낮을수록 종목: 면제를 건너뛰고 직전 유효 기록 기준으로 delta/improved를 계산한다', () => {
     const player1 = summaries.find((s) => s.id === 1)!
-    const shuttleTrend = player1.trends.find((t) => t.event === SHUTTLE.key)!
+    const shuttleTrend = player1.trends.find((t) => t.event === SHUTTLE.id)!
     expect(shuttleTrend.points).toEqual([
       { sessionDate: '2025-01-01', value: 80, display: '1:20', achieved: false, deltaFromPrevious: null, improved: null },
       { sessionDate: '2025-03-01', value: 75, display: '1:15', achieved: true, deltaFromPrevious: -5, improved: true },
@@ -114,7 +114,7 @@ describe('computePlayerSummaries', () => {
 
   it('높을수록 종목: 이상값을 건너뛰고 direction 반영 achieved/improved를 계산한다', () => {
     const player1 = summaries.find((s) => s.id === 1)!
-    const basketTrend = player1.trends.find((t) => t.event === BASKET.key)!
+    const basketTrend = player1.trends.find((t) => t.event === BASKET.id)!
     expect(basketTrend.points).toEqual([
       { sessionDate: '2025-01-01', value: 5, display: '5', achieved: true, deltaFromPrevious: null, improved: null },
       { sessionDate: '2025-03-01', value: 6, display: '6', achieved: true, deltaFromPrevious: 1, improved: true },
@@ -125,8 +125,8 @@ describe('computePlayerSummaries', () => {
   it('PB는 direction 기준 최고값을 고르고, 동률이면 최초 달성 회차를 쓰며, 이후 더 나빠진 기록에 갱신되지 않는다', () => {
     const player1 = summaries.find((s) => s.id === 1)!
     expect(player1.personalBests).toEqual([
-      { event: SHUTTLE.key, value: 75, display: '1:15', sessionDate: '2025-03-01', achieved: true },
-      { event: BASKET.key, value: 6, display: '6', sessionDate: '2025-03-01', achieved: true },
+      { event: SHUTTLE.id, value: 75, display: '1:15', sessionDate: '2025-03-01', achieved: true },
+      { event: BASKET.id, value: 6, display: '6', sessionDate: '2025-03-01', achieved: true },
     ])
   })
 
@@ -135,45 +135,45 @@ describe('computePlayerSummaries', () => {
     expect(player3.status).toBe('비대상')
     expect(player3.trends).toEqual([
       {
-        event: SHUTTLE.key,
+        event: SHUTTLE.id,
         points: [{ sessionDate: '2025-02-01', value: 70, display: '1:10', achieved: true, deltaFromPrevious: null, improved: null }],
       },
-      { event: BASKET.key, points: [] },
+      { event: BASKET.id, points: [] },
     ])
     expect(player3.personalBests).toEqual([
-      { event: SHUTTLE.key, value: 70, display: '1:10', sessionDate: '2025-02-01', achieved: true },
+      { event: SHUTTLE.id, value: 70, display: '1:10', sessionDate: '2025-02-01', achieved: true },
     ])
   })
 
   it('휴식 선수도 정상 포함되고, 목표 미달성(achieved: false) 기록도 그대로 반영한다', () => {
     const player4 = summaries.find((s) => s.id === 4)!
     expect(player4.status).toBe('휴식')
-    expect(player4.trends.find((t) => t.event === SHUTTLE.key)?.points).toEqual([])
-    expect(player4.trends.find((t) => t.event === BASKET.key)?.points).toEqual([
+    expect(player4.trends.find((t) => t.event === SHUTTLE.id)?.points).toEqual([])
+    expect(player4.trends.find((t) => t.event === BASKET.id)?.points).toEqual([
       { sessionDate: '2025-01-01', value: 3, display: '3', achieved: false, deltaFromPrevious: null, improved: null },
     ])
     expect(player4.personalBests).toEqual([
-      { event: BASKET.key, value: 3, display: '3', sessionDate: '2025-01-01', achieved: false },
+      { event: BASKET.id, value: 3, display: '3', sessionDate: '2025-01-01', achieved: false },
     ])
   })
 
   it('초반 회차에 아직 미가입이었던 선수는 그 회차들이 데이터 포인트로 취급되지 않는다(미측정이 아니라 아예 없음)', () => {
     const player5 = summaries.find((s) => s.id === 5)!
-    const shuttleTrend = player5.trends.find((t) => t.event === SHUTTLE.key)!
+    const shuttleTrend = player5.trends.find((t) => t.event === SHUTTLE.id)!
     expect(shuttleTrend.points).toEqual([
       { sessionDate: '2025-03-01', value: 76, display: '1:16', achieved: true, deltaFromPrevious: null, improved: null },
       { sessionDate: '2025-04-01', value: 74, display: '1:14', achieved: true, deltaFromPrevious: -2, improved: true },
     ])
     expect(player5.personalBests).toEqual([
-      { event: SHUTTLE.key, value: 74, display: '1:14', sessionDate: '2025-04-01', achieved: true },
+      { event: SHUTTLE.id, value: 74, display: '1:14', sessionDate: '2025-04-01', achieved: true },
     ])
   })
 
   it('한 번도 기록이 없는 선수는 모든 종목이 points: []이고 personalBests는 완전히 빈 배열이다', () => {
     const player6 = summaries.find((s) => s.id === 6)!
     expect(player6.trends).toEqual([
-      { event: SHUTTLE.key, points: [] },
-      { event: BASKET.key, points: [] },
+      { event: SHUTTLE.id, points: [] },
+      { event: BASKET.id, points: [] },
     ])
     expect(player6.personalBests).toEqual([])
   })
@@ -189,7 +189,7 @@ describe('computePlayerSummaries — 경계값·빈 입력', () => {
   it('낮을수록 종목: 목표치와 정확히 같아도 달성으로 처리한다', () => {
     const players: Player[] = [{ id: 1, name: '선수1', status: '활동' }]
     const sessions: Session[] = [
-      { date: '2025-01-01', entries: [entry(1, '선수1', { [SHUTTLE.key]: recorded(77, '1:17') })], eventKeys: [SHUTTLE.key] },
+      { date: '2025-01-01', entries: [entry(1, '선수1', { [SHUTTLE.id]: recorded(77, '1:17') })], eventIds: [SHUTTLE.id] },
     ]
     const [summary] = computePlayerSummaries([SHUTTLE], players, sessions)
     expect(summary.trends[0].points[0].achieved).toBe(true)
@@ -202,10 +202,10 @@ describe('computePlayerSummaries — 경계값·빈 입력', () => {
 })
 
 describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
-  // RECENT: 3회차부터 등장하는 신규 종목 — 1·2회차 eventKeys/scores엔 key 자체가 없음.
-  // ENDED: 2회차까지만 측정된 종료 종목 — 3·4회차 eventKeys/scores엔 key 자체가 없음.
+  // RECENT: 3회차부터 등장하는 신규 종목 — 1·2회차 eventIds/scores엔 key 자체가 없음.
+  // ENDED: 2회차까지만 측정된 종료 종목 — 3·4회차 eventIds/scores엔 key 자체가 없음.
   const RECENT: EventDefinition = {
-    key: '신규종목',
+    id: '신규종목', name: '신규종목',
     valueKind: 'count',
     target: '3',
     targetValue: 3,
@@ -215,7 +215,7 @@ describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
     exemptable: false,
   }
   const ENDED: EventDefinition = {
-    key: '종료종목',
+    id: '종료종목', name: '종료종목',
     valueKind: 'time',
     target: '10',
     targetValue: 10,
@@ -226,16 +226,16 @@ describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
   }
   const players: Player[] = [{ id: 1, name: '선수1', status: '활동' }]
   const sessions: Session[] = [
-    { date: '2025-01-01', entries: [entry(1, '선수1', { [ENDED.key]: recorded(12, '0:12') })], eventKeys: [ENDED.key] },
-    { date: '2025-02-01', entries: [entry(1, '선수1', { [ENDED.key]: recorded(9, '0:09') })], eventKeys: [ENDED.key] },
-    { date: '2025-03-01', entries: [entry(1, '선수1', { [RECENT.key]: recorded(4, '4') })], eventKeys: [RECENT.key] },
-    { date: '2025-04-01', entries: [entry(1, '선수1', { [RECENT.key]: recorded(5, '5') })], eventKeys: [RECENT.key] },
+    { date: '2025-01-01', entries: [entry(1, '선수1', { [ENDED.id]: recorded(12, '0:12') })], eventIds: [ENDED.id] },
+    { date: '2025-02-01', entries: [entry(1, '선수1', { [ENDED.id]: recorded(9, '0:09') })], eventIds: [ENDED.id] },
+    { date: '2025-03-01', entries: [entry(1, '선수1', { [RECENT.id]: recorded(4, '4') })], eventIds: [RECENT.id] },
+    { date: '2025-04-01', entries: [entry(1, '선수1', { [RECENT.id]: recorded(5, '5') })], eventIds: [RECENT.id] },
   ]
 
   const [summary] = computePlayerSummaries([RECENT, ENDED], players, sessions)
 
   it('신규 종목: 등장 이전 회차들엔 scores에 key 자체가 없어도 크래시 없이 건너뛰고, 첫 유효 기록의 deltaFromPrevious는 null이다', () => {
-    const recentTrend = summary.trends.find((t) => t.event === RECENT.key)!
+    const recentTrend = summary.trends.find((t) => t.event === RECENT.id)!
     expect(recentTrend.points).toEqual([
       { sessionDate: '2025-03-01', value: 4, display: '4', achieved: true, deltaFromPrevious: null, improved: null },
       { sessionDate: '2025-04-01', value: 5, display: '5', achieved: true, deltaFromPrevious: 1, improved: true },
@@ -243,13 +243,13 @@ describe('computePlayerSummaries — 미측정 회차 스킵 가드', () => {
   })
 
   it('종료 종목: 종료 이후 회차들엔 scores에 key가 없어도 크래시 없이 건너뛰고, 종료 전 이력과 PB가 그대로 보존된다', () => {
-    const endedTrend = summary.trends.find((t) => t.event === ENDED.key)!
+    const endedTrend = summary.trends.find((t) => t.event === ENDED.id)!
     expect(endedTrend.points).toEqual([
       { sessionDate: '2025-01-01', value: 12, display: '0:12', achieved: false, deltaFromPrevious: null, improved: null },
       { sessionDate: '2025-02-01', value: 9, display: '0:09', achieved: true, deltaFromPrevious: -3, improved: true },
     ])
-    expect(summary.personalBests.find((pb) => pb.event === ENDED.key)).toEqual({
-      event: ENDED.key,
+    expect(summary.personalBests.find((pb) => pb.event === ENDED.id)).toEqual({
+      event: ENDED.id,
       value: 9,
       display: '0:09',
       sessionDate: '2025-02-01',

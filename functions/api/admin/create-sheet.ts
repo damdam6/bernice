@@ -68,7 +68,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       quoteSheetName(classification.goals),
     ])
     const { players } = parseRoster(rosterRange.values)
-    const { events, sheetRowByKey } = parseGoals(goalsRange.values)
+    const { events, sheetRowById, identityMode } = parseGoals(goalsRange.values)
 
     const plan = buildCreateSheetPlan({
       sessionDate,
@@ -76,7 +76,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       rosterName: classification.roster,
       goalsName: classification.goals,
       events,
-      sheetRowByKey,
+      sheetRowById,
+      identityMode,
       players,
       participantIds,
     })

@@ -37,7 +37,7 @@ export function GrowthStatCard({ card, expanded, onToggle, children }: GrowthSta
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="truncate font-bold text-ink">{card.label}</p>
+            <p className="break-words font-bold text-ink">{card.label}</p>
             {card.ended && (
               <span className="shrink-0">
                 <Pill colorClassName="bg-neutral-tint text-neutral-strong">종료</Pill>

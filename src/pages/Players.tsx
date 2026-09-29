@@ -62,15 +62,15 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number>(players[0].id)
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
   // 기본으로 첫 종목 카드를 확장해 추이 차트를 바로 보여준다(목업 기본 동작). null이면 전부 접힘.
-  const [selectedEventKey, setSelectedEventKey] = useState<string | null>(events[0].key)
+  const [selectedEventKey, setSelectedEventKey] = useState<string | null>(events[0].id)
 
   const player = players.find((p) => p.id === selectedPlayerId) ?? players[0]
   const latestSessionDate = sessions[sessions.length - 1].date
   const sessionDate = selectedSessionDate ?? latestSessionDate
   const session = sessions.find((s) => s.date === sessionDate)
 
-  const radarAxes = buildRadarAxes(events, session, player.id, scale)
-  const growthCards = buildGrowthCards(events, session, player)
+  const radarAxes = buildRadarAxes(events, session, player.id, scale, sessions)
+  const growthCards = buildGrowthCards(events, session, player, sessions)
   const cardByEvent = new Map(growthCards.map((card) => [card.eventKey, card]))
 
   return (
@@ -106,16 +106,16 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
 
       <div className="flex flex-col gap-2">
         {events.map((event) => {
-          const card = cardByEvent.get(event.key)
+          const card = cardByEvent.get(event.id)
           if (!card) return null
-          const expanded = event.key === selectedEventKey
+          const expanded = event.id === selectedEventKey
           const series = expanded ? buildTrendSeries(event, sessions, players, player.id) : null
           return (
             <GrowthStatCard
-              key={event.key}
+              key={event.id}
               card={card}
               expanded={expanded}
-              onToggle={() => setSelectedEventKey((prev) => (prev === event.key ? null : event.key))}
+              onToggle={() => setSelectedEventKey((prev) => (prev === event.id ? null : event.id))}
             >
               {series && (
                 <TrendChart
@@ -123,7 +123,7 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
                   highlight={series.highlight}
                   background={series.background}
                   goal={series.goal}
-                  label={`${event.key} 추이`}
+                  label={`${card.label} 추이`}
                 />
               )}
             </GrowthStatCard>

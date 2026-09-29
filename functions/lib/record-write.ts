@@ -68,21 +68,21 @@ export interface ScoreKeyValidation {
 }
 
 // scores의 key 집합이 events[] 전체 key와 정확히 일치하는지 검사한다(행 전체 교체 upsert라
-// 누락·미지 key 모두 거부). 비교는 NFC 정규화 후 — 종목명이 NFD로 들어와도 매칭되게.
+// 누락·미지 key 모두 거부). ID는 정규화하지 않고 정확히 비교한다.
 export function validateScoreKeys(
   scores: Record<string, string>,
   events: EventDefinition[],
 ): ScoreKeyValidation {
-  const eventNfcKeys = new Set(events.map((event) => event.key.normalize('NFC')))
-  const requestNfcKeys = new Set(Object.keys(scores).map((key) => key.normalize('NFC')))
+  const eventIds = new Set(events.map((event) => event.id))
+  const requestIds = new Set(Object.keys(scores))
 
-  const missing = events.filter((event) => !requestNfcKeys.has(event.key.normalize('NFC'))).map((event) => event.key)
-  const unknown = Object.keys(scores).filter((key) => !eventNfcKeys.has(key.normalize('NFC')))
+  const missing = events.filter((event) => !requestIds.has(event.id)).map((event) => event.id)
+  const unknown = Object.keys(scores).filter((key) => !eventIds.has(key))
   return { missing, unknown }
 }
 
 export interface ScoreEvaluation {
-  /** key = event.key, events 순서. 200 응답의 scores 그대로 */
+  /** key = event.id, events 순서. 200 응답의 scores 그대로 */
   scoreMap: Record<string, EventScore>
   /** invalid로 판정된 종목·사유 (하나라도 있으면 400, 시트에 쓰지 않음) */
   invalid: { event: string; reason: string }[]
@@ -91,15 +91,15 @@ export interface ScoreEvaluation {
 // 각 종목 셀을 normalize-score + valueKind 교차검증(buildEventScore 재사용)으로 EventScore로 만든다.
 // key 검증(validateScoreKeys)이 선행됐다고 가정하지만, 누락 key는 빈 문자열(미측정)로 안전하게 처리한다.
 export function evaluateScores(scores: Record<string, string>, events: EventDefinition[]): ScoreEvaluation {
-  const requestByNfc = new Map(Object.keys(scores).map((key) => [key.normalize('NFC'), scores[key]]))
+  const requestById = new Map(Object.keys(scores).map((key) => [key, scores[key]]))
   const scoreMap: Record<string, EventScore> = {}
   const invalid: { event: string; reason: string }[] = []
 
   for (const event of events) {
-    const raw = requestByNfc.get(event.key.normalize('NFC')) ?? ''
+    const raw = requestById.get(event.id) ?? ''
     const score = buildEventScore(raw, event)
-    scoreMap[event.key] = score
-    if (score.status === 'invalid') invalid.push({ event: event.key, reason: score.reason })
+    scoreMap[event.id] = score
+    if (score.status === 'invalid') invalid.push({ event: event.id, reason: score.reason })
   }
   return { scoreMap, invalid }
 }
@@ -124,11 +124,11 @@ export function buildWritePlan(
   if (eventColumns.length === 0) {
     throw new SheetIntegrityError('종목 열이 없어 쓰기 범위를 만들 수 없습니다.')
   }
-  const requestByNfc = new Map(Object.keys(scores).map((key) => [key.normalize('NFC'), scores[key]]))
+  const requestById = new Map(Object.keys(scores).map((key) => [key, scores[key]]))
   const firstColumnIndex = eventColumns[0].columnIndex
   const lastColumnIndex = eventColumns[eventColumns.length - 1].columnIndex
 
-  const rowValues = eventColumns.map((column) => requestByNfc.get(column.event.key.normalize('NFC')) ?? '')
+  const rowValues = eventColumns.map((column) => requestById.get(column.event.id) ?? '')
   const range = `${quoteSheetName(tabName)}!${columnLetter(firstColumnIndex + 1)}${rowNumber}:${columnLetter(
     lastColumnIndex + 1,
   )}${rowNumber}`

@@ -1,3 +1,4 @@
+import { eventLabel } from '../../shared/event-identity'
 // 홈 요약 파생 로직(#103) — RecordsResponse.home + events/sessions에서 화면이 그릴 값만
 // 순수 함수로 뽑아낸다. 렌더(Home.tsx)와 분리해 파생 규칙을 단위 테스트로 못박는다.
 // 정본: docs/prd-design.html §05 🏠 홈 표(요소→필드 매핑).
@@ -29,14 +30,16 @@ export interface HomeGauge {
   rate: number
 }
 
-/** 게이지 목록 — achievementRates[] 순서대로, 라벨은 events[]에서 key로 조회한다
- *  (EventDefinition은 key가 곧 표시 라벨). 매칭 종목이 없으면 event key를 그대로 쓴다. */
-export function buildHomeGauges(rates: EventAchievementRate[], events: EventDefinition[]): HomeGauge[] {
-  return rates.map((rate) => ({
+/** ID로 정의를 찾아 이름을 표시한다. 동명 종목에는 종료 상태와 측정 기간을 붙인다. */
+export function buildHomeGauges(rates: EventAchievementRate[], events: EventDefinition[], sessions: Session[] = []): HomeGauge[] {
+  return rates.map((rate) => {
+    const event = events.find((event) => event.id === rate.event)
+    return {
     event: rate.event,
-    label: events.find((event) => event.key === rate.event)?.key ?? rate.event,
+    label: event ? eventLabel(event, events, sessions) : rate.event,
     achievedCount: rate.achievedCount,
     eligibleCount: rate.eligibleCount,
     rate: rate.rate,
-  }))
+    }
+  })
 }

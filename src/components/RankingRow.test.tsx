@@ -13,7 +13,7 @@ const scale: PerformanceScale = { normalize: () => 0.5 }
 
 function countEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
   return {
-    key: '골밑슛',
+    id: '골밑슛', name: '골밑슛',
     valueKind: 'count',
     target: '5',
     targetValue: 5,

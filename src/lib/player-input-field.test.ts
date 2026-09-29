@@ -8,7 +8,7 @@ function ev(
   direction: RankDirection = '높을수록',
   exemptable = false,
 ): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction, endSessionDate: null, exemptable }
+  return { id: key, name: key, valueKind, target: '0', targetValue: 0, maxScore: 10, direction, endSessionDate: null, exemptable }
 }
 
 const RECORDED_TIME: EventScore = { status: 'recorded', value: 72, display: '1:12' }

@@ -37,7 +37,7 @@ function collectValidScores(player: Player, event: EventDefinition, sessions: Se
     const entry = session.entries.find((candidate) => candidate.playerId === player.id)
     if (!entry) continue
 
-    const score = entry.scores[event.key]
+    const score = entry.scores[event.id]
     if (!score || score.status !== 'recorded') continue
 
     scores.push({ sessionDate: session.date, value: score.value, display: score.display })
@@ -65,7 +65,7 @@ function buildTrend(event: EventDefinition, scores: ValidScore[]): PlayerEventTr
     previous = score
   }
 
-  return { event: event.key, points }
+  return { event: event.id, points }
 }
 
 // 동률 시 최초로 그 값을 달성한(가장 이른) 회차를 PB 회차로 고정한다 —
@@ -82,7 +82,7 @@ function buildPersonalBest(event: EventDefinition, scores: ValidScore[]): Player
   })
 
   return {
-    event: event.key,
+    event: event.id,
     value: best.value,
     display: best.display,
     sessionDate: best.sessionDate,

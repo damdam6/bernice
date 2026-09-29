@@ -10,12 +10,12 @@ export type RankingRowDatum =
   | { status: 'exempt' | 'unmeasured'; playerId: number; name: string }
   | { status: 'invalid'; playerId: number; name: string; display: string }
 
-/** 회차 1개의 측정 종목 정의 — session.eventKeys(그 회차 헤더 순서)대로 events[]에서 찾아 담는다.
- *  랭킹 화면 종목 칩(#123)이 "선택 회차에 무엇을 측정했나"만 보여줄 때 쓴다. eventKeys의 키가
+/** 회차 1개의 측정 종목 정의 — session.eventIds(그 회차 헤더 순서)대로 events[]에서 찾아 담는다.
+ *  랭킹 화면 종목 칩(#123)이 "선택 회차에 무엇을 측정했나"만 보여줄 때 쓴다. eventIds의 키가
  *  events[]에 없으면(계약 위반 데이터) 크래시 대신 건너뛴다. */
 export function deriveSessionEvents(events: EventDefinition[], session: Session): EventDefinition[] {
-  return session.eventKeys
-    .map((key) => events.find((event) => event.key === key))
+  return session.eventIds
+    .map((key) => events.find((event) => event.id === key))
     .filter((event): event is EventDefinition => event !== undefined)
 }
 

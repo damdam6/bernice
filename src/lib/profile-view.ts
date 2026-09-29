@@ -1,3 +1,4 @@
+import { eventLabel } from '../../shared/event-identity'
 // 개인 프로필 화면 파생 로직 — 디자인 PRD §05 "👤 개인" 매핑 표의 구현.
 // Rankings가 ranking-view.ts에 파생을 두는 것과 같은 분리: 화면(Players.tsx)은 배선만,
 // 값 계산은 여기 순수 함수가 담당해 DOM 없이 단위 테스트한다.
@@ -22,24 +23,30 @@ export function buildSessionLabels(sessions: Session[]): string[] {
   return sessions.map((_, i) => `${i + 1}차`)
 }
 
-/** 선택 회차의 측정 종목(session.eventKeys) 정규화 성능 레이더 축 — 회차마다 축 개수가
- *  가변(4각형↔7각형 등, PRD §08). compute-rankings.ts의 eventKeys 기준 순회와 동형 패턴.
+/** 선택 회차의 측정 종목(session.eventIds) 정규화 성능 레이더 축 — 회차마다 축 개수가
+ *  가변(4각형↔7각형 등, PRD §08). compute-rankings.ts의 eventIds 기준 순회와 동형 패턴.
  *  recorded면 정규화, 그 외(면제·미측정·이상값·미참여)는 0으로 둔다. 라벨은 종목 key가 곧 short 라벨. */
 export function buildRadarAxes(
   events: EventDefinition[],
   session: Session | undefined,
   playerId: number,
   scale: PerformanceScale,
+  sessions: Session[] = session ? [session] : [],
 ): RadarAxis[] {
-  const eventsByKey = new Map(events.map((event) => [event.key, event]))
+  const eventsByKey = new Map(events.map((event) => [event.id, event]))
   const entry = session?.entries.find((e) => e.playerId === playerId)
-  return (session?.eventKeys ?? [])
+  return (session?.eventIds ?? [])
     .map((key) => eventsByKey.get(key))
     .filter((event): event is EventDefinition => event !== undefined)
     .map((event) => {
-      const score = entry?.scores[event.key]
-      const value = score?.status === 'recorded' ? scale.normalize(event.key, score.value) : 0
-      return { label: event.key, value }
+      const score = entry?.scores[event.id]
+      const value = score?.status === 'recorded' ? scale.normalize(event.id, score.value) : 0
+      const duplicates = events.filter((candidate) => candidate.name === event.name)
+      if (duplicates.length > 1) return {
+        label: `${event.name} · ${duplicates.findIndex((candidate) => candidate.id === event.id) + 1}`,
+        detail: eventLabel(event, events, sessions), value,
+      }
+      return { label: event.name, value }
     })
 }
 
@@ -97,19 +104,20 @@ export function buildGrowthCards(
   events: EventDefinition[],
   session: Session | undefined,
   player: PlayerSummary,
+  sessions: Session[] = session ? [session] : [],
 ): GrowthCardDatum[] {
   const entry = session?.entries.find((e) => e.playerId === player.id)
   const pbByEvent = new Map(player.personalBests.map((pb) => [pb.event, pb]))
   const trendByEvent = new Map(player.trends.map((t) => [t.event, t]))
   return events
-    .filter((event) => event.endSessionDate === null || pbByEvent.has(event.key))
+    .filter((event) => event.endSessionDate === null || pbByEvent.has(event.id))
     .map((event) => ({
-      eventKey: event.key,
-      label: event.key,
+      eventKey: event.id,
+      label: eventLabel(event, events, sessions),
       ended: event.endSessionDate !== null,
-      pb: pbByEvent.get(event.key)?.display ?? '—',
-      value: currentValueText(entry?.scores[event.key]),
-      delta: buildDelta(trendByEvent.get(event.key), session?.date, event.valueKind),
+      pb: pbByEvent.get(event.id)?.display ?? '—',
+      value: currentValueText(entry?.scores[event.id]),
+      delta: buildDelta(trendByEvent.get(event.id), session?.date, event.valueKind),
     }))
 }
 
@@ -140,7 +148,7 @@ export function buildTrendSeries(
       }))
       .filter((datum) => datum.sessionIndex >= 0)
 
-  const trendOf = (player: PlayerSummary) => player.trends.find((t) => t.event === event.key)
+  const trendOf = (player: PlayerSummary) => player.trends.find((t) => t.event === event.id)
 
   const current = players.find((p) => p.id === currentPlayerId)
   const highlight = current ? seriesFor(trendOf(current)) : []

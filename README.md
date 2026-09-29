@@ -3,6 +3,11 @@
 버니스 농구팀의 3개월 주기 실력 테스트 기록을 관리·시각화하는 사이트.
 설계 문서는 [`docs/`](docs/index.html), 단계별 계획은 [`docs/build-plan.html`](docs/build-plan.html) 참고.
 
+## 종목 ID 전환 (#177 / #178)
+
+[새 스키마·호환 규칙·운영 이전/배포 순서](docs/event-identity-migration.html)를 확인하세요.
+코드만 먼저 배포해도 기존 이름 기반 시트를 읽고 쓸 수 있습니다. 운영 데이터 이전은 별도 #178 작업이며, `seed-sheet.mjs`는 이전 도구가 아닙니다.
+
 ## 스택
 
 Vite + React + TypeScript · Tailwind CSS v4 · Cloudflare Pages + Pages Functions · Google Sheets(서비스계정)

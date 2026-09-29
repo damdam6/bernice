@@ -21,7 +21,7 @@ function event(
   endSessionDate: string | null = null,
   exemptable = false,
 ): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore, direction: '높을수록', endSessionDate, exemptable }
+  return { id: key, name: key, valueKind, target: '0', targetValue: 0, maxScore, direction: '높을수록', endSessionDate, exemptable }
 }
 
 // 2026-07 종목 개편(#126) 시나리오 — 45도패스캐치(종료)를 패스 3종 + 볼 캐치가 이었다. events[]는
@@ -40,13 +40,13 @@ const ENDED_EVENT = event('45도패스캐치', 'count', 7, '2025-05-16')
 const ALL_EVENTS: EventDefinition[] = [...ACTIVE_EVENTS, ENDED_EVENT]
 
 const OLD_EVENT_KEYS = ['드리블셔틀런', '골밑슛', '자유투', '45도패스캐치']
-const NEW_EVENT_KEYS = ACTIVE_EVENTS.map((e) => e.key)
+const NEW_EVENT_KEYS = ACTIVE_EVENTS.map((e) => e.id)
 
 const UNMEASURED: EventScore = { status: 'unmeasured', value: null, display: null }
 
-function scoresFor(eventKeys: string[], overrides: Record<string, EventScore> = {}): Record<string, EventScore> {
+function scoresFor(eventIds: string[], overrides: Record<string, EventScore> = {}): Record<string, EventScore> {
   const base: Record<string, EventScore> = {}
-  for (const key of eventKeys) base[key] = UNMEASURED
+  for (const key of eventIds) base[key] = UNMEASURED
   return { ...base, ...overrides }
 }
 
@@ -54,8 +54,8 @@ function makeEntry(scores: Record<string, EventScore>): SessionEntry {
   return { playerId: 7, name: '선수7', scores, participated: true }
 }
 
-function makeSession(date: string, entries: SessionEntry[], eventKeys: string[]): Session {
-  return { date, entries, eventKeys }
+function makeSession(date: string, entries: SessionEntry[], eventIds: string[]): Session {
+  return { date, entries, eventIds }
 }
 
 function baseData(overrides: Partial<RecordsResponse> = {}): RecordsResponse {
@@ -96,6 +96,27 @@ function recordsFetchMock(data: RecordsResponse) {
 }
 
 describe('RecordsPlayerInput', () => {
+  it('#177 동명 종목을 상태·기간으로 표시하고 서로 다른 ID로 저장한다', async () => {
+    const events = [
+      { ...event('pass-old', 'count', 5, '2026-07-23'), name: '패스' },
+      { ...event('pass-new', 'count', 10), name: '패스' },
+    ]
+    const data = baseData({ events, sessions: [makeSession('2026-07-23', [makeEntry(scoresFor(['pass-old', 'pass-new']))], ['pass-old', 'pass-new'])] })
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) => Promise.resolve(String(input) === '/api/admin/records'
+      ? jsonResponse(200, { sessionDate: '2026-07-23', playerId: 7, name: '선수7', scores: {} })
+      : jsonResponse(200, data)))
+    renderPage('/admin/records/2026-07-23/7', fetchMock)
+    const oldInput = await screen.findByLabelText(/패스 \(종료 · 2026-07-23 ~ 2026-07-23.*개수/)
+    const newInput = screen.getByLabelText(/패스 \(진행 중 · 2026-07-23 ~ 2026-07-23.*개수/)
+    fireEvent.change(oldInput, { target: { value: '4' } })
+    fireEvent.change(newInput, { target: { value: '8' } })
+    expect(oldInput).toHaveValue('4')
+    fireEvent.click(screen.getByRole('button', { name: '저장' }))
+    await screen.findByText(/참가자 목록 스텁/)
+    const saved = fetchMock.mock.calls.find(([url]) => url === '/api/admin/records')!
+    expect(JSON.parse(String(saved[1]?.body))).toEqual({ sessionDate: '2026-07-23', playerId: 7, scores: { 'pass-old': '4', 'pass-new': '8' } })
+  })
+
   it('회차를 찾을 수 없으면 안내를 보여준다', async () => {
     const data = baseData({ sessions: [] })
     renderPage('/admin/records/2025-08-16/7', recordsFetchMock(data))
@@ -111,7 +132,7 @@ describe('RecordsPlayerInput', () => {
     expect(await screen.findByText('참가자를 찾을 수 없습니다')).toBeInTheDocument()
   })
 
-  it('과거 4종목 회차 — 그 회차 eventKeys만 렌더하고, 전역에만 있는 신규 종목 필드는 새지 않는다', async () => {
+  it('과거 4종목 회차 — 그 회차 eventIds만 렌더하고, 전역에만 있는 신규 종목 필드는 새지 않는다', async () => {
     const entry = makeEntry(scoresFor(OLD_EVENT_KEYS))
     const data = baseData({ sessions: [makeSession('2025-05-16', [entry], OLD_EVENT_KEYS)] })
     renderPage('/admin/records/2025-05-16/7', recordsFetchMock(data))
@@ -122,7 +143,7 @@ describe('RecordsPlayerInput', () => {
     expect(screen.getByLabelText('자유투 개수')).toBeInTheDocument()
     expect(screen.getByLabelText('45도패스캐치 개수')).toBeInTheDocument()
 
-    // 전역 events[]엔 있지만 이 회차 eventKeys 밖인 신규 종목 필드는 새지 않는다.
+    // 전역 events[]엔 있지만 이 회차 eventIds 밖인 신규 종목 필드는 새지 않는다.
     expect(screen.queryByLabelText('패스 - 체스트 개수')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('패스 - 바운드 개수')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('패스 - 원핸드 개수')).not.toBeInTheDocument()
@@ -148,7 +169,7 @@ describe('RecordsPlayerInput', () => {
     expect(screen.queryByRole('switch', { name: '볼 캐치 면제' })).not.toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: '골밑슛 면제' })).not.toBeInTheDocument()
 
-    // 종료 종목(45도패스캐치)은 이 회차 eventKeys 밖이라 아예 렌더되지 않는다.
+    // 종료 종목(45도패스캐치)은 이 회차 eventIds 밖이라 아예 렌더되지 않는다.
     expect(screen.queryByLabelText('45도패스캐치 개수')).not.toBeInTheDocument()
   })
 

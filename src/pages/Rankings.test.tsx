@@ -38,8 +38,8 @@ const EMPTY_BODY: RecordsResponse = {
 const RECORDS_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-    { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+    { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '셔틀런', name: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
   ],
   players: [
     { id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] },
@@ -68,7 +68,7 @@ const RECORDS_BODY: RecordsResponse = {
           },
         },
       ],
-      eventKeys: ['골밑슛', '셔틀런'],
+      eventIds: ['골밑슛', '셔틀런'],
     },
     {
       date: '2026-06-08',
@@ -92,7 +92,7 @@ const RECORDS_BODY: RecordsResponse = {
           },
         },
       ],
-      eventKeys: ['골밑슛', '셔틀런'],
+      eventIds: ['골밑슛', '셔틀런'],
     },
   ],
   rankings: [
@@ -126,13 +126,13 @@ const RECORDS_BODY: RecordsResponse = {
   home: { latestSession: null, achievementRates: [] },
 }
 
-// 종목 7개 × 회차 2개 — 1차는 4종목만 측정(eventKeys 부분집합), 최신은 7종목 전부 측정.
-// 종목 칩이 events[] 전체가 아니라 선택 회차 eventKeys만 반영하는지, 회차 전환 시
+// 종목 7개 × 회차 2개 — 1차는 4종목만 측정(eventIds 부분집합), 최신은 7종목 전부 측정.
+// 종목 칩이 events[] 전체가 아니라 선택 회차 eventIds만 반영하는지, 회차 전환 시
 // 선택 종목이 사라지면 첫 종목으로 폴백하는지를 검증한다(#123, PRD §08 마이그레이션 시나리오).
 const MIXED_EVENT_KEYS = ['골밑슛', '셔틀런', '자유투', '드리블', '패스', '던지기', '달리기']
 
 function mixedEventDefinition(key: string) {
-  return { key, valueKind: 'count' as const, target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' as const, endSessionDate: null, exemptable: false }
+  return { id: key, name: key, valueKind: 'count' as const, target: '5', targetValue: 5, maxScore: 10, direction: '높을수록' as const, endSessionDate: null, exemptable: false }
 }
 
 function recordedScoresFor(keys: string[]) {
@@ -154,12 +154,12 @@ const MIXED_EVENT_COUNT_BODY: RecordsResponse = {
     {
       date: '2026-06-01',
       entries: [{ playerId: 1, name: '선수1', participated: true, scores: recordedScoresFor(MIXED_EVENT_KEYS.slice(0, 4)) }],
-      eventKeys: MIXED_EVENT_KEYS.slice(0, 4),
+      eventIds: MIXED_EVENT_KEYS.slice(0, 4),
     },
     {
       date: '2026-06-08',
       entries: [{ playerId: 1, name: '선수1', participated: true, scores: recordedScoresFor(MIXED_EVENT_KEYS) }],
-      eventKeys: MIXED_EVENT_KEYS,
+      eventIds: MIXED_EVENT_KEYS,
     },
   ],
   rankings: [
@@ -169,13 +169,13 @@ const MIXED_EVENT_COUNT_BODY: RecordsResponse = {
   home: { latestSession: null, achievementRates: [] },
 }
 
-// 회차에 eventKeys 자체가 없는(계약 위반) 방어 케이스 — sessionEvents가 비어도 크래시 없이
+// 회차에 eventIds 자체가 없는(계약 위반) 방어 케이스 — sessionEvents가 비어도 크래시 없이
 // 빈 상태로 수렴하는지 검증한다(#123 리뷰 코멘트).
 const EMPTY_SESSION_EVENTS_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: [mixedEventDefinition('골밑슛')],
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
-  sessions: [{ date: '2026-06-01', entries: [], eventKeys: [] }],
+  sessions: [{ date: '2026-06-01', entries: [], eventIds: [] }],
   rankings: [{ sessionDate: '2026-06-01', events: [] }],
   home: { latestSession: null, achievementRates: [] },
 }
@@ -247,13 +247,13 @@ describe('Rankings', () => {
 
     renderRankings()
 
-    // 기본값: 최신 회차(2차) — eventKeys 7개가 그대로 칩 7개로
+    // 기본값: 최신 회차(2차) — eventIds 7개가 그대로 칩 7개로
     await waitFor(() => expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true'))
     for (const key of MIXED_EVENT_KEYS) {
       expect(screen.getByRole('button', { name: key })).toBeInTheDocument()
     }
 
-    // 1차로 전환 — eventKeys 4개만 칩으로 남고, 나머지 3개는 렌더되지 않는다
+    // 1차로 전환 — eventIds 4개만 칩으로 남고, 나머지 3개는 렌더되지 않는다
     fireEvent.click(screen.getByRole('button', { name: '1차' }))
 
     for (const key of MIXED_EVENT_KEYS.slice(0, 4)) {
@@ -281,7 +281,7 @@ describe('Rankings', () => {
     expect(screen.getByRole('button', { name: '골밑슛' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('선택 회차에 eventKeys가 없으면(계약 위반 데이터) 크래시 없이 빈 상태를 보여준다', async () => {
+  it('선택 회차에 eventIds가 없으면(계약 위반 데이터) 크래시 없이 빈 상태를 보여준다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, EMPTY_SESSION_EVENTS_BODY)))
 
     renderRankings()

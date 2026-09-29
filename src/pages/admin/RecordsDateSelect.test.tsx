@@ -14,10 +14,10 @@ afterEach(() => {
 })
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { id: '드리블셔틀런', name: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+  { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
 ]
-const SESSION_EVENT_KEYS = EVENTS.map((e) => e.key)
+const SESSION_EVENT_KEYS = EVENTS.map((e) => e.id)
 
 function completedEntry(playerId: number, name: string): SessionEntry {
   return {
@@ -86,8 +86,8 @@ describe('RecordsDateSelect', () => {
   it('회차 카드를 최신부터(역순) n차 라벨과 완료 n/N으로 렌더한다', async () => {
     const data = baseData({
       sessions: [
-        { date: '2025-05-16', entries: [completedEntry(1, '가은'), unmeasuredEntry(2, '나연')], eventKeys: SESSION_EVENT_KEYS },
-        { date: '2025-05-23', entries: [completedEntry(1, '가은'), completedEntry(2, '나연')], eventKeys: SESSION_EVENT_KEYS },
+        { date: '2025-05-16', entries: [completedEntry(1, '가은'), unmeasuredEntry(2, '나연')], eventIds: SESSION_EVENT_KEYS },
+        { date: '2025-05-23', entries: [completedEntry(1, '가은'), completedEntry(2, '나연')], eventIds: SESSION_EVENT_KEYS },
       ],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
@@ -104,19 +104,19 @@ describe('RecordsDateSelect', () => {
     expect(cards[1]).toHaveTextContent('완료 1/2')
   })
 
-  it('회차마다 eventKeys 종목 수가 달라도 각자 자기 회차 기준으로만 완료를 판정한다(이슈 #126 회귀)', async () => {
+  it('회차마다 eventIds 종목 수가 달라도 각자 자기 회차 기준으로만 완료를 판정한다(이슈 #126 회귀)', async () => {
     const data = baseData({
       sessions: [
         {
           date: '2025-05-16',
-          eventKeys: ['드리블셔틀런'],
+          eventIds: ['드리블셔틀런'],
           entries: [
             { playerId: 1, name: '가은', participated: true, scores: { 드리블셔틀런: { status: 'recorded', value: 72, display: '1:12' } } },
           ],
         },
         {
           date: '2025-06-20',
-          eventKeys: ['드리블셔틀런', '골밑슛'],
+          eventIds: ['드리블셔틀런', '골밑슛'],
           entries: [
             {
               playerId: 1,
@@ -146,7 +146,7 @@ describe('RecordsDateSelect', () => {
 
   it('회차 카드를 탭하면 그 회차 참가자 목록으로 이동한다', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [completedEntry(1, '가은')], eventKeys: SESSION_EVENT_KEYS }],
+      sessions: [{ date: '2025-05-16', entries: [completedEntry(1, '가은')], eventIds: SESSION_EVENT_KEYS }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 

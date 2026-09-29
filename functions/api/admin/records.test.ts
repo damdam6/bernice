@@ -31,11 +31,11 @@ function makeBundle(): SheetRawBundle {
     goals: {
       name: '목표',
       values: [
-        ['종목', '목표', '만점', '방향', '종료 회차'],
-        ['드리블셔틀런', '1:30', '-', '낮을수록', ''],
-        ['골밑슛', '5', '10', '높을수록', ''],
-        ['자유투', '5', '10', '높을수록', ''],
-        ['45도패스캐치', '5', '-', '높을수록', ''],
+        ['종목', '목표', '만점', '방향', '종료 회차', '면제 가능', '종목 ID'],
+        ['드리블셔틀런', '1:30', '-', '낮을수록', '', '', '드리블셔틀런'],
+        ['골밑슛', '5', '10', '높을수록', '', '', '골밑슛'],
+        ['자유투', '5', '10', '높을수록', '', '', '자유투'],
+        ['45도패스캐치', '5', '-', '높을수록', '', '', '45도패스캐치'],
       ],
     },
     rounds: [
@@ -88,6 +88,48 @@ afterEach(() => {
 })
 
 describe('POST /api/admin/records', () => {
+  it('#177 기존 5열 시트도 ID 요청을 기존 이름 헤더의 올바른 셀에 저장한다', async () => {
+    const bundle = makeBundle()
+    bundle.goals!.values = bundle.goals!.values.map((row) => row.slice(0, 5))
+    fetchSheetBundleMock.mockResolvedValue(bundle)
+    const response = await onRequestPost(makeContext({ sessionDate: '2025-08-16', playerId: 1,
+      scores: { 'legacy-row-5': '', 'legacy-row-3': '6', 'legacy-row-2': '1:12', 'legacy-row-4': '면제' } }))
+    expect(response.status).toBe(200)
+    expect(updateValuesMock).toHaveBeenCalledWith(expect.anything(), 'sheet-under-test', "'2025-08-16'!B2:E2", [['1:12', '6', '면제', '']])
+    expect((await response.json() as { scores: Record<string, unknown> }).scores['legacy-row-3']).toMatchObject({ value: 6 })
+  })
+
+  it('#177 동명 종목의 ID 헤더 순서대로 저장하며 이름 변경으로 연결이 바뀌지 않는다', async () => {
+    const bundle = makeBundle()
+    bundle.goals!.values = [
+      ['종목', '목표', '만점', '방향', '종료 회차', '면제 가능', '종목 ID'],
+      ['패스 새 이름', '3', '5', '높을수록', '', '', 'pass-a'],
+      ['패스', '7', '10', '높을수록', '', '', 'pass-b'],
+    ]
+    bundle.rounds[0].values = [['이름', 'id:pass-b\n패스', 'id:pass-a\n패스'], ['선수1', '7', '3']]
+    fetchSheetBundleMock.mockResolvedValue(bundle)
+    const response = await onRequestPost(makeContext({ sessionDate: '2025-08-16', playerId: 1,
+      scores: { 'pass-a': '4', 'pass-b': '8' } }))
+    expect(response.status).toBe(200)
+    expect(updateValuesMock).toHaveBeenCalledWith(expect.anything(), 'sheet-under-test', "'2025-08-16'!B2:C2", [['8', '4']])
+    expect((await response.json() as { scores: Record<string, unknown> }).scores['pass-a']).toMatchObject({ value: 4 })
+  })
+
+  it.each(['ambiguous', 'duplicate-id', 'unknown-id'])('#177 %s 매핑 오류에서는 시트에 쓰지 않는다', async (kind) => {
+    const bundle = makeBundle()
+    bundle.goals!.values = [
+      ['종목', '목표', '만점', '방향', '종료 회차', '면제 가능', '종목 ID'],
+      ['패스', '3', '5', '높을수록', '', '', 'pass-a'],
+      ['패스', '7', '10', '높을수록', '', '', kind === 'duplicate-id' ? 'pass-a' : 'pass-b'],
+    ]
+    bundle.rounds[0].values = [['이름', kind === 'unknown-id' ? 'id:missing\n패스' : '패스'], ['선수1', '3']]
+    fetchSheetBundleMock.mockResolvedValue(bundle)
+    const response = await onRequestPost(makeContext({ sessionDate: '2025-08-16', playerId: 1, scores: { 'pass-a': '4' } }))
+    expect(response.status).toBe(500)
+    expect(await response.json()).toMatchObject({ error: 'sheet_data_invalid' })
+    expect(updateValuesMock).not.toHaveBeenCalled()
+  })
+
   it('정상 저장 → 점수 셀 범위만 RAW 쓰기 + 캐시 무효화(응답 전) + EventScore 200', async () => {
     fetchSheetBundleMock.mockResolvedValue(makeBundle())
 
@@ -263,7 +305,7 @@ describe('POST /api/admin/records', () => {
     it('scores에 그 회차 비측정 종목(이미 종료된 종목) key가 오면 400 + unknown, 시트에 쓰지 않는다', async () => {
       const bundle = makeBundle()
       // 윗몸일으키기는 2025-07-01에 종료 — 2025-08-16 회차 헤더엔 이 컬럼이 없다(V3 자연 소멸).
-      addGoalRow(bundle, ['윗몸일으키기', '10', '15', '높을수록', '2025-07-01'])
+      addGoalRow(bundle, ['윗몸일으키기', '10', '15', '높을수록', '2025-07-01', '', '윗몸일으키기'])
       fetchSheetBundleMock.mockResolvedValue(bundle)
 
       const res = await onRequestPost(
@@ -280,7 +322,7 @@ describe('POST /api/admin/records', () => {
     it('종료 회차 경계(그 당일) 회차는 헤더에 컬럼이 있으므로 정상 저장된다', async () => {
       const bundle = makeBundle()
       // 윗몸일으키기의 종료 회차가 이 회차(2025-08-16) 그 자체 — 경계 포함이라 헤더에 컬럼이 있다.
-      addGoalRow(bundle, ['윗몸일으키기', '10', '15', '높을수록', '2025-08-16'])
+      addGoalRow(bundle, ['윗몸일으키기', '10', '15', '높을수록', '2025-08-16', '', '윗몸일으키기'])
       bundle.rounds[0].values[0].push('윗몸일으키기')
       bundle.rounds[0].values[1].push('7') // 선수1
       bundle.rounds[0].values[2].push('') // 선수2

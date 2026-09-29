@@ -6,7 +6,7 @@ import { buildPerformanceScale, clamp01 } from './performance-scale'
 
 function countEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
   return {
-    key: '골밑슛',
+    id: '골밑슛', name: '골밑슛',
     valueKind: 'count',
     target: '5',
     targetValue: 5,
@@ -20,7 +20,7 @@ function countEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
 
 function timeEvent(overrides: Partial<EventDefinition> = {}): EventDefinition {
   return {
-    key: '셔틀런',
+    id: '셔틀런', name: '셔틀런',
     valueKind: 'time',
     target: '1:17',
     targetValue: 77,
@@ -48,7 +48,7 @@ function sessionsWithValues(eventKey: string, values: Array<number | EventScore>
         participated: true,
       },
     ],
-    eventKeys: [eventKey],
+    eventIds: [eventKey],
   }))
 }
 
@@ -121,7 +121,7 @@ describe('시간 종목 (범위 스케일 + 낮을수록 반전)', () => {
 
 describe('범위 스케일 (높을수록)', () => {
   it('만점 없는 개수 종목은 범위 스케일 — 최대 = 1', () => {
-    const event = countEvent({ key: '팔굽혀펴기', maxScore: null })
+    const event = countEvent({ id: '팔굽혀펴기', name: '팔굽혀펴기', maxScore: null })
     const scale = buildPerformanceScale([event], sessionsWithValues('팔굽혀펴기', [10, 30]))
     expect(scale.normalize('팔굽혀펴기', 30)).toBe(1)
     expect(scale.normalize('팔굽혀펴기', 10)).toBe(0)
@@ -129,7 +129,7 @@ describe('범위 스케일 (높을수록)', () => {
   })
 
   it('만점이 있어도 낮을수록면 범위 스케일로 폴백 (의미 역전 방지)', () => {
-    const event = countEvent({ key: '실책', direction: '낮을수록' })
+    const event = countEvent({ id: '실책', name: '실책', direction: '낮을수록' })
     const scale = buildPerformanceScale([event], sessionsWithValues('실책', [0, 4]))
     expect(scale.normalize('실책', 0)).toBe(1)
     expect(scale.normalize('실책', 4)).toBe(0)

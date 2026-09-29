@@ -11,7 +11,7 @@ import {
 
 // key·valueKind만 검증에 쓰이지만 타입 충족을 위해 나머지 필드도 채운다.
 function ev(key: string, valueKind: 'count' | 'time', direction: RankDirection = '높을수록'): EventDefinition {
-  return { key, valueKind, target: '0', targetValue: 0, maxScore: null, direction, endSessionDate: null, exemptable: false }
+  return { id: key, name: key, valueKind, target: '0', targetValue: 0, maxScore: null, direction, endSessionDate: null, exemptable: false }
 }
 
 const EVENTS: EventDefinition[] = [
@@ -94,14 +94,14 @@ describe('validateScoreKeys', () => {
     expect(result.unknown).toEqual(['없는종목'])
   })
 
-  it('key를 NFC 정규화해 비교한다(NFD 입력도 일치)', () => {
+  it('ID는 NFC 변환 없이 정확히 비교한다 (다른 바이트 ID를 임의 연결하지 않음)', () => {
     const nfdScores: Record<string, string> = {
       ['드리블셔틀런'.normalize('NFD')]: '1:12',
       ['골밑슛'.normalize('NFD')]: '6',
       ['자유투'.normalize('NFD')]: '면제',
       ['45도패스캐치'.normalize('NFD')]: '',
     }
-    expect(validateScoreKeys(nfdScores, EVENTS)).toEqual({ missing: [], unknown: [] })
+    expect(validateScoreKeys(nfdScores, EVENTS)).toEqual({ missing: EVENTS.map((e) => e.id), unknown: Object.keys(nfdScores) })
   })
 })
 
@@ -116,7 +116,7 @@ describe('evaluateScores', () => {
     expect(scoreMap['자유투']).toEqual({ status: 'exempt', value: null, display: null })
     expect(scoreMap['45도패스캐치']).toEqual({ status: 'unmeasured', value: null, display: null })
     // scoreMap은 events 순서를 따른다
-    expect(Object.keys(scoreMap)).toEqual(EVENTS.map((e) => e.key))
+    expect(Object.keys(scoreMap)).toEqual(EVENTS.map((e) => e.id))
   })
 
   it('normalize-score invalid(예: 1:75)는 invalid로 사유와 함께 보고한다', () => {
@@ -150,7 +150,7 @@ describe('mapHeaderToEvents 재사용 — 읽기 경로와 동일한 완화·검
   it('목표 종목 일부만 있는 회차 헤더도 그대로 통과한다 (V3 완화)', () => {
     const eventColumns = mapHeaderToEvents(SUBSET_HEADER, EVENTS, '2025-08-16')
 
-    expect(eventColumns.map((column) => column.event.key)).toEqual(['골밑슛', '드리블셔틀런'])
+    expect(eventColumns.map((column) => column.event.id)).toEqual(['골밑슛', '드리블셔틀런'])
   })
 
   it('서브셋 회차의 쓰기 범위는 목표 전체가 아니라 그 회차 헤더 열만 덮는다', () => {
@@ -165,7 +165,7 @@ describe('mapHeaderToEvents 재사용 — 읽기 경로와 동일한 완화·검
 
   it('종료된 종목이 이후 회차 헤더에 있으면 쓰기 경로에서도 동일하게 Error를 던진다 (V4)', () => {
     const events = EVENTS.map((event) =>
-      event.key === '45도패스캐치' ? { ...event, endSessionDate: '2025-05-16', exemptable: false } : event,
+      event.id === '45도패스캐치' ? { ...event, endSessionDate: '2025-05-16', exemptable: false } : event,
     )
 
     expect(() => mapHeaderToEvents(HEADER, events, '2025-08-16')).toThrow(/45도패스캐치/)

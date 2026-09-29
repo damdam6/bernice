@@ -45,6 +45,7 @@
 // 데이터 모순(V4)은 새로 잡는다.
 
 import type { EventDefinition, EventScore, Session, SessionEntry, Player } from '../../shared/domain'
+import { indexEvents, resolveEventHeader } from '../../shared/event-identity'
 import { buildEventScore } from '../../shared/build-event-score'
 
 const NAME_HEADER = '이름'.normalize('NFC')
@@ -105,7 +106,7 @@ export function parseSession(
 
     const scores: Record<string, EventScore> = {}
     for (const { event, columnIndex } of eventColumns) {
-      scores[event.key] = buildEventScore(row[columnIndex], event)
+      scores[event.id] = buildEventScore(row[columnIndex], event)
     }
 
     const participated = Object.values(scores).some((score) => score.status !== 'unmeasured')
@@ -113,7 +114,7 @@ export function parseSession(
     entries.push({ playerId: player.id, name: normalizedNameCell, scores, participated })
   })
 
-  return { date: tabName, entries, eventKeys: eventColumns.map(({ event }) => event.key) }
+  return { date: tabName, entries, eventIds: eventColumns.map(({ event }) => event.id) }
 }
 
 export function buildPlayersByName(players: Player[]): Map<string, Player[]> {
@@ -143,26 +144,26 @@ export function mapHeaderToEvents(header: string[], events: EventDefinition[], s
     throw new Error(`회차 탭 헤더 첫 열이 "이름"이 아닙니다: "${header[0] ?? ''}"`)
   }
 
-  const eventByKey = new Map(events.map((event) => [event.key.normalize('NFC'), event]))
-  const matchedKeys = new Set<string>()
+  const eventById = indexEvents(events)
+  const matchedIds = new Set<string>()
   const columns: EventColumn[] = []
 
   for (let columnIndex = 1; columnIndex < header.length; columnIndex++) {
     const rawLabel = header[columnIndex] ?? ''
-    const label = rawLabel.trim().normalize('NFC')
+    const label = rawLabel
 
     // 헤더 셀은 전부 종목 참조 수식이라 정상 상태에서는 절대 빈 칸일 수 없다(데이터 행의
     // 점수 칸과 달리 "빈 트레일링 셀 생략" 같은 benign 케이스가 없음) — 빈 칸도 그냥
     // "대응 종목 없음"으로 던져 다른 헤더 이상과 동일하게 fail-loud를 유지한다.
-    const event = eventByKey.get(label)
+    const event = resolveEventHeader(label, events, eventById)
     if (!event) {
       throw new Error(
-        label === ''
+        label.trim() === ''
           ? `회차 탭 헤더 ${columnIndex + 1}번째 열이 비어 있습니다 — 종목 참조 수식이 깨졌을 수 있습니다`
           : `회차 탭 헤더 "${rawLabel}"에 대응하는 종목을 목표 탭에서 찾을 수 없습니다`,
       )
     }
-    if (matchedKeys.has(label)) {
+    if (matchedIds.has(event.id)) {
       throw new Error(`회차 탭 헤더에 "${rawLabel}"가 중복됩니다`)
     }
 
@@ -178,7 +179,7 @@ export function mapHeaderToEvents(header: string[], events: EventDefinition[], s
       )
     }
 
-    matchedKeys.add(label)
+    matchedIds.add(event.id)
     columns.push({ event, columnIndex })
   }
 

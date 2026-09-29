@@ -36,7 +36,7 @@ export function buildPerformanceScale(
   events: EventDefinition[],
   sessions: Session[],
 ): PerformanceScale {
-  const definitions = new Map(events.map((event) => [event.key, event]))
+  const definitions = new Map(events.map((event) => [event.id, event]))
 
   // 종목별 관측 범위 — 전 회차·전 선수의 recorded 값만 집계(면제·미측정·이상값 제외)
   const ranges = new Map<string, ValueRange>()

@@ -34,9 +34,9 @@ export function computeEventRanking(event: EventDefinition, entries: SessionEntr
   const candidates: RankedCandidate[] = []
   for (const entry of entries) {
     if (!activePlayerIds.has(entry.playerId)) continue
-    // scores[event.key]는 계약상(shared/domain.ts:57-58) 항상 존재하지만, 그 보장을 만드는
+    // scores[event.id]는 계약상(shared/domain.ts:57-58) 항상 존재하지만, 그 보장을 만드는
     // 파서(#27)가 아직 없는 상태라 방어적으로 optional chaining — player.status 재확인과 대칭.
-    const score = entry.scores[event.key]
+    const score = entry.scores[event.id]
     if (score?.status !== 'recorded') continue
     candidates.push({ playerId: entry.playerId, name: entry.name, value: score.value, display: score.display })
   }
@@ -61,18 +61,18 @@ export function computeEventRanking(event: EventDefinition, entries: SessionEntr
     })
   })
 
-  return { event: event.key, entries: entriesRanked }
+  return { event: event.id, entries: entriesRanked }
 }
 
-/** 회차 1개에 대한 종목별 랭킹 묶음. 그 회차 Session.eventKeys에 해당하는 종목만, 헤더 순서로
+/** 회차 1개에 대한 종목별 랭킹 묶음. 그 회차 Session.eventIds에 해당하는 종목만, 헤더 순서로
  *  담는다(shared/domain.ts SessionRankings.events 계약) — 미측정 종목×회차 조합은 항목 자체가 없다.
- *  eventKeys에 있는데 events(목표 탭)에 없는 key는 조용히 건너뛴다: 파서(#111/#112)가 이 불변식을
+ *  eventIds에 있는데 events(목표 탭)에 없는 key는 조용히 건너뛴다: 파서(#111/#112)가 이 불변식을
  *  보장하지만, 이 파일은 그 완성을 기다리지 않고 Session 픽스처만으로 개발되므로 방어적으로 둔다. */
 export function computeSessionRankings(session: Session, events: EventDefinition[], players: Player[]): SessionRankings {
-  const eventsByKey = new Map(events.map((event) => [event.key, event]))
+  const eventsByKey = new Map(events.map((event) => [event.id, event]))
   return {
     sessionDate: session.date,
-    events: session.eventKeys
+    events: session.eventIds
       .map((key) => eventsByKey.get(key))
       .filter((event): event is EventDefinition => event !== undefined)
       .map((event) => computeEventRanking(event, session.entries, players)),

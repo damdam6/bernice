@@ -1,3 +1,4 @@
+import { eventLabel } from '../../shared/event-identity'
 import { useMemo, useState } from 'react'
 import type { RecordsResponse } from '../../shared/domain'
 import { CenteredPanel } from '../components/common/CenteredPanel'
@@ -53,15 +54,15 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   const sessionDate = selectedSessionDate ?? latestSessionDate
   const session = sessions.find((s) => s.date === sessionDate)
 
-  // 종목 칩 = 선택 회차의 측정 종목만(eventKeys 순서) — 회차 전환으로 선택 종목이 사라지면
+  // 종목 칩 = 선택 회차의 측정 종목만(eventIds 순서) — 회차 전환으로 선택 종목이 사라지면
   // 아래 find/??가 렌더마다 다시 평가되어 첫 종목으로 자동 폴백한다(#123)
   const sessionEvents = session ? deriveSessionEvents(events, session) : []
   // sessionEvents가 비면(계약상 발생 불가하나 잘못된 데이터 방어) event는 undefined —
   // 아래 렌더는 이 경우를 "표시할 기록이 없습니다"로 안전하게 수렴시킨다.
-  const event: (typeof sessionEvents)[number] | undefined = sessionEvents.find((e) => e.key === selectedEventKey) ?? sessionEvents[0]
+  const event: (typeof sessionEvents)[number] | undefined = sessionEvents.find((e) => e.id === selectedEventKey) ?? sessionEvents[0]
 
-  const eventRanking = event && rankings.find((r) => r.sessionDate === sessionDate)?.events.find((er) => er.event === event.key)
-  const rows = eventRanking && session && event ? buildRankingRows(eventRanking, session, event.key, players) : []
+  const eventRanking = event && rankings.find((r) => r.sessionDate === sessionDate)?.events.find((er) => er.event === event.id)
+  const rows = eventRanking && session && event ? buildRankingRows(eventRanking, session, event.id, players) : []
   const tiedRanks = findTiedRanks(rows)
 
   return (
@@ -70,8 +71,8 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {sessionEvents.map((e) => (
-          <FilterChip key={e.key} active={e.key === event?.key} onClick={() => setSelectedEventKey(e.key)}>
-            {e.key}
+          <FilterChip key={eventLabel(e, events, sessions)} active={e.id === event?.id} onClick={() => setSelectedEventKey(e.id)}>
+            {eventLabel(e, events, sessions)}
           </FilterChip>
         ))}
       </div>

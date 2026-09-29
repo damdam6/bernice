@@ -11,8 +11,8 @@ import {
 // 종목 2개(개수+만점 있음 높을수록 / 시간+만점 없음 낮을수록) × 회차 3개.
 // 회차별로 첫 기록·개선·동률·악화 델타가 모두 나오도록 값을 짰다.
 const EVENTS: EventDefinition[] = [
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-  { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+  { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { id: '셔틀런', name: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
 ]
 
 const PROFILE_SESSION_EVENT_KEYS = ['골밑슛', '셔틀런']
@@ -40,7 +40,7 @@ const SESSIONS: Session[] = [
         },
       },
     ],
-    eventKeys: PROFILE_SESSION_EVENT_KEYS,
+    eventIds: PROFILE_SESSION_EVENT_KEYS,
   },
   {
     date: '2026-06-08',
@@ -64,7 +64,7 @@ const SESSIONS: Session[] = [
         },
       },
     ],
-    eventKeys: PROFILE_SESSION_EVENT_KEYS,
+    eventIds: PROFILE_SESSION_EVENT_KEYS,
   },
   {
     date: '2026-06-15',
@@ -88,7 +88,7 @@ const SESSIONS: Session[] = [
         },
       },
     ],
-    eventKeys: PROFILE_SESSION_EVENT_KEYS,
+    eventIds: PROFILE_SESSION_EVENT_KEYS,
   },
 ]
 
@@ -179,9 +179,9 @@ describe('buildRadarAxes', () => {
     expect(axes.map((a) => a.value)).toEqual([0, 0])
   })
 
-  it('축 = 선택 회차의 측정 종목(session.eventKeys) — 회차마다 축 개수가 가변하고, 순서는 eventKeys 순서를 따른다(전역 events[] 순서 아님)', () => {
+  it('축 = 선택 회차의 측정 종목(session.eventIds) — 회차마다 축 개수가 가변하고, 순서는 eventIds 순서를 따른다(전역 events[] 순서 아님)', () => {
     const sevenEvents: EventDefinition[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => ({
-      key,
+      id: key, name: key,
       valueKind: 'count',
       target: '5',
       targetValue: 5,
@@ -201,7 +201,7 @@ describe('buildRadarAxes', () => {
           scores: { D: recordedScore(4), B: recordedScore(4), A: recordedScore(4), C: recordedScore(4) },
         },
       ],
-      eventKeys: ['D', 'B', 'A', 'C'], // events[] 정의 순서(A..G)와 다르게 섞어 순서 출처를 검증
+      eventIds: ['D', 'B', 'A', 'C'], // events[] 정의 순서(A..G)와 다르게 섞어 순서 출처를 검증
     }
     const sevenEventSession: Session = {
       date: '2026-07-08',
@@ -210,10 +210,10 @@ describe('buildRadarAxes', () => {
           playerId: 1,
           name: '선수1',
           participated: true,
-          scores: Object.fromEntries(sevenEvents.map((e) => [e.key, recordedScore(5)])),
+          scores: Object.fromEntries(sevenEvents.map((e) => [e.id, recordedScore(5)])),
         },
       ],
-      eventKeys: sevenEvents.map((e) => e.key),
+      eventIds: sevenEvents.map((e) => e.id),
     }
     const scale7 = buildPerformanceScale(sevenEvents, [fourEventSession, sevenEventSession])
 
@@ -279,7 +279,7 @@ describe('buildGrowthCards', () => {
 
   it('종료 종목은 그 선수 유효 기록(PB)이 1건 이상일 때만 ended:true 카드로 노출되고, 없으면 카드 자체가 없다', () => {
     const endedEvent: EventDefinition = {
-      key: '종료종목',
+      id: '종료종목', name: '종료종목',
       valueKind: 'count',
       target: '5',
       targetValue: 5,
@@ -343,7 +343,7 @@ describe('buildTrendSeries', () => {
 
   it('종료 종목: 종료 회차 이후 세션까지 넘겨도 라인은 종료 회차에서 끊기고 이후 구간엔 점이 없다', () => {
     const endedEvent: EventDefinition = {
-      key: '종료종목',
+      id: '종료종목', name: '종료종목',
       valueKind: 'count',
       target: '5',
       targetValue: 5,
