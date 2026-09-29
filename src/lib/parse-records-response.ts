@@ -1,3 +1,4 @@
+import { isEventId } from '../../shared/event-identity'
 // GET /api/records 응답 런타임 검증(#93) — `as RecordsResponse` 단언 대신 unknown에서 값을
 // 꺼내 새 객체를 조립한다("parse, don't validate", functions/api/admin/records.ts parseBody와
 // 같은 관용구). 조립형이라 shared/domain.ts에 필수 필드가 추가되면 여기가 컴파일 에러로 함께
@@ -55,7 +56,9 @@ function parseArray<T>(raw: unknown, parseItem: (item: unknown) => T | null): T[
 
 function parseEventDefinition(raw: unknown): EventDefinition | null {
   if (!isPlainObject(raw)) return null
-  if (typeof raw.key !== 'string') return null
+  if (!isEventId(raw.id)) return null
+  if (typeof raw.name !== 'string' || !raw.name.trim()) return null
+  if (raw.legacyName !== undefined && (typeof raw.legacyName !== 'string' || !raw.legacyName.trim())) return null
   if (!isOneOf(raw.valueKind, EVENT_VALUE_KINDS)) return null
   if (typeof raw.target !== 'string') return null
   if (typeof raw.targetValue !== 'number') return null
@@ -64,7 +67,9 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
   if (typeof raw.endSessionDate !== 'string' && raw.endSessionDate !== null) return null
   if (typeof raw.exemptable !== 'boolean') return null
   return {
-    key: raw.key,
+    id: raw.id,
+    name: raw.name,
+    ...(typeof raw.legacyName === 'string' ? { legacyName: raw.legacyName } : {}),
     valueKind: raw.valueKind,
     target: raw.target,
     targetValue: raw.targetValue,
@@ -100,6 +105,7 @@ export function parseScores(raw: unknown): Record<string, EventScore> | null {
   if (!isPlainObject(raw)) return null
   const scores: Record<string, EventScore> = {}
   for (const [key, value] of Object.entries(raw)) {
+    if (!isEventId(key)) return null
     const parsed = parseEventScore(value)
     if (parsed === null) return null
     scores[key] = parsed
@@ -127,9 +133,9 @@ function parseSession(raw: unknown): Session | null {
   if (typeof raw.date !== 'string') return null
   const entries = parseArray(raw.entries, parseSessionEntry)
   if (entries === null) return null
-  const eventKeys = parseStringArray(raw.eventKeys)
-  if (eventKeys === null) return null
-  return { date: raw.date, entries, eventKeys }
+  const eventIds = parseStringArray(raw.eventIds)
+  if (eventIds === null) return null
+  return { date: raw.date, entries, eventIds }
 }
 
 function parseRankingEntry(raw: unknown): RankingEntry | null {
@@ -259,5 +265,26 @@ export function parseRecordsResponse(raw: unknown): RecordsResponse | null {
   if (rankings === null) return null
   const home = parseHomeSummary(raw.home)
   if (home === null) return null
+  // Referential integrity is checked before any UI/aggregation can silently merge IDs.
+  const ids = new Set(events.map((event) => event.id))
+  if (ids.size !== events.length) return null
+  const uniqueKnown = (values: string[]) => new Set(values).size === values.length && values.every((id) => ids.has(id))
+  for (const session of sessions) {
+    if (!uniqueKnown(session.eventIds)) return null
+    for (const entry of session.entries) {
+      const keys = Object.keys(entry.scores)
+      if (keys.length !== session.eventIds.length || keys.some((id) => !session.eventIds.includes(id))) return null
+    }
+  }
+  for (const ranking of rankings) {
+    if (!uniqueKnown(ranking.events.map((event) => event.event))) return null
+    const session = sessions.find((s) => s.date === ranking.sessionDate)
+    if (!session || ranking.events.some((event) => !session.eventIds.includes(event.event))) return null
+  }
+  for (const player of players) {
+    if (!uniqueKnown(player.trends.map((trend) => trend.event))) return null
+    if (!uniqueKnown(player.personalBests.map((best) => best.event))) return null
+  }
+  if (!uniqueKnown(home.achievementRates.map((rate) => rate.event))) return null
   return { generatedAt: raw.generatedAt, events, players, sessions, rankings, home }
 }

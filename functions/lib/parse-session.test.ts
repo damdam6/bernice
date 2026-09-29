@@ -7,10 +7,10 @@ const HEADER = ['이름', '드리블셔틀런', '골밑슛', '자유투', '45도
 
 function buildEvents(): EventDefinition[] {
   return [
-    { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-    { key: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
-    { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '드리블셔틀런', name: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+    { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '자유투', name: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '45도패스캐치', name: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: false },
   ]
 }
 
@@ -77,7 +77,7 @@ describe('parseSession', () => {
     expect(player7.playerId).toBe(7)
     expect(player7.participated).toBe(false)
     for (const event of buildEvents()) {
-      expect(player7.scores[event.key]).toEqual({ status: 'unmeasured', value: null, display: null })
+      expect(player7.scores[event.id]).toEqual({ status: 'unmeasured', value: null, display: null })
     }
   })
 
@@ -195,7 +195,7 @@ describe('parseSession', () => {
 
     const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers()), buildEvents())
 
-    expect(session.eventKeys).toEqual(['드리블셔틀런', '골밑슛', '자유투'])
+    expect(session.eventIds).toEqual(['드리블셔틀런', '골밑슛', '자유투'])
     expect(session.entries[0].scores).not.toHaveProperty('45도패스캐치')
   })
 
@@ -256,7 +256,7 @@ describe('parseSession', () => {
 
     expect(session.entries[0].participated).toBe(true)
     for (const event of buildEvents()) {
-      expect(session.entries[0].scores[event.key]).toEqual({ status: 'exempt', value: null, display: null })
+      expect(session.entries[0].scores[event.id]).toEqual({ status: 'exempt', value: null, display: null })
     }
   })
 
@@ -266,7 +266,7 @@ describe('parseSession', () => {
 
     expect(session.entries[0].participated).toBe(true)
     for (const event of buildEvents()) {
-      expect(session.entries[0].scores[event.key].status).toBe('invalid')
+      expect(session.entries[0].scores[event.id].status).toBe('invalid')
     }
   })
 
@@ -303,12 +303,12 @@ describe('parseSession', () => {
     // 목표는 4종목인데 이 회차엔 2종목만 측정 — 나머지 2종목은 아직 추가 전이거나 종료됐거나 생략됐다.
     const SUBSET_HEADER = ['이름', '골밑슛', '드리블셔틀런']
 
-    it('eventKeys는 목표 탭 순서가 아니라 그 회차 헤더 순서를 그대로 담는다', () => {
+    it('eventIds는 목표 탭 순서가 아니라 그 회차 헤더 순서를 그대로 담는다', () => {
       const rows = [SUBSET_HEADER, ['선수1', '5', '1:12']]
 
       const session = parseSession('2025-05-16', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
 
-      expect(session.eventKeys).toEqual(['골밑슛', '드리블셔틀런'])
+      expect(session.eventIds).toEqual(['골밑슛', '드리블셔틀런'])
     })
 
     it('scores는 헤더 종목만 채우고 비측정 종목은 key 자체가 없다', () => {
@@ -338,11 +338,11 @@ describe('parseSession', () => {
       expect(session.entries[0].participated).toBe(true)
     })
 
-    it('참가자가 0명인 회차에서도 eventKeys로 측정 종목을 알 수 있다', () => {
+    it('참가자가 0명인 회차에서도 eventIds로 측정 종목을 알 수 있다', () => {
       const session = parseSession('2025-05-16', [SUBSET_HEADER], buildPlayersByName(buildPlayers()), buildEvents())
 
       expect(session.entries).toEqual([])
-      expect(session.eventKeys).toEqual(['골밑슛', '드리블셔틀런'])
+      expect(session.eventIds).toEqual(['골밑슛', '드리블셔틀런'])
     })
 
     it('완화된 것은 "헤더에 없음"뿐 — 목표에 없는 헤더(V1)·중복 헤더(V2)는 그대로 에러다', () => {
@@ -359,7 +359,7 @@ describe('parseSession', () => {
   // endSessionDate는 목표 탭 5열 파싱(#111) 소관이라 여기서는 픽스처로 직접 주입한다.
   describe('종료 경계 검증 (V4)', () => {
     function eventsWithEnd(key: string, endSessionDate: string | null): EventDefinition[] {
-      return buildEvents().map((event) => (event.key === key ? { ...event, endSessionDate } : event))
+      return buildEvents().map((event) => (event.id === key ? { ...event, endSessionDate } : event))
     }
 
     it('종료 회차보다 뒤인 회차 헤더에 종료 종목 컬럼이 있으면 Error를 던진다', () => {
@@ -388,7 +388,7 @@ describe('parseSession', () => {
         eventsWithEnd('45도패스캐치', '2025-05-16'),
       )
 
-      expect(session.eventKeys).toContain('45도패스캐치')
+      expect(session.eventIds).toContain('45도패스캐치')
       expect(session.entries[0].scores['45도패스캐치']).toEqual({ status: 'recorded', value: 6, display: '6' })
     })
 
@@ -402,7 +402,7 @@ describe('parseSession', () => {
         eventsWithEnd('45도패스캐치', '2025-05-16'),
       )
 
-      expect(session.eventKeys).not.toContain('45도패스캐치')
+      expect(session.eventIds).not.toContain('45도패스캐치')
     })
 
     it('종료 회차가 아직 오지 않은 회차(현역 구간)는 컬럼이 있어도 정상이다', () => {
@@ -415,7 +415,7 @@ describe('parseSession', () => {
         eventsWithEnd('45도패스캐치', '2025-06-20'),
       )
 
-      expect(session.eventKeys).toEqual(['45도패스캐치'])
+      expect(session.eventIds).toEqual(['45도패스캐치'])
     })
 
     it('endSessionDate가 null인 현역 종목은 어느 회차에서도 V4에 걸리지 않는다', () => {
@@ -423,7 +423,7 @@ describe('parseSession', () => {
 
       const session = parseSession('2099-12-31', rows, buildPlayersByName(buildPlayers(['선수1'])), buildEvents())
 
-      expect(session.eventKeys).toHaveLength(4)
+      expect(session.eventIds).toHaveLength(4)
     })
   })
 

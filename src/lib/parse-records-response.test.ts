@@ -7,8 +7,8 @@ import { parseEventScore, parseRecordsResponse } from './parse-records-response'
 const FULL_RESPONSE: RecordsResponse = {
   generatedAt: '2026-07-17T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-    { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+    { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '드리블셔틀런', name: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
   ],
   players: [
     {
@@ -54,7 +54,7 @@ const FULL_RESPONSE: RecordsResponse = {
           participated: true,
         },
       ],
-      eventKeys: ['골밑슛', '드리블셔틀런'],
+      eventIds: ['골밑슛', '드리블셔틀런'],
     },
   ],
   rankings: [
@@ -198,12 +198,12 @@ describe('parseRecordsResponse', () => {
     expect(parseRecordsResponse(payload((d) => delete (d.events as Record<string, unknown>[])[0].exemptable))).toBeNull()
   })
 
-  it('Session.eventKeys는 문자열 배열만 통과, 비배열·비문자열 원소는 거부한다', () => {
+  it('Session.eventIds는 문자열 배열만 통과, 비배열·비문자열 원소는 거부한다', () => {
     expect(
       parseRecordsResponse(
         payload((d) => {
           const sessions = d.sessions as Record<string, unknown>[]
-          sessions[0].eventKeys = '골밑슛,드리블셔틀런'
+          sessions[0].eventIds = '골밑슛,드리블셔틀런'
         }),
       ),
     ).toBeNull()
@@ -211,11 +211,11 @@ describe('parseRecordsResponse', () => {
       parseRecordsResponse(
         payload((d) => {
           const sessions = d.sessions as Record<string, unknown>[]
-          sessions[0].eventKeys = ['골밑슛', 1]
+          sessions[0].eventIds = ['골밑슛', 1]
         }),
       ),
     ).toBeNull()
-    expect(parseRecordsResponse(payload((d) => delete (d.sessions as Record<string, unknown>[])[0].eventKeys))).toBeNull()
+    expect(parseRecordsResponse(payload((d) => delete (d.sessions as Record<string, unknown>[])[0].eventIds))).toBeNull()
   })
 })
 

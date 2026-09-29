@@ -47,11 +47,11 @@ afterEach(() => {
 const ADMIN_CODE = 'admin-secret-71'
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
-  { key: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-  { key: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { id: '드리블셔틀런', name: '드리블셔틀런', valueKind: 'time', target: '0:58', targetValue: 58, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+  { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '7', targetValue: 7, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { id: '자유투', name: '자유투', valueKind: 'count', target: '3', targetValue: 3, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
   // 실시트 목표 탭 F열('면제 가능')과 동일하게 패스 종목만 면제 가능(#159) — 아래 면제 토글 시나리오가 이 플래그에 의존.
-  { key: '패스 - 체스트', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: true },
+  { id: '패스 - 체스트', name: '패스 - 체스트', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: true },
 ]
 
 // satisfies로 Player[] 형태를 검증하되 status 리터럴('활동')은 넓히지 않는다 — 아래
@@ -67,7 +67,7 @@ function makeEntry(player: Player): SessionEntry {
   return {
     playerId: player.id,
     name: player.name,
-    scores: Object.fromEntries(EVENTS.map((event) => [event.key, buildEventScore('', event)])),
+    scores: Object.fromEntries(EVENTS.map((event) => [event.id, buildEventScore('', event)])),
     participated: false,
   }
 }
@@ -77,7 +77,7 @@ function makeEntry(player: Player): SessionEntry {
 // 자체의 전체 커버리지는 compute-rankings.test.ts가 이미 갖고 있다.
 function computeEventRanking(event: EventDefinition, session: Session): EventRanking {
   const recorded = session.entries
-    .map((entry) => ({ entry, score: entry.scores[event.key] }))
+    .map((entry) => ({ entry, score: entry.scores[event.id] }))
     .filter((item): item is { entry: SessionEntry; score: Extract<EventScore, { status: 'recorded' }> } =>
       item.score.status === 'recorded',
     )
@@ -94,17 +94,17 @@ function computeEventRanking(event: EventDefinition, session: Session): EventRan
     entries.push({ playerId: entry.playerId, name: entry.name, value: score.value, display: score.display, rank, achieved })
   })
 
-  return { event: event.key, entries }
+  return { event: event.id, entries }
 }
 
 // 이 픽스처엔 세션이 최대 1개뿐이라 deltaFromPrevious/improved는 항상 null(첫 유효 기록)이다.
 function buildTrends(playerId: number, session: Session | null): PlayerEventTrend[] {
   return EVENTS.map((event) => {
-    const score = session?.entries.find((entry) => entry.playerId === playerId)?.scores[event.key]
-    if (!session || !score || score.status !== 'recorded') return { event: event.key, points: [] }
+    const score = session?.entries.find((entry) => entry.playerId === playerId)?.scores[event.id]
+    if (!session || !score || score.status !== 'recorded') return { event: event.id, points: [] }
     const achieved = event.direction === '낮을수록' ? score.value <= event.targetValue : score.value >= event.targetValue
     return {
-      event: event.key,
+      event: event.id,
       points: [
         { sessionDate: session.date, value: score.value, display: score.display, achieved, deltaFromPrevious: null, improved: null },
       ],
@@ -159,7 +159,7 @@ function createRecordsBackend() {
       sessionState = {
         date: formatSeoulDate(new Date()),
         entries: participants.map((player) => makeEntry(player)),
-        eventKeys: EVENTS.map((e) => e.key),
+        eventIds: EVENTS.map((e) => e.id),
       }
       return jsonResponse(201, { sessionDate: sessionState.date, participantCount: participants.length })
     }
@@ -183,7 +183,7 @@ function createRecordsBackend() {
       if (!player) return jsonResponse(400, { error: 'validation_failed', message: '존재하지 않는 선수입니다.' })
 
       const scoreMap: Record<string, EventScore> = {}
-      for (const event of EVENTS) scoreMap[event.key] = buildEventScore(scores[event.key], event)
+      for (const event of EVENTS) scoreMap[event.id] = buildEventScore(scores[event.id], event)
 
       sessionState = {
         ...sessionState,

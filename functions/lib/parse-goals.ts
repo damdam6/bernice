@@ -1,23 +1,10 @@
-// 목표 탭 원시 2D 배열 → EventDefinition[]. 열 순서: 종목 | 목표 | 만점 | 방향 | 종료 회차 | 면제 가능 (헤더 1행).
-// 스키마 근거: docs/sheet-integration.html §02(6열) · docs/prd-event-lifecycle.html §04(5열 시절 원형).
-// 값 정규화는 normalize-score.ts(이슈 #6)를 재사용.
-//
-// F열(면제 가능, #159)은 과도기 스키마다 — F1 헤더가 없는 5열 시트는 전 종목 exemptable=false로
-// 수용한다(신코드 배포가 실시트 열 추가보다 먼저여도 무중단). 단 F1 없이 F값만 있으면 의도 불명이라
-// fail-loud. G열 이후는 기존처럼 무시한다 — "배포 중인 코드가 모르는 열을 무시"하는 이 관례가
-// 시트 열 선(先)추가 → 코드 후(後)배포 순서를 안전하게 만들므로 미래 열 추가를 위해 보존한다.
-//
-// 목표 탭은 회차마다 바뀌지 않는 설정 시트(팀 운영자가 드물게 편집)라, 회차 점수 셀과 달리
-// EventDefinition에는 "이상값"을 실을 슬롯이 없다(EventScore.invalid와 대비). 그래서 행 파싱이
-// 실패하면 시트 행 번호·종목명을 담아 즉시 throw한다 — 운영자가 바로 시트에서 원인 셀을 찾을 수 있게.
-// 완전 공백 행만 예외적으로 스킵한다(#24 Sheets API 래퍼가 아직 없어 batchGet range가 데이터
-// 끝보다 넓게 잡혀 trailing 빈 행이 섞여 올 가능성을 배제할 수 없음) — parse-session.ts(#27)와
-// 동일하게, 스킵 여부와 무관하게 각 행의 시트 행 번호는 원본 배열 위치 기준으로 고정한다.
-//
-// 반환값의 sheetRowByKey(종목 key → 그 종목의 목표 탭 실제 행 번호)는 RecordsResponse 공개 계약에는
-// 노출되지 않는 내부 부산물이다 — create-sheet(#121)가 헤더 참조 수식(=목표!A{행})을 지을 때 쓴다.
+// Goals A:F keep their legacy meaning. G (종목 ID) selects explicit-ID mode;
+// optional H (이전 종목명) preserves one immutable alias during migration.
+// Without G, IDs use the original sheet row (legacy-row-N), never the current name.
+// Row moves/deletions remain prohibited until #178 has persisted IDs and converted headers.
 
 import { RANK_DIRECTIONS, type EventDefinition, type RankDirection } from '../../shared/domain'
+import { isEventId } from '../../shared/event-identity'
 import { normalizeScore } from '../../shared/normalize-score'
 import { isValidRoundTabName } from './sheetTabs'
 
@@ -31,15 +18,24 @@ const INTEGER_RE = /^\d+$/
 export interface ParseGoalsResult {
   events: EventDefinition[]
   /** 종목 key → 목표 탭 실제 행 번호(내부 전용, 위 파일 docblock 참고) */
-  sheetRowByKey: Map<string, number>
+  sheetRowById: Map<string, number>
+  identityMode: 'legacy' | 'id'
 }
 
 export function parseGoals(rows: string[][]): ParseGoalsResult {
-  if (rows.length === 0) return { events: [], sheetRowByKey: new Map() }
+  if (rows.length === 0) return { events: [], sheetRowById: new Map(), identityMode: 'legacy' }
   const hasExemptableColumn = validateHeader(rows[0])
 
+  const idHeader = (rows[0][6] ?? '').trim()
+  if (idHeader !== '' && idHeader !== '종목 ID') throw new Error('목표 탭 G1 헤더는 종목 ID여야 합니다')
+  const hasIdColumn = idHeader === '종목 ID'
+  const aliasHeader = (rows[0][7] ?? '').trim()
+  if (aliasHeader !== '' && aliasHeader !== '이전 종목명') throw new Error('목표 탭 H1 헤더는 이전 종목명이어야 합니다')
+  const hasAliasColumn = (rows[0][7] ?? '').trim() === '이전 종목명'
+  if (hasAliasColumn && !hasIdColumn) throw new Error('이전 종목명 열은 종목 ID 열과 함께 사용해야 합니다')
   const events: EventDefinition[] = []
-  const sheetRowByKey = new Map<string, number>()
+  const legacyNames = new Set<string>()
+  const sheetRowById = new Map<string, number>()
 
   rows.slice(1).forEach((row, index) => {
     const sheetRow = index + 2 // 헤더(1행) 다음부터 시작 — 스킵된 행이 있어도 밀리지 않음
@@ -47,16 +43,30 @@ export function parseGoals(rows: string[][]): ParseGoalsResult {
 
     const event = parseGoalRow(row, sheetRow, hasExemptableColumn)
 
-    const firstSeenRow = sheetRowByKey.get(event.key)
-    if (firstSeenRow !== undefined) {
-      fail(sheetRow, event.key, `종목명이 중복됨 (이미 ${firstSeenRow}행에서 같은 종목명 사용됨)`)
+    if (!hasIdColumn && (row[6] ?? '') !== '') fail(sheetRow, event.name, '종목 ID 값이 있는데 G1 헤더가 없음')
+    if (!hasAliasColumn && (row[7] ?? '').trim() !== '') fail(sheetRow, event.name, '이전 종목명 값이 있는데 H1 헤더가 없음')
+    if (hasIdColumn) {
+      const id = row[6] ?? ''
+      if (!isEventId(id)) fail(sheetRow, event.name, '종목 ID가 비어 있거나 형식이 올바르지 않음')
+      event.id = id
+      const alias = hasAliasColumn ? (row[7] ?? '').trim().normalize('NFC') : ''
+      if (alias) event.legacyName = alias
+    } else {
+      if (legacyNames.has(event.name)) fail(sheetRow, event.name, '종목명이 중복됨 — ID 형식으로 먼저 이전하세요')
+      if (event.name.startsWith('id:')) fail(sheetRow, event.name, 'id: 접두사는 ID 헤더용으로 예약되어 있습니다')
+      legacyNames.add(event.name)
     }
-    sheetRowByKey.set(event.key, sheetRow)
+
+    const firstSeenRow = sheetRowById.get(event.id)
+    if (firstSeenRow !== undefined) {
+      fail(sheetRow, event.id, `종목 ID가 중복됨 (이미 ${firstSeenRow}행에서 같은 ID 사용됨)`)
+    }
+    sheetRowById.set(event.id, sheetRow)
 
     events.push(event)
   })
 
-  return { events, sheetRowByKey }
+  return { events, sheetRowById, identityMode: hasIdColumn ? 'id' : 'legacy' }
 }
 
 // 반환값 = F열(면제 가능) 헤더 존재 여부. 앞 5열은 기존대로 prefix 강제, F1은 "없으면 5열
@@ -90,7 +100,8 @@ function parseGoalRow(row: string[], sheetRow: number, hasExemptableColumn: bool
   }
 
   return {
-    key: name.normalize('NFC'),
+    id: `legacy-row-${sheetRow}`,
+    name: name.normalize('NFC'),
     valueKind: score.kind === 'seconds' ? 'time' : 'count',
     target: targetRaw.trim(),
     targetValue: score.value,

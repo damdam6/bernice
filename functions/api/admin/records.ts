@@ -1,3 +1,4 @@
+import { isEventId } from '../../../shared/event-identity'
 // POST /api/admin/records — 관리자가 입력 화면에서 저장한 한 선수의 회차 점수 전체를 회차 탭
 // 해당 행에 기록한다(행 단위 upsert, 마지막 저장 승리). PRD: docs/prd-record-input.html §06~§09.
 //
@@ -150,6 +151,7 @@ function parseBody(raw: unknown): ParsedBody {
 
   const scores: Record<string, string> = {}
   for (const [key, value] of Object.entries(body.scores)) {
+    if (!isEventId(key)) return { ok: false, message: `유효하지 않은 종목 ID: ${key}` }
     if (typeof value !== 'string') {
       return { ok: false, message: `scores["${key}"] 값이 문자열이 아닙니다.` }
     }

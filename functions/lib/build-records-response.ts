@@ -38,7 +38,7 @@ function validateEndSessionDates(events: EventDefinition[], rounds: RoundRawTabl
   for (const event of events) {
     if (event.endSessionDate !== null && !roundNames.has(event.endSessionDate)) {
       throw new Error(
-        `목표 탭 종목 "${event.key}"의 종료 회차(${event.endSessionDate})에 해당하는 회차 탭을 찾을 수 없습니다 — 오타이거나 그 회차 탭이 아직 생성되지 않았을 수 있습니다`,
+        `목표 탭 종목 "${event.name} (${event.id})"의 종료 회차(${event.endSessionDate})에 해당하는 회차 탭을 찾을 수 없습니다 — 오타이거나 그 회차 탭이 아직 생성되지 않았을 수 있습니다`,
       )
     }
   }
@@ -48,7 +48,7 @@ function excludeWithdrawn(session: Session, playersById: Map<number, Player>): S
   return {
     date: session.date,
     entries: session.entries.filter((entry) => playersById.get(entry.playerId)?.status !== '탈퇴'),
-    eventKeys: session.eventKeys,
+    eventIds: session.eventIds,
   }
 }
 

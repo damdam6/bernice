@@ -60,7 +60,7 @@ describe('deriveEntryStatus', () => {
     expect(deriveEntryStatus(e, fourEventKeys)).toBe('완료')
   })
 
-  it('종목 추가 후 과거 회차 상태 불변: 신규 종목 key가 scores에 없어도(그 회차 eventKeys 밖) 판정이 흔들리지 않는다', () => {
+  it('종목 추가 후 과거 회차 상태 불변: 신규 종목 key가 scores에 없어도(그 회차 eventIds 밖) 판정이 흔들리지 않는다', () => {
     // 과거 회차는 A·B 2종목만 측정했다 — scores에는 A·B만 존재(계약상 신규 종목 C는 키 자체가 없음).
     const pastEventKeys = ['A', 'B']
     const blank: SessionEntry = {
@@ -82,7 +82,7 @@ describe('deriveEntryStatus', () => {
       },
     }
 
-    // 신규 종목 C가 전역에 추가된 뒤에도 이 회차 자신의 eventKeys(A·B)만으로 판정하므로
+    // 신규 종목 C가 전역에 추가된 뒤에도 이 회차 자신의 eventIds(A·B)만으로 판정하므로
     // 결과는 종목 추가 전과 동일하게 유지된다.
     expect(deriveEntryStatus(blank, pastEventKeys)).toBe('미입력')
     expect(deriveEntryStatus(full, pastEventKeys)).toBe('완료')

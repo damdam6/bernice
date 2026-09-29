@@ -6,6 +6,7 @@
 // 참가자 행만 존재하고(가나다 정렬), 명단 연결은 행 위치가 아니라 이름 셀 매칭이다. 헤더 종목·이름
 // 모두 참조 수식으로 써서(scripts/seed-sheet.mjs와 동일) 목표·명단 편집이 회차 탭에 자동 반영된다.
 
+import { indexEvents } from '../../shared/event-identity'
 import type { EventDefinition, Player } from '../../shared/domain'
 import { quoteSheetName } from './sheetsApi'
 
@@ -27,7 +28,8 @@ export interface BuildCreateSheetParams {
   events: EventDefinition[]
   /** parseGoals가 동반하는 종목 key → 목표 탭 실제 행 번호. 종료 종목이 섞여 목표 탭 행이
    *  비연속일 수 있어, 헤더 참조 수식(=목표!A{행})은 배열 인덱스가 아니라 이 값을 쓴다. */
-  sheetRowByKey: Map<string, number>
+  sheetRowById: Map<string, number>
+  identityMode: 'legacy' | 'id'
   /** parseRoster 결과 (전 상태 포함) — 참가자 활동 여부·이름 조회 */
   players: Player[]
   /** 요청이 고른 참가자 id */
@@ -47,8 +49,10 @@ export type BuildCreateSheetResult =
   | { ok: false; code: 'invalid_participants'; invalidIds: number[] }
 
 export function buildCreateSheetPlan(params: BuildCreateSheetParams): BuildCreateSheetResult {
-  const { sessionDate, existingSheetIds, rosterName, goalsName, events, sheetRowByKey, players, participantIds } =
+  const { sessionDate, existingSheetIds, rosterName, goalsName, events, sheetRowById, identityMode, players, participantIds } =
     params
+
+  indexEvents(events)
 
   // 활동 선수만 참가 대상 — id로 조회한다. parseRoster가 name을 이미 NFC 정규화해 두므로
   // 가나다 비교에 그대로 쓸 수 있다(roster.ts:67).
@@ -89,7 +93,8 @@ export function buildCreateSheetPlan(params: BuildCreateSheetParams): BuildCreat
     rosterName,
     goalsName,
     events: activeEvents,
-    sheetRowByKey,
+    sheetRowById,
+    identityMode,
     participants,
   })
   return { ok: true, sessionDate, sheetId: newSheetId, requests, participants }
@@ -101,19 +106,30 @@ function buildBatchRequests(args: {
   rosterName: string
   goalsName: string
   events: EventDefinition[]
-  sheetRowByKey: Map<string, number>
+  sheetRowById: Map<string, number>
+  identityMode: 'legacy' | 'id'
   participants: CreateSheetParticipant[]
 }): unknown[] {
-  const { sessionDate, sheetId, rosterName, goalsName, events, sheetRowByKey, participants } = args
+  const { sessionDate, sheetId, rosterName, goalsName, events, sheetRowById, identityMode, participants } = args
   const goalsRef = quoteSheetName(goalsName)
   const rosterRef = quoteSheetName(rosterName)
 
   // 헤더: 이름 + 종목명(목표 탭 참조 수식). 종료 종목이 섞여 목표 탭 행이 비연속일 수 있어
-  // 배열 인덱스가 아니라 종목별 실제 행 번호(sheetRowByKey, parse-goals.ts)를 쓴다. events가
-  // 이미 sheetRowByKey를 만든 같은 parseGoals 호출의 결과라 모든 key가 맵에 존재함이 보장된다.
+  // 배열 인덱스가 아니라 종목별 실제 행 번호(sheetRowById, parse-goals.ts)를 쓴다. events가
+  // 이미 sheetRowById를 만든 같은 parseGoals 호출의 결과라 모든 key가 맵에 존재함이 보장된다.
   const headerCells = [
     { userEnteredValue: { stringValue: '이름' } },
-    ...events.map((event) => ({ userEnteredValue: { formulaValue: `=${goalsRef}!A${sheetRowByKey.get(event.key)!}` } })),
+    ...events.map((event) => {
+      const row = sheetRowById.get(event.id)
+      if (row === undefined) throw new Error(`종목 ID ${event.id}의 목표 행을 찾을 수 없습니다`)
+      // The ID is a literal, never a reference to a mutable row/name. Only the readable
+      // second line looks up the current display name by ID (safe if rows are moved later).
+      const quotedId = event.id.replaceAll('"', '""')
+      const formulaValue = identityMode === 'legacy'
+        ? `=${goalsRef}!A${row}`
+        : `="id:${quotedId}"&CHAR(10)&INDEX(${goalsRef}!A:A,MATCH(TRUE,ARRAYFORMULA(EXACT("${quotedId}",${goalsRef}!G:G)),0))`
+      return { userEnteredValue: { formulaValue } }
+    }),
   ]
 
   // 참가자 행: 이름 열(A)만 명단 참조 수식으로 채우고 점수 칸(B~)은 비운다("빈 점수").

@@ -43,14 +43,14 @@ const EMPTY_BODY: RecordsResponse = {
 const RECORDS_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: [
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-    { key: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+    { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '셔틀런', name: '셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
   ],
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
   sessions: [
-    { date: '2026-06-01', entries: [], eventKeys: ['골밑슛', '셔틀런'] },
-    { date: '2026-06-08', entries: [], eventKeys: ['골밑슛', '셔틀런'] },
-    { date: '2026-06-15', entries: [], eventKeys: ['골밑슛', '셔틀런'] },
+    { date: '2026-06-01', entries: [], eventIds: ['골밑슛', '셔틀런'] },
+    { date: '2026-06-08', entries: [], eventIds: ['골밑슛', '셔틀런'] },
+    { date: '2026-06-15', entries: [], eventIds: ['골밑슛', '셔틀런'] },
   ],
   rankings: [],
   home: {
@@ -62,13 +62,13 @@ const RECORDS_BODY: RecordsResponse = {
   },
 }
 
-// 종료 종목(#124) — 과거 회차엔 있었으나 최신 회차 eventKeys엔 없는 종목. achievementRates가 이미
+// 종료 종목(#124) — 과거 회차엔 있었으나 최신 회차 eventIds엔 없는 종목. achievementRates가 이미
 // 최신 회차만 담아 오므로(computeHomeSummary), 게이지 목록도 종료 종목 없이 현역 1개만 그려야 한다.
 const ENDED_EVENT_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: [
     {
-      key: '오래된종목',
+      id: '오래된종목', name: '오래된종목',
       valueKind: 'count',
       target: '5',
       targetValue: 5,
@@ -77,13 +77,13 @@ const ENDED_EVENT_BODY: RecordsResponse = {
       endSessionDate: '2026-06-08',
       exemptable: false,
     },
-    { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+    { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
   ],
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
   sessions: [
-    { date: '2026-06-01', entries: [], eventKeys: ['오래된종목', '골밑슛'] },
-    { date: '2026-06-08', entries: [], eventKeys: ['오래된종목', '골밑슛'] },
-    { date: '2026-06-15', entries: [], eventKeys: ['골밑슛'] },
+    { date: '2026-06-01', entries: [], eventIds: ['오래된종목', '골밑슛'] },
+    { date: '2026-06-08', entries: [], eventIds: ['오래된종목', '골밑슛'] },
+    { date: '2026-06-15', entries: [], eventIds: ['골밑슛'] },
   ],
   rankings: [],
   home: {
@@ -98,7 +98,7 @@ const SEVEN_EVENTS = ['종목A', '종목B', '종목C', '종목D', '종목E', '�
 const SEVEN_EVENTS_BODY: RecordsResponse = {
   generatedAt: '2026-07-19T00:00:00.000Z',
   events: SEVEN_EVENTS.map((key) => ({
-    key,
+    id: key, name: key,
     valueKind: 'count' as const,
     target: '5',
     targetValue: 5,
@@ -108,7 +108,7 @@ const SEVEN_EVENTS_BODY: RecordsResponse = {
     exemptable: false,
   })),
   players: [{ id: 1, name: '선수1', status: '활동', trends: [], personalBests: [] }],
-  sessions: [{ date: '2026-06-15', entries: [], eventKeys: SEVEN_EVENTS }],
+  sessions: [{ date: '2026-06-15', entries: [], eventIds: SEVEN_EVENTS }],
   rankings: [],
   home: {
     latestSession: { date: '2026-06-15', participantCount: 7 },

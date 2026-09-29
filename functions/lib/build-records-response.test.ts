@@ -76,7 +76,7 @@ describe('buildRecordsResponse', () => {
     const result = buildRecordsResponse(baseBundle(), '2026-01-01T00:00:00.000Z')
 
     expect(result.home.latestSession).toEqual({ date: '2025-05-16', participantCount: 1 })
-    expect(result.home.achievementRates).toEqual([{ event: '골밑슛', achievedCount: 1, eligibleCount: 1, rate: 1 }])
+    expect(result.home.achievementRates).toEqual([{ event: 'legacy-row-2', achievedCount: 1, eligibleCount: 1, rate: 1 }])
   })
 
   it('회차가 하나도 없으면 sessions/rankings 빈 배열, home 기본값', () => {
@@ -123,7 +123,7 @@ describe('buildRecordsResponse', () => {
     expect(() => buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')).not.toThrow()
   })
 
-  it('혼재 번들: 구 회차(종료 종목 포함)와 신규 회차(현역 종목만)가 각자의 eventKeys로 정합하게 조립된다', () => {
+  it('혼재 번들: 구 회차(종료 종목 포함)와 신규 회차(현역 종목만)가 각자의 eventIds로 정합하게 조립된다', () => {
     // §10 마이그레이션 시나리오 축소 재현 — 골밑슛(현역)은 두 회차 모두 측정, 45도패스캐치는
     // 2025-05-16에서 종료되어 그 회차까지만 컬럼이 있고 신규 회차 헤더에는 없다.
     const goals = [
@@ -149,13 +149,13 @@ describe('buildRecordsResponse', () => {
 
     const result = buildRecordsResponse(bundle, '2026-01-01T00:00:00.000Z')
 
-    expect(result.events.map((e) => ({ key: e.key, endSessionDate: e.endSessionDate, exemptable: e.exemptable }))).toEqual([
-      { key: '골밑슛', endSessionDate: null, exemptable: false },
-      { key: '45도패스캐치', endSessionDate: '2025-05-16', exemptable: false },
+    expect(result.events.map((e) => ({ id: e.id, name: e.name, endSessionDate: e.endSessionDate, exemptable: e.exemptable }))).toEqual([
+      { id: 'legacy-row-2', name: '골밑슛', endSessionDate: null, exemptable: false },
+      { id: 'legacy-row-3', name: '45도패스캐치', endSessionDate: '2025-05-16', exemptable: false },
     ])
-    expect(result.sessions.map((s) => ({ date: s.date, eventKeys: s.eventKeys }))).toEqual([
-      { date: '2025-05-16', eventKeys: ['골밑슛', '45도패스캐치'] },
-      { date: '2026-07-23', eventKeys: ['골밑슛'] },
+    expect(result.sessions.map((s) => ({ date: s.date, eventIds: s.eventIds }))).toEqual([
+      { date: '2025-05-16', eventIds: ['legacy-row-2', 'legacy-row-3'] },
+      { date: '2026-07-23', eventIds: ['legacy-row-2'] },
     ])
   })
 

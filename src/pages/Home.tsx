@@ -57,7 +57,7 @@ function HomeContent({ data }: { data: RecordsResponse }) {
             averagePct={averageAchievementPct(achievementRates)}
           />
 
-          {achievementRates.length > 0 && <GaugeList gauges={buildHomeGauges(achievementRates, events)} />}
+          {achievementRates.length > 0 && <GaugeList gauges={buildHomeGauges(achievementRates, events, sessions)} />}
 
           <Shortcuts />
         </>

@@ -14,10 +14,10 @@ afterEach(() => {
 })
 
 const EVENTS: EventDefinition[] = [
-  { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
-  { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+  { id: '드리블셔틀런', name: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+  { id: '골밑슛', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
 ]
-const SESSION_EVENT_KEYS = EVENTS.map((e) => e.key)
+const SESSION_EVENT_KEYS = EVENTS.map((e) => e.id)
 
 function entryWith(playerId: number, name: string, scores: SessionEntry['scores']): SessionEntry {
   return { playerId, name, participated: true, scores }
@@ -86,7 +86,7 @@ describe('RecordsParticipants', () => {
             entryWith(1, '가은', RECORDED),
             entryWith(2, '나연', { ...UNMEASURED, 골밑슛: RECORDED.골밑슛 }),
           ],
-          eventKeys: SESSION_EVENT_KEYS,
+          eventIds: SESSION_EVENT_KEYS,
         },
       ],
     })
@@ -104,13 +104,13 @@ describe('RecordsParticipants', () => {
     expect(rows[2]).toHaveTextContent('미입력')
   })
 
-  it('전역 종목이 이 회차 eventKeys보다 많아도 뱃지는 이 회차 자신의 eventKeys만으로 판정한다(이슈 #126 회귀)', async () => {
+  it('전역 종목이 이 회차 eventIds보다 많아도 뱃지는 이 회차 자신의 eventIds만으로 판정한다(이슈 #126 회귀)', async () => {
     // 전역 events엔 드리블셔틀런·골밑슛 2종목이 있지만, 이 과거 회차는 드리블셔틀런 1종목만 측정했다.
     const data = baseData({
       sessions: [
         {
           date: '2025-05-16',
-          eventKeys: ['드리블셔틀런'],
+          eventIds: ['드리블셔틀런'],
           entries: [
             entryWith(1, '가은', { 드리블셔틀런: { status: 'recorded', value: 72, display: '1:12' } }),
             entryWith(2, '나연', { 드리블셔틀런: { status: 'unmeasured', value: null, display: null } }),
@@ -129,7 +129,7 @@ describe('RecordsParticipants', () => {
 
   it('참가자 행을 탭하면 선수별 입력 화면으로 이동한다', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],
+      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventIds: SESSION_EVENT_KEYS }],
     })
 
     renderPage('2025-05-16', data)
@@ -140,7 +140,7 @@ describe('RecordsParticipants', () => {
 
   it('[참가자 추가]를 탭하면 현재 회차를 넘겨 참가자 추가 화면으로 이동한다', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],
+      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventIds: SESSION_EVENT_KEYS }],
     })
 
     renderPage('2025-05-16', data)
@@ -151,7 +151,7 @@ describe('RecordsParticipants', () => {
 
   it('navigate state로 toast 메시지가 넘어오면 진입 시 노출한다(기록지 만들기·참가자 추가 성공 착지)', async () => {
     const data = baseData({
-      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventKeys: SESSION_EVENT_KEYS }],
+      sessions: [{ date: '2025-05-16', entries: [entryWith(1, '가은', RECORDED)], eventIds: SESSION_EVENT_KEYS }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 

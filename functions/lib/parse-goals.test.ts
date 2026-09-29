@@ -19,19 +19,20 @@ const SAMPLE_ROWS = [
 describe('parseGoals', () => {
   it('문서 예시(양방향 · 시간형/개수형 목표치 · 만점 null/숫자 혼합)를 그대로 파싱한다', () => {
     expect(parseGoals(SAMPLE_ROWS).events).toEqual([
-      { key: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
-      { key: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
-      { key: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
-      { key: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: false },
+      { id: 'legacy-row-2', name: '드리블셔틀런', valueKind: 'time', target: '1:17', targetValue: 77, maxScore: null, direction: '낮을수록', endSessionDate: null, exemptable: false },
+      { id: 'legacy-row-3', name: '골밑슛', valueKind: 'count', target: '5', targetValue: 5, maxScore: 10, direction: '높을수록', endSessionDate: null, exemptable: false },
+      { id: 'legacy-row-4', name: '자유투', valueKind: 'count', target: '2', targetValue: 2, maxScore: 5, direction: '높을수록', endSessionDate: null, exemptable: false },
+      { id: 'legacy-row-5', name: '45도패스캐치', valueKind: 'count', target: '5', targetValue: 5, maxScore: 7, direction: '높을수록', endSessionDate: null, exemptable: false },
     ])
   })
 
-  it('종목명이 NFD(자모 분해)로 들어와도 NFC로 정규화해 key에 반영한다', () => {
+  it('종목명이 NFD(자모 분해)로 들어와도 NFC로 정규화해 name에 반영하고 ID는 행 번호를 유지한다', () => {
     const nameNFD = '드리블셔틀런'.normalize('NFD')
     expect(nameNFD).not.toBe('드리블셔틀런') // 픽스처가 실제로 다른 바이트 표현인지 확인
 
     const result = parseGoals([HEADER, [nameNFD, '1:17', '-', '낮을수록']])
-    expect(result.events[0].key).toBe('드리블셔틀런')
+    expect(result.events[0].name).toBe('드리블셔틀런')
+    expect(result.events[0].id).toBe('legacy-row-2')
   })
 
   it('만점이 빈 칸이어도 "-"와 동일하게 null로 처리한다', () => {
@@ -46,7 +47,7 @@ describe('parseGoals', () => {
 
   it('표 중간의 완전 공백 행은 에러 없이 건너뛴다', () => {
     const result = parseGoals([HEADER, ['골밑슛', '5', '10', '높을수록'], ['', '', '', ''], ['자유투', '2', '5', '높을수록']])
-    expect(result.events.map((event) => event.key)).toEqual(['골밑슛', '자유투'])
+    expect(result.events.map((event) => event.id)).toEqual(['legacy-row-2', 'legacy-row-4'])
   })
 
   it('공백 행을 건너뛰어도 이후 행의 시트 행 번호가 밀리지 않는다 (회귀 테스트)', () => {
@@ -134,23 +135,23 @@ describe('parseGoals', () => {
       )
     })
 
-    it('G열 이후는 헤더·값 모두 무시한다 — 미래 열 추가를 안전하게 만드는 관례 보존', () => {
+    it('I열 이후는 헤더·값 모두 무시한다 — 미래 열 추가를 안전하게 만드는 관례 보존', () => {
       const result = parseGoals([
-        [...HEADER6, '미래의 열'],
-        ['패스 - 체스트', '3', '5', '높을수록', '', '가능', '아무 값'],
+        [...HEADER6, '', '', '미래의 열'],
+        ['패스 - 체스트', '3', '5', '높을수록', '', '가능', '', '', '아무 값'],
       ])
       expect(result.events[0].exemptable).toBe(true)
     })
   })
 
-  describe('행 번호 동반 (sheetRowByKey) — create-sheet(#121)가 참조 수식에 쓸 내부 값, RecordsResponse에는 비노출', () => {
+  describe('행 번호 동반 (sheetRowById) — create-sheet(#121)가 참조 수식에 쓸 내부 값, RecordsResponse에는 비노출', () => {
     it('각 종목 key에 목표 탭 실제 행 번호를 매핑한다', () => {
       const result = parseGoals(SAMPLE_ROWS)
-      expect(Object.fromEntries(result.sheetRowByKey)).toEqual({
-        드리블셔틀런: 2,
-        골밑슛: 3,
-        자유투: 4,
-        '45도패스캐치': 5,
+      expect(Object.fromEntries(result.sheetRowById)).toEqual({
+        'legacy-row-2': 2,
+        'legacy-row-3': 3,
+        'legacy-row-4': 4,
+        'legacy-row-5': 5,
       })
     })
 
@@ -161,7 +162,7 @@ describe('parseGoals', () => {
         ['', '', '', ''],
         ['자유투', '2', '5', '높을수록'],
       ])
-      expect(Object.fromEntries(result.sheetRowByKey)).toEqual({ 골밑슛: 2, 자유투: 4 })
+      expect(Object.fromEntries(result.sheetRowById)).toEqual({ 'legacy-row-2': 2, 'legacy-row-4': 4 })
     })
   })
 

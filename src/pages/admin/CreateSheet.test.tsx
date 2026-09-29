@@ -206,7 +206,7 @@ describe('CreateSheet', () => {
     const today = formatSeoulDate(new Date())
     const data = baseData({
       players: [player(1, '가은')],
-      sessions: [{ date: today, entries: [], eventKeys: [] }],
+      sessions: [{ date: today, entries: [], eventIds: [] }],
     })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, data)))
 

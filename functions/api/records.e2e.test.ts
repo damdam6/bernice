@@ -5,8 +5,8 @@
 // "실시트 마이그레이션 후 상태"라는 이슈 요구를 문자 그대로 만족시킨다.
 //
 // functions/api/records.test.ts와의 역할 분담: 그 파일은 캐시·에러 매핑 같은 라우트 관심사를
-// 종목 1개짜리 최소 픽스처로 다룬다. 이 파일은 실시트 규모(8종목·2회차·혼재 eventKeys)
-// 픽스처로 events[]·eventKeys·rankings·trends·home 전 계약 필드가 라우트 안에서 실제로
+// 종목 1개짜리 최소 픽스처로 다룬다. 이 파일은 실시트 규모(8종목·2회차·혼재 eventIds)
+// 픽스처로 events[]·eventIds·rankings·trends·home 전 계약 필드가 라우트 안에서 실제로
 // 맞물리는지를 본다 — 랭킹 동점 처리 같은 계산 세부 분기는 compute-rankings.test.ts 등
 // 단위 테스트가 이미 촘촘히 덮으므로 여기서는 대표값 위주로만 assert한다.
 
@@ -131,40 +131,40 @@ describe('GET /api/records — 혼재 번들 계약 스모크 (#127)', () => {
     const { response, body } = await getRecords(migratedBundle())
 
     expect(response.status).toBe(200)
-    expect(body.events.map((e) => [e.key, e.endSessionDate])).toEqual([
-      ['드리블셔틀런', null],
-      ['골밑슛', null],
-      ['자유투', null],
-      ['패스 - 체스트', null],
-      ['패스 - 바운드', null],
-      ['패스 - 원핸드', null],
-      ['볼 캐치', null],
-      ['45도패스캐치', '2025-05-16'],
+    expect(body.events.map((e) => [e.id, e.endSessionDate])).toEqual([
+      ['legacy-row-2', null],
+      ['legacy-row-3', null],
+      ['legacy-row-4', null],
+      ['legacy-row-5', null],
+      ['legacy-row-6', null],
+      ['legacy-row-7', null],
+      ['legacy-row-8', null],
+      ['legacy-row-9', '2025-05-16'],
     ])
   })
 
-  it('정상 경로: 회차별 eventKeys가 과거 4종목·신규 7종목으로 각각 좁혀진다', async () => {
+  it('정상 경로: 회차별 eventIds가 과거 4종목·신규 7종목으로 각각 좁혀진다', async () => {
     const { body } = await getRecords(migratedBundle())
 
-    expect(body.sessions.map((s) => [s.date, s.eventKeys.length])).toEqual([
+    expect(body.sessions.map((s) => [s.date, s.eventIds.length])).toEqual([
       ['2025-05-16', 4],
       ['2026-07-23', 7],
     ])
-    expect(body.sessions[1].eventKeys).toEqual([
-      '드리블셔틀런',
-      '골밑슛',
-      '자유투',
-      '패스 - 체스트',
-      '패스 - 바운드',
-      '패스 - 원핸드',
-      '볼 캐치',
+    expect(body.sessions[1].eventIds).toEqual([
+      'legacy-row-2',
+      'legacy-row-3',
+      'legacy-row-4',
+      'legacy-row-5',
+      'legacy-row-6',
+      'legacy-row-7',
+      'legacy-row-8',
     ])
   })
 
   it('정상 경로: 과거 회차 랭킹은 45도패스캐치 면제자(선수5)를 제외하고 나머지 5명을 담는다', async () => {
     const { body } = await getRecords(migratedBundle())
 
-    const oldRanking = body.rankings[0].events.find((e) => e.event === '45도패스캐치')!
+    const oldRanking = body.rankings[0].events.find((e) => e.event === 'legacy-row-9')!
     expect(oldRanking.entries.map((e) => e.name)).toEqual(
       expect.arrayContaining(['선수1', '선수2', '선수3', '선수4', '선수6']),
     )
@@ -186,16 +186,16 @@ describe('GET /api/records — 혼재 번들 계약 스모크 (#127)', () => {
 
     const player5 = body.players.find((p) => p.name === '선수5')!
     expect(player5.trends).toHaveLength(8)
-    expect(player5.trends.find((t) => t.event === '45도패스캐치')!.points).toEqual([])
+    expect(player5.trends.find((t) => t.event === 'legacy-row-9')!.points).toEqual([])
 
     const player1 = body.players.find((p) => p.name === '선수1')!
-    const oldOnlyTrend = player1.trends.find((t) => t.event === '드리블셔틀런')!
+    const oldOnlyTrend = player1.trends.find((t) => t.event === 'legacy-row-2')!
     expect(oldOnlyTrend.points).toHaveLength(1)
     expect(oldOnlyTrend.points[0]).toMatchObject({ sessionDate: '2025-05-16', value: 72, display: '1:12' })
 
-    const newOnlyTrend = player1.trends.find((t) => t.event === '패스 - 체스트')!
+    const newOnlyTrend = player1.trends.find((t) => t.event === 'legacy-row-5')!
     expect(newOnlyTrend.points).toEqual([])
-    expect(player1.personalBests.some((pb) => pb.event === '볼 캐치')).toBe(false)
+    expect(player1.personalBests.some((pb) => pb.event === 'legacy-row-8')).toBe(false)
   })
 
   it('정상 경로: home은 최신 회차(신규)를 가리키고, 아직 아무도 기록하지 않아 참여 0명·달성률 전부 0이다', async () => {
@@ -233,35 +233,35 @@ describe('GET /api/records — 혼재 번들 계약 스모크 (#127)', () => {
   // 않는다")이며, V3 완화 이전 코드는 정확히 이 번들에서 "회차 탭 헤더에 다음 종목 컬럼이
   // 없습니다: 패스 - 체스트, 패스 - 바운드, 패스 - 원핸드, 볼 캐치"로 throw해 앱 전체를
   // 죽였다. 위 혼재 케이스들과 달리 신규 종목이 단 하나의 회차에도 등장하지 않는 극단이
-  // 조립 전 구간(events·eventKeys·rankings·trends·home)에서 200으로 살아남는지를 고정한다.
+  // 조립 전 구간(events·eventIds·rankings·trends·home)에서 200으로 살아남는지를 고정한다.
   describe('신규 종목이 목표 탭에만 있고 어떤 회차 탭에도 없음 (#149)', () => {
     const oldRoundOnly = () =>
       migratedBundle({ rounds: [{ name: '2025-05-16', date: new Date('2025-05-16'), values: OLD_ROUND_ROWS }] })
 
-    const NEW_EVENT_KEYS = ['패스 - 체스트', '패스 - 바운드', '패스 - 원핸드', '볼 캐치']
+    const NEW_EVENT_KEYS = ['legacy-row-5', 'legacy-row-6', 'legacy-row-7', 'legacy-row-8']
 
     it('200으로 조립되고 events[]는 목표 탭 8종목을 그대로 유지한다', async () => {
       const { response, body } = await getRecords(oldRoundOnly())
 
       expect(response.status).toBe(200)
-      expect(body.events.map((e) => e.key)).toEqual([
-        '드리블셔틀런',
-        '골밑슛',
-        '자유투',
+      expect(body.events.map((e) => e.id)).toEqual([
+        'legacy-row-2',
+        'legacy-row-3',
+        'legacy-row-4',
         ...NEW_EVENT_KEYS,
-        '45도패스캐치',
+        'legacy-row-9',
       ])
-      expect(body.events.filter((e) => NEW_EVENT_KEYS.includes(e.key)).every((e) => e.endSessionDate === null)).toBe(
+      expect(body.events.filter((e) => NEW_EVENT_KEYS.includes(e.id)).every((e) => e.endSessionDate === null)).toBe(
         true,
       )
     })
 
-    it('유일한 회차의 eventKeys·rankings는 그 회차 측정 4종목뿐 — 신규 종목 슬롯이 없다', async () => {
+    it('유일한 회차의 eventIds·rankings는 그 회차 측정 4종목뿐 — 신규 종목 슬롯이 없다', async () => {
       const { body } = await getRecords(oldRoundOnly())
 
       expect(body.sessions).toHaveLength(1)
-      expect(body.sessions[0].eventKeys).toEqual(['드리블셔틀런', '골밑슛', '자유투', '45도패스캐치'])
-      expect(body.rankings[0].events.map((e) => e.event)).toEqual(['드리블셔틀런', '골밑슛', '자유투', '45도패스캐치'])
+      expect(body.sessions[0].eventIds).toEqual(['legacy-row-2', 'legacy-row-3', 'legacy-row-4', 'legacy-row-9'])
+      expect(body.rankings[0].events.map((e) => e.event)).toEqual(['legacy-row-2', 'legacy-row-3', 'legacy-row-4', 'legacy-row-9'])
     })
 
     it('신규 종목은 trends 슬롯만 있고 points: [], personalBests에는 등장하지 않는다', async () => {
@@ -280,10 +280,10 @@ describe('GET /api/records — 혼재 번들 계약 스모크 (#127)', () => {
 
       expect(body.home.latestSession).toEqual({ date: '2025-05-16', participantCount: 6 })
       expect(body.home.achievementRates.map((r) => r.event)).toEqual([
-        '드리블셔틀런',
-        '골밑슛',
-        '자유투',
-        '45도패스캐치',
+        'legacy-row-2',
+        'legacy-row-3',
+        'legacy-row-4',
+        'legacy-row-9',
       ])
     })
   })

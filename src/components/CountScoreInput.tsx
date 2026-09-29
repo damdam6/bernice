@@ -5,7 +5,7 @@ import { DIGITS_ONLY } from '../lib/regex'
 
 interface CountScoreInputProps {
   /** 접근성 라벨 접두어 — 종목 카드 하나에 여러 인스턴스가 동시에 렌더되므로 "개수"만으로는
-   *  스크린리더가 어느 종목인지 구분할 수 없다. 호출자가 event.key를 넘긴다. */
+   *  스크린리더가 어느 종목인지 구분할 수 없다. 호출자가 종목 표시 라벨를 넘긴다. */
   label: string
   value: string
   maxScore: number | null

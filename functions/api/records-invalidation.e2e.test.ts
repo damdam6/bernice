@@ -385,7 +385,7 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
     it('응답 직후의 GET 요청이 flush 없이 바뀐 점수를 반환한다', async () => {
       // ① 캐시 적재 — 저장 전 값 확인
       const before = await harness.primeCache()
-      expect(entryOf(before, OLD_ROUND, '가은')!.scores['골밑슛']).toEqual({
+      expect(entryOf(before, OLD_ROUND, '가은')!.scores['legacy-row-3']).toEqual({
         status: 'recorded',
         value: 5,
         display: '5',
@@ -396,7 +396,7 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
         harness.postContext('/api/admin/records', {
           sessionDate: OLD_ROUND,
           playerId: 1,
-          scores: { 드리블셔틀런: '1:12', 골밑슛: '9', 자유투: '2' },
+          scores: { 'legacy-row-2': '1:12', 'legacy-row-3': '9', 'legacy-row-4': '2' },
         }),
       )
       expect(response.status).toBe(200)
@@ -405,7 +405,7 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
 
       // ③ flush 없이 즉시 GET
       const { body: after } = await harness.getRecords()
-      expect(entryOf(after, OLD_ROUND, '가은')!.scores['골밑슛']).toEqual({
+      expect(entryOf(after, OLD_ROUND, '가은')!.scores['legacy-row-3']).toEqual({
         status: 'recorded',
         value: 9,
         display: '9',
@@ -419,23 +419,23 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
         harness.postContext('/api/admin/records', {
           sessionDate: OLD_ROUND,
           playerId: 1,
-          scores: { 드리블셔틀런: '1:12', 골밑슛: '9', 자유투: '2' },
+          scores: { 'legacy-row-2': '1:12', 'legacy-row-3': '9', 'legacy-row-4': '2' },
         }),
       )
 
       const { body } = await harness.getRecords()
 
       // 랭킹: 골밑슛 1위가 다현(7)에서 가은(9)으로 바뀐다.
-      const ranking = body.rankings.find((r) => r.sessionDate === OLD_ROUND)!.events.find((e) => e.event === '골밑슛')!
+      const ranking = body.rankings.find((r) => r.sessionDate === OLD_ROUND)!.events.find((e) => e.event === 'legacy-row-3')!
       expect(ranking.entries[0]).toMatchObject({ name: '가은', value: 9, rank: 1 })
 
       // 추이: 가은의 골밑슛 포인트가 새 값으로 갱신된다.
-      const trend = body.players.find((p) => p.name === '가은')!.trends.find((t) => t.event === '골밑슛')!
+      const trend = body.players.find((p) => p.name === '가은')!.trends.find((t) => t.event === 'legacy-row-3')!
       expect(trend.points.map((point) => point.value)).toEqual([9])
 
       // 홈: 목표 5 이상 달성자가 3명 전원(5·6·7 → 9·6·7)이라 달성률은 그대로 1이지만,
       // 응답이 옛 캐시가 아니라 새로 조립된 것임은 위 두 어서션이 이미 고정한다.
-      const rate = body.home.achievementRates.find((r) => r.event === '골밑슛')!
+      const rate = body.home.achievementRates.find((r) => r.event === 'legacy-row-3')!
       expect(rate).toMatchObject({ achievedCount: 3, eligibleCount: 3, rate: 1 })
     })
   })
@@ -468,7 +468,7 @@ describe('쓰기 → 조회 최신성 (#165)', () => {
       expect(after.sessions.map((session) => session.date)).toEqual([OLD_ROUND, NEW_ROUND])
 
       const created = after.sessions.find((session) => session.date === NEW_ROUND)!
-      expect(created.eventKeys).toEqual(['드리블셔틀런', '골밑슛', '자유투'])
+      expect(created.eventIds).toEqual(['legacy-row-2', 'legacy-row-3', 'legacy-row-4'])
       expect(created.entries.map((entry) => entry.name)).toEqual(['가은', '라온']) // 가나다 정렬
       // 빈 점수로 만들어진 탭이라 아직 아무도 참여하지 않은 상태여야 한다.
       expect(created.entries.every((entry) => !entry.participated)).toBe(true)

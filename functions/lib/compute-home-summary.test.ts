@@ -22,12 +22,12 @@ function entry(playerId: number, scores: Record<string, EventScore>, name = `선
   return { playerId, name, scores, participated }
 }
 
-function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'key' | 'direction' | 'targetValue'>): EventDefinition {
+function event(overrides: Partial<EventDefinition> & Pick<EventDefinition, 'id' | 'name' | 'direction' | 'targetValue'>): EventDefinition {
   return { valueKind: 'count', target: String(overrides.targetValue), maxScore: null, endSessionDate: null, exemptable: false, ...overrides }
 }
 
 function session(date: string, entries: SessionEntry[]): Session {
-  return { date, entries, eventKeys: [...new Set(entries.flatMap((entry) => Object.keys(entry.scores)))] }
+  return { date, entries, eventIds: [...new Set(entries.flatMap((entry) => Object.keys(entry.scores)))] }
 }
 
 describe('computeHomeSummary', () => {
@@ -38,7 +38,7 @@ describe('computeHomeSummary', () => {
   })
 
   it('participantCount는 활동 상태 + participated:true만 집계 (비대상·휴식·미참여 제외)', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동'), player(2, '휴식'), player(3, '활동')]
     const s = session('2025-05-16', [
       entry(1, { 골밑슛: recorded(6) }),
@@ -53,8 +53,8 @@ describe('computeHomeSummary', () => {
   })
 
   it('achievementRates는 최신 회차 EventRanking을 그대로 집계 (활동+recorded만 분모)', () => {
-    const shuttleRun = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77 })
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const shuttleRun = event({ id: '셔틀런', name: '셔틀런', direction: '낮을수록', targetValue: 77 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동'), player(2, '활동')]
     const s = session('2025-05-16', [
       entry(1, { 셔틀런: recorded(70, '1:10'), 골밑슛: recorded(6) }),
@@ -71,7 +71,7 @@ describe('computeHomeSummary', () => {
   })
 
   it('eligibleCount가 0이면(예: 전원 면제) rate는 0', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동')]
     const s = session('2025-05-16', [entry(1, { 골밑슛: exempt() })])
     const rankings = computeSessionRankings(s, [layup], players)
@@ -82,7 +82,7 @@ describe('computeHomeSummary', () => {
   })
 
   it('여러 회차 중 마지막(sessions.at(-1)) 회차만 집계', () => {
-    const layup = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const layup = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
     const players = [player(1, '활동')]
     const s1 = session('2025-05-01', [entry(1, { 골밑슛: recorded(3) })])
     const s2 = session('2025-05-16', [entry(1, { 골밑슛: recorded(9) })])
@@ -97,25 +97,25 @@ describe('computeHomeSummary', () => {
 
   it('혼재 픽스처 — 과거 회차 4종목·최신 회차 7종목이면 achievementRates는 최신 7종목만 담는다', () => {
     const players = [player(1, '활동')]
-    const pastEvents = ['종목A', '종목B', '종목C', '종목D'].map((key) => event({ key, direction: '높을수록', targetValue: 5 }))
+    const pastEvents = ['종목A', '종목B', '종목C', '종목D'].map((key) => event({ id: key, name: key, direction: '높을수록', targetValue: 5 }))
     const latestEvents = ['종목E', '종목F', '종목G', '종목H', '종목I', '종목J', '종목K'].map((key) =>
-      event({ key, direction: '높을수록', targetValue: 5 }),
+      event({ id: key, name: key, direction: '높을수록', targetValue: 5 }),
     )
-    const past = session('2025-04-01', [entry(1, Object.fromEntries(pastEvents.map((e) => [e.key, recorded(6)])))])
-    const latest = session('2025-05-16', [entry(1, Object.fromEntries(latestEvents.map((e) => [e.key, recorded(6)])))])
+    const past = session('2025-04-01', [entry(1, Object.fromEntries(pastEvents.map((e) => [e.id, recorded(6)])))])
+    const latest = session('2025-05-16', [entry(1, Object.fromEntries(latestEvents.map((e) => [e.id, recorded(6)])))])
     const pastRankings = computeSessionRankings(past, pastEvents, players)
     const latestRankings = computeSessionRankings(latest, latestEvents, players)
 
     const result = computeHomeSummary([past, latest], [pastRankings, latestRankings], players)
 
-    expect(result.achievementRates.map((r) => r.event)).toEqual(latestEvents.map((e) => e.key))
-    expect(result.achievementRates.some((r) => pastEvents.some((e) => e.key === r.event))).toBe(false)
+    expect(result.achievementRates.map((r) => r.event)).toEqual(latestEvents.map((e) => e.id))
+    expect(result.achievementRates.some((r) => pastEvents.some((e) => e.id === r.event))).toBe(false)
   })
 
   it('종료 종목 — 과거 회차엔 있었으나 최신 회차 events에 없는 종목은 achievementRates에서 자연 소멸', () => {
     const players = [player(1, '활동')]
-    const ongoing = event({ key: '골밑슛', direction: '높을수록', targetValue: 5 })
-    const ended = event({ key: '셔틀런', direction: '낮을수록', targetValue: 77, endSessionDate: '2025-05-01', exemptable: false })
+    const ongoing = event({ id: '골밑슛', name: '골밑슛', direction: '높을수록', targetValue: 5 })
+    const ended = event({ id: '셔틀런', name: '셔틀런', direction: '낮을수록', targetValue: 77, endSessionDate: '2025-05-01', exemptable: false })
     const past = session('2025-05-01', [entry(1, { 골밑슛: recorded(4), 셔틀런: recorded(70, '1:10') })])
     const latest = session('2025-05-16', [entry(1, { 골밑슛: recorded(6) })])
     const pastRankings = computeSessionRankings(past, [ongoing, ended], players)

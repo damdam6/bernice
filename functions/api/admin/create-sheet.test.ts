@@ -79,6 +79,25 @@ afterEach(() => {
 })
 
 describe('POST /api/admin/create-sheet', () => {
+  it('#177 ID 목표에서는 종료 종목을 제외하고 고정 ID + ID 조회 이름 수식을 만든다', async () => {
+    batchGetMock.mockResolvedValue([
+      { range: "'버니스명단'", values: ROSTER_VALUES },
+      { range: "'목표'", values: [
+        ['종목', '목표', '만점', '방향', '종료 회차', '면제 가능', '종목 ID'],
+        ['패스', '3', '5', '높을수록', '2025-05-16', '', 'pass-old'],
+        ['패스', '7', '10', '높을수록', '', '', 'pass-new'],
+      ] },
+    ])
+    const { context } = makeContext({ participantIds: [1] })
+    const response = await onRequestPost(context)
+    expect(response.status).toBe(201)
+    const requests = batchUpdateMock.mock.calls[0][2] as { updateCells?: { rows: { values: unknown[] }[] } }[]
+    expect(requests[1].updateCells!.rows[0].values).toEqual([
+      { userEnteredValue: { stringValue: '이름' } },
+      { userEnteredValue: { formulaValue: '="id:pass-new"&CHAR(10)&INDEX(\'목표\'!A:A,MATCH(TRUE,ARRAYFORMULA(EXACT("pass-new",\'목표\'!G:G)),0))' } },
+    ])
+  })
+
   it('201 — 참가자만·가나다·빈 점수 탭을 원자적 batchUpdate로 만들고 캐시를 무효화한다', async () => {
     const { context, cacheDelete } = makeContext({ participantIds: [4, 1] }) // 라온, 가은
 
