@@ -32,7 +32,7 @@ export function buildRadarAxes(
   session: Session | undefined,
   playerId: number,
   scale: PerformanceScale,
-  sessions: Session[] = session ? [session] : [],
+  _sessions: Session[] = session ? [session] : [],
 ): RadarAxis[] {
   const eventsByKey = new Map(events.map((event) => [event.id, event]))
   const entry = session?.entries.find((e) => e.playerId === playerId)
@@ -42,11 +42,6 @@ export function buildRadarAxes(
     .map((event) => {
       const score = entry?.scores[event.id]
       const value = score?.status === 'recorded' ? scale.normalize(event.id, score.value) : 0
-      const duplicates = events.filter((candidate) => candidate.name === event.name)
-      if (duplicates.length > 1) return {
-        label: `${event.name} · ${duplicates.findIndex((candidate) => candidate.id === event.id) + 1}`,
-        detail: eventLabel(event, events, sessions), value,
-      }
       return { label: event.name, value }
     })
 }

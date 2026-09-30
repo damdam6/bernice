@@ -38,8 +38,22 @@ describe('RadarChart', () => {
 
   it('축 라벨 텍스트 렌더', () => {
     const { container } = render(<RadarChart axes={AXES} />)
-    const labels = [...container.querySelectorAll('text')].map((t) => t.textContent)
+    const labels = [...container.querySelectorAll('foreignObject')].map((t) => t.textContent)
     expect(labels).toEqual(['셔틀런', '골밑슛', '자유투', '패스캐치'])
+  })
+
+  it('긴 종목명도 생략하지 않고 모든 라벨 영역을 SVG 내부에 둔다', () => {
+    const names = ['체스트패스', '바운드패스', '원핸드패스(주손)', '골밑슛', '자유투', '하이–로우 범위 캐치', '주손 드리블 셔틀런']
+    const { container } = render(<RadarChart axes={names.map((label) => ({ label, value: 0.5 }))} />)
+    const boxes = [...container.querySelectorAll('foreignObject')]
+    expect(boxes.map((box) => box.textContent)).toEqual(names)
+    for (const box of boxes) {
+      const x = Number(box.getAttribute('x')), y = Number(box.getAttribute('y'))
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(y).toBeGreaterThanOrEqual(0)
+      expect(x + Number(box.getAttribute('width'))).toBeLessThanOrEqual(200)
+      expect(y + Number(box.getAttribute('height'))).toBeLessThanOrEqual(200)
+    }
   })
 
   it('접근성 — 정규화 값을 %로 읽어준다', () => {
@@ -86,7 +100,7 @@ describe('RadarChart', () => {
     it('꼭짓점 도트·라벨이 축 개수(7)만큼 순서대로 렌더', () => {
       const { container } = render(<RadarChart axes={SEVEN_AXES} />)
       expect(container.querySelectorAll('circle')).toHaveLength(7)
-      const labels = [...container.querySelectorAll('text')].map((t) => t.textContent)
+      const labels = [...container.querySelectorAll('foreignObject')].map((t) => t.textContent)
       expect(labels).toEqual(['셔틀런', '골밑슛', '자유투', '체스트패스', '바운드패스', '원핸드패스', '볼캐치'])
     })
 
