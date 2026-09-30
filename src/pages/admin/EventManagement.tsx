@@ -1,3 +1,4 @@
+import { eventAtSession } from '../../../shared/event-target'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminEventLabel } from '../../../shared/event-identity'
@@ -52,7 +53,7 @@ export default function EventManagement() {
       const last = dates.at(-1) ?? data.sessions.map((s) => s.date).sort().at(-1)
       return <section key={event.id} className="flex flex-col gap-2 rounded-card border border-line bg-white p-4">
         <h3 className="font-semibold">{adminEventLabel(event, data.events, data.sessions)}</h3>
-        <p className="text-sm text-ink-sub">목표 {event.target}{event.maxScore !== null ? ` / ${event.maxScore}` : ''} · {event.direction} · 면제 {event.exemptable ? '가능' : '불가'}</p>
+        <p className="text-sm text-ink-sub">목표 {eventAtSession(event, data.sessions.at(-1)?.date ?? '').target}{event.maxScore !== null ? ` / ${event.maxScore}` : ''} · {event.direction} · 면제 {event.exemptable ? '가능' : '불가'}</p>
         <p className="text-sm">{event.endSessionDate ? `종료 · ${event.endSessionDate}` : '진행 중'} · {dates.length ? `${dates[0]} ~ ${dates.at(-1)}` : '측정 전'}</p>
         <form key={JSON.stringify(event.tags)} className="flex flex-col gap-2" onSubmit={(e) => {
           e.preventDefault()

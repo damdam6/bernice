@@ -1,3 +1,4 @@
+import { eventAtSession } from '../../shared/event-target'
 import { eventLabel } from '../../shared/event-identity'
 // 개인 프로필 화면 파생 로직 — 디자인 PRD §05 "👤 개인" 매핑 표의 구현.
 // Rankings가 ranking-view.ts에 파생을 두는 것과 같은 분리: 화면(Players.tsx)은 배선만,
@@ -122,6 +123,7 @@ export interface TrendSeries {
   background: TrendPointDatum[][]
   /** 목표선 원값 — EventDefinition.targetValue 그대로 */
   goal: number
+  goals?: TrendPointDatum[]
 }
 
 /** 한 종목의 확장 추이 차트 데이터 — 본인 하이라이트 + 전체 배경 + 목표선(§07).
@@ -151,5 +153,7 @@ export function buildTrendSeries(
     .map((p) => seriesFor(trendOf(p)))
     .filter((series) => series.length > 0)
 
-  return { highlight, background, goal: event.targetValue }
+  return { highlight, background, goal: event.targetValue,
+    ...(event.targetHistory?.length ? { goals: sessions.flatMap((session, sessionIndex) => session.eventIds.includes(event.id) ? [{ sessionIndex, value: eventAtSession(event, session.date).targetValue }] : []) } : {}),
+  }
 }

@@ -1,3 +1,4 @@
+import { eventAtSession } from '../../shared/event-target'
 // 회차·종목별 랭킹 계산 — 순수 함수. 파서(#21) 완성을 기다리지 않고 shared/domain.ts 타입만으로 동작.
 // 동점·달성·상태 정책 규칙은 이 파일에서 새로 정하지 않고 docs/records-schema.html §02·§04(PR #16 승인)를 그대로 구현한다.
 
@@ -75,6 +76,6 @@ export function computeSessionRankings(session: Session, events: EventDefinition
     events: session.eventIds
       .map((key) => eventsByKey.get(key))
       .filter((event): event is EventDefinition => event !== undefined)
-      .map((event) => computeEventRanking(event, session.entries, players)),
+      .map((event) => computeEventRanking(eventAtSession(event, session.date), session.entries, players)),
   }
 }

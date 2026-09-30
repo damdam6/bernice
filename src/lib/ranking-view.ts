@@ -1,3 +1,4 @@
+import { eventAtSession } from '../../shared/event-target'
 // 랭킹 화면 파생 로직 — 디자인 PRD §05 "미측정·면제·이상값 행은 sessions[].entries에서
 // 보충해 하단 배치"(#70)의 구현. rankings[].events[].entries(순위권)는 그대로 쓰고,
 // 그 회차의 원본 sessions[].entries에서 활동 상태 + 아직 순위권에 없는 선수만 보충한다.
@@ -17,6 +18,7 @@ export function deriveSessionEvents(events: EventDefinition[], session: Session)
   return session.eventIds
     .map((key) => events.find((event) => event.id === key))
     .filter((event): event is EventDefinition => event !== undefined)
+    .map((event) => eventAtSession(event, session.date))
 }
 
 /** 종목 1개·회차 1개의 표시용 행 목록 — 순위권(오름차순) 다음에 보충 행(회차 원본 순서)이 이어진다. */

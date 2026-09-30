@@ -234,3 +234,12 @@ describe('TrendChart', () => {
     expect(container).toBeEmptyDOMElement()
   })
 })
+
+it('회차별 목표가 있으면 과거/현재 목표를 구분하고 단일 목표선을 대체한다', () => {
+  const { container } = render(<TrendChart sessionLabels={['1차', '2차']} highlight={[{ sessionIndex: 0, value: 76 }]} goal={77} goals={[{ sessionIndex: 0, value: 77 }, { sessionIndex: 1, value: 75 }]} />)
+  expect(container.querySelector('line.stroke-good')).toBeNull()
+  expect(container.querySelectorAll('path.stroke-good')).toHaveLength(2)
+  expect(screen.getByText('1차 목표 77')).toBeInTheDocument()
+  expect(screen.getByText('2차 목표 75')).toBeInTheDocument()
+  expect(container.querySelector('path.stroke-good')?.getAttribute('d')).toContain(' V ')
+})

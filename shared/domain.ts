@@ -35,7 +35,15 @@ export interface Player {
 /** 종목 정의 — 목표 탭 1행 = 종목 1개. 불변 id가 회차 점수 컬럼·랭킹·추이를 잇는 유일한 식별자.
  *  달성 판정은 direction 기준 경계값 포함(같아도 달성) — 낮을수록는 value <= targetValue,
  *  높을수록는 value >= targetValue. */
+export interface EventTarget {
+  fromSessionDate: string
+  target: string
+  targetValue: number
+}
+
 export interface EventDefinition {
+  /** Optional effective-date changes; base target remains valid for earlier rounds. */
+  targetHistory?: EventTarget[]
   id: string
   name: string // 표시용 이름. ID 생성/연결에 사용하지 않는다.
   /** Optional immutable name alias used only while legacy headers remain. */
