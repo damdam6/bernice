@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
@@ -16,7 +17,7 @@ afterEach(() => {
 function createWrapper() {
   const client = new QueryClient()
   return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    return <MemoryRouter><QueryClientProvider client={client}>{children}</QueryClientProvider></MemoryRouter>
   }
 }
 
@@ -289,4 +290,16 @@ describe('Rankings', () => {
     await waitFor(() => expect(screen.getByText('표시할 기록이 없습니다')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: '골밑슛' })).not.toBeInTheDocument()
   })
+})
+it('태그를 바꿔 종목을 필터링하고 없는 태그 결과를 처리한다', async () => {
+  const body = structuredClone(RECORDS_BODY)
+  body.events[0].tags = ['슛']; body.events[1].tags = ['드리블']
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, body)))
+  renderRankings()
+  const filter = await screen.findByRole('combobox', { name: '태그 필터' })
+  fireEvent.change(filter, { target: { value: 'tag:슛' } })
+  expect(screen.getByRole('button', { name: '골밑슛' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '셔틀런' })).not.toBeInTheDocument()
+  fireEvent.change(filter, { target: { value: 'tag:' } })
+  expect(screen.getByText('표시할 기록이 없습니다')).toBeInTheDocument()
 })

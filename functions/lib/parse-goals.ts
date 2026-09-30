@@ -4,6 +4,7 @@
 // Row moves/deletions remain prohibited until #178 has persisted IDs and converted headers.
 
 import { RANK_DIRECTIONS, type EventDefinition, type RankDirection } from '../../shared/domain'
+import { tagsFromCell } from '../../shared/event-tags'
 import { isEventId } from '../../shared/event-identity'
 import { normalizeScore } from '../../shared/normalize-score'
 import { isValidRoundTabName } from './sheetTabs'
@@ -33,6 +34,8 @@ export function parseGoals(rows: string[][]): ParseGoalsResult {
   if (aliasHeader !== '' && aliasHeader !== '이전 종목명') throw new Error('목표 탭 H1 헤더는 이전 종목명이어야 합니다')
   const hasAliasColumn = (rows[0][7] ?? '').trim() === '이전 종목명'
   if (hasAliasColumn && !hasIdColumn) throw new Error('이전 종목명 열은 종목 ID 열과 함께 사용해야 합니다')
+  const tagHeader = (rows[0][8] ?? '').trim()
+  if (tagHeader && tagHeader !== '태그') throw new Error('목표 탭 I1 헤더는 태그여야 합니다')
   const events: EventDefinition[] = []
   const legacyNames = new Set<string>()
   const sheetRowById = new Map<string, number>()
@@ -56,6 +59,9 @@ export function parseGoals(rows: string[][]): ParseGoalsResult {
       if (event.name.startsWith('id:')) fail(sheetRow, event.name, 'id: 접두사는 ID 헤더용으로 예약되어 있습니다')
       legacyNames.add(event.name)
     }
+
+    if (!tagHeader && (row[8] ?? '').trim()) fail(sheetRow, event.name, '태그 값이 있는데 I1 헤더가 없음')
+    if (tagHeader) event.tags = tagsFromCell(row[8] ?? '')
 
     const firstSeenRow = sheetRowById.get(event.id)
     if (firstSeenRow !== undefined) {
