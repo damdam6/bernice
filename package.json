@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "migrate:events": "tsx scripts/migrate-events.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
@@ -27,12 +28,14 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.6.3",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.1.0",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.1.0",
+    "tsx": "^4.23.15",
     "typescript": "~5.9.0",
     "vite": "^7.1.0",
     "vitest": "^4.1.10",

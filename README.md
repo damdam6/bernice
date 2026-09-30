@@ -6,6 +6,8 @@
 ## 종목 ID 전환 (#177 / #178)
 
 [새 스키마·호환 규칙·운영 이전/배포 순서](docs/event-identity-migration.html)를 확인하세요.
+[#178 이전 도구 실행·복제 검증·복구 지침](docs/event-identity-migration-runbook.html): 기본 실행은 쓰기 없는 dry-run입니다.
+
 코드만 먼저 배포해도 기존 이름 기반 시트를 읽고 쓸 수 있습니다. 운영 데이터 이전은 별도 #178 작업이며, `seed-sheet.mjs`는 이전 도구가 아닙니다.
 
 ## 스택
