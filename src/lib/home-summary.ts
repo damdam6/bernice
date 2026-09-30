@@ -30,7 +30,7 @@ export interface HomeGauge {
   rate: number
 }
 
-/** ID로 정의를 찾아 이름을 표시한다. 동명 종목에는 종료 상태와 측정 기간을 붙인다. */
+/** ID로 정의를 찾아 이름을 표시한다. 운영용 식별 정보는 표시하지 않는다. */
 export function buildHomeGauges(rates: EventAchievementRate[], events: EventDefinition[], sessions: Session[] = []): HomeGauge[] {
   return rates.map((rate) => {
     const event = events.find((event) => event.id === rate.event)

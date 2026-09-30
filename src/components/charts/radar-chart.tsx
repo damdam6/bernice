@@ -1,5 +1,5 @@
 import { clamp01 } from '../../lib/performance-scale'
-import { polygonPoints, radarLabelLayout, radarPoint, ringPoints } from './radar-math'
+import { polygonPoints, radarPoint, ringPoints } from './radar-math'
 
 export interface RadarAxis {
   /** 종목 short 라벨 */
@@ -12,20 +12,20 @@ export interface RadarAxis {
 
 export interface RadarChartProps {
   axes: RadarAxis[]
-  /** 렌더 크기(px, 정사각) */
+  /** 최대 렌더 크기(px, 정사각). 생략하면 카드 가용 너비를 사용한다. */
   size?: number
 }
 
 const RING_COUNT = 4
 const VIEW = 200 // viewBox 한 변 — 좌표 계산 기준
 const CENTER = VIEW / 2
-const RADIUS = 72 // 값 1.0의 반지름 — 바깥 라벨 여백을 남긴다
-const LABEL_DISTANCE = 1.22 // 라벨은 최대 반지름의 22% 바깥
+const RADIUS = 52 // 라벨 줄바꿈 영역까지 viewBox 안에 확보한다
+const LABEL_DISTANCE = 1.5 // 라벨 중심은 최대 반지름의 50% 바깥
 const DOT_RADIUS = 3
 
 // 개인 프로필의 종목 스킬 레이더 — §07: 링 4개(chart-grid) + 채움 폴리곤(primary 14% 투명)
 // + 꼭짓점 도트. 값은 이미 정규화된 0~1을 받는다(데이터 결합은 화면 쪽 책임).
-export function RadarChart({ axes, size = 240 }: RadarChartProps) {
+export function RadarChart({ axes, size }: RadarChartProps) {
   if (axes.length === 0) return null
 
   const values = axes.map((axis) => clamp01(axis.value))
@@ -34,8 +34,8 @@ export function RadarChart({ axes, size = 240 }: RadarChartProps) {
     .join(', ')}`
 
   return (
-    <div className="min-w-0">
-      <svg viewBox={`0 0 ${VIEW} ${VIEW}`} width={size} height={size} role="img" aria-label={ariaLabel}>
+    <div className="min-w-0 w-full" style={{ maxWidth: size }}>
+      <svg viewBox={`0 0 ${VIEW} ${VIEW}`} width={size ?? VIEW} height={size ?? VIEW} className="block h-auto w-full" role="img" aria-label={ariaLabel}>
         {Array.from({ length: RING_COUNT }, (_, i) => (
           <polygon
             key={i}
@@ -53,23 +53,20 @@ export function RadarChart({ axes, size = 240 }: RadarChartProps) {
         />
         {values.map((value, i) => {
           const point = radarPoint(i, values.length, value, CENTER, RADIUS)
-          return <circle key={axes[i].label} cx={point.x} cy={point.y} r={DOT_RADIUS} className="fill-primary" />
+          return <circle key={i} cx={point.x} cy={point.y} r={DOT_RADIUS} className="fill-primary" />
         })}
         {axes.map((axis, i) => {
           const point = radarPoint(i, axes.length, LABEL_DISTANCE, CENTER, RADIUS)
-          const { anchor, baseline } = radarLabelLayout(i, axes.length)
+          // Keep a wrapping label box inside the SVG, including the left/right axes.
+          const width = 64
+          const x = Math.max(0, Math.min(VIEW - width, point.x - width / 2))
+          const y = Math.max(0, Math.min(VIEW - 32, point.y - 16))
           return (
-            <text
-              key={axis.label}
-              x={point.x}
-              y={point.y}
-              textAnchor={anchor}
-              dominantBaseline={baseline}
-              fontSize={11}
-              className="fill-ink-sub"
-            >
-              {axis.label}
-            </text>
+            <foreignObject key={i} x={x} y={y} width={width} height={32}>
+              <div className="flex h-full items-center justify-center break-words text-center text-ink-sub" style={{ fontSize: 10, lineHeight: '14px', overflowWrap: 'anywhere' }}>
+                {axis.label}
+              </div>
+            </foreignObject>
           )
         })}
       </svg>

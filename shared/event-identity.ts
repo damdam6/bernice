@@ -33,9 +33,14 @@ export function resolveEventHeader(label: string, events: EventDefinition[], byI
 }
 
 /** Names stay readable; duplicate names also show lifecycle and observed measurement period. */
-export function eventLabel(event: EventDefinition, events: EventDefinition[], sessions: Session[]): string {
+export function adminEventLabel(event: EventDefinition, events: EventDefinition[], sessions: Session[]): string {
   if (events.filter((candidate) => candidate.name === event.name).length < 2) return event.name
   const dates = sessions.filter((session) => session.eventIds.includes(event.id)).map((session) => session.date).sort()
   const period = dates.length ? `${dates[0]} ~ ${dates[dates.length - 1]}` : '측정 전'
   return `${event.name} (${event.endSessionDate === null ? '진행 중' : '종료'} · ${period} · ${event.id})`
+}
+
+/** Public views identify records by ID internally but display only the event name. */
+export function eventLabel(event: EventDefinition, _events: EventDefinition[], _sessions: Session[]): string {
+  return event.name
 }

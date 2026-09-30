@@ -1,4 +1,4 @@
-import { eventLabel } from '../../../shared/event-identity'
+import { adminEventLabel } from '../../../shared/event-identity'
 // 기록 입력 · 선수별 입력(#68) — docs/prd-design.html §05 · docs/prd-record-input.html §05:
 // 종목 타입별 입력기(시간=분·초 2필드, 개수=스테퍼+직접입력, 면제=면제 가능 종목만 토글) +
 // 기존 값 프리필 + 인라인 검증 + 하단 고정 저장 바. 검증은 buildEventScore(shared/)를 그대로
@@ -75,7 +75,7 @@ export default function RecordsPlayerInput() {
       session={session}
       entry={entry}
       events={sessionEvents}
-      eventLabels={Object.fromEntries(data.events.map((event) => [event.id, eventLabel(event, data.events, data.sessions)]))}
+      eventLabels={Object.fromEntries(data.events.map((event) => [event.id, adminEventLabel(event, data.events, data.sessions)]))}
       roundLabel={roundLabel}
       onSaved={(toast) => navigate(`/admin/records/${session.date}`, { state: { toast } })}
     />
