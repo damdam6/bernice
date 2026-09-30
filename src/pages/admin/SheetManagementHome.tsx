@@ -68,6 +68,13 @@ export default function SheetManagementHome() {
           </button>
           <button
             type="button"
+            onClick={() => navigate('/admin/events')}
+            className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink"
+          >
+            종목 관리
+          </button>
+          <button
+            type="button"
             onClick={handleRefresh}
             disabled={refreshing}
             className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-60"
