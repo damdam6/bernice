@@ -269,6 +269,18 @@ describe('quoteSheetName', () => {
 })
 
 describe('fetchSheetBundle', () => {
+  it('reads the optional history tab after the round ranges', async () => {
+    const history = [['적용 회차', '종목 ID', '목표'], ['2026-10-03', 'run', '1:15']]
+    stubSheetsFetch({
+      metadata: { body: { sheets: ['목표 이력', '2026-10-03'].map((title) => ({ properties: { title } })) } },
+      batchGet: { body: { valueRanges: [{ values: [['이름']] }, { values: history }] } },
+    })
+    const bundle = await fetchSheetBundle(makeEnv(), SHEET_ID)
+    expect(bundle.targetHistory).toEqual({ name: '목표 이력', values: history })
+    expect(bundle.unclassified).toEqual([])
+    expect(bundle.rounds).toHaveLength(1)
+  })
+
   it('명단/목표/회차를 분류해 원시 값 묶음으로 반환한다', async () => {
     stubSheetsFetch({
       metadata: {

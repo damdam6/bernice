@@ -1,3 +1,4 @@
+import { eventAtSession } from '../../shared/event-target'
 import type {
   EventDefinition,
   Player,
@@ -57,7 +58,7 @@ function buildTrend(event: EventDefinition, scores: ValidScore[]): PlayerEventTr
       sessionDate: score.sessionDate,
       value: score.value,
       display: score.display,
-      achieved: isAchieved(event.direction, score.value, event.targetValue),
+      achieved: isAchieved(event.direction, score.value, eventAtSession(event, score.sessionDate).targetValue),
       deltaFromPrevious,
       improved: deltaFromPrevious === null ? null : isImproved(event.direction, deltaFromPrevious),
     })
@@ -86,7 +87,7 @@ function buildPersonalBest(event: EventDefinition, scores: ValidScore[]): Player
     value: best.value,
     display: best.display,
     sessionDate: best.sessionDate,
-    achieved: isAchieved(event.direction, best.value, event.targetValue),
+    achieved: isAchieved(event.direction, best.value, eventAtSession(event, best.sessionDate).targetValue),
   }
 }
 

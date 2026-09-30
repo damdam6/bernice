@@ -125,6 +125,7 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
                   highlight={series.highlight}
                   background={series.background}
                   goal={series.goal}
+                  goals={series.goals}
                   label={`${card.label} 추이`}
                 />
               )}

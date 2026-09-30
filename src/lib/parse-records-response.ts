@@ -1,3 +1,4 @@
+import { parseTargetHistory } from '../../shared/event-target'
 import { normalizeEventTags } from '../../shared/event-tags'
 import { isEventId } from '../../shared/event-identity'
 // GET /api/records 응답 런타임 검증(#93) — `as RecordsResponse` 단언 대신 unknown에서 값을
@@ -71,7 +72,12 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
   if (raw.tags !== undefined) {
     try { tags = normalizeEventTags(raw.tags) } catch { return null }
   }
+  let targetHistory: EventDefinition['targetHistory']
+  if (raw.targetHistory !== undefined) {
+    try { targetHistory = parseTargetHistory(raw.targetHistory, { valueKind: raw.valueKind, maxScore: raw.maxScore }) } catch { return null }
+  }
   return {
+    ...(targetHistory !== undefined ? { targetHistory } : {}),
     ...(tags !== undefined ? { tags } : {}),
     id: raw.id,
     name: raw.name,
@@ -275,6 +281,9 @@ export function parseRecordsResponse(raw: unknown): RecordsResponse | null {
   const ids = new Set(events.map((event) => event.id))
   if (ids.size !== events.length) return null
   const uniqueKnown = (values: string[]) => new Set(values).size === values.length && values.every((id) => ids.has(id))
+  for (const event of events) {
+    if (event.targetHistory?.some((item) => !sessions.some((session) => session.date === item.fromSessionDate) || (event.endSessionDate !== null && item.fromSessionDate > event.endSessionDate))) return null
+  }
   for (const session of sessions) {
     if (!uniqueKnown(session.eventIds)) return null
     for (const entry of session.entries) {

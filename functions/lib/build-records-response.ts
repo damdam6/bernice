@@ -1,3 +1,4 @@
+import { attachTargetHistory } from './target-history'
 // SheetRawBundle(#24) → RecordsResponse(#21 계약) 조립.
 // 파서(#25~#27)·계산(#28~#29)은 순수 함수 그대로 재사용하고, 이 파일이 새로 맡는 것은:
 //  1) 명단/목표 탭 누락을 구분 가능한 에러로 승격
@@ -61,7 +62,7 @@ export function buildRecordsResponse(bundle: SheetRawBundle, generatedAt: string
   }
 
   const { players } = parseRoster(bundle.roster.values)
-  const { events } = parseGoals(bundle.goals.values)
+  const events = attachTargetHistory(parseGoals(bundle.goals.values).events, bundle.targetHistory?.values, bundle.rounds)
   validateEndSessionDates(events, bundle.rounds)
   const playersById = new Map(players.map((player) => [player.id, player]))
   // 회차 탭마다 이름→Player 맵을 다시 만들지 않도록 한 번만 생성해 재사용한다 —

@@ -1,3 +1,4 @@
+import { eventAtSession } from '../../shared/event-target'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { allEventTags, filterEventsByTag } from '../../shared/event-tags'
@@ -26,7 +27,7 @@ export default function Events() {
         <h2 className="font-bold">{group || '태그 없음'}</h2>
         {members.map((event) => <article key={event.id} className="rounded-card border border-line bg-white p-4">
           <h3 className="font-semibold">{eventLabel(event, data.events, data.sessions)}</h3>
-          <p className="text-sm">목표 {event.target}{event.maxScore !== null ? ` / ${event.maxScore}` : ''} · {event.direction}</p>
+          <p className="text-sm">목표 {eventAtSession(event, data.sessions.at(-1)?.date ?? '').target}{event.maxScore !== null ? ` / ${event.maxScore}` : ''} · {event.direction}</p>
           <p className="text-sm text-ink-sub">{event.endSessionDate ? `종료 · ${event.endSessionDate}` : '진행 중'}</p>
         </article>)}
       </section>

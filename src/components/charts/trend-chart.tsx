@@ -13,6 +13,8 @@ export interface TrendChartProps {
   background?: TrendPointDatum[][]
   /** 목표선 원값 — EventDefinition.targetValue(시간=초, 개수=그대로). 축 범위에 항상 포함된다 */
   goal?: number
+  /** 회차별 목표. 제공되면 단일 수평 목표선 대신 사용한다. */
+  goals?: TrendPointDatum[]
   /** viewBox 높이 — 렌더 폭은 부모에 맞춰 100% */
   height?: number
   /** 접근성 라벨 (예: "셔틀런 추이") */
@@ -33,6 +35,7 @@ export function TrendChart({
   highlight,
   background = [],
   goal,
+  goals,
   height = DEFAULT_HEIGHT,
   label = '종목 추이',
 }: TrendChartProps) {
@@ -50,8 +53,9 @@ export function TrendChart({
   }
 
   // 축 범위는 본인 점 ∪ 목표값 — 배경 라인은 제외된다(#172). 좁은 범위는 최소 폭까지 넓혀진다(#174).
-  const domain: TrendDomain = trendDomain(points, goal, background)
-  const goalY = goal === undefined ? null : trendY(goal, domain, layout)
+  const goalPoints = renderablePoints(goals ?? [], count)
+  const domain: TrendDomain = trendDomain([...points, ...goalPoints], goals ? undefined : goal, background)
+  const goalY = goals || goal === undefined ? null : trendY(goal, domain, layout)
   const bandHeight = height - layout.padTop - layout.padBottom
   // 도메인과 교차하는 구간이 없는 배경 시리즈는 클립되면 세로 막대 토막만 남으므로 아예 뺀다(#174).
   const visibleBackground = background.filter((series) => hasVisibleSegment(series, count, domain))
@@ -75,6 +79,13 @@ export function TrendChart({
           />
         ))}
       </g>
+      {goalPoints.map((point, i) => {
+        const next = goalPoints[i + 1]
+        const x = trendX(point.sessionIndex, count, layout)
+        const y = trendY(point.value, domain, layout)
+        const nextX = next ? trendX(next.sessionIndex, count, layout) : VIEW_WIDTH - layout.padX
+        return <path key={point.sessionIndex} d={`M ${x} ${y} H ${nextX}${next ? ` V ${trendY(next.value, domain, layout)}` : ''}`} fill="none" strokeWidth={1.5} strokeDasharray="4 4" className="stroke-good"><title>{sessionLabels[point.sessionIndex]} 목표 {point.value}</title></path>
+      })}
       {goalY !== null && (
         <line
           x1={layout.padX}

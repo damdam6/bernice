@@ -1,3 +1,4 @@
+import { TARGET_HISTORY_TAB } from './target-history'
 // Sheets API 읽기 래퍼 — 메타(탭 목록) 조회 + values.batchGet 일괄 조회.
 // 토큰 발급은 googleAuth.ts(이슈 #19), 탭 분류는 sheetTabs.ts(이슈 #18)를 그대로 재사용한다.
 // 이 모듈은 파싱하지 않고 원시 string[][]만 돌려준다 — 파서는 후속 이슈(#25~#27) 담당.
@@ -129,6 +130,7 @@ export interface RoundRawTable extends SheetRawTable {
 }
 
 export interface SheetRawBundle {
+  targetHistory?: SheetRawTable
   roster: SheetRawTable | null
   goals: SheetRawTable | null
   /** 날짜 오름차순 — classifySheetTabs와 동일 순서 */
@@ -140,10 +142,13 @@ export async function fetchSheetBundle(env: Env, sheetId: string): Promise<Sheet
   const tabTitles = await getSpreadsheetTabTitles(env, sheetId)
   const classification = classifySheetTabs(tabTitles)
 
+  const historyNames = tabTitles.filter((name) => name.normalize('NFC') === TARGET_HISTORY_TAB)
+  if (historyNames.length > 1) throw new Error('목표 이력 탭이 중복됩니다')
   const names = [
     ...(classification.roster !== null ? [classification.roster] : []),
     ...(classification.goals !== null ? [classification.goals] : []),
     ...classification.rounds.map((round) => round.name),
+    ...historyNames,
   ]
   const valueRanges = await batchGetValues(
     env,
@@ -162,5 +167,8 @@ export async function fetchSheetBundle(env: Env, sheetId: string): Promise<Sheet
     values: valueRanges[cursor++].values,
   }))
 
-  return { roster, goals, rounds, unclassified: classification.unclassified }
+  return { roster, goals, rounds,
+    ...(historyNames.length ? { targetHistory: { name: historyNames[0], values: valueRanges[cursor].values } } : {}),
+    unclassified: classification.unclassified.filter((name) => !historyNames.includes(name)),
+  }
 }
