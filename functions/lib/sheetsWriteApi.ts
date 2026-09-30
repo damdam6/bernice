@@ -27,13 +27,13 @@ function sleep(ms: number): Promise<void> {
 
 // fetch + 429·5xx 짧은 백오프 재시도 공통 루프 — 성공 응답을 반환하고, 4xx나 재시도 소진 시
 // SheetsApiError로 던진다. updateValues·batchUpdate가 공유한다(errorLabel로 실패 메시지만 구분).
-async function fetchWithRetry(url: string, init: RequestInit, errorLabel: string): Promise<Response> {
+async function fetchWithRetry(url: string, init: RequestInit, errorLabel: string, retry = true): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
     const response = await fetch(url, init)
     if (response.ok) return response
 
     const error = new SheetsApiError(`${errorLabel} (${response.status}): ${await response.text()}`, response.status)
-    if (!isRetryableStatus(response.status) || attempt >= RETRY_DELAYS_MS.length) throw error
+    if (!retry || !isRetryableStatus(response.status) || attempt >= RETRY_DELAYS_MS.length) throw error
     await sleep(RETRY_DELAYS_MS[attempt])
   }
 }
@@ -70,7 +70,7 @@ export async function updateValues(
 // updateValues와 같은 429·5xx 재시도를 쓴다 — addSheet는 엄밀히 멱등은 아니지만(5xx 응답만 실패하고
 // 실제로는 적용됐다면 재시도가 "이미 존재" 4xx로 실패) 사전 중복 가드가 그 위험을 줄이고, 흔한 5xx는
 // 배치가 통째로 거부된 경우라 재시도가 안전하다.
-export async function batchUpdate(env: Env, sheetId: string, requests: unknown[]): Promise<unknown> {
+export async function batchUpdate(env: Env, sheetId: string, requests: unknown[], retry = true): Promise<unknown> {
   const accessToken = await getAccessToken(env, WRITE_SCOPE)
   const url = `${SHEETS_BASE_URL}/${encodeURIComponent(sheetId)}:batchUpdate`
 
@@ -82,6 +82,7 @@ export async function batchUpdate(env: Env, sheetId: string, requests: unknown[]
       body: JSON.stringify({ requests }),
     },
     'Sheets API batchUpdate 실패',
+    retry,
   )
   return response.json()
 }
