@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
+import { FolderOpen } from 'lucide-react'
 
 interface EmptyStateProps {
-  icon?: string
+  icon?: ReactNode
   title: string
   description?: string
   /** 제목 헤딩 태그 — 쓰이는 화면의 헤딩 계층에 맞춰 조정 (기본 h2) */
@@ -10,10 +11,10 @@ interface EmptyStateProps {
   children?: ReactNode
 }
 
-export function EmptyState({ icon = '🗂️', title, description, titleAs: Title = 'h2', children }: EmptyStateProps) {
+export function EmptyState({ icon = <FolderOpen className="h-10 w-10 fill-primary-tint text-primary/60" strokeWidth={1.5} />, title, description, titleAs: Title = 'h2', children }: EmptyStateProps) {
   return (
     <div className="w-full max-w-frame rounded-card border border-line bg-white p-8 text-center shadow-sm">
-      <p className="text-4xl">{icon}</p>
+      <div aria-hidden="true" className="flex justify-center text-4xl">{icon}</div>
       <Title className="mt-3 text-lg font-bold text-ink">{title}</Title>
       {description && <p className="mt-2 text-sm text-ink-sub">{description}</p>}
       {children && <div className="mt-6">{children}</div>}
