@@ -8,7 +8,7 @@ const header = ['종목', '목표', '만점', '방향', '종료 회차', '면제
 const create = { action: 'create', name: '골밑슛', target: '7', maxScore: 10, valueKind: 'count', direction: '높을수록', exemptable: false }
 function bundle(): SheetRawBundle {
   return { roster: { name: '버니스명단', values: [['이름', '상태'], ['선수', '활동']] },
-    goals: { name: '목표', values: [header, ['골밑슛', '5', '10', '높을수록', '', '', 'old']] },
+    goals: { name: '목표', values: [[...header], ['골밑슛', '5', '10', '높을수록', '', '', 'old']] },
     rounds: [{ name: '2025-05-16', date: new Date('2025-05-16'), values: [['이름', 'id:old\n골밑슛'], ['선수', '6']] }], unclassified: [] }
 }
 describe('종목 관리', () => {
@@ -25,8 +25,9 @@ describe('종목 관리', () => {
     expect(end.requests).toEqual([{ updateCells: { start: { sheetId: 5, rowIndex: 1, columnIndex: 4 }, rows: [{ values: [{ userEnteredValue: { stringValue: '2025-05-16' } }] }], fields: 'userEnteredValue' } }])
     b.goals!.values[1][4] = '2025-05-16'
     const plan = buildEventPlan(b, 5, parseEventCommand(create), 'new')
-    expect(plan.requests).toHaveLength(1)
-    const append = plan.requests[0] as { appendCells: { rows: { values: { userEnteredValue: { stringValue: string } }[] }[] } }
+    expect(plan.requests).toHaveLength(2)
+    b.goals!.values[0][8] = '태그'
+    const append = plan.requests[1] as { appendCells: { rows: { values: { userEnteredValue: { stringValue: string } }[] }[] } }
     b.goals!.values.push(append.appendCells.rows[0].values.map((v) => v.userEnteredValue.stringValue))
     const after = buildRecordsResponse(b, 'test')
     expect(after.sessions).toEqual(before.sessions)
@@ -60,4 +61,19 @@ describe('종목 관리', () => {
     expect(() => buildEventPlan(b, 5, parseEventCommand({ action: 'end', id: 'old', endSessionDate: '2025-05-16' }), 'new')).toThrow('이미 종료')
     expect(() => parseEventCommand({ action: 'edit', id: 'old', target: '7' })).toThrow()
   })
+})
+it('종료 종목의 태그만 수정하며 기록과 목표를 보존한다', () => {
+  const b = bundle(); b.goals!.values[1][4] = '2025-05-16'
+  const before = buildRecordsResponse(b, 'test')
+  const plan = buildEventPlan(b, 5, parseEventCommand({ action: 'tags', id: 'old', tags: ['슛', '기본기'] }), 'unused')
+  expect(plan.requests).toHaveLength(2)
+  const serialized = JSON.stringify(plan.requests)
+  expect(serialized).toContain('"columnIndex":8')
+  expect(serialized).not.toContain('appendCells')
+  b.goals!.values[0][8] = '태그'; b.goals!.values[1][8] = '슛, 기본기'
+  const after = buildRecordsResponse(b, 'test')
+  expect(after.rankings).toEqual(before.rankings)
+  expect(after.sessions).toEqual(before.sessions)
+  expect(after.players).toEqual(before.players)
+  expect(after.events[0]).toEqual({ ...before.events[0], tags: ['슛', '기본기'] })
 })

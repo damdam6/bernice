@@ -259,3 +259,10 @@ describe('parseEventScore', () => {
     expect(parseEventScore({ status: 'recorded', value: '72', display: '1:12' })).toBeNull()
   })
 })
+it('태그 계약을 검증하고 기존 태그 없는 응답도 허용한다', () => {
+  const tagged = structuredClone(FULL_RESPONSE)
+  tagged.events[0].tags = ['슛']
+  expect(parseRecordsResponse(tagged)?.events[0].tags).toEqual(['슛'])
+  expect(parseRecordsResponse(FULL_RESPONSE)).not.toBeNull()
+  expect(parseRecordsResponse({ ...tagged, events: [{ ...tagged.events[0], tags: '슛' }] })).toBeNull()
+})

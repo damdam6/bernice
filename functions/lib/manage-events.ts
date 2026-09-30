@@ -1,3 +1,4 @@
+import { normalizeEventTags } from '../../shared/event-tags'
 import { isPlainObject } from '../../shared/is-plain-object'
 import { isEventId } from '../../shared/event-identity'
 import { normalizeScore } from '../../shared/normalize-score'
@@ -7,11 +8,13 @@ import type { SheetRawBundle } from './sheetsApi'
 
 export class EventInputError extends Error {}
 export type EventCommand =
-  | { action: 'create'; name: string; target: string; maxScore: number | null; valueKind: 'count' | 'time'; direction: '높을수록' | '낮을수록'; exemptable: boolean }
+  | { action: 'create'; name: string; target: string; maxScore: number | null; valueKind: 'count' | 'time'; direction: '높을수록' | '낮을수록'; exemptable: boolean; tags: string[] }
+  | { action: 'tags'; id: string; tags: string[] }
   | { action: 'end'; id: string; endSessionDate: string }
 
 export function parseEventCommand(raw: unknown): EventCommand {
   if (!isPlainObject(raw)) throw new EventInputError('JSON 입력이 필요합니다.')
+  if (raw.action === 'tags' && isEventId(raw.id)) return { action: 'tags', id: raw.id, tags: parseTags(raw.tags) }
   if (raw.action === 'end' && isEventId(raw.id) && typeof raw.endSessionDate === 'string') {
     return { action: 'end', id: raw.id, endSessionDate: raw.endSessionDate }
   }
@@ -31,7 +34,10 @@ export function parseEventCommand(raw: unknown): EventCommand {
   if (maxScore !== null && score.value > maxScore) throw new EventInputError('목표는 만점보다 클 수 없습니다.')
   if (direction !== '높을수록' && direction !== '낮을수록') throw new EventInputError('순위 방향을 확인해주세요.')
   if (typeof exemptable !== 'boolean') throw new EventInputError('면제 허용 여부를 선택해주세요.')
-  return { action: 'create', name: name.trim().normalize('NFC'), target: target.trim(), maxScore, valueKind, direction, exemptable }
+  return { action: 'create', name: name.trim().normalize('NFC'), target: target.trim(), maxScore, valueKind, direction, exemptable, tags: parseTags(raw.tags ?? []) }
+}
+function parseTags(raw: unknown): string[] {
+  try { return normalizeEventTags(raw) } catch (err) { throw new EventInputError(err instanceof Error ? err.message : '태그를 확인해주세요.') }
 }
 
 export function buildEventPlan(bundle: SheetRawBundle, sheetId: number, command: EventCommand, newId: string) {
@@ -49,7 +55,7 @@ export function buildEventPlan(bundle: SheetRawBundle, sheetId: number, command:
   if (command.action === 'create') {
     if (!isEventId(newId) || sheetRowById.has(newId)) throw new Error('새 종목 ID가 중복되거나 유효하지 않습니다.')
     eventId = newId
-    const row = [command.name, command.target, command.maxScore === null ? '' : String(command.maxScore), command.direction, '', command.exemptable ? '가능' : '', newId]
+    const row = [command.name, command.target, command.maxScore === null ? '' : String(command.maxScore), command.direction, '', command.exemptable ? '가능' : '', newId, '', command.tags.join(', ')]
     rows.push(row)
     // appendCells selects the end on the server; concurrent additions cannot overwrite a row.
     requests = [{ appendCells: { sheetId, rows: [{ values: row.map((stringValue) => ({ userEnteredValue: { stringValue } })) }], fields: 'userEnteredValue' } }]
@@ -57,6 +63,12 @@ export function buildEventPlan(bundle: SheetRawBundle, sheetId: number, command:
       rows[0][5] = '면제 가능'
       requests.unshift({ updateCells: { start: { sheetId, rowIndex: 0, columnIndex: 5 }, rows: [{ values: [{ userEnteredValue: { stringValue: '면제 가능' } }] }], fields: 'userEnteredValue' } })
     }
+  } else if (command.action === 'tags') {
+    eventId = command.id
+    const rowNumber = sheetRowById.get(eventId)
+    if (!rowNumber) throw new EventInputError('종목을 찾을 수 없습니다.')
+    rows[rowNumber - 1][8] = command.tags.join(', ')
+    requests = [{ updateCells: { start: { sheetId, rowIndex: rowNumber - 1, columnIndex: 8 }, rows: [{ values: [{ userEnteredValue: { stringValue: command.tags.join(', ') } }] }], fields: 'userEnteredValue' } }]
   } else {
     eventId = command.id
     const event = before.events.find((e) => e.id === eventId)
@@ -68,6 +80,10 @@ export function buildEventPlan(bundle: SheetRawBundle, sheetId: number, command:
     const rowNumber = sheetRowById.get(eventId)!
     rows[rowNumber - 1][4] = command.endSessionDate
     requests = [{ updateCells: { start: { sheetId, rowIndex: rowNumber - 1, columnIndex: 4 }, rows: [{ values: [{ userEnteredValue: { stringValue: command.endSessionDate } }] }], fields: 'userEnteredValue' } }]
+  }
+  if (command.action !== 'end' && !rows[0][8]) {
+    rows[0][8] = '태그'
+    requests.unshift({ updateCells: { start: { sheetId, rowIndex: 0, columnIndex: 8 }, rows: [{ values: [{ userEnteredValue: { stringValue: '태그' } }] }], fields: 'userEnteredValue' } })
   }
   // Validate the complete projected sheet, including records after the selected end date.
   buildRecordsResponse({ ...bundle, goals: { ...bundle.goals, values: rows } }, 'validation')

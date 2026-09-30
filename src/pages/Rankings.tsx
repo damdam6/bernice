@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import { allEventTags, filterEventsByTag } from '../../shared/event-tags'
 import { eventLabel } from '../../shared/event-identity'
 import { useMemo, useState } from 'react'
 import type { RecordsResponse } from '../../shared/domain'
@@ -47,6 +49,7 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   const { events, sessions, rankings, players } = data
   const scale = useMemo(() => buildPerformanceScale(events, sessions), [events, sessions])
 
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [selectedEventKey, setSelectedEventKey] = useState<string | null>(null)
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
 
@@ -56,7 +59,7 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
 
   // 종목 칩 = 선택 회차의 측정 종목만(eventIds 순서) — 회차 전환으로 선택 종목이 사라지면
   // 아래 find/??가 렌더마다 다시 평가되어 첫 종목으로 자동 폴백한다(#123)
-  const sessionEvents = session ? deriveSessionEvents(events, session) : []
+  const sessionEvents = filterEventsByTag(session ? deriveSessionEvents(events, session) : [], selectedTag)
   // sessionEvents가 비면(계약상 발생 불가하나 잘못된 데이터 방어) event는 undefined —
   // 아래 렌더는 이 경우를 "표시할 기록이 없습니다"로 안전하게 수렴시킨다.
   const event: (typeof sessionEvents)[number] | undefined = sessionEvents.find((e) => e.id === selectedEventKey) ?? sessionEvents[0]
@@ -68,10 +71,17 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-6">
       <h1 className="text-xl font-bold tracking-tight text-ink">랭킹</h1>
+      <Link to="/events" className="text-sm text-primary">태그별 전체 종목 보기</Link>
+      <label className="text-sm">태그 필터
+        <select aria-label="태그 필터" value={selectedTag === null ? 'all' : `tag:${selectedTag}`} onChange={(e) => setSelectedTag(e.target.value === 'all' ? null : e.target.value.slice(4))} className="ml-2 rounded-lg border border-line bg-white p-2">
+          <option value="all">전체</option><option value="tag:">태그 없음</option>
+          {allEventTags(events).map((tag) => <option key={tag} value={`tag:${tag}`}>{tag}</option>)}
+        </select>
+      </label>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {sessionEvents.map((e) => (
-          <FilterChip key={eventLabel(e, events, sessions)} active={e.id === event?.id} onClick={() => setSelectedEventKey(e.id)}>
+          <FilterChip key={e.id} active={e.id === event?.id} onClick={() => setSelectedEventKey(e.id)}>
             {eventLabel(e, events, sessions)}
           </FilterChip>
         ))}

@@ -40,6 +40,8 @@ export interface EventDefinition {
   name: string // 표시용 이름. ID 생성/연결에 사용하지 않는다.
   /** Optional immutable name alias used only while legacy headers remain. */
   legacyName?: string
+  /** Optional during rolling deployment; absent means untagged. Goal sheet I column. */
+  tags?: string[]
   valueKind: EventValueKind
   target: string // 목표치 원본 표시값 ("1:17" | "5")
   targetValue: number // 정규화 목표치(시간=초, 개수=그대로) — 달성 판정 기준

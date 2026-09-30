@@ -1,3 +1,4 @@
+import { normalizeEventTags } from '../../shared/event-tags'
 import { isEventId } from '../../shared/event-identity'
 // GET /api/records 응답 런타임 검증(#93) — `as RecordsResponse` 단언 대신 unknown에서 값을
 // 꺼내 새 객체를 조립한다("parse, don't validate", functions/api/admin/records.ts parseBody와
@@ -66,7 +67,12 @@ function parseEventDefinition(raw: unknown): EventDefinition | null {
   if (!isOneOf(raw.direction, RANK_DIRECTIONS)) return null
   if (typeof raw.endSessionDate !== 'string' && raw.endSessionDate !== null) return null
   if (typeof raw.exemptable !== 'boolean') return null
+  let tags: string[] | undefined
+  if (raw.tags !== undefined) {
+    try { tags = normalizeEventTags(raw.tags) } catch { return null }
+  }
   return {
+    ...(tags !== undefined ? { tags } : {}),
     id: raw.id,
     name: raw.name,
     ...(typeof raw.legacyName === 'string' ? { legacyName: raw.legacyName } : {}),
