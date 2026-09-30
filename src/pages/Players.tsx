@@ -62,7 +62,7 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number>(players[0].id)
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
   // 기본으로 첫 종목 카드를 확장해 추이 차트를 바로 보여준다(목업 기본 동작). null이면 전부 접힘.
-  const [selectedEventKey, setSelectedEventKey] = useState<string | null>(events[0].id)
+  const [selectedEventKey, setSelectedEventKey] = useState<string | null | undefined>(undefined)
 
   const player = players.find((p) => p.id === selectedPlayerId) ?? players[0]
   const latestSessionDate = sessions[sessions.length - 1].date
@@ -71,7 +71,9 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
 
   const radarAxes = buildRadarAxes(events, session, player.id, scale, sessions)
   const growthCards = buildGrowthCards(events, session, player, sessions)
-  const cardByEvent = new Map(growthCards.map((card) => [card.eventKey, card]))
+  const expandedEventKey = selectedEventKey === null ? null
+    : growthCards.find((card) => card.eventKey === selectedEventKey)?.eventKey ?? growthCards[0]?.eventKey
+  const eventsById = new Map(events.map((event) => [event.id, event]))
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-6">
@@ -105,17 +107,17 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        {events.map((event) => {
-          const card = cardByEvent.get(event.id)
-          if (!card) return null
-          const expanded = event.id === selectedEventKey
+        {growthCards.length === 0 && <EmptyState title="이 회차에 표시할 종목이 없습니다" />}
+        {growthCards.map((card) => {
+          const event = eventsById.get(card.eventKey)!
+          const expanded = event.id === expandedEventKey
           const series = expanded ? buildTrendSeries(event, sessions, players, player.id) : null
           return (
             <GrowthStatCard
               key={event.id}
               card={card}
               expanded={expanded}
-              onToggle={() => setSelectedEventKey((prev) => (prev === event.id ? null : event.id))}
+              onToggle={() => setSelectedEventKey(expanded ? null : event.id)}
             >
               {series && (
                 <TrendChart

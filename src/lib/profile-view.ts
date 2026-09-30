@@ -17,6 +17,7 @@ import type {
 } from '../../shared/domain'
 import type { RadarAxis, TrendPointDatum } from '../components/charts'
 import type { PerformanceScale } from './performance-scale'
+import { deriveSessionEvents } from './ranking-view'
 
 /** 회차 라벨 — 날짜 오름차순 index+1 ("1차", …). Rankings.tsx의 {i+1}차와 동일 규칙. */
 export function buildSessionLabels(sessions: Session[]): string[] {
@@ -97,9 +98,8 @@ function buildDelta(
   }
 }
 
-/** 종목별 성장 카드 목록 — 종목 순서(events[]) 그대로. 현역 종목은 전부, 종료 종목은 그 선수
- *  유효 기록이 1건 이상(personalBests에 항목 존재 — 이미 스파스 필터링됨)일 때만 포함한다(PRD §08).
- *  PB·현재값·직전 유효 기록 대비 델타. */
+/** 선택 회차의 종목만 헤더 순서대로 표시한다. 종료 여부나 PB 유무는
+ *  포함 기준이 아니다. 해당 회차의 미측정·미참여 종목도 카드로 남긴다. */
 export function buildGrowthCards(
   events: EventDefinition[],
   session: Session | undefined,
@@ -109,8 +109,7 @@ export function buildGrowthCards(
   const entry = session?.entries.find((e) => e.playerId === player.id)
   const pbByEvent = new Map(player.personalBests.map((pb) => [pb.event, pb]))
   const trendByEvent = new Map(player.trends.map((t) => [t.event, t]))
-  return events
-    .filter((event) => event.endSessionDate === null || pbByEvent.has(event.id))
+  return (session ? deriveSessionEvents(events, session) : [])
     .map((event) => ({
       eventKey: event.id,
       label: eventLabel(event, events, sessions),

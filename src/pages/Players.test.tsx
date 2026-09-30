@@ -147,6 +147,55 @@ const RECORDS_BODY: RecordsResponse = {
 }
 
 describe('Players', () => {
+  it('회차에 없는 신규·과거 종목은 숨기고 사라진 선택은 회차 첫 카드로 폴백한다 (#184)', async () => {
+    const body = structuredClone(RECORDS_BODY)
+    body.events[0].endSessionDate = body.sessions[0].date
+    body.sessions[0].eventIds = ['골밑슛']
+    body.sessions[1].eventIds = ['셔틀런']
+    for (const session of body.sessions) for (const entry of session.entries) {
+      for (const id of Object.keys(entry.scores)) if (!session.eventIds.includes(id)) delete entry.scores[id]
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, body)))
+    renderPlayers()
+    await waitFor(() => expect(screen.getByRole('img', { name: '셔틀런 추이' })).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: /골밑슛/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    expect(screen.queryByRole('button', { name: /셔틀런/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '골밑슛 추이' })).toBeInTheDocument()
+    expect(screen.getByText('종료')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /골밑슛/ }))
+    expect(screen.queryByRole('img', { name: /추이$/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /골밑슛/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2차' }))
+    expect(screen.getByRole('img', { name: '셔틀런 추이' })).toBeInTheDocument()
+    // 폴백된 카드도 한 번에 접힌다.
+    fireEvent.click(screen.getByRole('button', { name: /셔틀런/ }))
+    expect(screen.queryByRole('img', { name: /추이$/ })).not.toBeInTheDocument()
+  })
+
+  it('성장 카드는 전역 목표 순서 대신 선택 회차 헤더 순서로 표시한다', async () => {
+    const body = structuredClone(RECORDS_BODY)
+    body.sessions[1].eventIds = ['셔틀런', '골밑슛']
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, body)))
+    renderPlayers()
+    await waitFor(() => expect(screen.getByRole('img', { name: '셔틀런 추이' })).toBeInTheDocument())
+    const cards = screen.getAllByRole('button', { name: /셔틀런|골밑슛/ })
+    expect(cards[0]).toHaveTextContent('셔틀런')
+    expect(cards[1]).toHaveTextContent('골밑슛')
+  })
+
+  it('종목 없는 회차에는 성장 카드 대신 빈 상태를 표시한다', async () => {
+    const body = structuredClone(RECORDS_BODY)
+    body.sessions[1] = { ...body.sessions[1], eventIds: [], entries: [] }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, body)))
+    renderPlayers()
+    await waitFor(() => expect(screen.getByText('이 회차에 표시할 종목이 없습니다')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: /골밑슛|셔틀런/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /추이$/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    expect(screen.getByRole('img', { name: '골밑슛 추이' })).toBeInTheDocument()
+  })
+
   it('로딩 중에는 스피너를 보여준다', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
 

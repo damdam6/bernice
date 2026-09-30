@@ -47,7 +47,11 @@ describe('#177 immutable event identity', () => {
     const cards = buildGrowthCards(data.events, data.sessions[0], data.players[0], data.sessions)
     expect(cards[0]).toMatchObject({ eventKey: 'pass-old', ended: true, pb: '4', value: '4' })
     expect(cards[0].label).toContain('종료 · 2026-06-01 ~ 2026-06-01')
-    expect(cards[1].label).toContain('진행 중 · 2026-09-01 ~ 2026-09-01')
+    expect(cards).toHaveLength(1)
+    const latestCards = buildGrowthCards(data.events, data.sessions[1], data.players[0], data.sessions)
+    expect(latestCards).toHaveLength(1)
+    expect(latestCards[0].eventKey).toBe('pass-new')
+    expect(latestCards[0].label).toContain('진행 중 · 2026-09-01 ~ 2026-09-01')
     expect(buildTrendSeries(data.events[0], data.sessions, data.players, 1).highlight).toEqual([{ sessionIndex: 0, value: 4 }])
   })
 
