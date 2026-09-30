@@ -21,6 +21,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   } catch (err) {
     if (err instanceof EventInputError) return Response.json({ message: err.message }, { status: 409 })
     if (err instanceof SheetsApiError) return Response.json({ message: '저장 결과를 확인할 수 없습니다. 데이터 새로 고침으로 반영 여부를 확인한 뒤 다시 시도해주세요.' }, { status: 502 })
-    return Response.json({ message: err instanceof Error ? err.message : '종목을 저장하지 못했습니다.' }, { status: 500 })
+    return Response.json({ message: '저장 결과를 확인할 수 없습니다. 데이터 새로 고침으로 반영 여부를 확인해주세요.' }, { status: 500 })
   }
 }

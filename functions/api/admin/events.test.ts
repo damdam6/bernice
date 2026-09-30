@@ -38,3 +38,11 @@ it('상위 쓰기 실패를 성공으로 보고하지 않는다', async () => {
   expect(await res.text()).toContain('반영 여부')
   expect(mocks.purge).not.toHaveBeenCalled()
 })
+it('예상하지 못한 내부 오류 메시지는 응답에 노출하지 않는다', async () => {
+  mocks.fetch.mockRejectedValue(new Error('private internal detail'))
+  const res = await onRequestPost(context(body))
+  expect(res.status).toBe(500)
+  const text = await res.text()
+  expect(text).not.toContain('private internal detail')
+  expect(text).toContain('반영 여부')
+})
