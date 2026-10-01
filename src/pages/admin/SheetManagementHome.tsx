@@ -1,5 +1,4 @@
-// 시트 관리 홈(#67) — docs/prd-design.html §05: 버튼 3개 세로 스택(기록 입력 강조·참가자
-// 추가·기록지 만들기) + 로그아웃 텍스트 버튼 + 안내 박스.
+// 시트 관리 홈 — 회차별 작업 다음에 전체 팀원·전체 종목 관리를 배치한다.
 // #151: 시트를 직접 편집했을 때의 탈출구로 "데이터 새로 고침" 버튼 추가 — 엣지·브라우저
 // 캐시를 모두 뚫고 최신 데이터를 반영한다(흐름은 useRefreshRecords 참고).
 import { useState } from 'react'
@@ -45,36 +44,36 @@ export default function SheetManagementHome() {
         <h1 className="text-center text-2xl font-bold tracking-tight text-ink">시트 관리</h1>
 
         <div className="flex flex-col gap-3">
-          <button type="button" onClick={() => navigate('/admin/roster')} className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas">
-            전체 팀원 관리
-          </button>
           <button
             type="button"
             onClick={() => navigate('/admin/records')}
             className="w-full rounded-[13px] bg-primary py-3.5 text-sm font-bold text-white transition-colors hover:bg-primary-strong"
           >
-            기록 입력
+            회차별 기록 입력
           </button>
           <button
             type="button"
             onClick={() => navigate('/admin/add-players')}
             className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas"
           >
-            참가자 추가
+            회차별 참가자 추가
           </button>
           <button
             type="button"
             onClick={() => navigate('/admin/create-sheet')}
             className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas"
           >
-            기록지 만들기
+            신규 회차 등록
+          </button>
+          <button type="button" onClick={() => navigate('/admin/roster')} className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas">
+            전체 팀원 관리
           </button>
           <button
             type="button"
             onClick={() => navigate('/admin/events')}
             className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink"
           >
-            종목 관리
+            전체 종목 관리
           </button>
           <button
             type="button"
