@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import type { RecordsResponse } from '../../shared/domain'
 import { Card } from '../components/Card'
-import { FilterChip } from '../components/FilterChip'
 import { GrowthStatCard } from '../components/GrowthStatCard'
 import { PlayerSelect } from '../components/PlayerSelect'
 import { RadarChart, TrendChart, TrendLegend } from '../components/charts'
@@ -84,13 +84,19 @@ function ProfileContent({ data }: { data: RecordsResponse }) {
 
       <PlayerSelect players={players} selectedId={player.id} onSelect={setSelectedPlayerId} />
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {sessions.map((s, i) => (
-          <FilterChip key={s.date} active={s.date === sessionDate} onClick={() => setSelectedSessionDate(s.date)}>
-            {i + 1}차
-          </FilterChip>
-        ))}
-      </div>
+      <label className="relative min-w-0">
+        <span className="sr-only">회차 선택</span>
+        <select
+          value={sessionDate}
+          onChange={(e) => setSelectedSessionDate(e.target.value)}
+          className="w-full min-w-0 appearance-none rounded-xl border border-line bg-white py-3 pl-3 pr-8 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          {sessions.map((s, i) => (
+            <option key={s.date} value={s.date}>{i + 1}차 {s.date.replaceAll('-', '.')}</option>
+          ))}
+        </select>
+        <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-sub" />
+      </label>
 
       <Card className="flex justify-center">
         <RadarChart axes={radarAxes} />

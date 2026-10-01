@@ -159,14 +159,14 @@ describe('Players', () => {
     renderPlayers()
     await waitFor(() => expect(screen.getByRole('img', { name: '셔틀런 추이' })).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: /골밑슛/ })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-01' } })
     expect(screen.queryByRole('button', { name: /셔틀런/ })).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: '골밑슛 추이' })).toBeInTheDocument()
     expect(screen.getByText('종료')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /골밑슛/ }))
     expect(screen.queryByRole('img', { name: /추이$/ })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /골밑슛/ }))
-    fireEvent.click(screen.getByRole('button', { name: '2차' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-08' } })
     expect(screen.getByRole('img', { name: '셔틀런 추이' })).toBeInTheDocument()
     // 폴백된 카드도 한 번에 접힌다.
     fireEvent.click(screen.getByRole('button', { name: /셔틀런/ }))
@@ -192,7 +192,7 @@ describe('Players', () => {
     await waitFor(() => expect(screen.getByText('이 회차에 표시할 종목이 없습니다')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: /골밑슛|셔틀런/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /추이$/ })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-01' } })
     expect(screen.getByRole('img', { name: '골밑슛 추이' })).toBeInTheDocument()
   })
 
@@ -232,9 +232,12 @@ describe('Players', () => {
 
     renderPlayers()
 
-    // 선수 트리거 = 선수1, 최신 회차(2차) 칩 활성
+    // 선수 트리거 = 선수1, 최신 회차(2차) 선택
     await waitFor(() => expect(screen.getByRole('button', { name: '선수1' })).toBeInTheDocument())
-    expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('combobox', { name: '회차 선택' })).toHaveValue('2026-06-08')
+
+    expect(screen.getByRole('option', { name: '1차 2026.06.01' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: '2차 2026.06.08' })).toBeInTheDocument()
 
     // 레이더 + 첫 종목(골밑슛) 카드 확장 → 추이 차트 노출
     expect(screen.getByRole('img', { name: /종목 프로필 레이더/ })).toBeInTheDocument()
@@ -261,16 +264,16 @@ describe('Players', () => {
     expect(screen.getByText('▲ 5초')).toBeInTheDocument()
   })
 
-  it('회차 칩을 바꾸면 첫 기록 회차의 델타가 "—"가 된다', async () => {
+  it('회차 드롭다운을 바꾸면 첫 기록 회차의 델타가 "—"가 된다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY)))
 
     renderPlayers()
-    await waitFor(() => expect(screen.getByRole('button', { name: '2차' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('combobox', { name: '회차 선택' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-01' } })
 
     // 1차는 두 종목 모두 첫 유효 기록 → 델타 "—" 두 개, 현재값은 1차 값
-    expect(screen.getByRole('button', { name: '1차' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('combobox', { name: '회차 선택' })).toHaveValue('2026-06-01')
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('6')).toBeInTheDocument()
     expect(screen.getByText('1:30')).toBeInTheDocument()
