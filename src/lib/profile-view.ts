@@ -64,6 +64,8 @@ export interface GrowthCardDatum {
   pb: string
   /** 선택 회차 현재값 — recorded면 display, 면제면 '면제', 그 외 '—' */
   value: string
+  /** 유효한 개수 기록에만 표시하는 전체 시도 수. */
+  maxScore?: number | null
   delta: GrowthDelta
 }
 
@@ -112,6 +114,8 @@ export function buildGrowthCards(
       ended: event.endSessionDate !== null,
       pb: pbByEvent.get(event.id)?.display ?? '—',
       value: currentValueText(entry?.scores[event.id]),
+      maxScore: event.valueKind === 'count' && entry?.scores[event.id]?.status === 'recorded'
+        ? event.maxScore : null,
       delta: buildDelta(trendByEvent.get(event.id), session?.date, event.valueKind),
     }))
 }

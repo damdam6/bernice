@@ -47,7 +47,12 @@ export function GrowthStatCard({ card, expanded, onToggle, children }: GrowthSta
           <p className="mt-0.5 text-xs text-ink-sub">PB {card.pb}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-lg font-extrabold tabular-nums text-ink">{card.value}</p>
+          <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-ink">
+            {card.value}
+            {card.maxScore != null && (
+              <span className="ml-1 text-xs font-normal text-ink-sub">/ {card.maxScore}</span>
+            )}
+          </p>
           <p className={`mt-0.5 text-sm font-bold tabular-nums ${DELTA_TONE_CLASS[card.delta.tone]}`}>
             {card.delta.text}
           </p>
