@@ -5,7 +5,7 @@ import { CenteredPanel } from '../components/common/CenteredPanel'
 import { EmptyState } from '../components/common/EmptyState'
 import { ErrorPanel } from '../components/common/ErrorPanel'
 import { Spinner } from '../components/common/Spinner'
-import { FilterChip } from '../components/FilterChip'
+import { ChevronDown } from 'lucide-react'
 import { RankingRow } from '../components/RankingRow'
 import { useRecords } from '../hooks/useRecords'
 import { buildPerformanceScale } from '../lib/performance-scale'
@@ -54,7 +54,7 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   const sessionDate = selectedSessionDate ?? latestSessionDate
   const session = sessions.find((s) => s.date === sessionDate)
 
-  // 종목 칩 = 선택 회차의 측정 종목만(eventIds 순서) — 회차 전환으로 선택 종목이 사라지면
+  // 종목 선택지 = 선택 회차의 측정 종목만(eventIds 순서) — 회차 전환으로 선택 종목이 사라지면
   // 아래 find/??가 렌더마다 다시 평가되어 첫 종목으로 자동 폴백한다(#123)
   const sessionEvents = session ? deriveSessionEvents(events, session) : []
   // sessionEvents가 비면(계약상 발생 불가하나 잘못된 데이터 방어) event는 undefined —
@@ -68,20 +68,38 @@ function RankingsContent({ data }: { data: RecordsResponse }) {
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-6">
       <h1 className="text-xl font-bold tracking-tight text-ink">랭킹</h1>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {sessionEvents.map((e) => (
-          <FilterChip key={e.id} active={e.id === event?.id} onClick={() => setSelectedEventKey(e.id)}>
-            {eventLabel(e, events, sessions)}
-          </FilterChip>
-        ))}
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {sessions.map((s, i) => (
-          <FilterChip key={s.date} active={s.date === sessionDate} onClick={() => setSelectedSessionDate(s.date)}>
-            {i + 1}차
-          </FilterChip>
-        ))}
+      <div className="grid grid-cols-2 gap-2">
+        <label className="relative min-w-0">
+          <span className="sr-only">회차 선택</span>
+          <select
+            value={sessionDate}
+            onChange={(e) => {
+              setSelectedSessionDate(e.target.value)
+              setSelectedEventKey(event?.id ?? null)
+            }}
+            className="w-full min-w-0 appearance-none rounded-xl border border-line bg-white py-3 pl-3 pr-8 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            {sessions.map((s, i) => (
+              <option key={s.date} value={s.date}>{i + 1}차 {s.date.replaceAll('-', '.')}</option>
+            ))}
+          </select>
+          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-sub" />
+        </label>
+        <label className="relative min-w-0">
+          <span className="sr-only">종목 선택</span>
+          <select
+            value={event?.id ?? ''}
+            onChange={(e) => setSelectedEventKey(e.target.value)}
+            disabled={sessionEvents.length === 0}
+            className="w-full min-w-0 appearance-none rounded-xl border border-line bg-white py-3 pl-3 pr-8 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-primary disabled:text-ink-sub"
+          >
+            {sessionEvents.length === 0 && <option value="">종목 없음</option>}
+            {sessionEvents.map((e) => (
+              <option key={e.id} value={e.id}>{eventLabel(e, events, sessions)}</option>
+            ))}
+          </select>
+          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-sub" />
+        </label>
       </div>
 
       {event && <p className="text-sm text-ink-sub">{buildEventGuidance(event)}</p>}
