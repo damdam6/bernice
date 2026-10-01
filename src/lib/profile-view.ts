@@ -62,6 +62,8 @@ export interface GrowthCardDatum {
   ended: boolean
   /** PB 표시값 — 스파스(유효 기록 없는 종목은 '—') */
   pb: string
+  /** 개수형 PB의 전체 시도 수. 선택 회차의 기록 유무와 독립적이다. */
+  pbMaxScore?: number | null
   /** 선택 회차 현재값 — recorded면 display, 면제면 '면제', 그 외 '—' */
   value: string
   /** 유효한 개수 기록에만 표시하는 전체 시도 수. */
@@ -113,6 +115,7 @@ export function buildGrowthCards(
       label: eventLabel(event, events, sessions),
       ended: event.endSessionDate !== null,
       pb: pbByEvent.get(event.id)?.display ?? '—',
+      pbMaxScore: event.valueKind === 'count' && pbByEvent.has(event.id) ? event.maxScore : null,
       value: currentValueText(entry?.scores[event.id]),
       maxScore: event.valueKind === 'count' && entry?.scores[event.id]?.status === 'recorded'
         ? event.maxScore : null,
