@@ -45,6 +45,9 @@ export default function SheetManagementHome() {
         <h1 className="text-center text-2xl font-bold tracking-tight text-ink">시트 관리</h1>
 
         <div className="flex flex-col gap-3">
+          <button type="button" onClick={() => navigate('/admin/roster')} className="w-full rounded-[13px] border border-line bg-white py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas">
+            전체 팀원 관리
+          </button>
           <button
             type="button"
             onClick={() => navigate('/admin/records')}
