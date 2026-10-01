@@ -44,7 +44,7 @@ export function GrowthStatCard({ card, expanded, onToggle, children }: GrowthSta
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-ink-sub">PB {card.pb}</p>
+          <p className="mt-0.5 text-xs text-ink-sub">PB {card.pb}{card.pbMaxScore != null ? ` / ${card.pbMaxScore}` : ''}</p>
         </div>
         <div className="shrink-0 text-right">
           <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-ink">
