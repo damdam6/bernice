@@ -21,8 +21,8 @@ function renderPage() {
         <Routes>
           <Route path="/admin" element={<SheetManagementHome />} />
           <Route path="/admin/records" element={<p>날짜 선택 스텁</p>} />
-          <Route path="/admin/add-players" element={<p>참가자 추가 스텁</p>} />
-          <Route path="/admin/create-sheet" element={<p>기록지 만들기 스텁</p>} />
+          <Route path="/admin/add-players" element={<p>회차별 참가자 추가 스텁</p>} />
+          <Route path="/admin/create-sheet" element={<p>신규 회차 등록 스텁</p>} />
           <Route path="/" element={<p>홈 스텁</p>} />
         </Routes>
       </MemoryRouter>
@@ -40,33 +40,33 @@ const RECORDS_BODY = {
 }
 
 describe('SheetManagementHome', () => {
-  it('버튼 4개 · 로그아웃 · 안내 박스를 노출한다', () => {
+  it('관리 메뉴 · 로그아웃 · 안내 박스를 노출한다', () => {
     renderPage()
 
-    expect(screen.getByRole('button', { name: '기록 입력' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '참가자 추가' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '기록지 만들기' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '회차별 기록 입력' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '회차별 참가자 추가' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '신규 회차 등록' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '데이터 새로 고침' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument()
     expect(screen.getByText(/시트가 SoT/)).toBeInTheDocument()
   })
 
-  it('기록 입력 클릭 → 날짜 선택으로 이동', () => {
+  it('회차별 기록 입력 클릭 → 날짜 선택으로 이동', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: '기록 입력' }))
+    fireEvent.click(screen.getByRole('button', { name: '회차별 기록 입력' }))
     expect(screen.getByText('날짜 선택 스텁')).toBeInTheDocument()
   })
 
-  it('참가자 추가 클릭 → 참가자 추가 화면으로 이동', () => {
+  it('회차별 참가자 추가 클릭 → 회차별 참가자 추가 화면으로 이동', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: '참가자 추가' }))
-    expect(screen.getByText('참가자 추가 스텁')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '회차별 참가자 추가' }))
+    expect(screen.getByText('회차별 참가자 추가 스텁')).toBeInTheDocument()
   })
 
-  it('기록지 만들기 클릭 → 기록지 만들기 화면으로 이동', () => {
+  it('신규 회차 등록 클릭 → 신규 회차 등록 화면으로 이동', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: '기록지 만들기' }))
-    expect(screen.getByText('기록지 만들기 스텁')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '신규 회차 등록' }))
+    expect(screen.getByText('신규 회차 등록 스텁')).toBeInTheDocument()
   })
 
   it('로그아웃 클릭 → /api/logout 호출 후 홈으로 이동', async () => {

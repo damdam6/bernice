@@ -226,7 +226,7 @@ describe('측정일 시나리오 (E2E 스모크)', () => {
     await screen.findByText('시트 관리')
 
     // 2. 기록지 만들기 — 참가자 선택(3명 중 2명만)
-    fireEvent.click(screen.getByRole('button', { name: '기록지 만들기' }))
+    fireEvent.click(screen.getByRole('button', { name: '신규 회차 등록' }))
     await screen.findByRole('heading', { name: '기록지 만들기' })
     fireEvent.click(screen.getByRole('button', { name: '선수1' }))
     fireEvent.click(screen.getByRole('button', { name: '선수2' }))
