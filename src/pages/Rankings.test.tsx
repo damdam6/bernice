@@ -128,7 +128,7 @@ const RECORDS_BODY: RecordsResponse = {
 }
 
 // 종목 7개 × 회차 2개 — 1차는 4종목만 측정(eventIds 부분집합), 최신은 7종목 전부 측정.
-// 종목 칩이 events[] 전체가 아니라 선택 회차 eventIds만 반영하는지, 회차 전환 시
+// 종목 선택지가 events[] 전체가 아니라 선택 회차 eventIds만 반영하는지, 회차 전환 시
 // 선택 종목이 사라지면 첫 종목으로 폴백하는지를 검증한다(#123, PRD §08 마이그레이션 시나리오).
 const MIXED_EVENT_KEYS = ['골밑슛', '셔틀런', '자유투', '드리블', '패스', '던지기', '달리기']
 
@@ -213,55 +213,57 @@ describe('Rankings', () => {
     await waitFor(() => expect(screen.getByText('아직 기록된 회차가 없습니다')).toBeInTheDocument())
   })
 
-  it('기본 선택(최신 회차·첫 종목)을 렌더하고, 칩 전환 시 안내문·행 목록이 갱신된다', async () => {
+  it('기본 선택(최신 회차·첫 종목)을 렌더하고, 선택지 전환 시 안내문·행 목록이 갱신된다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, RECORDS_BODY)))
 
     renderRankings()
 
     // 기본값: 최신 회차(2차) + 첫 종목(골밑슛) — 미측정 보충 포함
-    await waitFor(() => expect(screen.getByRole('button', { name: '골밑슛' })).toHaveAttribute('aria-pressed', 'true'))
-    expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true')
+    expect(await screen.findByRole('combobox', { name: '종목 선택' })).toHaveValue('골밑슛')
+    expect(screen.getByRole('combobox', { name: '회차 선택' })).toHaveValue('2026-06-08')
+    expect(screen.getByRole('option', { name: '2차 2026.06.08' })).toBeInTheDocument()
+    expect(screen.getAllByRole('combobox').map((el) => el.textContent)).toEqual([expect.stringContaining('1차 2026.06.01'), expect.stringContaining('골밑슛')])
     expect(screen.getByText('목표 5개 이상 · / 10')).toBeInTheDocument()
     expect(screen.getByText('1위')).toBeInTheDocument()
     expect(screen.getByText('8 / 10')).toBeInTheDocument()
     expect(screen.getByText('—')).toBeInTheDocument()
     expect(screen.getByText('미측정')).toBeInTheDocument()
 
-    // 종목 칩 전환 → 셔틀런(같은 회차: 2차, 둘 다 recorded)
-    fireEvent.click(screen.getByRole('button', { name: '셔틀런' }))
+    // 종목 선택지 전환 → 셔틀런(같은 회차: 2차, 둘 다 recorded)
+    fireEvent.change(screen.getByRole('combobox', { name: '종목 선택' }), { target: { value: '셔틀런' } })
 
     expect(screen.getByText('목표 1:17 이내 · 낮을수록 좋음 ↓')).toBeInTheDocument()
     expect(screen.getByText('1:00')).toBeInTheDocument()
     expect(screen.getByText('1:05')).toBeInTheDocument()
     expect(screen.getAllByText('달성')).toHaveLength(2)
 
-    // 회차 칩 전환 → 1차(종목은 셔틀런 유지) — 동점 없는 1/2위 + 미달성 뱃지 확인
-    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    // 회차 선택지 전환 → 1차(종목은 셔틀런 유지) — 동점 없는 1/2위 + 미달성 뱃지 확인
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-01' } })
 
     expect(screen.getByText('1:10')).toBeInTheDocument()
     expect(screen.getByText('1:30')).toBeInTheDocument()
     expect(screen.getByText('미달성')).toBeInTheDocument()
   })
 
-  it('혼재 픽스처 — 1차는 4종목 칩, 최신 회차는 7종목 칩을 보여준다', async () => {
+  it('혼재 픽스처 — 1차는 4종목 선택지, 최신 회차는 7종목 선택지를 보여준다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, MIXED_EVENT_COUNT_BODY)))
 
     renderRankings()
 
-    // 기본값: 최신 회차(2차) — eventIds 7개가 그대로 칩 7개로
-    await waitFor(() => expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true'))
+    // 기본값: 최신 회차(2차) — eventIds 7개가 그대로 선택지 7개로
+    expect(await screen.findByRole('combobox', { name: '회차 선택' })).toHaveValue('2026-06-08')
     for (const key of MIXED_EVENT_KEYS) {
-      expect(screen.getByRole('button', { name: key })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: key })).toBeInTheDocument()
     }
 
-    // 1차로 전환 — eventIds 4개만 칩으로 남고, 나머지 3개는 렌더되지 않는다
-    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    // 1차로 전환 — eventIds 4개만 선택지로 남고, 나머지 3개는 렌더되지 않는다
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-01' } })
 
     for (const key of MIXED_EVENT_KEYS.slice(0, 4)) {
-      expect(screen.getByRole('button', { name: key })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: key })).toBeInTheDocument()
     }
     for (const key of MIXED_EVENT_KEYS.slice(4)) {
-      expect(screen.queryByRole('button', { name: key })).not.toBeInTheDocument()
+      expect(screen.queryByRole('option', { name: key })).not.toBeInTheDocument()
     }
   })
 
@@ -271,15 +273,15 @@ describe('Rankings', () => {
     renderRankings()
 
     // 최신 회차(2차)에서 1차엔 없는 종목(달리기, 7번째)을 선택
-    await waitFor(() => expect(screen.getByRole('button', { name: '2차' })).toHaveAttribute('aria-pressed', 'true'))
-    fireEvent.click(screen.getByRole('button', { name: '달리기' }))
-    expect(screen.getByRole('button', { name: '달리기' })).toHaveAttribute('aria-pressed', 'true')
+    expect(await screen.findByRole('combobox', { name: '회차 선택' })).toHaveValue('2026-06-08')
+    fireEvent.change(screen.getByRole('combobox', { name: '종목 선택' }), { target: { value: '달리기' } })
+    expect(screen.getByRole('combobox', { name: '종목 선택' })).toHaveValue('달리기')
 
-    // 1차로 전환 — 달리기 칩 자체가 사라지고, 선택은 1차의 첫 종목(골밑슛)으로 폴백
-    fireEvent.click(screen.getByRole('button', { name: '1차' }))
+    // 1차로 전환 — 달리기 선택지 자체가 사라지고, 선택은 1차의 첫 종목(골밑슛)으로 폴백
+    fireEvent.change(screen.getByRole('combobox', { name: '회차 선택' }), { target: { value: '2026-06-01' } })
 
-    expect(screen.queryByRole('button', { name: '달리기' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '골밑슛' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByRole('option', { name: '달리기' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: '종목 선택' })).toHaveValue('골밑슛')
   })
 
   it('선택 회차에 eventIds가 없으면(계약 위반 데이터) 크래시 없이 빈 상태를 보여준다', async () => {
@@ -288,7 +290,8 @@ describe('Rankings', () => {
     renderRankings()
 
     await waitFor(() => expect(screen.getByText('표시할 기록이 없습니다')).toBeInTheDocument())
-    expect(screen.queryByRole('button', { name: '골밑슛' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: '골밑슛' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: '종목 선택' })).toBeDisabled()
   })
 })
 it('태그와 무관하게 회차 종목을 표시하고 태그 탐색 UI는 노출하지 않는다', async () => {
@@ -296,8 +299,8 @@ it('태그와 무관하게 회차 종목을 표시하고 태그 탐색 UI는 노
   body.events[0].tags = ['슛']; body.events[1].tags = ['드리블']
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, body)))
   renderRankings()
-  expect(await screen.findByRole('button', { name: '골밑슛' })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: '셔틀런' })).toBeInTheDocument()
+  expect(await screen.findByRole('option', { name: '골밑슛' })).toBeInTheDocument()
+  expect(screen.getByRole('option', { name: '셔틀런' })).toBeInTheDocument()
   expect(screen.queryByRole('combobox', { name: '태그 필터' })).not.toBeInTheDocument()
   expect(screen.queryByRole('link', { name: '태그별 전체 종목 보기' })).not.toBeInTheDocument()
 })

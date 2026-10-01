@@ -306,13 +306,13 @@ describe('측정일 시나리오 (E2E 스모크)', () => {
     renderApp(client, ['/rankings'])
     await screen.findByRole('heading', { name: '랭킹' })
 
-    fireEvent.click(screen.getByRole('button', { name: '골밑슛' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '종목 선택' }), { target: { value: '골밑슛' } })
     await screen.findByText('1위')
     expect(screen.getByText('1위').closest('div')).toHaveTextContent('선수1')
     expect(screen.getByText('2위').closest('div')).toHaveTextContent('선수2')
     expect(screen.getByText('3위').closest('div')).toHaveTextContent('선수3')
 
-    fireEvent.click(screen.getByRole('button', { name: '패스 - 체스트' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '종목 선택' }), { target: { value: '패스 - 체스트' } })
     await screen.findByText('선수2')
     expect(screen.getByText('선수2').closest('div')).toHaveTextContent('면제')
 
