@@ -14,6 +14,7 @@ import RecordsParticipants from './pages/admin/RecordsParticipants.tsx'
 import RecordsPlayerInput from './pages/admin/RecordsPlayerInput.tsx'
 import CreateSheet from './pages/admin/CreateSheet.tsx'
 import EventManagement from './pages/admin/EventManagement.tsx'
+import RosterManagement from './pages/admin/RosterManagement.tsx'
 import AddPlayers from './pages/admin/AddPlayers.tsx'
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/admin/records/:sessionDate" element={<RecordsParticipants />} />
           <Route path="/admin/records/:sessionDate/:playerId" element={<RecordsPlayerInput />} />
           <Route path="/admin/create-sheet" element={<CreateSheet />} />
+          <Route path="/admin/roster" element={<RosterManagement />} />
           <Route path="/admin/events" element={<EventManagement />} />
           <Route path="/admin/add-players" element={<AddPlayers />} />
         </Route>
